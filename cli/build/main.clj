@@ -20,7 +20,6 @@
   (shadow/release :server)
   (shadow/compile :page)
   (sh! "release=true node target/page.js")
-  (sh! "cp -r entry/favored-fonts dist/")
   (sh! "cp entry/manifest.json dist/"))
 
 (defn page []

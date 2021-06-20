@@ -58,7 +58,6 @@
       :search
       router-name
       (fn [e d!] (d! :router/change {:name :search}) (focus-search!)))
-     (render-entry "REPL" :repl router-name (fn [e d!] (d! :router/change {:name :repl})))
      (render-entry
       (str "Members:" (:members-count stats))
       :members

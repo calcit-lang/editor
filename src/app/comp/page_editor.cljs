@@ -19,7 +19,6 @@
             [app.util.dom :refer [do-copy-logics!]]
             [respo-alerts.core :refer [use-confirm use-prompt]]
             [app.comp.replace-name :refer [use-replace-name-modal]]
-            [app.comp.repl-preview :refer [comp-repl-preview]]
             [app.comp.picker-notice :refer [comp-picker-notice]]))
 
 (defn on-draft-box [state cursor]
@@ -33,11 +32,10 @@
   (fn [e d!]
     (case (:kind bookmark)
       :def
-        (let [code ["[]" (:ns bookmark) ":refer" ["[]" (:extra bookmark)]]]
+        (let [code [(:ns bookmark) ":refer" [(:extra bookmark)]]]
           (do-copy-logics! d! (pr-str code) (str "Copied path of " (:extra bookmark))))
       :ns
-        (let [the-ns (:ns bookmark)
-              code ["[]" the-ns ":as" (last (string/split the-ns "."))]]
+        (let [the-ns (:ns bookmark), code [the-ns ":as" (last (string/split the-ns "."))]]
           (do-copy-logics! d! (pr-str code) (str "Copied path of " the-ns)))
       (d! :notify/push-message [:warn "No op."]))))
 
@@ -251,5 +249,4 @@
     (if picker-mode?
       (comp-picker-notice
        (:picker-choices router-data)
-       (get-in expr (mapcat prepend-data focus))))
-    (if (-> router-data :repl :alive?) (comp-repl-preview (-> router-data :repl :logs))))))
+       (get-in expr (mapcat prepend-data focus)))))))

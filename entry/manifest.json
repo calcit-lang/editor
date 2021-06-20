@@ -3,8 +3,8 @@
   "name": "Calcit Editor",
   "icons": [
     {
-      "src": "https://cdn.tiye.me/logo/cirru.png",
-      "sizes": "600x600"
+      "src": "https://cdn.tiye.me/logo/calcit.png",
+      "sizes": "480x480"
     }
   ],
   "start_url": "index.html",

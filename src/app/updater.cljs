@@ -8,7 +8,6 @@
             [app.updater.notify :as notify]
             [app.updater.analyze :as analyze]
             [app.updater.watcher :as watcher]
-            [app.updater.repl :as repl]
             [app.updater.configs :as configs]))
 
 (defn updater [db op op-data sid op-id op-time]
@@ -79,12 +78,6 @@
             :analyze/abstract-def analyze/abstract-def
             :analyze/peek-def analyze/peek-def
             :watcher/file-change watcher/file-change
-            :repl/start repl/on-start
-            :repl/log repl/on-log
-            :repl/value repl/log-value
-            :repl/error repl/on-error
-            :repl/exit repl/on-exit
-            :repl/clear-logs repl/clear-logs
             :ping identity
             :configs/update configs/update-configs
             (do (println "Unknown op:" op) identity))]

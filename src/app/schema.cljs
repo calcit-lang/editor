@@ -4,11 +4,7 @@
 (def bookmark {:kind :def, :ns nil, :extra nil, :focus []})
 
 (def configs
-  {:extension ".cljs",
-   :output "src",
-   :port 6001,
-   :local-ui? false,
-   :compact-output? false,
+  {:port 6001,
    :init-fn "app.main/main!",
    :reload-fn "app.main/reload!",
    :modules [],

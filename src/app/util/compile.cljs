@@ -1,10 +1,7 @@
 
 (ns app.util.compile
   (:require [clojure.set :refer [difference intersection]]
-            [cirru-sepal.analyze :refer [write-file]]
-            [app.util
-             :refer
-             [ns->path file->cirru db->string tree->cirru now! hide-empty-fields]]
+            [app.util :refer [file->cirru db->string tree->cirru now! hide-empty-fields]]
             ["chalk" :as chalk]
             ["path" :as path]
             ["fs" :as fs]
@@ -14,12 +11,6 @@
             [cumulo-util.core :refer [unix-time!]]
             [applied-science.js-interop :as j]
             [cirru-edn.core :as cirru-edn]))
-
-(defn create-file! [file-path file output-dir]
-  (let [project-path (path/join output-dir file-path)]
-    (cp/execSync (str "mkdir -p " (path/dirname project-path)))
-    (fs/writeFileSync project-path (write-file (file->cirru file)))
-    (println (.gray chalk (str "created " project-path)))))
 
 (defn handle-compact-files! [pkg
                              old-files
@@ -98,37 +89,6 @@
      (cirru-edn/write inc-data)
      (fn [err] (if (some? err) (js/console.log "Failed to write!" err))))))
 
-(defn modify-file! [file-path file output-dir]
-  (let [project-path (path/join output-dir file-path)]
-    (fs/writeFileSync project-path (write-file (file->cirru file)))
-    (println (.gray chalk (str "modified " project-path)))))
-
-(defn remove-file! [file-path output-dir]
-  (let [project-path (path/join output-dir file-path)]
-    (cp/execSync (str "rm -rfv " project-path))
-    (println (.red chalk (str "removed " project-path)))))
-
-(defn handle-file-writing! [old-files
-                            new-files
-                            added-names
-                            removed-names
-                            changed-names
-                            get-ext
-                            output-dir]
-  (doseq [ns-text added-names]
-    (let [file (get new-files ns-text)]
-      (create-file! (ns->path ns-text (get-ext file)) file output-dir)))
-  (doseq [ns-text removed-names]
-    (let [file (get old-files ns-text)]
-      (remove-file! (ns->path ns-text (get-ext file)) output-dir)))
-  (doseq [ns-text changed-names]
-    (let [file (get new-files ns-text), old-file (get old-files ns-text)]
-      (if (= (-> file :configs :extension) (-> old-file :configs :extension))
-        (modify-file! (ns->path ns-text (get-ext file)) file output-dir)
-        (do
-         (remove-file! (ns->path ns-text (get-ext old-file)) output-dir)
-         (create-file! (ns->path ns-text (get-ext file)) file output-dir))))))
-
 (defn persist-async! [storage-path db-str started-time]
   (fs/writeFile
    storage-path
@@ -156,29 +116,15 @@
                              (fn [ns-text]
                                (not= (get new-files ns-text) (get old-files ns-text))))
                             (set)
-                            (filter-by-ns))
-         extension (:extension configs)
-         output-dir (:output configs)
-         get-ext (fn [file]
-                   (let [local-ext (-> file :configs :extension)]
-                     (if (some? local-ext) (str "." (name local-ext)) extension)))]
-     (if (:compact-output? configs)
-       (handle-compact-files!
-        (get-in db [:ir :package])
-        old-files
-        new-files
-        added-names
-        removed-names
-        changed-names
-        (:configs db))
-       (handle-file-writing!
-        old-files
-        new-files
-        added-names
-        removed-names
-        changed-names
-        get-ext
-        output-dir))
+                            (filter-by-ns))]
+     (handle-compact-files!
+      (get-in db [:ir :package])
+      old-files
+      new-files
+      added-names
+      removed-names
+      changed-names
+      (:configs db))
      (dispatch! :writer/save-files filter-ns)
      (if save-ir?
        (js/setTimeout
@@ -200,3 +146,8 @@
   (fs/writeFileSync storage-path db-str)
   (println
    (.gray chalk (str "took " (- (unix-time!) started-time) "ms to wrote calcit.cirru"))))
+
+(defn remove-file! [file-path output-dir]
+  (let [project-path (path/join output-dir file-path)]
+    (cp/execSync (str "rm -rfv " project-path))
+    (println (.red chalk (str "removed " project-path)))))

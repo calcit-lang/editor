@@ -20,13 +20,10 @@
               (<< "Running latest version ~{version}")
               (chalk/yellow
                (<< "Update is available tagged ~{npm-version}, current one is ~{version}"))))))
-        (.catch (fn [e] (println "failed to request version:" e))))))
+        (.catch (fn [e] (js/console.log "failed to request version:" e))))))
 
 (defn get-cli-configs! []
-  (let [env js/process.env]
-    {:compile? (= "compile" (j/get env :op)),
-     :local-ui? (= "local" (j/get env :ui)),
-     :compact? (= "true" (j/get env :compact))}))
+  (let [env js/process.env] {:compile? (= "compile" (j/get env :op))}))
 
 (defn pick-port! [port next-fn]
   (port-taken?

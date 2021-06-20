@@ -15,11 +15,6 @@
             [feather.core :refer [comp-icon comp-i]])
   (:require-macros [clojure.core.strint :refer [<<]]))
 
-(def extension-options
-  [{:value :cljs, :display "cljs"}
-   {:value :cljc, :display "cljc"}
-   {:value :clj, :display "clj"}])
-
 (def style-def {:padding "0 8px", :position :relative, :color (hsl 0 0 74)})
 
 (def style-file {:width 280, :overflow :auto, :padding-bottom 120})
@@ -51,14 +46,6 @@
     (div
      {}
      (<> "File" style/title)
-     (=< 8 nil)
-     (comp-select
-      (>> states :extension)
-      (or (:extension configs) :cljs)
-      extension-options
-      {:text "Select extension",
-       :style-trigger {:font-family ui/font-normal, :font-size 12}}
-      (fn [result d!] (d! :ir/file-config {:extension result})))
      (=< 16 nil)
      (span
       {:inner-text "Draft",

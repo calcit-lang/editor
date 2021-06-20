@@ -27,9 +27,7 @@
   (let [html-content (make-string (comp-container {} nil))
         assets (read-string (slurp "dist/assets.edn"))
         cdn (if config/cdn? (:cdn-url config/site) "")
-        font-styles (if config/cdn?
-                      (:release-ui config/site)
-                      "favored-fonts/main-fonts.css")
+        font-styles (:release-ui config/site)
         prefix-cdn (fn [x] x)]
     (make-page
      html-content

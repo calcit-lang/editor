@@ -143,12 +143,4 @@
                   (span
                    {}
                    (<> (str (string/join "." (butlast pieces)) ".") {:color (hsl 0 0 50)})
-                   (<> (last pieces) {:color (hsl 0 0 80)}))
-                  (=< 12 nil)
-                  (span
-                   {:inner-text "proc",
-                    :style {:padding "0 8px",
-                            :background-color (hsl 0 0 20),
-                            :font-size 12,
-                            :line-height "18px"},
-                    :on-click (on-select (assoc bookmark :kind :proc) cursor)})))]))))))))
+                   (<> (last pieces) {:color (hsl 0 0 80)}))))]))))))))

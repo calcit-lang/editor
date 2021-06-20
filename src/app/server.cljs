@@ -7,11 +7,8 @@
             [app.util.compile :refer [handle-files! persist!]]
             [app.util.env :refer [pick-port!]]
             [app.util :refer [db->string]]
-            [app.repl :as repl]
             ["chalk" :as chalk]
             ["path" :as path]
-            ["express" :as express]
-            ["serve-index" :as serve-index]
             ["shortid" :as shortid]
             ["fs" :as fs]
             ["md5" :as md5]
@@ -48,8 +45,7 @@
              cost (- (unix-time!) started-at)]
          (println (chalk/gray (str "Took " cost "ms to load.")))
          data)
-       (if (some? configs)
-         {:configs (assoc configs :compact-output? (:compact? (get-cli-configs!)))})))))
+       (if (some? configs) {:configs configs})))))
 
 (defonce *writer-db
   (atom
@@ -81,11 +77,6 @@
          (handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true nil)
        :effect/save-ns
          (handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true op-data)
-       :effect/connect-repl (repl/load-nrepl! d2!)
-       :effect/cljs-repl (repl/try-cljs-repl! d2! op-data)
-       :effect/send-code (repl/send-raw-code! op-data d2!)
-       :effect/eval-tree (repl/eval-tree! @*writer-db d2! sid)
-       :effect/end-repl (repl/end-repl! d2!)
        (reset! *writer-db (updater @*writer-db op op-data sid op-id op-time)))
      (catch js/Error e (println (.red chalk e)) (.error js/console e)))))
 
@@ -135,13 +126,6 @@
       (dispatch! :session/disconnect nil sid)),
     :on-error (fn [error] (js/console.error error))}))
 
-(defn serve-app! [port]
-  (let [app (express), dir (path/join js/__dirname ""), file-port (+ 100 port)]
-    (.use app "/" (express/static dir) (serve-index dir (clj->js {:icons true})))
-    (.listen app file-port)
-    (println
-     (str "Serving local editor at " (chalk/blue (str "http://localhost:" file-port))))))
-
 (defn watch-file! []
   (if (fs/existsSync storage-file)
     (do
@@ -175,10 +159,7 @@
   (let [configs (:configs initial-db), cli-configs (get-cli-configs!)]
     (if (:compile? cli-configs)
       (compile-all-files! configs)
-      (do
-       (start-server! configs)
-       (when (:local-ui? cli-configs) (serve-app! (:port configs)))
-       (check-version!)))))
+      (do (start-server! configs) (check-version!)))))
 
 (defn reload! []
   (println (.gray chalk "code updated."))
