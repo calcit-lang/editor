@@ -14,12 +14,19 @@
 
 (defn handle-compact-files! [pkg
                              old-files
-                             new-files
+                             latest-files
                              added-names
                              removed-names
                              changed-names
-                             configs]
-  (let [compact-data {:package pkg,
+                             configs
+                             filter-ns]
+  (let [new-files (if (some? filter-ns)
+                    (let [target (get latest-files filter-ns)]
+                      (if (some? target)
+                        (assoc old-files filter-ns target)
+                        (dissoc old-files filter-ns)))
+                    latest-files)
+        compact-data {:package pkg,
                       :configs {:init-fn (:init-fn configs),
                                 :reload-fn (:reload-fn configs),
                                 :modules (:modules configs),
@@ -124,7 +131,8 @@
       added-names
       removed-names
       changed-names
-      (:configs db))
+      (:configs db)
+      filter-ns)
      (dispatch! :writer/save-files filter-ns)
      (if save-ir?
        (js/setTimeout
