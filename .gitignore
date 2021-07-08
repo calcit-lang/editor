@@ -1,6 +1,7 @@
 
 /target
 /dist
+/dist-server
 /node_modules
 .shadow-cljs/
 .cpcache/
@@ -12,3 +13,4 @@ example/
 .compact-inc.cirru
 
 js-out/
+out-page/
