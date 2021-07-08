@@ -11,7 +11,7 @@
           [] respo-ui.core :as ui
           [] respo.core :refer $ [] defcomp <> list-> span div a
           [] respo.comp.space :refer $ [] =<
-          [] "\"url-parse" :as url-parse
+          [] "\"url-parse" :default url-parse
       :defs $ {}
         |comp-page-members $ quote
           defcomp comp-page-members (router-data session-id)
@@ -176,7 +176,7 @@
         ns app.updater.user $ :require
           [] app.util :refer $ [] find-first push-warning
           [] clojure.string :as string
-          [] |md5 :as md5
+          [] |md5 :default md5
           [] app.schema :as schema
       :defs $ {}
         |change-theme $ quote
@@ -534,7 +534,7 @@
                       merge result $ parse-require
                         if
                           = (first rule) "\"[]"
-                          subvec rule 1
+                          .slice rule 1
                           , rule
                       rest xs
         |parse-def $ quote
@@ -564,7 +564,7 @@
               :ns $ str (:ns bookmark) "\"/"
         |db->string $ quote
           defn db->string (db)
-            write-cirru-edn $ -> db
+            format-cirru-edn $ -> db
               dissoc :sessions $ {}
               dissoc :saved-files $ {}
               dissoc :repl
@@ -581,11 +581,11 @@
                 "\":as" $ {}
                     get piece 2
                     {} (:method :as) (:ns ns-text)
-                "\":refer" $ ->> (get piece 2)
+                "\":refer" $ -> (get piece 2)
                   filter $ fn (def-text) (not= def-text "\"[]")
                   map $ fn (def-text)
                     [] def-text $ {} (:method :refer) (:ns ns-text) (:def def-text)
-                  into $ {}
+                  pairs-map
                 "\":default" $ {}
                     get piece 2
                     {} (:method :refer) (:ns ns-text)
@@ -599,14 +599,13 @@
               = :leaf $ :type x
               :text x
               with-meta
-                ->> (:data x) (sort-by first)
+                -> (:data x) (.sort-by first)
                   map $ fn (entry)
-                    tree->cirru $ val entry
-                  vec
+                    tree->cirru $ last entry
                 , :quoted-cirru
         |cirru->tree $ quote
           defn cirru->tree (xs author timestamp)
-            if (vector? xs)
+            if (list? xs)
               merge schema/expr $ {} (:at timestamp) (:by author)
                 :data $ loop
                     result $ {}
@@ -622,8 +621,8 @@
         |cirru->file $ quote
           defn cirru->file (file author timestamp)
             -> file
-              update :ns $ "#()" cirru->tree % author timestamp
-              update :proc $ "#()" cirru->tree % author timestamp
+              update :ns $ \ cirru->tree % author timestamp
+              update :proc $ \ cirru->tree % author timestamp
               update :defs $ fn (defs)
                 ->> defs $ map-kv
                   fn (k xs)
@@ -637,13 +636,9 @@
           defn file-tree->cirru (file)
             -> file (update :ns tree->cirru) (update :proc tree->cirru)
               update :defs $ fn (defs)
-                ->> defs
-                  map $ fn (entry)
-                    let
-                          [] def-text def-tree
-                          , entry
-                      [] def-text $ tree->cirru def-tree
-                  into $ {}
+                -> defs $ map-kv
+                  fn (def-text def-tree)
+                    [] def-text $ tree->cirru def-tree
         |same-buffer? $ quote
           defn same-buffer? (x y)
             and
@@ -652,7 +647,7 @@
               = (:extra x) (:extra y)
         |to-keys $ quote
           defn to-keys (target-expr)
-            vec $ sort
+            sort $ .to-list
               keys $ :data target-expr
         |push-warning $ quote
           defn push-warning (op-id op-time text)
@@ -678,11 +673,11 @@
                 mapcat prepend-data $ :focus bookmark
         |stringify-s-expr $ quote
           defn stringify-s-expr (x)
-            if (vector? x)
+            if (list? x)
               str "|("
                 join-str "| " $ map
                   fn (y)
-                    if (vector? y) (stringify-s-expr y)
+                    if (list? y) (stringify-s-expr y)
                       if (.includes? y "| ") (pr-str y) y
                   , x
                 , "|)"
@@ -691,7 +686,7 @@
         |hide-empty-fields $ quote
           defn hide-empty-fields (x)
             -> x (.to-list)
-              remove $ fn (pair)
+              filter-not $ fn (pair)
                 let[] (k v) pair $ or (nil? v) (empty? v)
               pairs-map
         |file->cirru $ quote
@@ -703,10 +698,7 @@
                     [] k $ tree->cirru xs
         |find-first $ quote
           defn find-first (f xs)
-            reduce
-              fn (_ x)
-                when (f x) (reduced x)
-              , nil xs
+            find xs $ fn (x) (f x)
       :proc $ quote ()
     |app.twig.search $ {}
       :ns $ quote
@@ -714,7 +706,7 @@
       :defs $ {}
         |twig-search $ quote
           defn twig-search (files)
-            ->> files
+            #{} & $ ->> files
               mapcat $ fn (entry)
                 let-sugar
                       [] k file
@@ -730,7 +722,6 @@
                               , f-entry
                           {} (:kind :def) (:ns k) (:extra f-k)
                       :defs file
-              set
       :proc $ quote ()
     |app.comp.changed-files $ {}
       :ns $ quote
@@ -784,15 +775,13 @@
       :proc $ quote ()
     |app.page $ {}
       :ns $ quote
-        ns app.page
-          :require
-            [] respo.render.html :refer $ [] make-string
-            [] shell-page.core :refer $ [] make-page spit slurp
-            [] app.comp.container :refer $ [] comp-container
-            [] cljs.reader :refer $ [] read-string
-            [] app.config :as config
-            [] cumulo-util.build :refer $ [] get-ip!
-          :require-macros $ [] clojure.core.strint :refer ([] <<)
+        ns app.page $ :require
+          [] respo.render.html :refer $ [] make-string
+          [] shell-page.core :refer $ [] make-page spit slurp
+          [] app.comp.container :refer $ [] comp-container
+          [] cljs.reader :refer $ [] read-string
+          [] app.config :as config
+          [] cumulo-util.build :refer $ [] get-ip!
       :defs $ {}
         |base-info $ quote
           def base-info $ {}
@@ -803,7 +792,9 @@
         |dev-page $ quote
           defn dev-page () $ make-page "\""
             merge base-info $ {}
-              :styles $ [] (<< "\"http://~(get-ip!):8100/main-fonts.css") "\"/entry/main.css"
+              :styles $ []
+                str "\"http://" (get-ip!) "\":8100/main-fonts.css"
+                , "\"/entry/main.css"
               :scripts $ []
                 {} (:src "\"/client.js") (:defer? true)
               :inline-styles $ []
@@ -909,10 +900,10 @@
             let
                 cursor $ :cursor states
                 state $ or (:data states) initial-state
-                queries $ ->>
+                queries $ ->
                   split (:query state) "| "
                   map trim
-                def-candidates $ ->> router-data
+                def-candidates $ -> router-data
                   filter $ fn (bookmark)
                     and
                       = :def $ :kind bookmark
@@ -920,10 +911,10 @@
                         fn (y)
                           .includes? (:extra bookmark) y
                         , queries
-                  sort-by $ if
+                  .sort-by $ if
                     blank? $ :query state
                     , bookmark->str query-length
-                ns-candidates $ ->> router-data
+                ns-candidates $ -> router-data
                   filter $ fn (bookmark)
                     and
                       = :ns $ :kind bookmark
@@ -931,7 +922,7 @@
                         fn (y)
                           .includes? (:ns bookmark) y
                         , queries
-                  sort-by $ if
+                  .sort-by $ if
                     blank? $ :query state
                     , bookmark->str query-length
               div
@@ -951,7 +942,7 @@
                   if (empty? def-candidates) (comp-no-results)
                   list-> :div
                     {} $ :style (merge ui/expand style-body)
-                    ->> def-candidates (take 20)
+                    -> def-candidates (take 20)
                       map-indexed $ fn (idx bookmark)
                         let
                             text $ bookmark->str bookmark
@@ -974,7 +965,7 @@
                   if (empty? ns-candidates) (comp-no-results)
                   list->
                     {} $ :style (merge ui/expand style-body)
-                    ->> ns-candidates (take 20)
+                    -> ns-candidates (take 20)
                       map-indexed $ fn (idx bookmark)
                         [] (:ns bookmark)
                           let
@@ -1010,14 +1001,14 @@
                 cond
                     = keycode/return code
                     let
-                        target $ get (vec candidates) (:selection state)
+                        target $ get candidates (:selection state)
                       if (some? target)
                         do (d! :writer/select target)
                           d! cursor $ {} (:query |) (:position 0)
                   (= keycode/up code)
                     do (.preventDefault event)
                       if
-                        pos? $ :selection state
+                        > (:selection state) 0
                         d! cursor $ update state :selection dec
                   (= keycode/escape code)
                     do
@@ -1084,18 +1075,18 @@
         |port-taken? $ quote
           defn port-taken? (port next-fn)
             let
-                tester $ .createServer net
-              .. tester
-                once |error $ fn (err)
+                tester $ net/createServer
+              -> tester
+                .!once |error $ fn (err)
                   if
                     not= (.-code err) |EADDRINUSE
                     next-fn err false
                     next-fn nil true
-                once |listening $ fn ()
-                  .. tester
-                    once |close $ fn () (next-fn nil false)
-                    close
-                listen port
+                .!once |listening $ fn ()
+                  -> tester
+                    .!once |close $ fn () (next-fn nil false)
+                    .!close
+                .!listen port
       :proc $ quote ()
     |app.comp.draft-box $ {}
       :ns $ quote
@@ -1134,9 +1125,8 @@
               comp-modal
                 fn (d!) (d! cursor nil) (close-modal! d!)
                 let
-                    path $ ->> focus
+                    path $ -> focus
                       mapcat $ fn (x) ([] :data x)
-                      vec
                     node $ get-in expr path
                     missing? $ nil? node
                   if missing?
@@ -1171,7 +1161,7 @@
                                 do
                                   .preventDefault $ :event e
                                   if expr?
-                                    d! :ir/draft-expr $ read-string state
+                                    d! :ir/draft-expr $ parse-cirru-edn state
                                     d! :ir/update-leaf state
                                   d! cursor nil
                                   close-modal! d!
@@ -1204,7 +1194,7 @@
           defn on-submit (expr? text cursor close-modal! close?)
             fn (e d!)
               if expr?
-                d! :ir/draft-expr $ read-string text
+                d! :ir/draft-expr $ parse-cirru-edn text
                 d! :ir/update-leaf text
               if close? $ do (d! cursor nil) (close-modal! d!)
       :proc $ quote ()
@@ -1242,13 +1232,13 @@
                   -> db
                     update-in ([] :ir :files ns-text :defs)
                       fn (defs)
-                        ; println target-path (cons def-text target-path) (tree->cirru target-expr) (keys defs)
+                        ; println target-path (prepend target-path def-text) (tree->cirru target-expr) (keys defs)
                         -> defs
                           assoc def-text $ cirru->tree
                             [] |def def-text $ tree->cirru target-expr
                             , user-id op-time
                           assoc-in
-                            cons (:extra bookmark) target-path
+                            prepend target-path $ :extra bookmark
                             cirru->tree def-text user-id op-time
                     update-in ([] :sessions sid :writer) (push-bookmark new-bookmark)
         |goto-def $ quote
@@ -1260,7 +1250,7 @@
                 ns-text $ :ns bookmark
                 ns-expr $ tree->cirru
                   get-in db $ [] :ir :files ns-text :ns
-                deps-info $ parse-deps (subvec ns-expr 2)
+                deps-info $ parse-deps (.slice ns-expr 2)
                 def-info $ parse-def (:text op-data)
                 forced? $ :forced? op-data
                 new-bookmark $ merge schema/bookmark
@@ -1297,9 +1287,9 @@
                     if forced?
                       let
                           new-expr $ if
-                            vector? $ :args op-data
+                            list? $ :args op-data
                             [] "\"defn" (:extra new-bookmark)
-                              vec $ :args op-data
+                              [] & $ :args op-data
                             [] "\"def" (:extra new-bookmark) ([])
                         -> db
                           assoc-in
@@ -1318,7 +1308,7 @@
                 ns-text $ :ns bookmark
                 ns-expr $ tree->cirru
                   get-in db $ [] :ir :files ns-text :ns
-                deps-info $ parse-deps (subvec ns-expr 2)
+                deps-info $ parse-deps (.slice ns-expr 2)
                 def-info $ parse-def op-data
                 new-bookmark $ merge schema/bookmark
                   if
@@ -1391,21 +1381,21 @@
                     div ({})
                       list-> ({})
                         ->> possible-names
-                          sort-by $ fn (x) ("`index-of" x hint)
+                          .sort-by $ fn (x) (.index-of x hint)
                           map $ fn (x)
                             [] x $ render-code x
                       =< nil 8
                 let
-                    filtered-names $ ->> imported-names (remove hint-fn)
+                    filtered-names $ -> imported-names (filter-not hint-fn)
                   if-not (empty? filtered-names)
                     div ({})
                       list-> ({})
-                        ->> filtered-names sort $ map
-                          fn (x)
+                        -> filtered-names (sort &compare)
+                          map $ fn (x)
                             [] x $ render-code x
                       =< nil 8
                 list-> ({})
-                  ->> defined-names (remove hint-fn) sort $ map
+                  -> defined-names (filter-not hint-fn) sort $ map
                     fn (x)
                       [] x $ render-code x
         |style-name $ quote
@@ -1493,8 +1483,8 @@
                   div
                     {} $ :style style-editor
                     let
-                        others $ ->> (:others router-data) (vals) (map :focus)
-                          into $ #{}
+                        others $ #{} &
+                          -> (:others router-data) (vals) (map :focus)
                       div
                         {} $ :style style-area
                         inject-style "\".cirru-expr" $ base-style-expr theme
@@ -1726,8 +1716,7 @@
           [] app.util.list :refer $ [] compare-entry
       :defs $ {}
         |keys-set $ quote
-          defn keys-set (x)
-            set $ keys x
+          defn keys-set (x) (keys x)
         |render-changed-files $ quote
           defn render-changed-files (files saved-files)
             ->>
@@ -1752,23 +1741,22 @@
                           not= (get defs def-text) (get saved-defs def-text)
                         map $ fn (def-text)
                           [] def-text $ compare-entry (get defs def-text) (get saved-defs def-text)
-                        into $ {}
+                        pairs-map
               filter $ fn (pair)
                 let[] (k info) pair $ not
                   and
                     = :same $ :ns info
                     = :same $ :proc info
                     empty? $ :defs info
-              into $ {}
+              pairs-map
         |twig-page-files $ quote
           defn twig-page-files (files selected-ns saved-files draft-ns sessions sid)
             {}
-              :ns-set $ into (#{}) (keys files)
+              :ns-set $ keys files
               :defs-set $ if (some? selected-ns)
-                do $ ->>
+                do $ ->
                   get-in files $ [] selected-ns :defs
                   keys
-                  into $ #{}
                 #{}
               :file-configs $ if (some? selected-ns)
                 get-in files $ [] selected-ns :configs
@@ -1787,7 +1775,7 @@
                         , :focus
                 filter $ fn (pair)
                   let[] (k session) pair $ if (= sid k) false (some? session)
-                into $ {}
+                pairs-map
       :proc $ quote ()
     |app.schema $ {}
       :ns $ quote (ns app.schema)
@@ -2010,7 +1998,7 @@
                 :on-click $ on-preview ns-text kind status
               <> kind
               =< 8 nil
-              <> (name status) style-status
+              <> (turn-string status) style-status
               =< 4 nil
               span
                 {} $ :class-name "\"is-minor"
@@ -2049,14 +2037,14 @@
                   {}
                     :focus $ :focus bookmark
                     :others $ dissoc
-                      ->> sessions
+                      #{} & $ ->> sessions
                         map $ fn (entry)
                           let
-                              session $ val entry
+                              session $ last entry
                               writer $ :writer session
                               router $ :router session
                               a-bookmark $ get (:stack writer) (:pointer writer)
-                            [] (key entry)
+                            [] (first entry)
                               if
                                 and
                                   = :editor $ :name router
@@ -2069,9 +2057,8 @@
                                 , nil
                         filter $ fn (pair)
                           some? $ last pair
-                        into $ {}
                       , session-id
-                    :watchers $ ->> sessions
+                    :watchers $ -> sessions
                       filter $ fn (entry)
                         let-sugar
                               [] k other-session
@@ -2086,7 +2073,7 @@
                               , entry
                           [] k $ twig-user
                             get users $ :user-id other-session
-                      into $ {}
+                      pairs-map
                     :expr $ case-default (:kind bookmark) nil
                       :ns $ get-in files ([] ns-text :ns)
                       :proc $ get-in files ([] ns-text :proc)
@@ -2114,26 +2101,25 @@
         |pick-from-ns $ quote
           defn pick-from-ns (ns-info)
             let
-                var-names $ set
-                  keys $ :defs ns-info
+                var-names $ keys (:defs ns-info)
                 rules $ ->>
                   tree->cirru $ :ns ns-info
                   drop 2
                   mapcat $ fn (rule)
                     if
-                      and (vector? rule)
+                      and (list? rule)
                         contains? (#{} "\":require" "\":require-macros") (first rule)
                       rest rule
                       , nil
-                import-names $ ->> rules
-                  mapcat $ fn (rule)
-                    filter
-                      fn (x) (not= x "\"[]")
-                      if
-                        string? $ last rule
-                        list $ last rule
-                        last rule
-                  , set
+                import-names $ #{} &
+                  -> rules $ mapcat
+                    fn (rule)
+                      filter
+                        fn (x) (not= x "\"[]")
+                        if
+                          string? $ last rule
+                          [] $ last rule
+                          last rule
               {} (:imported import-names) (:defined var-names)
       :proc $ quote ()
     |app.theme $ {}
@@ -2173,11 +2159,9 @@
                 -> db (assoc :saved-files new-files)
                   assoc-in ([] :ir :files) new-files
                 update db :saved-files $ fn (old-files)
-                  ->> new-files
-                    map $ fn (entry)
+                  ->> new-files $ map-kv
+                    fn (ns-text file)
                       let-sugar
-                            [] ns-text file
-                            , entry
                           old-file $ get old-files ns-text
                           old-defs $ :defs old-file
                         [] ns-text $ if (= file old-file) old-file
@@ -2191,15 +2175,11 @@
                                   old-expr $ :proc old-file
                                 if (= expr old-expr) old-expr expr
                             update :defs $ fn (defs)
-                              ->> defs
-                                map $ fn (entry)
-                                  let-sugar
-                                        [] def-text expr
-                                        , entry
+                              -> defs $ map-kv
+                                fn (def-text expr)
+                                  let
                                       old-expr $ get old-file def-text
                                     [] def-text $ if (= expr old-expr) old-expr expr
-                                into $ {}
-                    into $ {}
       :proc $ quote ()
     |app.twig.user $ {}
       :ns $ quote
@@ -2244,9 +2224,9 @@
                 if (= text "\"nil")
                   {} $ :color (hsl 310 60 40)
                 if (> best-width max-width) style-partial
-                if (.includes? text \newline) style-big
+                if (.includes? text &newline) style-big
                 if
-                  re-find (re-pattern |^-?\d) text
+                  re-find (new js/RegExp |^-?\d) text
                   , style-number
                 if has-blank? style-space
                 if (or focused? by-other?) style-highlight
@@ -2270,7 +2250,7 @@
               if focused? $ {}
                 :border-color $ hsl 0 0 100 0.9
               if
-                and (pos? length) (not tail?) (not= layout-mode :block)
+                and (> length 0) (not tail?) (not= layout-mode :block)
                 , style-expr-simple
               if tail? style-expr-tail
         |style-leaf $ quote
@@ -2332,7 +2312,7 @@
           defn dispatch! (op op-data)
             when
               and config/dev? $ not= op :states
-              .info js/console |Dispatch (str op) (clj->js op-data)
+              .info js/console |Dispatch (str op) (to-js-data op-data)
             case-default op (send-op! op op-data)
               :states $ reset! *states
                 let-sugar
@@ -2356,10 +2336,8 @@
               :ir/reset-files $ do
                 reset! *states $ updater/clear-editor @*states
                 send-op! op op-data
-        |*connecting? $ quote
-          defonce *connecting? $ atom false
-        |*store $ quote
-          defonce *store $ atom nil
+        |*connecting? $ quote (defatom *connecting? false)
+        |*store $ quote (defatom *store nil)
         |main! $ quote
           defn main! ()
             println "\"Running mode:" $ if config/dev? "\"dev" "\"release"
@@ -2379,9 +2357,9 @@
               when (= "\"visible" js/document.visibilityState) (retry-connect!)
             println "\"App started!"
         |*states $ quote
-          defonce *states $ atom
-            {} $ :states
-              {} $ :cursor ([])
+          defatom *states $ {}
+            :states $ {}
+              :cursor $ []
         |connect! $ quote
           defn connect! () (.info js/console "\"Connecting...") (reset! *connecting? true)
             ws-connect! ws-host $ {}
@@ -2391,7 +2369,7 @@
                 case-default (:kind data) (println "\"unknown kind:" data)
                   :patch $ let
                       changes $ :data data
-                    when config/dev? $ js/console.log "\"Changes" (clj->js changes)
+                    when config/dev? $ js/console.log "\"Changes" changes
                     reset! *store $ patch-twig @*store changes
         |simulate-login! $ quote
           defn simulate-login! () $ let
@@ -2415,7 +2393,7 @@
               println "\"Disabled heartbeat since connection lost."
         |render-app! $ quote
           defn render-app! (renderer)
-            renderer mount-target (comp-container @*states @*store) ("#()" dispatch! %1 %2)
+            renderer mount-target (comp-container @*states @*store) dispatch!
         |reload! $ quote
           defn reload! () (clear-cache!) (render-app! render!) (println "|Code updated.")
         |send-op! $ quote
@@ -2456,7 +2434,7 @@
                   {}
                     :style $ {} (:position :absolute) (:bottom |100%) (:right 0) (:background-color :black)
                       :border $ str "\"1px solid " (hsl 0 0 100 0.2)
-                    :on-click $ "#()"
+                    :on-click $ fn (e d!)
                   ->> theme-list $ map
                     fn (theme-name)
                       [] theme-name $ div
@@ -2543,7 +2521,7 @@
                   keys $ :data expr
                 last-id $ apply max
                   keys $ :data expr
-                sorted-children $ ->> (:data expr) (sort-by first)
+                sorted-children $ -> (:data expr) (.sort-by first)
               list-> :div
                 {} (:tab-index 0)
                   :class-name $ str |cirru-expr (if focused? "| cirru-focused" |)
@@ -2570,9 +2548,9 @@
                         [] k child
                         first children
                       child-coord $ conj coord k
-                      partial-others $ ->> others
-                        filter $ fn (x) (coord-contains? x child-coord)
-                        into $ #{}
+                      partial-others $ #{} &
+                        -> others $ filter
+                          fn (x) (coord-contains? x child-coord)
                       cursor-key k
                       mode $ if (leaf? child) :inline
                         if (expr-many-items? child 6) :block $ case-default prev-mode :block (:inline :inline-block)
@@ -2651,7 +2629,7 @@
                             d! :analyze/goto-def $ {}
                               :text $ first tree
                               :forced? true
-                              :args $ subvec tree 1
+                              :args $ .slice tree 1
                             d! :notify/push-message $ [] :warn "\"Can not create a function!"
                         do (d! :manual-state/abstract nil)
                           js/setTimeout $ fn ()
@@ -2771,14 +2749,12 @@
               = (:ns x) (:ns y)
               = (:extra x) (:extra y)
         |index-of-bookmark $ quote
-          defn$ index-of-bookmark
-              stack bookmark
-              index-of-bookmark stack bookmark 0
-            (stack bookmark idx)
-              if (empty? stack) -1 $ if
+          defn index-of-bookmark (stack bookmark ? idx)
+            if (empty? stack) -1 $ let
+                idx $ or idx 0
+              if
                 =bookmark? bookmark $ first stack
-                , idx
-                  recur (rest stack) bookmark $ inc idx
+                , idx $ recur (rest stack) bookmark (inc idx)
         |push-bookmark $ quote
           defn push-bookmark (bookmark ? forced?)
             fn (writer)
@@ -2787,7 +2763,7 @@
                     , writer
                   idx $ index-of-bookmark stack bookmark
                 if
-                  or forced? $ neg? idx
+                  or forced? $ < idx 0
                   -> writer
                     update :stack $ fn (stack)
                       cond
@@ -2797,11 +2773,10 @@
                           conj stack bookmark
                         (=bookmark? bookmark (get stack (inc pointer)))
                           , stack
-                        true $ vec
-                          concat
-                            take (inc pointer) stack
-                            [] bookmark
-                            drop (inc pointer) stack
+                        true $ concat
+                          take stack $ inc pointer
+                          [] bookmark
+                          drop stack $ inc pointer
                     update :pointer $ fn (p)
                       if (empty? stack) 0 $ inc p
                   -> writer $ assoc :pointer idx
@@ -2827,7 +2802,7 @@
       :ns $ quote
         ns app.util.env $ :require ([] "\"chalk" :as chalk)
           [] app.util.detect :refer $ [] port-taken?
-          [] "\"latest-version" :as latest-version
+          [] "\"latest-version" :default latest-version
           [] "\"path" :as path
           [] "\"fs" :as fs
       :defs $ {}
@@ -2839,8 +2814,8 @@
               pkg-name $ aget pkg "\"name"
             -> (latest-version pkg-name)
               .then $ fn (npm-version)
-                println $ if (= version npm-version) (<< "\"Running latest version ~{version}")
-                  chalk/yellow $ << "\"Update is available tagged ~{npm-version}, current one is ~{version}"
+                println $ if (= version npm-version) (str "\"Running latest version " version)
+                  chalk/yellow $ str "\"Update is available tagged " npm-version "\", current one is " version
               .catch $ fn (e) (js/console.log "\"failed to request version:" e)
         |get-cli-configs! $ quote
           defn get-cli-configs! () $ let
@@ -2854,24 +2829,23 @@
                 do (js/console.error err) (js/process.exit 1)
                 if taken?
                   do
-                    println $ << "\"port ~{port} is in use."
+                    println $ str "\"port " port "\" is in use."
                     pick-port! (inc port) next-fn
                   do
                     let
-                        link $ chalk/blue (<< "\"http://calcit-editor.cirru.org?port=~{port}")
-                      println $ << "\"port ~{port} is ok, please edit on ~{link}"
+                        link $ chalk/blue (str "\"http://calcit-editor.cirru.org?port=" port)
+                      println $ str "\"port " port "\" is ok, please edit on " link
                     next-fn port
       :proc $ quote ()
     |app.util.compile $ {}
       :ns $ quote
         ns app.util.compile $ :require
-          [] clojure.set :refer $ [] difference intersection
           [] app.util :refer $ [] file->cirru db->string tree->cirru now! hide-empty-fields
           [] "\"chalk" :as chalk
           [] "\"path" :as path
           [] "\"fs" :as fs
           [] "\"child_process" :as cp
-          [] "\"md5" :as md5
+          [] "\"md5" :default md5
           [] app.config :as config
           [] cumulo-util.core :refer $ [] unix-time!
           [] applied-science.js-interop :as j
@@ -2883,19 +2857,19 @@
               let
                   new-files $ get-in db ([] :ir :files)
                   old-files $ get db :saved-files
-                  new-names $ set (keys new-files)
-                  old-names $ set (keys old-files)
+                  new-names $ #{} & (keys new-files)
+                  old-names $ #{} & (keys old-files)
                   filter-by-ns $ fn (xs)
                     if (some? filter-ns)
-                      if (contains? xs filter-ns) (list filter-ns) nil
+                      if (contains? xs filter-ns) ([] filter-ns) nil
                       , xs
                   added-names $ filter-by-ns (difference new-names old-names)
                   removed-names $ filter-by-ns (difference old-names new-names)
-                  changed-names $ ->> (intersection new-names old-names)
-                    filter $ fn (ns-text)
-                      not= (get new-files ns-text) (get old-files ns-text)
-                    set
-                    filter-by-ns
+                  changed-names $ #{} &
+                    ->> (intersection new-names old-names)
+                      filter $ fn (ns-text)
+                        not= (get new-files ns-text) (get old-files ns-text)
+                      filter-by-ns
                 handle-compact-files!
                   get-in db $ [] :ir :package
                   , old-files new-files added-names removed-names changed-names (:configs db) filter-ns
@@ -2906,15 +2880,16 @@
                       started-time $ unix-time!
                     reset! *calcit-md5 $ md5 db-content
                     persist-async! (:storage-file config/site) db-content started-time
-              catch js/Error e $ do
-                println $ chalk/red e
-                js/console.error e
-                dispatch! :notify/push-message $ [] :error (aget e "\"message")
+              fn (e)
+                do
+                  println $ chalk/red e
+                  js/console.error e
+                  dispatch! :notify/push-message $ [] :error (aget e "\"message")
         |path $ quote
           def path $ js/require |path
         |persist! $ quote
           defn persist! (storage-path db-str started-time) (fs/writeFileSync storage-path db-str)
-            println $ .gray chalk
+            println $ chalk/gray
               str "|took "
                 - (unix-time!) started-time
                 , "|ms to wrote calcit.cirru"
@@ -2923,7 +2898,7 @@
             let
                 project-path $ path/join output-dir file-path
               cp/execSync $ str "|rm -rfv " project-path
-              println $ .red chalk (str "|removed " project-path)
+              println $ chalk/red (str "|removed " project-path)
         |handle-compact-files! $ quote
           defn handle-compact-files! (pkg old-files latest-files added-names removed-names changed-names configs filter-ns)
             let
@@ -2943,10 +2918,10 @@
                       [] k $ file->cirru v
                 inc-data $ hide-empty-fields
                   {} (:removed removed-names)
-                    :added $ ->> added-names
+                    :added $ -> added-names
                       map $ fn (ns-text)
                         [] ns-text $ file->cirru (get new-files ns-text)
-                      into $ {}
+                      pairs-map
                     :changed $ ->> changed-names
                       map $ fn (ns-text)
                         [] ns-text $ let
@@ -2954,8 +2929,8 @@
                             new-file $ get new-files ns-text
                             old-defs $ :defs old-file
                             new-defs $ :defs new-file
-                            old-def-names $ set (keys old-defs)
-                            new-def-names $ set (keys new-defs)
+                            old-def-names $ keys old-defs
+                            new-def-names $ keys new-defs
                             added-defs $ difference new-def-names old-def-names
                             removed-defs $ difference old-def-names new-def-names
                             changed-defs $ ->> (intersection old-def-names new-def-names)
@@ -2979,7 +2954,7 @@
                               map $ fn (x)
                                 [] x $ tree->cirru (get new-defs x)
                               hide-empty-fields
-                      into $ {}
+                      pairs-map
               fs/writeFile "\"compact.cirru" (format-cirru-edn compact-data)
                 fn (err)
                   if (some? err) (js/console.log "\"Failed to write!" err)
@@ -3069,7 +3044,7 @@
                     button $ {} (:inner-text "\"Submit") (:style style/button)
                       :on-click $ fn (e d!)
                         if
-                          not= state $ write-cirru file
+                          not= state $ format-cirru file
                           d! :ir/replace-file $ parse-cirru state
                         d! cursor nil
                         d! :writer/draft-ns nil
@@ -3139,7 +3114,7 @@
                   code $ :key-code e
                   shift? $ .-shiftKey event
                   meta? $ or (.-metaKey event) (.-ctrlKey event)
-                  selected? $ not= event.target.selectionStart event.target.selectionEnd
+                  selected? $ not= (-> event .-target .-selectionStart) (-> event .-target .-selectionEnd)
                   text $ if
                     > (:at state) (:at leaf)
                     :text state
@@ -3167,13 +3142,15 @@
                         d! :writer/go-up nil
                       .preventDefault event
                   (and (not selected?) (= code keycode/left))
-                    if (zero? event.target.selectionStart)
+                    if
+                      = 0 $ -> event .-target .-selectionStart
                       do (d! :writer/go-left nil) (.preventDefault event)
                   (and meta? (= code keycode/b))
                     d! :analyze/peek-def $ :text leaf
                   (and (not selected?) (= code keycode/right))
-                    if (= text-length event.target.selectionEnd)
-                      do (d! :writer/go-right nil) (.preventDefault event)
+                    if
+                      = text-length $ -> event .-target .-selectionEnd
+                      do (d! :writer/go-right nil) (.!preventDefault event)
                   (and meta? (= code keycode/c) (= (.-selectionStart (.-target event)) (.-selectionEnd (.-target event))))
                     do-copy-logics! d! (tree->cirru leaf) "\"Copied!"
                   (and meta? shift? (= code keycode/v))
@@ -3181,8 +3158,8 @@
                   (and meta? (= code keycode/d))
                     do (.preventDefault event)
                       if
-                        ->> ([] "\"\"" "\"|" "\"#\"")
-                          some $ fn (x)
+                        -> ([] "\"\"" "\"|" "\"#\"")
+                          any? $ fn (x)
                             starts-with? (:text leaf) x
                         do (d! :manual-state/draft-box nil)
                           js/setTimeout $ fn ()
@@ -3198,7 +3175,7 @@
                         split (:text leaf) "\"/"
                   (and picker-mode? (= code keycode/escape))
                     d! :writer/picker-mode nil
-                  :else $ do (; println "|Keydown leaf" code)
+                  true $ do (; println "|Keydown leaf" code)
                     on-window-keydown event d! $ {} (:name :editor)
       :proc $ quote ()
     |app.comp.messages $ {}
@@ -3210,7 +3187,7 @@
           [] respo.comp.space :refer $ [] =<
           [] app.client-util :as util
           [] app.style :as style
-          [] "\"dayjs" :as Dayjs
+          [] "\"dayjs" :default Dayjs
       :defs $ {}
         |comp-messages $ quote
           defcomp comp-messages (messages)
@@ -3245,21 +3222,20 @@
       :defs $ {}
         |cirru-form? $ quote
           defn cirru-form? (x)
-            if (string? x) true $ if (vector? x) (map cirru-form? x) false
+            if (string? x) true $ if (list? x) (map cirru-form? x) false
         |dissoc-idx $ quote
           defn dissoc-idx (xs idx)
             if
-              or (neg? idx)
+              or (< idx 0)
                 > idx $ dec (count xs)
-              throw $ js/Error. "|Index out of bound!"
+              raise "|Index out of bound!"
             cond
-                zero? idx
-                subvec xs 1
+                = 0 idx
+                .slice xs 1
               (= idx (dec (count xs)))
-                pop xs
-              :else $ vec
-                concat (take idx xs)
-                  drop (inc idx) xs
+                butlast xs
+              true $ concat (take idx xs)
+                drop (inc idx) xs
         |compare-entry $ quote
           defn compare-entry (new-x old-x)
             cond
@@ -3338,7 +3314,7 @@
                 true $ do (println "|Unexpected kind:" kind) db
         |add-def $ quote
           defn add-def (db op-data session-id op-id op-time)
-            assert (vector? op-data) "\"expects op-data of [ns text]"
+            assert (list? op-data) "\"expects op-data of [ns text]"
             let-sugar
                   [] ns-part def-part
                   , op-data
@@ -3346,7 +3322,7 @@
                 cirru-expr $ [] |defn def-part ([])
               when (nil? ns-part)
                 println $ get-in db ([] :sessions session-id :writer)
-                throw $ js/Error. "\"Empty ns target."
+                raise "\"Empty ns target."
               assoc-in db ([] :ir :files ns-part :defs def-part) (cirru->tree cirru-expr user-id op-time)
         |leaf-before $ quote
           defn leaf-before (db op-data session-id op-id op-time)
@@ -3366,9 +3342,7 @@
                 update-in
                   [] :sessions session-id :writer :stack (:pointer writer) :focus
                   fn (focus)
-                    conj
-                      vec $ butlast focus
-                      , next-id
+                    conj (butlast focus) next-id
         |reset-at $ quote
           defn reset-at (db op-data session-id op-id op-time)
             let
@@ -3377,15 +3351,14 @@
               update-in db
                 [] :ir :files $ :ns op-data
                 fn (file)
-                  case (:kind op-data)
+                  case-default (:kind op-data)
+                    raise $ str "|Malformed data: " (pr-str op-data)
                     :ns $ assoc file :ns (:ns old-file)
                     :proc $ assoc file :proc (:proc old-file)
                     :def $ let
                         def-text $ :extra op-data
                       assoc-in file ([] :defs def-text)
                         get-in old-file $ [] :defs def-text
-                    throw $ js/Error.
-                      str "|Malformed data: " $ pr-str op-data
         |leaf-after $ quote
           defn leaf-after (db op-data session-id op-id op-time)
             let-sugar
@@ -3405,9 +3378,7 @@
                 update-in
                   [] :sessions session-id :writer :stack (:pointer writer) :focus
                   fn (focus)
-                    conj
-                      vec $ butlast focus
-                      , next-id
+                    conj (butlast focus) next-id
         |expr-replace $ quote
           defn expr-replace (db op-data session-id op-id op-time)
             let
@@ -3425,7 +3396,7 @@
                   ->> data .to-list
                     map $ fn (pair)
                       let[] (k v) pair $ [] k (call-replace-expr v from to)
-                    remove $ fn (pair)
+                    filter-not $ fn (pair)
                       let[] (k v) pair $ and
                         = (:type v) :leaf
                         blank? $ :text v
@@ -3489,9 +3460,7 @@
                 update-in
                   [] :sessions session-id :writer :stack (:pointer writer) :focus
                   fn (focus)
-                    conj
-                      vec $ butlast focus
-                      , next-id
+                    conj (butlast focus) next-id
         |expr-before $ quote
           defn expr-before (db op-data session-id op-id op-time)
             let
@@ -3512,9 +3481,7 @@
                 update-in
                   [] :sessions session-id :writer :stack (:pointer writer) :focus
                   fn (focus)
-                    conj
-                      vec $ butlast focus
-                      , next-id bisection/mid-id
+                    conj (butlast focus) next-id bisection/mid-id
         |update-leaf $ quote
           defn update-leaf (db op-data session-id op-id op-time)
             let
@@ -3542,14 +3509,13 @@
               -> db
                 update-in
                   [] :sessions session-id :writer :stack (:pointer writer) :focus
-                  fn (focus)
-                    vec $ butlast focus
+                  fn (focus) (butlast focus)
                 update-in parent-path $ fn (base-expr)
                   let
                       expr $ get-in base-expr ([] :data last-coord)
-                      child-keys $ vec
-                        sort $ keys (:data base-expr)
-                      children $ ->> (:data expr) (sort-by first) (map val)
+                      child-keys $ sort
+                        .to-list $ keys (:data base-expr)
+                      children $ ->> (:data expr) (.sort-by first) (map last)
                       idx $ .indexOf child-keys last-coord
                       limit-id $ if
                         = idx $ dec (count child-keys)
@@ -3586,7 +3552,7 @@
                 update-in ([] :sessions session-id :writer :stack pointer :focus)
                   fn (focus)
                     if (empty? focus) ([] bisection/mid-id)
-                      vec $ concat (butlast focus)
+                      concat (butlast focus)
                         [] (last focus) bisection/mid-id
         |remove-def $ quote
           defn remove-def (db op-data session-id op-id op-time)
@@ -3644,7 +3610,8 @@
                 parent-bookmark $ update bookmark :focus butlast
                 data-path $ bookmark->path parent-bookmark
                 child-keys $ sort
-                  keys $ :data (get-in db data-path)
+                  .to-list $ keys
+                    :data $ get-in db data-path
                 deleted-key $ last (:focus bookmark)
                 idx $ .indexOf child-keys deleted-key
               -> db
@@ -3653,11 +3620,10 @@
                 update-in
                   [] :sessions session-id :writer :stack (:pointer writer) :focus
                   fn (focus)
-                    if (zero? idx)
-                      vec $ butlast focus
+                    if (= 0 idx) (butlast focus)
                       assoc focus
                         dec $ count focus
-                        get (vec child-keys) (dec idx)
+                        get child-keys $ dec idx
         |expr-after $ quote
           defn expr-after (db op-data session-id op-id op-time)
             let
@@ -3678,9 +3644,7 @@
                 update-in
                   [] :sessions session-id :writer :stack (:pointer writer) :focus
                   fn (focus)
-                    conj
-                      vec $ butlast focus
-                      , next-id bisection/mid-id
+                    conj (butlast focus) next-id bisection/mid-id
         |toggle-comment $ quote
           defn toggle-comment (db op-data sid op-id op-time)
             let
@@ -3759,8 +3723,7 @@
                     first $ vals (:data expr)
                   update-in
                     [] :sessions session-id :writer :stack (:pointer writer) :focus
-                    fn (focus)
-                      vec $ butlast focus
+                    fn (focus) (butlast focus)
                 , db
         |clone-ns $ quote
           defn clone-ns (db op-data sid op-id op-time)
@@ -3859,7 +3822,7 @@
         |parse-query! $ quote
           defn parse-query! () $ let
               url-obj $ url-parse js/location.href true
-            js->clj (.-query url-obj) :keywordize-keys true
+            to-calcit-data $ .-query url-obj
         |coord-contains? $ quote
           defn coord-contains? (xs ys)
             if (empty? ys) true $ if
@@ -3887,10 +3850,10 @@
                   d $ :data x
                 or
                   > (count d) size
-                  some? $ some expr? (vals d)
+                  any? (vals d) expr?
               , false
       :ns $ quote
-        ns app.client-util $ :require ([] clojure.string :as string) ([] app.config :as config) ([] "\"url-parse" :as url-parse) ([] app.schema :as schema)
+        ns app.client-util $ :require ([] clojure.string :as string) ([] app.config :as config) ([] "\"url-parse" :default url-parse) ([] app.schema :as schema)
       :proc $ quote ()
     |app.theme.curves $ {}
       :ns $ quote
@@ -3962,8 +3925,9 @@
                           :show modules-plugin
                           , d! $ fn (text)
                             d! :configs/update $ {}
-                              :modules $ vec
-                                remove blank? $ split (trim text) "\" "
+                              :modules $ filter-not
+                                split (trim text) "\" "
+                                , blank?
                     <>
                       let
                           content $ join-str (:modules configs) "\" "
@@ -4046,7 +4010,7 @@
             -> db $ update-in ([] :sessions session-id :writer)
               fn (writer)
                 -> writer
-                  update :stack $ fn (stack) (subvec stack op-data)
+                  update :stack $ fn (stack) (.slice stack op-data)
                   assoc :pointer 0
         |go-up $ quote
           defn go-up (db op-data session-id op-id op-time)
@@ -4055,7 +4019,7 @@
                 update-in writer
                   [] :stack (:pointer writer) :focus
                   fn (focus)
-                    if (empty? focus) focus $ vec (butlast focus)
+                    if (empty? focus) focus $ butlast focus
         |move-next $ quote
           defn move-next (db op-data sid op-id op-time)
             -> db $ update-in ([] :sessions sid :writer)
@@ -4083,7 +4047,7 @@
               fn (writer)
                 let
                     pointer $ :pointer writer
-                  assoc writer :pointer $ if (pos? pointer) (dec pointer) 0
+                  assoc writer :pointer $ if (> pointer 0) (dec pointer) 0
         |draft-ns $ quote
           defn draft-ns (db op-data sid op-id op-time)
             -> db $ update-in ([] :sessions sid :writer)
@@ -4095,7 +4059,7 @@
                 bookmark $ to-bookmark writer
                 data-path $ bookmark->path bookmark
                 user-id $ get-in db ([] :sessions sid :user-id)
-              if (vector? op-data)
+              if (list? op-data)
                 -> db $ assoc-in data-path (cirru->tree op-data user-id op-time)
                 , db
         |move-order $ quote
@@ -4112,20 +4076,20 @@
                           , to-idx
                         (or (< pointer (min from-idx to-idx)) (> pointer (max from-idx to-idx)))
                           , pointer
-                        :else $ if (> from-idx to-idx) (inc pointer) (dec pointer)
+                        true $ if (> from-idx to-idx) (inc pointer) (dec pointer)
                     update :stack $ fn (stack)
-                      vec $ if (< from-idx to-idx)
-                        concat (subvec stack 0 from-idx)
-                          subvec stack (inc from-idx) (inc to-idx)
-                          list $ get stack from-idx
-                          subvec stack $ inc to-idx
-                        concat (subvec stack 0 to-idx)
-                          list $ get stack from-idx
-                          subvec stack to-idx from-idx
+                      if (< from-idx to-idx)
+                        concat (.slice stack 0 from-idx)
+                          .slice stack (inc from-idx) (inc to-idx)
+                          [] $ get stack from-idx
+                          .slice stack $ inc to-idx
+                        concat (.slice stack 0 to-idx)
+                          [] $ get stack from-idx
+                          .slice stack to-idx from-idx
                           if
                             >= (inc from-idx) (count stack)
-                            list
-                            subvec stack $ inc from-idx
+                            []
+                            .slice stack $ inc from-idx
         |focus $ quote
           defn focus (db op-data session-id op-id op-time)
             let
@@ -4141,7 +4105,7 @@
                 bookmark $ get (:stack writer) (:pointer writer)
                 target-expr $ get-in db (bookmark->path bookmark)
               if
-                zero? $ count (:data target-expr)
+                = 0 $ count (:data target-expr)
                 , db $ -> db
                   update-in
                     [] :sessions session-id :writer :stack (:pointer writer) :focus
@@ -4181,7 +4145,7 @@
                         > (count stack) pointer
                         dissoc-idx stack pointer
                         , stack
-                    assoc :pointer $ if (pos? pointer) (dec pointer) pointer
+                    assoc :pointer $ if (> pointer 0) (dec pointer) pointer
         |hide-peek $ quote
           defn hide-peek (db op-data sid op-id op-time)
             assoc-in db ([] :sessions sid :writer :peek-def) nil
@@ -4202,7 +4166,7 @@
                         code $ stringify-s-expr op-data
                       if
                         > (count code) 40
-                        str (subs code 0 40) "\"..."
+                        str (.slice code 0 40) "\"..."
                         , code
         |picker-mode $ quote
           defn picker-mode (db op-data session-id op-id op-time)
@@ -4221,8 +4185,8 @@
                 parent-path $ bookmark->path parent-bookmark
                 last-coord $ last (:focus bookmark)
                 base-expr $ get-in db parent-path
-                child-keys $ vec
-                  sort $ keys (:data base-expr)
+                child-keys $ sort
+                  .to-list $ keys (:data base-expr)
                 idx $ .indexOf child-keys last-coord
               if
                 empty? $ :focus bookmark
@@ -4230,8 +4194,7 @@
                   update-in
                     [] :sessions session-id :writer :stack (:pointer writer) :focus
                     fn (focus)
-                      conj
-                        vec $ butlast focus
+                      conj (butlast focus)
                         if
                           = idx $ dec (count child-keys)
                           , last-coord $ get child-keys (inc idx)
@@ -4276,8 +4239,8 @@
                 parent-path $ bookmark->path parent-bookmark
                 last-coord $ last (:focus bookmark)
                 base-expr $ get-in db parent-path
-                child-keys $ vec
-                  sort $ keys (:data base-expr)
+                child-keys $ sort
+                  .to-list $ keys (:data base-expr)
                 idx $ .indexOf child-keys last-coord
               if
                 empty? $ :focus bookmark
@@ -4285,9 +4248,8 @@
                   update-in
                     [] :sessions session-id :writer :stack (:pointer writer) :focus
                     fn (focus)
-                      conj
-                        vec $ butlast focus
-                        if (zero? idx) last-coord $ get child-keys (dec idx)
+                      conj (butlast focus)
+                        if (= 0 idx) last-coord $ get child-keys (dec idx)
       :proc $ quote ()
     |app.comp.header $ {}
       :ns $ quote
@@ -4421,21 +4383,19 @@
       :configs $ {}
     |app.comp.page-files $ {}
       :ns $ quote
-        ns app.comp.page-files
-          :require
-            [] respo.util.format :refer $ [] hsl
-            [] respo-ui.core :as ui
-            [] respo.core :refer $ [] defcomp list-> >> <> span div pre input button a
-            [] respo.comp.inspect :refer $ [] comp-inspect
-            [] respo.comp.space :refer $ [] =<
-            [] app.style :as style
-            [] app.comp.changed-files :refer $ [] comp-changed-files
-            [] keycode.core :as keycode
-            [] app.comp.file-replacer :refer $ [] comp-file-replacer
-            [] app.util.shortcuts :refer $ [] on-window-keydown
-            [] respo-alerts.core :refer $ [] use-prompt use-confirm comp-select
-            [] feather.core :refer $ [] comp-icon comp-i
-          :require-macros $ [] clojure.core.strint :refer ([] <<)
+        ns app.comp.page-files $ :require
+          [] respo.util.format :refer $ [] hsl
+          [] respo-ui.core :as ui
+          [] respo.core :refer $ [] defcomp list-> >> <> span div pre input button a
+          [] respo.comp.inspect :refer $ [] comp-inspect
+          [] respo.comp.space :refer $ [] =<
+          [] app.style :as style
+          [] app.comp.changed-files :refer $ [] comp-changed-files
+          [] keycode.core :as keycode
+          [] app.comp.file-replacer :refer $ [] comp-file-replacer
+          [] app.util.shortcuts :refer $ [] on-window-keydown
+          [] respo-alerts.core :refer $ [] use-prompt use-confirm comp-select
+          [] feather.core :refer $ [] comp-icon comp-i
       :defs $ {}
         |comp-file $ quote
           defcomp comp-file (states selected-ns defs-set highlights configs)
@@ -4495,7 +4455,7 @@
                       [] def-text $ let
                           confirm-remove-plugin $ use-confirm
                             >> states $ str :rm def-text
-                            {} $ :text (<< "\"Sure to remove def: ~{def-text} ?")
+                            {} $ :text (str "\"Sure to remove def: " def-text "\" ?")
                         div
                           {} (:class-name |hoverable)
                             :style $ merge style-def
@@ -4571,7 +4531,7 @@
           defcomp comp-ns-entry (states ns-text selected? ns-highlights)
             let
                 plugin-rm-ns $ use-confirm (>> states :rm-ns)
-                  {} $ :text (<< "\"Sure to remove namespace: ~{ns-text} ?")
+                  {} $ :text (str "\"Sure to remove namespace: " ns-text "\" ?")
                 has-highlight? $ contains? ns-highlights ns-text
               div
                 {}
@@ -4602,9 +4562,9 @@
         |comp-page-files $ quote
           defcomp comp-page-files (states selected-ns router-data)
             let
-                highlights $ set
+                highlights $ #{} &
                   map last $ :highlights router-data
-                ns-highlights $ set (map :ns highlights)
+                ns-highlights $ #{} & (map :ns highlights)
               div
                 {} $ :style (merge ui/flex ui/row sytle-container)
                 comp-namespace-list (>> states :ns) (:ns-set router-data) selected-ns ns-highlights
@@ -4688,8 +4648,8 @@
           [] |path :as path
           [] |shortid :as shortid
           [] |fs :as fs
-          [] |md5 :as md5
-          [] |gaze :as gaze
+          [] |md5 :default md5
+          [] |gaze :default gaze
           [] ws-edn.server :refer $ [] wss-serve! wss-send! wss-each!
           [] |shortid :as shortid
           [] recollect.twig :refer $ [] clear-twig-caches! new-twig-loop!
@@ -4704,8 +4664,7 @@
         |start-server! $ quote
           defn start-server! (configs)
             pick-port! (:port configs)
-              fn (unoccupied-port)
-                run-server! ("#()" dispatch! %1 "%2 %3") unoccupied-port
+              fn (unoccupied-port) (run-server! dispatch! unoccupied-port)
             render-loop!
             watch-file!
             .on js/process "\"SIGINT" $ fn (code)
@@ -4716,13 +4675,13 @@
                   let
                       started-time $ unix-time!
                     persist! storage-file (db->string @*writer-db) started-time
-                  println (str \newline "\"Saved calcit.cirru")
+                  println (str &newline "\"Saved calcit.cirru")
                     str $ if (some? code) (str "|with " code)
               .exit js/process
         |dispatch! $ quote
           defn dispatch! (op op-data sid)
-            when config/dev? $ js/console.log "\"Action" (str op) (clj->js op-data) sid
-            ; js/console.log "\"Database:" $ clj->js @*writer-db
+            when config/dev? $ js/console.log "\"Action" (str op) (to-js-data op-data) sid
+            ; js/console.log "\"Database:" $ to-js-data @*writer-db
             let
                 d2! $ fn (op2 op-data2) (dispatch! op2 op-data2 sid)
                 op-id $ id!
@@ -4732,11 +4691,10 @@
                   reset! *writer-db $ updater @*writer-db op op-data sid op-id op-time
                   :effect/save-files $ handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true nil
                   :effect/save-ns $ handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true op-data
-                catch js/Error e
-                  println $ .red chalk e
-                  .error js/console e
-        |*calcit-md5 $ quote
-          defonce *calcit-md5 $ atom nil
+                fn (e)
+                  println $ chalk/red e
+                  js/console.error e
+        |*calcit-md5 $ quote (defatom *calcit-md5 nil)
         |main! $ quote
           defn main! () $ let
               configs $ :configs initial-db
@@ -4747,13 +4705,13 @@
           defn run-server! (dispatch! port)
             wss-serve! port $ {}
               :on-open $ fn (sid socket) (dispatch! :session/connect nil sid)
-                println $ chalk/gray (<< "\"client connected: ~{sid}")
+                println $ chalk/gray (str "\"client connected: " sid)
               :on-data $ fn (sid action)
                 case-default (:kind action) (println "\"unknown data" action)
                   :op $ dispatch! (:op action) (:data action) sid
                   :ping nil
               :on-close $ fn (sid event)
-                println $ chalk/gray (<< "\"client disconnected: ~{sid}")
+                println $ chalk/gray (str "\"client disconnected: " sid)
                 dispatch! :session/disconnect nil sid
               :on-error $ fn (error) (js/console.error error)
         |sync-clients! $ quote
@@ -4773,17 +4731,17 @@
                     swap! *client-caches assoc sid new-store
             new-twig-loop!
         |*client-caches $ quote
-          defonce *client-caches $ atom ({})
+          defatom *client-caches $ {}
         |storage-file $ quote
-          def storage-file $ path/join (.. js/process -env -PWD) (:storage-file config/site)
+          def storage-file $ path/join (-> js/process .-env .-PWD) (:storage-file config/site)
         |initial-db $ quote
-          defonce initial-db $ merge schema/database
+          defatom initial-db $ merge schema/database
             let
                 found? $ fs/existsSync storage-file
                 configs $ :configs schema/database
               if found?
-                println $ .gray chalk "\"Loading calcit.cirru"
-                println $ .yellow chalk "\"Using default schema."
+                println $ chalk/gray "\"Loading calcit.cirru"
+                println $ chalk/yellow "\"Using default schema."
               if found?
                 let
                     started-at $ unix-time!
@@ -4793,8 +4751,7 @@
                   , data
                 if (some? configs)
                   {} $ :configs configs
-        |*reader-db $ quote
-          defonce *reader-db $ atom @*writer-db
+        |*reader-db $ quote (defatom *reader-db @*writer-db)
         |compile-all-files! $ quote
           defn compile-all-files! (configs)
             handle-files!
@@ -4804,7 +4761,7 @@
                 , false nil
         |reload! $ quote
           defn reload! ()
-            println $ .gray chalk "|code updated."
+            println $ chalk/gray "|code updated."
             clear-twig-caches!
             sync-clients! @*reader-db
         |watch-file! $ quote
@@ -4812,15 +4769,14 @@
             do
               reset! *calcit-md5 $ md5 (fs/readFileSync storage-file |utf8)
               gaze storage-file $ fn (error watcher)
-                if (some? error) (.log js/console error)
-                  .on ^js watcher "\"changed" $ fn (filepath) (delay! 0.02 on-file-change!)
+                if (some? error) (js/console.log error)
+                  .!on watcher "\"changed" $ fn (filepath) (delay! 0.02 on-file-change!)
         |*writer-db $ quote
-          defonce *writer-db $ atom
-            -> initial-db
-              assoc :repl $ {} (:alive? false)
-                :logs $ {}
-              assoc :saved-files $ get-in initial-db ([] :ir :files)
-              assoc :sessions $ {}
+          defatom *writer-db $ -> initial-db
+            assoc :repl $ {} (:alive? false)
+              :logs $ {}
+            assoc :saved-files $ get-in initial-db ([] :ir :files)
+            assoc :sessions $ {}
         |on-file-change! $ quote
           defn on-file-change! () $ let
               file-content $ fs/readFileSync storage-file "\"utf8"
@@ -4828,7 +4784,7 @@
             if (not= new-md5 @*calcit-md5)
               let
                   calcit $ parse-cirru-edn file-content
-                println $ .blue chalk "\"calcit storage file changed!"
+                println $ chalk/blue "\"calcit storage file changed!"
                 reset! *calcit-md5 new-md5
                 dispatch! :watcher/file-change calcit nil
         |render-loop! $ quote
