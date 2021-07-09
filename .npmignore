@@ -13,3 +13,14 @@
 /deps.edn
 *.log
 .github/
+/out-page/
+/js-out/
+/server.js
+/webpack.config.js
+/index.html
+/client.js
+compact.cirru
+/.gitattributes
+.compact-inc.cirru
+.calcit-error.cirru
+LICENSE

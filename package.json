@@ -1,9 +1,9 @@
 {
   "name": "@calcit/editor",
-  "version": "0.6.0-a2",
+  "version": "0.6.0-a3",
   "description": "Calcit Editor",
   "bin": {
-    "ct": "dist/server.js"
+    "ct": "./dist-server/bundle.js"
   },
   "scripts": {
     "watch-server": "cr --emit-js",
@@ -23,7 +23,6 @@
   "license": "MIT",
   "devDependencies": {
     "feather-icons": "^4.28.0",
-    "source-map-support": "^0.5.19",
     "url-parse": "^1.5.1",
     "vite": "^2.4.1",
     "webpack": "^5.44.0",
