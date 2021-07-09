@@ -1,9 +1,9 @@
 {
   "name": "@calcit/editor",
-  "version": "0.6.0-a4",
+  "version": "0.6.0-a5",
   "description": "Calcit Editor",
   "bin": {
-    "ct": "./dist-server/bundle.js"
+    "ct": "./entry/bin.js"
   },
   "scripts": {
     "watch-server": "cr --emit-js",
