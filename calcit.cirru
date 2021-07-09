@@ -34106,4 +34106,4 @@
     :init-fn |app.server/main!
     :compact-output? true
     :storage-key |calcit.edn
-    :version |0.6.0-a4
+    :version |0.6.0-a7
