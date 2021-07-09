@@ -310,7 +310,7 @@
           [] respo.core :refer $ [] defcomp <> span div pre input button img a br
           [] respo.comp.space :refer $ [] =<
           [] app.style :as style
-          [] respo-alerts.core :refer $ [] comp-modal
+          [] respo-alerts.core :refer $ [] comp-modal Modal-class
       :defs $ {}
         |use-replace-name-modal $ quote
           defn use-replace-name-modal (states on-replace)
@@ -325,8 +325,14 @@
                       not $ = (:new-name state) "\""
                     on-replace (:old-name state) (:new-name state) d!
                     d! cursor $ assoc state :show? false
-              {}
-                :ui $ comp-modal
+              ::
+                %{} Modal-class
+                  :render $ fn (self) (nth self 1)
+                  :show $ fn (self d!)
+                    d! cursor $ assoc state :show? true
+                  :clonse $ fn (self d!)
+                    d! cursor $ assoc state :show? false
+                comp-modal
                   {} (:title "\"Replace variable")
                     :style $ {} (:width 240)
                     :container-style $ {}
@@ -1593,9 +1599,7 @@
                     :on-click $ on-draft-box state cursor
                   =< 8 nil
                   span $ {} (:inner-text |Replace) (:style style-link)
-                    :on-click $ fn (e d!)
-                        :show replace-plugin
-                        , d!
+                    :on-click $ fn (e d!) (.show replace-plugin d!)
                   =< 8 nil
                   span $ {} (:inner-text |Exporting) (:style style-link)
                     :on-click $ on-path-gen! bookmark
@@ -1609,7 +1613,7 @@
                 .render confirm-reset-plugin
                 .render rename-plugin
                 .render add-plugin
-                :ui replace-plugin
+                .render replace-plugin
         |style-watchers $ quote
           def style-watchers $ merge ui/row
             {} $ :display :inline-block
@@ -2280,6 +2284,7 @@
             :margin-right 2
             :margin-left 12
             :margin-top 0
+            :line-height "\"1em"
       :proc $ quote ()
     |app.client $ {}
       :ns $ quote
@@ -3797,7 +3802,7 @@
                 div ({})
                   button $ {} (:inner-text "|Log out") (:style style/button)
                     :on $ {} (:click on-log-out)
-                :ui rename-plugin
+                .render rename-plugin
         |on-log-out $ quote
           defn on-log-out (e dispatch!) (dispatch! :user/log-out nil)
             .removeItem js/window.localStorage $ :storage-key config/site
@@ -4479,7 +4484,7 @@
                 plugin-add-ns $ use-prompt (>> states :add-ns)
                   {} $ :title "\"New namespace:"
               div
-                {} $ :style style-list
+                {} $ :style (merge ui/column style-list)
                 div
                   {} $ :style style/title
                   <> |Namespaces
