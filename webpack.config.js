@@ -11,7 +11,7 @@ let hot = process.env.hot === 'true' ? true : false;
 console.log("Hot:", hot)
 
 let mode = process.env.prod === 'true' ? 'production' : 'development';
-console.log("Mode", mode);
+console.log("Mode:", mode);
 
 module.exports = {
   entry: hot ? [
@@ -35,6 +35,9 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "js-out/"),
     filename: "bundle.js",
+  },
+  optimization: {
+    minimize: false,
   },
   plugins: [
     hot ? new webpack.HotModuleReplacementPlugin(): null
