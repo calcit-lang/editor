@@ -52,7 +52,7 @@
                               :href $ let
                                   url-obj $ url-parse js/location.href true
                                 aset (.-query url-obj) "\"watching" k
-                                .toString url-obj
+                                .!toString url-obj
                               :target |_blank
                               :style $ {}
                                 :color $ hsl 240 80 80
@@ -139,14 +139,14 @@
               {} (:class-name |stack-bookmark) (:draggable true)
                 :on-click $ on-pick bookmark idx
                 :on-dragstart $ fn (e d!)
-                  -> e :event .-dataTransfer $ .setData "\"id" idx
+                  -> e :event .-dataTransfer $ .!setData "\"id" idx
                 :on-drop $ fn (e d!)
                   let
                       target-idx $ js/parseInt
-                        -> e :event .-dataTransfer $ .getData "\"id"
+                        -> e :event .-dataTransfer $ .!getData "\"id"
                     when (not= target-idx idx)
                       d! :writer/move-order $ {} (:from target-idx) (:to idx)
-                :on-dragover $ fn (e d!) (-> e :event .preventDefault)
+                :on-dragover $ fn (e d!) (-> e :event .!preventDefault)
               case-default (:kind bookmark)
                 div
                   {} $ :style
@@ -329,8 +329,12 @@
                 %{} Modal-class
                   :render $ fn (self) (nth self 1)
                   :show $ fn (self d!)
-                    d! cursor $ assoc state :show? true
-                  :clonse $ fn (self d!)
+                    d! cursor $ assoc state :old-name "\"" :new-name "\"" :show? true
+                    js/setTimeout $ fn ()
+                      let
+                          el $ js/document.querySelector "\"#replace-input"
+                        if (some? el) (.select el)
+                  :close $ fn (self d!)
                     d! cursor $ assoc state :show? false
                 comp-modal
                   {} (:title "\"Replace variable")
@@ -370,12 +374,6 @@
                   :show? state
                   fn (d!)
                     d! cursor $ assoc state :show? false
-                :show $ fn (d!)
-                  d! cursor $ assoc state :old-name "\"" :new-name "\"" :show? true
-                  js/setTimeout $ fn ()
-                    let
-                        el $ js/document.querySelector "\"#replace-input"
-                      if (some? el) (.select el)
       :proc $ quote ()
       :configs $ {}
     |app.util.shortcuts $ {}
@@ -387,13 +385,13 @@
         |on-paste! $ quote
           defn on-paste! (d!)
             -> js/navigator .-clipboard (.readText)
-              .then $ fn (text) (println "\"read from text...")
+              .!then $ fn (text) (println "\"read from text...")
                 let
                     cirru-code $ parse-cirru text
                   if (cirru-form? cirru-code)
                     d! :writer/paste $ first cirru-code
                     d! :notify/push-message $ [] :error "\"Not valid code"
-              .catch $ fn (error) (.error js/console "\"Not able to read from paste:" error)
+              .!catch $ fn (error) (js/console.error "\"Not able to read from paste:" error)
                 d! :notify/push-message $ [] :error "\"Failed to paste!"
         |on-window-keydown $ quote
           defn on-window-keydown (event dispatch! router)
@@ -413,13 +411,13 @@
                       do $ dispatch! :effect/eval-tree
                       dispatch! :writer/edit-ns nil
                   (and meta? (not shift?) (= code keycode/j))
-                    do (.preventDefault event) (dispatch! :writer/move-next nil)
+                    do (.!preventDefault event) (dispatch! :writer/move-next nil)
                   (and meta? (not shift?) (= code keycode/i))
                     do $ dispatch! :writer/move-previous nil
                   (and meta? (= code keycode/k))
                     do $ dispatch! :writer/finish nil
                   (and meta? (= code keycode/s))
-                    do (.preventDefault event) (dispatch! :effect/save-files nil)
+                    do (.!preventDefault event) (dispatch! :effect/save-files nil)
                   (and meta? shift? (= code keycode/f))
                     dispatch! :router/change $ {} (:name :files)
                   (and meta? (not shift?) (= code keycode/period))
@@ -473,7 +471,7 @@
           defn on-submit (username password signup?)
             fn (e dispatch!)
               dispatch! (if signup? :user/sign-up :user/log-in) ([] username password)
-              .setItem js/window.localStorage (:storage-key config/site)
+              js/window.localStorage.setItem (:storage-key config/site)
                 format-cirru-edn $ [] username password
         |style-control $ quote
           def style-control $ merge ui/flex
@@ -491,21 +489,21 @@
         |copy-silently! $ quote
           defn copy-silently! (x)
             -> js/navigator .-clipboard (.writeText x)
-              .then $ fn () (println "\"Copied.")
-              .catch $ fn (error) (.error js/console "\"Failed to copy:" error)
+              .!then $ fn () (println "\"Copied.")
+              .!catch $ fn (error) (js/console.error "\"Failed to copy:" error)
         |do-copy-logics! $ quote
           defn do-copy-logics! (d! x message)
-            -> js/navigator .-clipboard (.writeText x)
-              .then $ fn (? v)
+            -> js/navigator .-clipboard (.!writeText x)
+              .!then $ fn (? v)
                 d! :notify/push-message $ [] :info message
-              .catch $ fn (error) (.error js/console "\"Failed to copy:" error)
+              .!catch $ fn (error) (js/console.error "\"Failed to copy:" error)
                 d! :notify/push-message $ [] :error (str "\"Failed to copy! " error)
         |focus! $ quote
           defn focus! () $ js/requestAnimationFrame
             fn (timestamp)
               let
                   current-focused $ .-activeElement js/document
-                  cirru-focused $ .querySelector js/document |.cirru-focused
+                  cirru-focused $ js/document.querySelector |.cirru-focused
                 if (some? cirru-focused)
                   if
                     not $ identical? current-focused cirru-focused
@@ -514,8 +512,8 @@
         |focus-search! $ quote
           defn focus-search! () $ delay! 0.2
             fn () $ let
-                target $ .querySelector js/document |.search-input
-              if (some? target) (.focus target)
+                target $ js/document.querySelector |.search-input
+              if (some? target) (.!focus target)
         |inject-style $ quote
           defn inject-style (class-name styles)
             style $ {}
@@ -686,7 +684,7 @@
                   join-str "| "
                 , "|)"
         |now! $ quote
-          defn now! () $ .now js/Date
+          defn now! () $ js/Date.now
         |hide-empty-fields $ quote
           defn hide-empty-fields (x)
             -> x (.to-list)
@@ -1158,7 +1156,7 @@
                                 close-modal! d!
                               (and (= keycode/s (:keycode e)) (.-metaKey (:event e)))
                                 do
-                                  .preventDefault $ :event e
+                                  .!preventDefault $ :event e
                                   if expr?
                                     d! :ir/draft-expr $ parse-cirru-edn state
                                     d! :ir/update-leaf state
@@ -2289,7 +2287,7 @@
     |app.client $ {}
       :ns $ quote
         ns app.client $ :require
-          [] respo.core :refer $ [] render! clear-cache! realize-ssr! *changes-logger
+          [] respo.core :refer $ [] render! clear-cache! *changes-logger
           [] app.comp.container :refer $ [] comp-container
           [] app.client-util :refer $ [] ws-host parse-query!
           [] app.util.dom :refer $ [] focus!
@@ -2300,8 +2298,6 @@
           [] cumulo-util.core :refer $ [] delay!
           [] app.config :as config
       :defs $ {}
-        |ssr? $ quote
-          def ssr? $ some? (.querySelector js/document |meta.respo-ssr)
         |retry-connect! $ quote
           defn retry-connect! () $ if
             and (nil? @*store) (not @*connecting?)
@@ -2310,7 +2306,7 @@
           defn dispatch! (op op-data)
             when
               and config/dev? $ not= op :states
-              .info js/console |Dispatch (str op) (to-js-data op-data)
+              js/console.info |Dispatch (str op) (to-js-data op-data)
             case-default op (send-op! op op-data)
               :states $ reset! *states
                 let-sugar
@@ -2339,19 +2335,18 @@
         |main! $ quote
           defn main! () (load-console-formatter!)
             println "\"Running mode:" $ if config/dev? "\"dev" "\"release"
-            if ssr? $ render-app! realize-ssr!
             ; reset! *changes-logger $ fn (global-element element changes) (println "\"Changes:" changes)
-            render-app! render!
+            render-app!
             connect!
-            add-watch *store :changes $ fn (store prev) (render-app! render!)
+            add-watch *store :changes $ fn (store prev) (render-app!)
               if
                 = :editor $ get-in @*store ([] :router :name)
                 focus!
-            add-watch *states :changes $ fn (states prev) (render-app! render!)
-            .addEventListener js/window "\"keydown" $ fn (event)
+            add-watch *states :changes $ fn (states prev) (render-app!)
+            js/window.addEventListener "\"keydown" $ fn (event)
               on-window-keydown event dispatch! $ :router @*store
-            .addEventListener js/window "\"focus" $ fn (event) (retry-connect!)
-            .addEventListener js/window "\"visibilitychange" $ fn (event)
+            js/window.addEventListener "\"focus" $ fn (event) (retry-connect!)
+            js/window.addEventListener "\"visibilitychange" $ fn (event)
               when (= "\"visible" js/document.visibilityState) (retry-connect!)
             println "\"App started!"
         |*states $ quote
@@ -2372,7 +2367,7 @@
                       reset! *store $ patch-twig @*store changes
         |simulate-login! $ quote
           defn simulate-login! () $ let
-              raw $ .getItem js/window.localStorage (:storage-key config/site)
+              raw $ js/window.localStorage.getItem (:storage-key config/site)
             if (some? raw)
               do $ dispatch! :user/log-in (parse-cirru-edn raw)
               do $ println "|Found no storage."
@@ -2391,15 +2386,14 @@
                 heartbeat!
               println "\"Disabled heartbeat since connection lost."
         |render-app! $ quote
-          defn render-app! (renderer)
-            renderer mount-target (comp-container @*states @*store) dispatch!
+          defn render-app! () $ render! mount-target (comp-container @*states @*store) dispatch!
         |reload! $ quote
-          defn reload! () (clear-cache!) (render-app! render!) (println "|Code updated.")
+          defn reload! () (clear-cache!) (render-app!) (println "|Code updated.")
         |send-op! $ quote
           defn send-op! (op op-data)
             ws-send! $ {} (:kind :op) (:op op) (:data op-data)
         |mount-target $ quote
-          def mount-target $ .querySelector js/document |.app
+          def mount-target $ js/document.querySelector |.app
       :proc $ quote ()
     |app.comp.theme-menu $ {}
       :ns $ quote
@@ -2528,14 +2522,14 @@
                     {} $ :click
                       fn (e d!)
                         if picker-mode? $ do
-                          .preventDefault $ :event e
+                          .!preventDefault $ :event e
                           d! :writer/pick-node $ tree->cirru expr
                     {}
                       :keydown $ on-keydown coord expr picker-mode?
                       :click $ fn (e d!)
                         if picker-mode?
                           do
-                            .preventDefault $ :event e
+                            .!preventDefault $ :event e
                             d! :writer/pick-node $ tree->cirru expr
                           d! :writer/focus coord
                 loop
@@ -2581,11 +2575,11 @@
                   (= code keycode/space)
                     do
                       d! (if shift? :ir/leaf-before :ir/leaf-after) nil
-                      .preventDefault event
+                      .!preventDefault event
                   (= code keycode/tab)
                     do
                       d! (if shift? :ir/unindent :ir/indent) nil
-                      .preventDefault event
+                      .!preventDefault event
                   (= code keycode/up)
                     do
                       if
@@ -2595,11 +2589,11 @@
                   (= code keycode/down)
                     do
                       d! :writer/go-down $ {} (:tail? shift?)
-                      .preventDefault event
+                      .!preventDefault event
                   (= code keycode/left)
-                    do (d! :writer/go-left nil) (.preventDefault event)
+                    do (d! :writer/go-left nil) (.!preventDefault event)
                   (= code keycode/right)
-                    do (d! :writer/go-right nil) (.preventDefault event)
+                    do (d! :writer/go-right nil) (.!preventDefault event)
                   (and meta? (= code keycode/c))
                     do-copy-logics! d!
                       format-cirru $ [] (tree->cirru expr)
@@ -2631,7 +2625,7 @@
                         do (d! :manual-state/abstract nil)
                           js/setTimeout $ fn ()
                             let
-                                el $ .querySelector js/document |.el-abstract
+                                el $ js/document.querySelector |.el-abstract
                               if (some? el) (.focus el)
                       .preventDefault event
                   (and meta? (= code keycode/slash) (not shift?))
@@ -2810,10 +2804,10 @@
               version $ aget pkg "\"version"
               pkg-name $ aget pkg "\"name"
             -> (latest-version pkg-name)
-              .then $ fn (npm-version)
+              .!then $ fn (npm-version)
                 println $ if (= version npm-version) (str "\"Running latest version " version)
                   chalk/yellow $ str "\"Update is available tagged " npm-version "\", current one is " version
-              .catch $ fn (e) (js/console.log "\"failed to request version:" e)
+              .!catch $ fn (e) (js/console.log "\"failed to request version:" e)
         |get-cli-configs! $ quote
           defn get-cli-configs! () $ let
               env js/process.env
@@ -3092,7 +3086,7 @@
             fn (e d!)
               if picker-mode?
                 do
-                  .preventDefault $ :event e
+                  .!preventDefault $ :event e
                   d! :writer/pick-node $ tree->cirru leaf
                 d! :writer/focus coord
         |on-input $ quote
@@ -3124,25 +3118,25 @@
                       and $ = | text
                       d! :ir/delete-node nil
                   (and (= code keycode/space) (not shift?))
-                    do (d! :ir/leaf-after nil) (.preventDefault event)
+                    do (d! :ir/leaf-after nil) (.!preventDefault event)
                   (= code keycode/enter)
                     do
                       d! (if shift? :ir/leaf-before :ir/leaf-after) nil
-                      .preventDefault event
+                      .!preventDefault event
                   (= code keycode/tab)
                     do
                       d! (if shift? :ir/unindent-leaf :ir/indent) nil
-                      .preventDefault event
+                      .!preventDefault event
                   (= code keycode/up)
                     do
                       if
                         not $ empty? coord
                         d! :writer/go-up nil
-                      .preventDefault event
+                      .!preventDefault event
                   (and (not selected?) (= code keycode/left))
                     if
                       = 0 $ -> event .-target .-selectionStart
-                      do (d! :writer/go-left nil) (.preventDefault event)
+                      do (d! :writer/go-left nil) (.!preventDefault event)
                   (and meta? (= code keycode/b))
                     d! :analyze/peek-def $ :text leaf
                   (and (not selected?) (= code keycode/right))
@@ -3154,7 +3148,7 @@
                   (and meta? shift? (= code keycode/v))
                     do (on-paste! d!) (.preventDefault event)
                   (and meta? (= code keycode/d))
-                    do (.preventDefault event)
+                    do (.!preventDefault event)
                       if
                         -> ([] "\"\"" "\"|" "\"#\"")
                           any? $ fn (x)
@@ -3162,13 +3156,13 @@
                         do (d! :manual-state/draft-box nil)
                           js/setTimeout $ fn ()
                             let
-                                el $ .querySelector js/document |.el-draft-box
+                                el $ js/document.querySelector |.el-draft-box
                               if (some? el) (.focus el)
                         d! :analyze/goto-def $ {}
                           :text $ :text leaf
                           :forced? shift?
                   (and meta? (= code keycode/slash) (not shift?))
-                    do $ .open js/window
+                    do $ js/window.open
                       str |https://clojuredocs.org/search?q= $ last
                         split (:text leaf) "\"/"
                   (and picker-mode? (= code keycode/escape))
@@ -3207,7 +3201,7 @@
                               :info $ hsl 240 80 80
                         :on-click $ fn (e d!) (d! :notify/clear nil)
                       <>
-                        -> (:time msg) Dayjs $ .format "\"mm:ss"
+                        -> (:time msg) Dayjs $ .!format "\"mm:ss"
                         {} (:font-size 12) (:font-family ui/font-code) (:opacity 0.7)
                       =< 8 nil
                       <> (:text msg) nil
@@ -3805,7 +3799,7 @@
                 .render rename-plugin
         |on-log-out $ quote
           defn on-log-out (e dispatch!) (dispatch! :user/log-out nil)
-            .removeItem js/window.localStorage $ :storage-key config/site
+            js/window.localStorage.removeItem $ :storage-key config/site
         |style-greet $ quote
           def style-greet $ {} (:font-family "|Josefin Sans") (:font-size 40) (:font-weight 100)
             :color $ hsl 0 0 100 0.8
@@ -4662,7 +4656,7 @@
               fn (unoccupied-port) (run-server! dispatch! unoccupied-port)
             render-loop!
             watch-file!
-            .on js/process "\"SIGINT" $ fn (code & args)
+            js/process.on "\"SIGINT" $ fn (code & args)
               if
                 empty? $ get-in @*writer-db ([] :ir :files)
                 println "\"Not writing empty project."
@@ -4672,7 +4666,7 @@
                     persist! storage-file (db->string @*writer-db) started-time
                   println (str &newline "\"Saved calcit.cirru")
                     str $ if (some? code) (str "|with " code)
-              .exit js/process
+              js/process.exit
         |dispatch! $ quote
           defn dispatch! (op op-data sid)
             when config/dev? $ js/console.log "\"Action" (str op) (to-js-data op-data) sid
