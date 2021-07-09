@@ -330,7 +330,7 @@
                   {} (:title "\"Replace variable")
                     :style $ {} (:width 240)
                     :container-style $ {}
-                    :render-body $ fn ()
+                    :render-body $ fn (? arg)
                       div
                         {} $ :style
                           {} $ :padding 16
@@ -384,7 +384,8 @@
               .then $ fn (text) (println "\"read from text...")
                 let
                     cirru-code $ parse-cirru text
-                  if (cirru-form? cirru-code) (d! :writer/paste cirru-code)
+                  if (cirru-form? cirru-code)
+                    d! :writer/paste $ first cirru-code
                     d! :notify/push-message $ [] :error "\"Not valid code"
               .catch $ fn (error) (.error js/console "\"Not able to read from paste:" error)
                 d! :notify/push-message $ [] :error "\"Failed to paste!"
@@ -400,7 +401,7 @@
                     do
                       dispatch! :router/change $ {} (:name :search)
                       focus-search!
-                      .preventDefault event
+                      .!preventDefault event
                   (and meta? (= code keycode/e))
                     if shift?
                       do $ dispatch! :effect/eval-tree
@@ -416,7 +417,7 @@
                   (and meta? shift? (= code keycode/f))
                     dispatch! :router/change $ {} (:name :files)
                   (and meta? (not shift?) (= code keycode/period))
-                    dispatch! :writer/picker-mode
+                    dispatch! :writer/picker-mode nil
       :proc $ quote ()
     |app.comp.login $ {}
       :ns $ quote
@@ -489,7 +490,7 @@
         |do-copy-logics! $ quote
           defn do-copy-logics! (d! x message)
             -> js/navigator .-clipboard (.writeText x)
-              .then $ fn ()
+              .then $ fn (? v)
                 d! :notify/push-message $ [] :info message
               .catch $ fn (error) (.error js/console "\"Failed to copy:" error)
                 d! :notify/push-message $ [] :error (str "\"Failed to copy! " error)
@@ -672,11 +673,11 @@
           defn stringify-s-expr (x)
             if (list? x)
               str "|("
-                join-str "| " $ map
-                  fn (y)
+                -> x
+                  map $ fn (y)
                     if (list? y) (stringify-s-expr y)
                       if (.includes? y "| ") (pr-str y) y
-                  , x
+                  join-str "| "
                 , "|)"
         |now! $ quote
           defn now! () $ .now js/Date
@@ -1128,7 +1129,7 @@
                         expr? $ = :expr (:type node)
                         state $ or (:data states)
                           if expr?
-                            format-cirru $ tree->cirru node
+                            format-cirru $ [] (tree->cirru node)
                             :text node
                       div
                         {} $ :style ui/column
@@ -1186,7 +1187,7 @@
           defn on-submit (expr? text cursor close-modal! close?)
             fn (e d!)
               if expr?
-                d! :ir/draft-expr $ parse-cirru-edn text
+                d! :ir/draft-expr $ first (parse-cirru text)
                 d! :ir/update-leaf text
               if close? $ do (d! cursor nil) (close-modal! d!)
       :proc $ quote ()
@@ -1368,7 +1369,10 @@
                     :on-click $ fn (e d!) (d! :writer/picker-mode nil)
                   <> "\"Picker mode: pick a target..."
                 let
-                    possible-names $ -> (concat imported-names defined-names) (.distinct) (filter hint-fn)
+                    possible-names $ ->
+                      concat (.to-list imported-names) (.to-list defined-names)
+                      .distinct
+                      filter hint-fn
                   if-not (empty? possible-names)
                     div ({})
                       list-> ({})
@@ -1382,13 +1386,13 @@
                   if-not (empty? filtered-names)
                     div ({})
                       list-> ({})
-                        -> filtered-names (sort &compare)
+                        -> filtered-names (.to-list) (sort &compare)
                           map $ fn (x)
                             [] x $ render-code x
                       =< nil 8
                 list-> ({})
-                  -> defined-names (filter-not hint-fn) sort $ map
-                    fn (x)
+                  -> defined-names (.to-list) (filter-not hint-fn) (sort)
+                    map $ fn (x)
                       [] x $ render-code x
         |style-name $ quote
           def style-name $ {} (:font-family ui/font-code) (:cursor :pointer) (:font-size 11) (:margin-right 3) (:margin-bottom 3) (:word-break :none) (:line-height "\"14px")
@@ -1495,7 +1499,7 @@
                       comp-abstract (>> states :abstract) close-abstract!
                     ; comp-inspect "\"Expr" router-data style/inspector
                 if picker-mode? $ comp-picker-notice (:picker-choices router-data)
-                  get-in expr $ mapcat prepend-data focus
+                  get-in expr $ mapcat focus prepend-data
         |style-status $ quote
           def style-status $ merge ui/row
             {} (:justify-content :space-between) (:padding "|0 8px")
@@ -1503,7 +1507,7 @@
           defcomp comp-status-bar (states router-data bookmark theme)
             let
                 cursor $ :cursor states
-                state $ :data states
+                state $ or (:data states) initial-state
                 old-name $ if
                   = :def $ :kind bookmark
                   str (:ns bookmark) "\"/" $ :extra bookmark
@@ -1647,8 +1651,8 @@
               d! cursor $ update state :draft-box? not
               js/setTimeout $ fn ()
                 let
-                    el $ .querySelector js/document |.el-draft-box
-                  if (some? el) (.focus el)
+                    el $ js/document.querySelector |.el-draft-box
+                  if (some? el) (.!focus el)
         |on-reset-expr $ quote
           defn on-reset-expr (bookmark d!)
             let
@@ -1757,8 +1761,9 @@
                   let[] (k session) pair $ [] k
                     let
                         writer $ :writer session
-                      dissoc
-                        get (:stack writer) (:pointer writer)
+                        stack $ :stack writer
+                      if (empty? stack) nil $ dissoc
+                        get stack $ :pointer writer
                         , :focus
                 filter $ fn (pair)
                   let[] (k session) pair $ if (= sid k) false (some? session)
@@ -2017,7 +2022,7 @@
             let
                 pointer $ :pointer writer
                 stack $ :stack writer
-                bookmark $ get stack pointer
+                bookmark $ if (empty? stack) nil (get stack pointer)
               if (some? bookmark)
                 let
                     ns-text $ :ns bookmark
@@ -2592,12 +2597,12 @@
                     do (d! :writer/go-right nil) (.preventDefault event)
                   (and meta? (= code keycode/c))
                     do-copy-logics! d!
-                      pr-str $ tree->cirru expr
+                      format-cirru $ [] (tree->cirru expr)
                       , "\"Copied!"
                   (and meta? (= code keycode/x))
                     do
                       do-copy-logics! d!
-                        pr-str $ tree->cirru expr
+                        format-cirru $ [] (tree->cirru expr)
                         , "\"Copied!"
                       d! :ir/delete-node nil
                   (and meta? (= code keycode/v))
@@ -2750,7 +2755,7 @@
                     , writer
                   idx $ index-of-bookmark stack bookmark
                 if
-                  or forced? $ < idx 0
+                  or forced? (nil? idx) (< idx 0)
                   -> writer
                     update :stack $ fn (stack)
                       cond
@@ -3213,7 +3218,7 @@
       :defs $ {}
         |cirru-form? $ quote
           defn cirru-form? (x)
-            if (string? x) true $ if (list? x) (map cirru-form? x) false
+            if (string? x) true $ if (list? x) (map x cirru-form?) false
         |dissoc-idx $ quote
           defn dissoc-idx (xs idx)
             if
@@ -3506,8 +3511,8 @@
                       expr $ get-in base-expr ([] :data last-coord)
                       child-keys $ sort
                         .to-list $ keys (:data base-expr)
-                      children $ -> (:data expr) (.sort-by first) (map last)
-                      idx $ .indexOf child-keys last-coord
+                      children $ -> (:data expr) (.to-list) (.sort-by first) (map last)
+                      idx $ .index-of child-keys last-coord
                       limit-id $ if
                         = idx $ dec (count child-keys)
                         , bisection/max-id
