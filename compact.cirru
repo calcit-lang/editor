@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.0-a7
+    :version |0.6.1
   :files $ {}
     |app.comp.page-members $ {}
       :ns $ quote
@@ -120,7 +120,7 @@
                 cond
                   meta? $ d! :writer/collapse idx
                   alt? $ d! :writer/remove-idx idx
-                  :else $ d! :writer/point-to idx
+                  true $ d! :writer/point-to idx
         |style-highlight $ quote
           def style-highlight $ {}
             :color $ hsl 0 0 100
@@ -271,8 +271,10 @@
                       div
                         {} $ :style
                           merge ui/flex $ {} (:overflow :auto)
-                        inject-style |.cirru-expr $ base-style-expr (or theme :star-trail)
-                        inject-style |.cirru-leaf $ base-style-leaf (or theme :star-trail)
+                        inject-style |.cirru-expr $ .to-list
+                          base-style-expr $ or theme :star-trail
+                        inject-style |.cirru-leaf $ .to-list
+                          base-style-leaf $ or theme :star-trail
                         comp-expr
                           >> states $ bookmark-full-str bookmark
                           , expr focus ([]) others false false readonly? false (or theme :star-trail) 0
@@ -343,7 +345,7 @@
                     :render-body $ fn (? arg)
                       div
                         {} $ :style
-                          {} $ :padding 16
+                          merge ui/column $ {} (:padding "\"8px 16px")
                         div ({})
                           input $ {} (:placeholder "\"from...")
                             :style $ merge ui/input
@@ -407,9 +409,7 @@
                       focus-search!
                       .!preventDefault event
                   (and meta? (= code keycode/e))
-                    if shift?
-                      do $ dispatch! :effect/eval-tree
-                      dispatch! :writer/edit-ns nil
+                    dispatch! :writer/edit-ns nil
                   (and meta? (not shift?) (= code keycode/j))
                     do (.!preventDefault event) (dispatch! :writer/move-next nil)
                   (and meta? (not shift?) (= code keycode/i))
@@ -547,7 +547,7 @@
         |parse-def $ quote
           defn parse-def (text)
             let
-                clean-text $ -> text (.replace |@ |)
+                clean-text $ -> text (.!replace |@ |)
               if (.includes? clean-text |/)
                 let-sugar
                       [] ns-text def-text
@@ -1003,7 +1003,7 @@
                         do (d! :writer/select target)
                           d! cursor $ {} (:query |) (:position 0)
                   (= keycode/up code)
-                    do (.preventDefault event)
+                    do (.!preventDefault event)
                       if
                         > (:selection state) 0
                         d! cursor $ update state :selection dec
@@ -1012,12 +1012,12 @@
                       d! :router/change $ {} (:name :editor)
                       d! cursor $ {} (:query |) (:position 0)
                   (= keycode/down code)
-                    do (.preventDefault event)
+                    do (.!preventDefault event)
                       if
                         < (:selection state)
                           dec $ count candidates
                         d! cursor $ update state :selection inc
-                  :else $ on-window-keydown (:event e) d!
+                  true $ on-window-keydown (:event e) d!
                     {} $ :name :search
         |query-length $ quote
           defn query-length (bookmark)
@@ -1483,7 +1483,8 @@
                   div
                     {} $ :style style-editor
                     let
-                        others $ -> (:others router-data) (vals) (map :focus)
+                        others $ -> (:others router-data) (vals)
+                          map $ fn (x) (:focus x)
                       div
                         {} $ :style style-area
                         inject-style "\".cirru-expr" $ .to-list (base-style-expr theme)
@@ -1542,7 +1543,7 @@
                     , style-hint
                   list->
                     {} $ :style style-watchers
-                    -> (:others router-data) (vals)
+                    -> (:others router-data) (vals) (.to-list)
                       map $ fn (info)
                         [] (:session-id info)
                           <> (:nickname info) style-watcher
@@ -1554,7 +1555,7 @@
                     , style-hint
                   list->
                     {} $ :style style-watchers
-                    -> (:watchers router-data)
+                    -> (:watchers router-data) (.to-list)
                       map $ fn (entry)
                         let-sugar
                               [] sid member
@@ -1678,13 +1679,13 @@
                 :def $ let
                     code $ [] (:ns bookmark) "\":refer"
                       [] $ :extra bookmark
-                  do-copy-logics! d! (pr-str code)
+                  do-copy-logics! d! (format-cirru-edn code)
                     str "\"Copied path of " $ :extra bookmark
                 :ns $ let
                     the-ns $ :ns bookmark
                     code $ [] the-ns "\":as"
                       last $ split the-ns "\"."
-                  do-copy-logics! d! (pr-str code) (str "\"Copied path of " the-ns)
+                  do-copy-logics! d! (format-cirru-edn code) (str "\"Copied path of " the-ns)
         |on-rename-def $ quote
           defn on-rename-def (new-name bookmark d!)
             when
@@ -1798,10 +1799,6 @@
             :ir ir-file
             :saved-files $ {}
             :configs configs
-            :repl $ {} (:alive? false)
-              :logs $ {}
-        |repl-log $ quote
-          def repl-log $ {} (:id nil) (:type nil) (:text |) (:time nil)
         |router $ quote
           def router $ {} (:name nil) (:title nil)
             :data $ {}
@@ -2020,7 +2017,7 @@
           [] app.util.list :refer $ [] compare-entry
       :defs $ {}
         |twig-page-editor $ quote
-          defn twig-page-editor (files old-files sessions users writer session-id repl)
+          defn twig-page-editor (files old-files sessions users writer session-id)
             let
                 pointer $ :pointer writer
                 stack $ :stack writer
@@ -2091,7 +2088,6 @@
                         :def $ compare-entry
                           get (:defs file) (:extra bookmark)
                           get (:defs old-file) (:extra bookmark)
-                    :repl repl
                 , nil
         |pick-from-ns $ quote
           defn pick-from-ns (ns-info)
@@ -2333,7 +2329,8 @@
         |*connecting? $ quote (defatom *connecting? false)
         |*store $ quote (defatom *store nil)
         |main! $ quote
-          defn main! () (load-console-formatter!)
+          defn main! ()
+            when config/dev? $ load-console-formatter!
             println "\"Running mode:" $ if config/dev? "\"dev" "\"release"
             ; reset! *changes-logger $ fn (global-element element changes) (println "\"Changes:" changes)
             render-app!
@@ -2375,9 +2372,9 @@
           defn detect-watching! () $ let
               query $ parse-query!
             when
-              some? $ :watching query
+              some? $ get query "\"watching"
               dispatch! :router/change $ {} (:name :watching)
-                :data $ :watching query
+                :data $ get query "\"watching"
         |heartbeat! $ quote
           defn heartbeat! () $ delay! 30
             fn () $ if (ws-connected?)
@@ -2627,12 +2624,12 @@
                             let
                                 el $ js/document.querySelector |.el-abstract
                               if (some? el) (.focus el)
-                      .preventDefault event
+                      .!preventDefault event
                   (and meta? (= code keycode/slash) (not shift?))
                     d! :ir/toggle-comment nil
                   (and picker-mode? (= code keycode/escape))
                     d! :writer/picker-mode nil
-                  :else $ do
+                  true $ do
                     ; println |Keydown $ :key-code e
                     on-window-keydown event d! $ {} (:name :editor)
       :proc $ quote ()
@@ -3019,14 +3016,14 @@
           defcomp comp-file-replacer (states file)
             let
                 cursor $ :cursor states
-                state $ or (:data states) (format-cirru file)
+                state $ or (:data states) (format-cirru-edn file)
               comp-modal
                 fn (d!) (d! :writer/draft-ns nil)
                 div
                   {} $ :style ui/column
                   textarea $ {} (:value state)
                     :style $ merge style/input
-                      {} (:width 800) (:height 400)
+                      {} (:width 800) (:height 400) (:white-space :pre) (:line-height "\"20px")
                     :on-input $ fn (e d!)
                       d! cursor $ :value e
                   =< nil 8
@@ -3036,8 +3033,8 @@
                     button $ {} (:inner-text "\"Submit") (:style style/button)
                       :on-click $ fn (e d!)
                         if
-                          not= state $ format-cirru file
-                          d! :ir/replace-file $ parse-cirru state
+                          not= state $ format-cirru-edn file
+                          d! :ir/replace-file $ parse-cirru-edn state
                         d! cursor nil
                         d! :writer/draft-ns nil
       :proc $ quote ()
@@ -3240,7 +3237,7 @@
                 , :remove
               (and (some? old-x) (some? new-x) (not (identical? old-x new-x)))
                 , :changed
-              :else :same
+              true :same
       :proc $ quote ()
     |app.updater.ir $ {}
       :ns $ quote
@@ -3736,8 +3733,8 @@
                 (contains? files op-data)
                   warn $ str new-ns "\" already existed!"
                 (not (contains? files selected-ns))
-                  warn $ warn "\"No selected namespace!"
-                :else $ -> db
+                  warn "\"No selected namespace!"
+                true $ -> db
                   update-in ([] :ir :files)
                     fn (files)
                       let
@@ -3747,9 +3744,8 @@
                             fn (expr)
                               let
                                   name-field $ key-nth (:data ns-expr) 1
-                                assert
+                                assert (str "\"old namespace to change:" selected-ns "\" " ns-expr)
                                   = selected-ns $ get-in ns-expr ([] :data name-field :text)
-                                  str "\"old namespace to change:" selected-ns "\" " ns-expr
                                 assoc-in expr ([] :data name-field :text) new-ns
                         assoc files new-ns new-file
                   assoc-in ([] :sessions sid :writer :selected-ns) new-ns
@@ -3972,7 +3968,7 @@
                         get-in session $ [] :writer :draft-ns
                         :sessions db
                         :id session
-                      :editor $ twig-page-editor (:files ir) (:saved-files db) (:sessions db) (:users db) writer (:id session) (:repl db)
+                      :editor $ twig-page-editor (:files ir) (:saved-files db) (:sessions db) (:users db) writer (:id session)
                       :members $ twig-page-members (:sessions db) (:users db)
                       :search $ twig-search (:files ir)
                       :watching $ let
@@ -3981,7 +3977,6 @@
                         if (contains? sessions his-sid)
                           twig-watching (get sessions his-sid) (:id session) (:files ir) (:users db)
                           , nil
-                      :repl $ :repl db
                       :configs $ :configs db
                   :stats $ {}
                     :members-count $ count (:sessions db)
@@ -4296,10 +4291,6 @@
                   render-entry |Configs :configs router-name $ fn (e d!)
                     d! :router/change $ {} (:name :configs)
                   a
-                    {} (:href "\"http://snippets.cirru.org") (:target "\"_blank") (:style style-entry)
-                    <> "\"Snippets" style-link
-                    <> "\"↗" $ {} (:font-family ui/font-code)
-                  a
                     {} (:href |https://github.com/Cirru/calcit-editor/wiki/Keyboard-Shortcuts) (:target |_blank) (:style style-entry)
                     <> "\"Shortcuts" style-link
                     <> "\"↗" $ {} (:font-family ui/font-code)
@@ -4403,7 +4394,7 @@
                 add-plugin $ use-prompt (>> states :add)
                   {} $ :text "\"New definition:"
               div
-                {} $ :style style-file
+                {} $ :style (merge ui/column style-file)
                 div ({}) (<> "\"File" style/title) (=< 16 nil)
                   span $ {} (:inner-text |Draft) (:style style/button)
                     :on-click $ fn (e d!) (d! :writer/draft-ns selected-ns)
@@ -4553,7 +4544,8 @@
           defcomp comp-page-files (states selected-ns router-data)
             let
                 highlights $ -> (:highlights router-data) (vals)
-                ns-highlights $ map highlights :ns
+                ns-highlights $ map highlights
+                  fn (x) (:ns x)
               div
                 {} $ :style (merge ui/flex ui/row sytle-container)
                 comp-namespace-list (>> states :ns) (:ns-set router-data) selected-ns ns-highlights
@@ -4758,8 +4750,6 @@
                   .!on watcher "\"changed" $ fn (filepath) (delay! 0.02 on-file-change!)
         |*writer-db $ quote
           defatom *writer-db $ -> initial-db
-            assoc :repl $ {} (:alive? false)
-              :logs $ {}
             assoc :saved-files $ get-in initial-db ([] :ir :files)
             assoc :sessions $ {}
         |on-file-change! $ quote
