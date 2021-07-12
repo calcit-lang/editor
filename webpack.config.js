@@ -10,13 +10,16 @@ console.log("Entry:", entry);
 let hot = process.env.hot === 'true' ? true : false;
 console.log("Hot:", hot)
 
+let mode = process.env.prod === 'true' ? 'production' : 'development';
+console.log("Mode:", mode);
+
 module.exports = {
   entry: hot ? [
     'webpack/hot/poll?1000',
     entry
   ] : entry,
   target: bundleTarget,
-  mode: "development",
+  mode: mode,
   devtool: "hidden-source-map",
   externals: {
     ws: "commonjs ws",
@@ -32,6 +35,9 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "js-out/"),
     filename: "bundle.js",
+  },
+  optimization: {
+    minimize: false,
   },
   plugins: [
     hot ? new webpack.HotModuleReplacementPlugin(): null
