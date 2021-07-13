@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.2
+    :version |0.6.3
   :files $ {}
     |app.keycode $ {}
       :ns $ quote (ns app.keycode)
@@ -2398,9 +2398,7 @@
                 get-in files $ [] selected-ns :configs
                 , nil
               :changed-files $ render-changed-files files saved-files
-              :peeking-file $ if (some? draft-ns)
-                file->cirru $ get files draft-ns
-                , nil
+              :peeking-file $ if (some? draft-ns) (get files draft-ns) nil
               :highlights $ -> sessions (.to-list)
                 map $ fn (pair)
                   let[] (k session) pair $ [] k
@@ -2505,12 +2503,14 @@
           [] app.style :as style
           [] app.comp.modal :refer $ [] comp-modal
           [] cljs.reader :refer $ [] read-string
+          app.util :refer $ file->cirru
       :defs $ {}
         |comp-file-replacer $ quote
           defcomp comp-file-replacer (states file)
             let
                 cursor $ :cursor states
-                state $ or (:data states) (format-cirru-edn file)
+                state $ or (:data states)
+                  format-cirru-edn $ file->cirru file
               comp-modal
                 fn (d!) (d! :writer/draft-ns nil)
                 div
