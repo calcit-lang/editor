@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.1
+    :version |0.6.2
   :files $ {}
     |app.comp.page-members $ {}
       :ns $ quote
@@ -607,19 +607,25 @@
                   tree->cirru $ last entry
         |cirru->tree $ quote
           defn cirru->tree (xs author timestamp)
-            if (list? xs)
-              merge schema/expr $ {} (:at timestamp) (:by author)
-                :data $ loop
-                    result $ {}
-                    ys xs
-                    next-id bisection/mid-id
-                  if (empty? ys) result $ let
-                      y $ first ys
-                    recur
-                      assoc result next-id $ cirru->tree y author timestamp
-                      rest ys
-                      bisection/bisect next-id bisection/max-id
-              merge schema/leaf $ {} (:at timestamp) (:by author) (:text xs)
+            if (tuple? xs)
+              if
+                = 'quote $ nth xs 0
+                cirru->tree (nth xs 1) author timestamp
+                do (println "\"unknown tuple from cirru:" xs)
+                  cirru->tree (nth xs 1) author timestamp
+              if (list? xs)
+                merge schema/expr $ {} (:at timestamp) (:by author)
+                  :data $ loop
+                      result $ {}
+                      ys xs
+                      next-id bisection/mid-id
+                    if (empty? ys) result $ let
+                        y $ first ys
+                      recur
+                        assoc result next-id $ cirru->tree y author timestamp
+                        rest ys
+                        bisection/bisect next-id bisection/max-id
+                merge schema/leaf $ {} (:at timestamp) (:by author) (:text xs)
         |cirru->file $ quote
           defn cirru->file (file author timestamp)
             -> file
@@ -669,10 +675,14 @@
               = :def $ :kind bookmark
               concat
                 [] :ir :files (:ns bookmark) :defs $ :extra bookmark
-                mapcat (:focus bookmark) prepend-data
+                mapcat
+                  or (:focus bookmark) ([])
+                  , prepend-data
               concat
                 [] :ir :files (:ns bookmark) (:kind bookmark)
-                mapcat (:focus bookmark) prepend-data
+                mapcat
+                  or (:focus bookmark) ([])
+                  , prepend-data
         |stringify-s-expr $ quote
           defn stringify-s-expr (x)
             if (list? x)
@@ -693,11 +703,12 @@
               pairs-map
         |file->cirru $ quote
           defn file->cirru (file)
-            -> file (update :ns tree->cirru) (update :proc tree->cirru)
-              update :defs $ fn (defs)
-                -> defs $ map-kv
-                  fn (k xs)
-                    [] k $ tree->cirru xs
+            {}
+              :ns $ :: 'quote
+                tree->cirru $ :ns file
+              :defs $ -> (:defs file)
+                map-kv $ fn (k xs)
+                  [] k $ :: 'quote (tree->cirru xs)
         |find-first $ quote
           defn find-first (f xs)
             find xs $ fn (x) (f x)
@@ -2928,10 +2939,6 @@
                               = (:ns old-file) (:ns new-file)
                               , nil
                                 :: 'quote $ tree->cirru (:ns new-file)
-                            :proc $ if
-                              = (:proc old-file) (:proc new-file)
-                              , nil
-                                :: 'quote $ tree->cirru (:proc new-file)
                             :removed-defs removed-defs
                             :added-defs $ -> added-defs
                               map $ fn (x)
