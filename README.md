@@ -71,20 +71,17 @@ Code is emitted in `compact.cirru` by pressing `Command s`. Two extra files will
 
 It would be used in [calcit-runner](https://github.com/calcit-lang/calcit_runner.rs).
 
-
-
 When server is stopped with `Control c`, `calcit.cirru` is also updated.
 
 There are also several options in `:configs` field in `calcit.cirru`:
 
 * `port`, defaults to `6001`
-* `output`, defaults to `src/`
 
 Editor UI is decoupled with WebSocket server, so it's okay to connect remote server from multiple pages with all expressions synced in real-time.
 
 ### Workflow
 
-Based on https://github.com/Cirru/calcit-editor
+Previously it's https://github.com/Cirru/calcit-editor which is for ClojureScript. And this repo is for Calcit-js only.
 
 ### License
 

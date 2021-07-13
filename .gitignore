@@ -3,9 +3,6 @@
 /dist
 /dist-server
 /node_modules
-.shadow-cljs/
-.cpcache/
-.nrepl-port
 *.log
 example/
 
