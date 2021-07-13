@@ -1,6 +1,6 @@
 {
   "name": "@calcit/editor",
-  "version": "0.6.0-a7",
+  "version": "0.6.1",
   "description": "Calcit Editor",
   "bin": {
     "ct": "./entry/bin.js"
