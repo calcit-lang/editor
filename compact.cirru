@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.3
+    :version |0.6.4
   :files $ {}
     |app.keycode $ {}
       :ns $ quote (ns app.keycode)
@@ -444,7 +444,7 @@
         ns app.updater.ir $ :require ([] app.schema :as schema) ([] bisection-key.core :as bisection)
           [] app.util :refer $ [] expr? leaf? bookmark->path to-writer to-bookmark to-keys cirru->tree cirru->file
           [] app.util.list :refer $ [] dissoc-idx
-          [] bisection-key.util :refer $ [] key-before key-after key-prepend key-append assoc-prepend key-nth assoc-nth val-nth
+          [] bisection-key.util :refer $ [] key-before key-after key-prepend key-append assoc-prepend key-nth assoc-nth val-nth get-min-key
           [] clojure.string :as string
           [] app.util :refer $ [] push-warning
       :defs $ {}
@@ -797,7 +797,7 @@
                 update-in
                   [] :sessions session-id :writer :stack (:pointer writer) :focus
                   fn (focus)
-                    conj (butlast focus) next-id bisection/mid-id
+                    -> (butlast focus) (conj next-id) (conj bisection/mid-id)
         |add-ns $ quote
           defn add-ns (db op-data session-id op-id op-time)
             let
@@ -919,7 +919,7 @@
                   = :expr $ :type node
                   update node :data $ fn (data)
                     let
-                        k0 $ apply min (keys data)
+                        k0 $ get-min-key data
                       if
                         and (some? k0)
                           = "\";" $ get-in data ([] k0 :text)
@@ -2901,8 +2901,8 @@
                 .slice xs 1
               (= idx (dec (count xs)))
                 butlast xs
-              true $ concat (take idx xs)
-                drop (inc idx) xs
+              true $ concat (take xs idx)
+                drop xs $ inc idx
         |cirru-form? $ quote
           defn cirru-form? (x)
             if (string? x) true $ if (list? x) (map x cirru-form?) false
@@ -2924,7 +2924,7 @@
               if (some? target) (.!focus target)
         |copy-silently! $ quote
           defn copy-silently! (x)
-            -> js/navigator .-clipboard (.writeText x)
+            -> js/navigator .-clipboard (.!writeText x)
               .!then $ fn () (println "\"Copied.")
               .!catch $ fn (error) (js/console.error "\"Failed to copy:" error)
         |focus! $ quote
@@ -3106,7 +3106,9 @@
                 {} (:id op-id) (:kind :info) (:text text) (:time op-time)
         |to-bookmark $ quote
           defn to-bookmark (writer)
-            get (:stack writer) (:pointer writer)
+            let
+                stack $ :stack writer
+              if (empty? stack) nil $ get stack (:pointer writer)
         |expr? $ quote
           defn expr? (x)
             = :expr $ :type x
@@ -3453,11 +3455,11 @@
                   -> rules $ mapcat
                     fn (rule)
                       filter
-                        fn (x) (not= x "\"[]")
                         if
                           string? $ last rule
                           [] $ last rule
                           last rule
+                        fn (x) (not= x "\"[]")
               {} (:imported import-names) (:defined var-names)
     |app.comp.changed-info $ {}
       :ns $ quote
