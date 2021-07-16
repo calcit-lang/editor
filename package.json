@@ -1,6 +1,6 @@
 {
   "name": "@calcit/editor",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "Calcit Editor",
   "bin": {
     "ct": "./entry/bin.js"
@@ -29,7 +29,7 @@
     "webpack-cli": "^4.7.2"
   },
   "dependencies": {
-    "@calcit/procs": "^0.4.8",
+    "@calcit/procs": "^0.4.10",
     "chalk": "^4.1.1",
     "dayjs": "^1.10.6",
     "gaze": "^1.1.3",
