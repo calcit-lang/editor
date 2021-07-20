@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.4
+    :version |0.6.5
   :files $ {}
     |app.keycode $ {}
       :ns $ quote (ns app.keycode)
@@ -297,7 +297,7 @@
                           :forced? shift?
                   (and meta? (= code keycode/slash) (not shift?))
                     do $ js/window.open
-                      str |https://clojuredocs.org/search?q= $ last
+                      str |https://apis.calcit-lang.org/?q= $ last
                         split (:text leaf) "\"/"
                   (and picker-mode? (= code keycode/escape))
                     d! :writer/picker-mode nil
@@ -1166,7 +1166,7 @@
           [] respo.comp.space :refer $ [] =<
           [] app.comp.modal :refer $ [] comp-modal
           [] app.style :as style
-          [] app.util :refer $ [] tree->cirru
+          [] app.util :refer $ [] tree->cirru now!
           [] app.keycode :as keycode
       :defs $ {}
         |style-wrong $ quote
@@ -1215,7 +1215,8 @@
                                   .!preventDefault $ :event e
                                   if expr?
                                     d! :ir/draft-expr $ parse-cirru-edn state
-                                    d! :ir/update-leaf state
+                                    d! :ir/update-leaf $ {} (:text state)
+                                      :at $ now!
                                   d! cursor nil
                                   close-modal! d!
                         =< nil 8
@@ -1232,7 +1233,8 @@
             fn (e d!)
               if expr?
                 d! :ir/draft-expr $ first (parse-cirru text)
-                d! :ir/update-leaf text
+                d! :ir/update-leaf $ {} (:text text)
+                  :at $ now!
               if close? $ do (d! cursor nil) (close-modal! d!)
         |style-original $ quote
           def style-original $ {} (:max-height 240) (:overflow :auto)
