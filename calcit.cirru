@@ -1,6 +1,6 @@
 
 {}
-  :configs $ {} (:reload-fn |app.server/reload!) (:port 6001) (:output |src) (:compact-output? true) (:storage-key |calcit.edn) (:version |0.6.5)
+  :configs $ {} (:reload-fn |app.server/reload!) (:port 6001) (:output |src) (:compact-output? true) (:storage-key |calcit.edn) (:version |0.6.6)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
     :init-fn |app.server/main!
     :extension |.cljs
@@ -2206,8 +2206,8 @@
                           |T $ {} (:text |text) (:type :leaf) (:at 1504777353661) (:by |root)
                           |j $ {}
                             :data $ {}
-                              |D $ {} (:text |or) (:type :leaf) (:at 1506852075138) (:by |root)
-                              |T $ {}
+                              |T $ {} (:text |or) (:type :leaf) (:at 1506852075138) (:by |root)
+                              |j $ {}
                                 :data $ {}
                                   |T $ {} (:text |if) (:type :leaf) (:at 1504777353661) (:by |root)
                                   |j $ {}
@@ -2247,10 +2247,10 @@
                                 :type :expr
                                 :at 1504777353661
                                 :by nil
-                              |j $ {} (:text "|\"") (:type :leaf) (:at 1551061698015) (:by |root)
+                              |r $ {} (:text "|\"") (:type :leaf) (:at 1551061698015) (:by |root)
                             :type :expr
-                            :at 1506852074331
-                            :by |root
+                            :at 1626796400024
+                            :by |S1lNv50FW
                         :type :expr
                         :at 1504777353661
                         :by nil
@@ -29990,6 +29990,18 @@
                                         :at 1504777570689
                                     :type :expr
                                     :at 1504777570689
+                                  |n $ {}
+                                    :data $ {}
+                                      |T $ {} (:text |or) (:type :leaf) (:at 1627217680827) (:by |S1lNv50FW)
+                                      |j $ {}
+                                        :data $ {}
+                                          |T $ {} (:text |{}) (:type :leaf) (:at 1627217681946) (:by |S1lNv50FW)
+                                        :type :expr
+                                        :at 1627217681642
+                                        :by |S1lNv50FW
+                                    :type :expr
+                                    :at 1627217679423
+                                    :by |S1lNv50FW
                                   |r $ {}
                                     :data $ {}
                                       |T $ {} (:text |keys) (:type :leaf) (:at 1504777570689) (:by |root)
@@ -34020,7 +34032,14 @@
                           |j $ {}
                             :data $ {}
                               |T $ {} (:text |:style) (:type :leaf) (:at 1504777353661) (:by |root)
-                              |j $ {} (:text |style-login) (:type :leaf) (:at 1504777353661) (:by |root)
+                              |j $ {}
+                                :data $ {}
+                                  |D $ {} (:text |merge) (:type :leaf) (:at 1626800555309) (:by |S1lNv50FW)
+                                  |L $ {} (:text |ui/column) (:type :leaf) (:at 1626800558266) (:by |S1lNv50FW)
+                                  |T $ {} (:text |style-login) (:type :leaf) (:at 1504777353661) (:by |root)
+                                :type :expr
+                                :at 1626800552778
+                                :by |S1lNv50FW
                             :type :expr
                             :at 1504777353661
                             :by nil
@@ -34036,12 +34055,7 @@
                               |j $ {}
                                 :data $ {}
                                   |T $ {} (:text |:style) (:type :leaf) (:at 1504777353661) (:by |root)
-                                  |j $ {}
-                                    :data $ {}
-                                      |T $ {} (:text |{}) (:type :leaf) (:at 1504777353661) (:by |root)
-                                    :type :expr
-                                    :at 1504777353661
-                                    :by nil
+                                  |r $ {} (:text |ui/column) (:type :leaf) (:at 1626796302387) (:by |S1lNv50FW)
                                 :type :expr
                                 :at 1504777353661
                                 :by nil
