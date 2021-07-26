@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.5
+    :version |0.6.6
   :files $ {}
     |app.keycode $ {}
       :ns $ quote (ns app.keycode)
@@ -2394,6 +2394,7 @@
               :defs-set $ if (some? selected-ns)
                 do $ ->
                   get-in files $ [] selected-ns :defs
+                  or $ {}
                   keys
                 #{}
               :file-configs $ if (some? selected-ns)
@@ -2737,9 +2738,9 @@
                 cursor $ :cursor states
                 state $ or (:data states) initial-state
               div
-                {} $ :style style-login
+                {} $ :style (merge ui/column style-login)
                 div
-                  {} $ :style ({})
+                  {} $ :style ui/column
                   div ({})
                     input $ {} (:placeholder |Username)
                       :value $ :username state
