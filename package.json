@@ -1,6 +1,6 @@
 {
   "name": "@calcit/editor",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "description": "Calcit Editor",
   "bin": {
     "ct": "./entry/bin.js"
@@ -22,6 +22,7 @@
   "author": "jiyinyiyong",
   "license": "MIT",
   "devDependencies": {
+    "bottom-tip": "^0.1.2",
     "feather-icons": "^4.28.0",
     "url-parse": "^1.5.1",
     "vite": "^2.4.2",

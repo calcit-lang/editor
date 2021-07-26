@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.6
+    :version |0.6.7
   :files $ {}
     |app.keycode $ {}
       :ns $ quote (ns app.keycode)
@@ -4622,6 +4622,8 @@
           [] recollect.patch :refer $ [] patch-twig
           [] cumulo-util.core :refer $ [] delay!
           [] app.config :as config
+          "\"bottom-tip" :default tip!
+          "\"./calcit.build-errors" :default build-errors
       :defs $ {}
         |render-app! $ quote
           defn render-app! () $ render! mount-target (comp-container @*states @*store) dispatch!
@@ -4715,13 +4717,15 @@
               do $ dispatch! :user/log-in (parse-cirru-edn raw)
               do $ println "|Found no storage."
         |reload! $ quote
-          defn reload! () (clear-cache!) (render-app!) (remove-watch *states :changes) (remove-watch *store :changes)
-            add-watch *states :changes $ fn (states prev) (render-app!)
-            add-watch *store :changes $ fn (store prev) (render-app!)
-              if
-                = :editor $ get-in @*store ([] :router :name)
-                focus!
-            println "|Code updated."
+          defn reload! () $ if (nil? build-errors) (tip! "\"ok~" nil)
+            do (clear-cache!) (render-app!) (remove-watch *states :changes) (remove-watch *store :changes)
+              add-watch *states :changes $ fn (states prev) (render-app!)
+              add-watch *store :changes $ fn (store prev) (render-app!)
+                if
+                  = :editor $ get-in @*store ([] :router :name)
+                  focus!
+              println "|Code updated."
+              tip! "\"error" build-errors
         |retry-connect! $ quote
           defn retry-connect! () $ if
             and (nil? @*store) (not @*connecting?)
