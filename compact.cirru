@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.6
+    :version |0.6.7
   :files $ {}
     |app.keycode $ {}
       :ns $ quote (ns app.keycode)
@@ -4465,25 +4465,30 @@
                     :placeholder "\"module/compact.cirru etc."
                     :input-style $ {} (:font-family ui/font-code)
                     :multiline? true
+                init-fn-plugin $ use-prompt (>> states :init-fn)
+                  {} (:text "\"Set a init-fn:")
+                    :initial $ :init-fn configs
+                    :placeholder "\"a path..."
+                    :input-style $ {} (:font-family ui/font-code)
+                reload-fn-plugin $ use-prompt (>> states :reload-fn)
+                  {} (:text "\"Set a reload-fn:")
+                    :initial $ :reload-fn configs
+                    :placeholder "\"a path..."
+                    :input-style $ {} (:font-family ui/font-code)
               div
                 {} $ :style
                   merge ui/expand ui/column $ {} (:padding "\"0 16px")
                 =< nil 8
-                div ({})
-                  <> "\"Version:" $ {} (:font-family ui/font-fancy)
-                  =< 8 nil
+                div ({}) (render-label "\"Version:") (=< 8 nil)
                   span
                     {} $ :on-click
                       fn (e d!)
                         .show version-plugin d! $ fn (text)
                           d! :configs/update $ {} (:version text)
-                    <>
-                      if
-                        blank? $ :version configs
-                        , "\"-" $ :version configs
-                      , style-value
-                div ({})
-                  <> "\"Modules:" $ {} (:font-family ui/font-fancy)
+                    render-field $ :version configs
+                div
+                  {} $ :style ui/row
+                  render-label "\"Modules:"
                   =< 8 nil
                   span
                     {} $ :on-click
@@ -4493,11 +4498,21 @@
                             :modules $ filter-not
                               split (trim text) "\" "
                               , blank?
-                    <>
-                      let
-                          content $ join-str (:modules configs) "\" "
-                        if (blank? content) "\"-" content
-                      , style-value
+                    render-field $ join-str (:modules configs) "\" "
+                div ({}) (render-label "\"init-fn:") (=< 8 nil)
+                  span
+                    {} $ :on-click
+                      fn (e d!)
+                        .show init-fn-plugin d! $ fn (text)
+                          d! :configs/update $ {} (:init-fn text)
+                    render-field $ :init-fn configs
+                div ({}) (render-label "\"reload-fn:") (=< 8 nil)
+                  span
+                    {} $ :on-click
+                      fn (e d!)
+                        .show reload-fn-plugin d! $ fn (text)
+                          d! :configs/update $ {} (:reload-fn text)
+                    render-field $ :reload-fn configs
                 pre
                   {} $ :style
                     merge $ {} (:max-width "\"100%") (:overflow :auto)
@@ -4506,6 +4521,16 @@
                     :innerHTML $ trim (format-cirru-edn configs)
                 .render version-plugin
                 .render modules-plugin
+                .render init-fn-plugin
+                .render reload-fn-plugin
+        |render-field $ quote
+          defn render-field (v)
+            <>
+              if (blank? v) "\"-" v
+              , style-value
+        |render-label $ quote
+          defn render-label (title)
+            <> title $ {} (:font-family ui/font-fancy)
     |app.updater.session $ {}
       :ns $ quote
         ns app.updater.session $ :require ([] app.schema :as schema)
@@ -4597,6 +4622,8 @@
           [] recollect.patch :refer $ [] patch-twig
           [] cumulo-util.core :refer $ [] delay!
           [] app.config :as config
+          "\"bottom-tip" :default tip!
+          "\"./calcit.build-errors" :default build-errors
       :defs $ {}
         |render-app! $ quote
           defn render-app! () $ render! mount-target (comp-container @*states @*store) dispatch!
@@ -4690,7 +4717,15 @@
               do $ dispatch! :user/log-in (parse-cirru-edn raw)
               do $ println "|Found no storage."
         |reload! $ quote
-          defn reload! () (clear-cache!) (render-app!) (println "|Code updated.")
+          defn reload! () $ if (nil? build-errors) (tip! "\"ok~" nil)
+            do (clear-cache!) (render-app!) (remove-watch *states :changes) (remove-watch *store :changes)
+              add-watch *states :changes $ fn (states prev) (render-app!)
+              add-watch *store :changes $ fn (store prev) (render-app!)
+                if
+                  = :editor $ get-in @*store ([] :router :name)
+                  focus!
+              println "|Code updated."
+              tip! "\"error" build-errors
         |retry-connect! $ quote
           defn retry-connect! () $ if
             and (nil? @*store) (not @*connecting?)
