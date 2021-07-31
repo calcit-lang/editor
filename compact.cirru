@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.7
+    :version |0.6.9
   :files $ {}
     |app.keycode $ {}
       :ns $ quote (ns app.keycode)
@@ -509,16 +509,19 @@
                     :data $ get-in db data-path
                 deleted-key $ last (:focus bookmark)
                 idx $ .index-of child-keys deleted-key
-              -> db
-                update-in data-path $ fn (expr)
-                  update expr :data $ fn (children) (dissoc children deleted-key)
-                update-in
-                  [] :sessions session-id :writer :stack (:pointer writer) :focus
-                  fn (focus)
-                    if (= 0 idx) (butlast focus)
-                      assoc focus
-                        dec $ count focus
-                        get child-keys $ dec idx
+              if
+                empty? $ :focus bookmark
+                -> db $ update-in ([] :sessions session-id :notifications) (push-warning op-id op-time "\"cannot delete from root")
+                -> db
+                  update-in data-path $ fn (expr)
+                    update expr :data $ fn (children) (dissoc children deleted-key)
+                  update-in
+                    [] :sessions session-id :writer :stack (:pointer writer) :focus
+                    fn (focus)
+                      if (= 0 idx) (butlast focus)
+                        assoc focus
+                          dec $ count focus
+                          get child-keys $ dec idx
         |leaf-before $ quote
           defn leaf-before (db op-data session-id op-id op-time)
             let
