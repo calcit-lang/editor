@@ -1507,7 +1507,7 @@
                   span $ {} (:inner-text x) (:style style-name)
                     :on-click $ fn (e d!) (d! :writer/pick-node x)
                 hint $ if (some? target-node) (:text target-node) nil
-                hint-fn $ fn (x)
+                hint-func $ fn (x)
                   if (blank? hint) false $ .includes? x hint
               div
                 {} $ :style style-container
@@ -1522,7 +1522,7 @@
                     possible-names $ ->
                       concat (.to-list imported-names) (.to-list defined-names)
                       .distinct
-                      filter hint-fn
+                      filter hint-func
                   if-not (empty? possible-names)
                     div ({})
                       list-> ({})
@@ -1532,7 +1532,7 @@
                             [] x $ render-code x
                       =< nil 8
                 let
-                    filtered-names $ -> imported-names (filter-not hint-fn)
+                    filtered-names $ -> imported-names (filter-not hint-func)
                   if-not (empty? filtered-names)
                     div ({})
                       list-> ({})
@@ -1541,7 +1541,7 @@
                             [] x $ render-code x
                       =< nil 8
                 list-> ({})
-                  -> defined-names (.to-list) (filter-not hint-fn) (sort)
+                  -> defined-names (.to-list) (filter-not hint-func) (sort)
                     map $ fn (x)
                       [] x $ render-code x
         |style-name $ quote
@@ -4498,7 +4498,7 @@
                             :modules $ filter-not
                               split (trim text) "\" "
                               , blank?
-                    render-field $ join-str (:modules configs) "\" "
+                    render-field $ -> (:modules configs) (or "\"") (join-str "\" ")
                 div ({}) (render-label "\"init-fn:") (=< 8 nil)
                   span
                     {} $ :on-click
