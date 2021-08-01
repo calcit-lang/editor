@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.7
+    :version |0.6.10
   :files $ {}
     |app.keycode $ {}
       :ns $ quote (ns app.keycode)
@@ -509,16 +509,19 @@
                     :data $ get-in db data-path
                 deleted-key $ last (:focus bookmark)
                 idx $ .index-of child-keys deleted-key
-              -> db
-                update-in data-path $ fn (expr)
-                  update expr :data $ fn (children) (dissoc children deleted-key)
-                update-in
-                  [] :sessions session-id :writer :stack (:pointer writer) :focus
-                  fn (focus)
-                    if (= 0 idx) (butlast focus)
-                      assoc focus
-                        dec $ count focus
-                        get child-keys $ dec idx
+              if
+                empty? $ :focus bookmark
+                -> db $ update-in ([] :sessions session-id :notifications) (push-warning op-id op-time "\"cannot delete from root")
+                -> db
+                  update-in data-path $ fn (expr)
+                    update expr :data $ fn (children) (dissoc children deleted-key)
+                  update-in
+                    [] :sessions session-id :writer :stack (:pointer writer) :focus
+                    fn (focus)
+                      if (= 0 idx) (butlast focus)
+                        assoc focus
+                          dec $ count focus
+                          get child-keys $ dec idx
         |leaf-before $ quote
           defn leaf-before (db op-data session-id op-id op-time)
             let
@@ -652,29 +655,37 @@
                 parent-bookmark $ update bookmark :focus butlast
                 last-coord $ last (:focus bookmark)
                 parent-path $ bookmark->path parent-bookmark
-              -> db
-                update-in
-                  [] :sessions session-id :writer :stack (:pointer writer) :focus
-                  fn (focus) (butlast focus)
-                update-in parent-path $ fn (base-expr)
-                  let
-                      expr $ get-in base-expr ([] :data last-coord)
-                      child-keys $ sort
-                        .to-list $ keys (:data base-expr)
-                      children $ -> (:data expr) (.to-list) (.sort-by first) (map last)
-                      idx $ .index-of child-keys last-coord
-                      limit-id $ if
-                        = idx $ dec (count child-keys)
-                        , bisection/max-id
-                          get child-keys $ inc idx
-                    loop
-                        result base-expr
-                        xs children
-                        next-id last-coord
-                      if (empty? xs) result $ recur
-                        assoc-in result ([] :data next-id) (first xs)
-                        rest xs
-                        bisection/bisect next-id limit-id
+              if
+                empty? $ :focus bookmark
+                -> db $ update-in (bookmark->path bookmark)
+                  fn (expr)
+                    if
+                      = 1 $ count (:data expr)
+                      last $ first (:data expr)
+                      , expr
+                -> db
+                  update-in
+                    [] :sessions session-id :writer :stack (:pointer writer) :focus
+                    fn (focus) (butlast focus)
+                  update-in parent-path $ fn (base-expr)
+                    let
+                        expr $ get-in base-expr ([] :data last-coord)
+                        child-keys $ sort
+                          .to-list $ keys (:data base-expr)
+                        children $ -> (:data expr) (.to-list) (.sort-by first) (map last)
+                        idx $ .index-of child-keys last-coord
+                        limit-id $ if
+                          = idx $ dec (count child-keys)
+                          , bisection/max-id
+                            get child-keys $ inc idx
+                      loop
+                          result base-expr
+                          xs children
+                          next-id last-coord
+                        if (empty? xs) result $ recur
+                          assoc-in result ([] :data next-id) (first xs)
+                          rest xs
+                          bisection/bisect next-id limit-id
         |unindent-leaf $ quote
           defn unindent-leaf (db op-data session-id op-id op-time)
             let
@@ -1507,7 +1518,7 @@
                   span $ {} (:inner-text x) (:style style-name)
                     :on-click $ fn (e d!) (d! :writer/pick-node x)
                 hint $ if (some? target-node) (:text target-node) nil
-                hint-fn $ fn (x)
+                hint-func $ fn (x)
                   if (blank? hint) false $ .includes? x hint
               div
                 {} $ :style style-container
@@ -1522,7 +1533,7 @@
                     possible-names $ ->
                       concat (.to-list imported-names) (.to-list defined-names)
                       .distinct
-                      filter hint-fn
+                      filter hint-func
                   if-not (empty? possible-names)
                     div ({})
                       list-> ({})
@@ -1532,7 +1543,7 @@
                             [] x $ render-code x
                       =< nil 8
                 let
-                    filtered-names $ -> imported-names (filter-not hint-fn)
+                    filtered-names $ -> imported-names (filter-not hint-func)
                   if-not (empty? filtered-names)
                     div ({})
                       list-> ({})
@@ -1541,7 +1552,7 @@
                             [] x $ render-code x
                       =< nil 8
                 list-> ({})
-                  -> defined-names (.to-list) (filter-not hint-fn) (sort)
+                  -> defined-names (.to-list) (filter-not hint-func) (sort)
                     map $ fn (x)
                       [] x $ render-code x
         |style-name $ quote
@@ -4498,7 +4509,7 @@
                             :modules $ filter-not
                               split (trim text) "\" "
                               , blank?
-                    render-field $ join-str (:modules configs) "\" "
+                    render-field $ -> (:modules configs) (or "\"") (join-str "\" ")
                 div ({}) (render-label "\"init-fn:") (=< 8 nil)
                   span
                     {} $ :on-click
