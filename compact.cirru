@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.9
+    :version |0.6.10
   :files $ {}
     |app.keycode $ {}
       :ns $ quote (ns app.keycode)
@@ -655,29 +655,37 @@
                 parent-bookmark $ update bookmark :focus butlast
                 last-coord $ last (:focus bookmark)
                 parent-path $ bookmark->path parent-bookmark
-              -> db
-                update-in
-                  [] :sessions session-id :writer :stack (:pointer writer) :focus
-                  fn (focus) (butlast focus)
-                update-in parent-path $ fn (base-expr)
-                  let
-                      expr $ get-in base-expr ([] :data last-coord)
-                      child-keys $ sort
-                        .to-list $ keys (:data base-expr)
-                      children $ -> (:data expr) (.to-list) (.sort-by first) (map last)
-                      idx $ .index-of child-keys last-coord
-                      limit-id $ if
-                        = idx $ dec (count child-keys)
-                        , bisection/max-id
-                          get child-keys $ inc idx
-                    loop
-                        result base-expr
-                        xs children
-                        next-id last-coord
-                      if (empty? xs) result $ recur
-                        assoc-in result ([] :data next-id) (first xs)
-                        rest xs
-                        bisection/bisect next-id limit-id
+              if
+                empty? $ :focus bookmark
+                -> db $ update-in (bookmark->path bookmark)
+                  fn (expr)
+                    if
+                      = 1 $ count (:data expr)
+                      last $ first (:data expr)
+                      , expr
+                -> db
+                  update-in
+                    [] :sessions session-id :writer :stack (:pointer writer) :focus
+                    fn (focus) (butlast focus)
+                  update-in parent-path $ fn (base-expr)
+                    let
+                        expr $ get-in base-expr ([] :data last-coord)
+                        child-keys $ sort
+                          .to-list $ keys (:data base-expr)
+                        children $ -> (:data expr) (.to-list) (.sort-by first) (map last)
+                        idx $ .index-of child-keys last-coord
+                        limit-id $ if
+                          = idx $ dec (count child-keys)
+                          , bisection/max-id
+                            get child-keys $ inc idx
+                      loop
+                          result base-expr
+                          xs children
+                          next-id last-coord
+                        if (empty? xs) result $ recur
+                          assoc-in result ([] :data next-id) (first xs)
+                          rest xs
+                          bisection/bisect next-id limit-id
         |unindent-leaf $ quote
           defn unindent-leaf (db op-data session-id op-id op-time)
             let
