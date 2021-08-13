@@ -3921,15 +3921,15 @@
               case-default (:kind bookmark)
                 d! :notify/push-message $ [] :warn "\"No op."
                 :def $ let
-                    code $ [] (:ns bookmark) "\":refer"
-                      [] $ :extra bookmark
-                  do-copy-logics! d! (format-cirru-edn code)
+                    code $ []
+                      [] (:ns bookmark) "\":refer" $ [] (:extra bookmark)
+                  do-copy-logics! d! (format-cirru code)
                     str "\"Copied path of " $ :extra bookmark
                 :ns $ let
                     the-ns $ :ns bookmark
-                    code $ [] the-ns "\":as"
-                      last $ split the-ns "\"."
-                  do-copy-logics! d! (format-cirru-edn code) (str "\"Copied path of " the-ns)
+                    code $ []
+                      [] the-ns "\":as" $ last (split the-ns "\".")
+                  do-copy-logics! d! (format-cirru code) (str "\"Copied path of " the-ns)
         |style-stack $ quote
           def style-stack $ {} (:max-width 200) (:overflow :auto) (:padding-bottom 120)
         |on-draft-box $ quote
