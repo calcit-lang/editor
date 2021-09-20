@@ -30,7 +30,8 @@ module.exports = {
     gaze: "commonjs gaze",
     ws: "commonjs ws",
     dayjs: "commonjs dayjs",
-    "latest-version": "commonjs latest-version",
+    "got": "commonjs got",
+    // "latest-version": "commonjs latest-version",
   },
   output: {
     path: path.resolve(__dirname, "js-out/"),
