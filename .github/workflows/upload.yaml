@@ -70,18 +70,3 @@ jobs:
 
     - name: Display status from deploy
       run: echo "${{ steps.deploy.outputs.status }}"
-
-    - name: Upload server script
-      id: deploy-server
-      uses: Pendect/action-rsyncer@v1.1.0
-      env:
-        DEPLOY_KEY: ${{secrets.rsync_private_key}}
-      with:
-        flags: '-avzr --progress'
-        options: ''
-        ssh_options: ''
-        src: 'dist-server/*'
-        dest: 'rsync-user@tiye.me:/servers/paste-sharing/'
-
-    - name: Display status from deploy
-      run: echo "${{ steps.deploy-server.outputs.status }}"

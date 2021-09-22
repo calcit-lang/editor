@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.10
+    :version |0.6.11
   :files $ {}
     |app.keycode $ {}
       :ns $ quote (ns app.keycode)
@@ -2047,7 +2047,9 @@
               ; println |deps deps-info def-info new-bookmark def-existed?
               if (some? new-bookmark)
                 if
-                  starts-with? (:ns new-bookmark) (str pkg |.)
+                  or
+                    = pkg $ :ns new-bookmark
+                    starts-with? (:ns new-bookmark) (str pkg |.)
                   if def-existed?
                     -> db $ update-in ([] :sessions sid :writer) (push-bookmark new-bookmark true)
                     if forced?
@@ -4295,7 +4297,7 @@
                       cond
                           = pointer from-idx
                           , to-idx
-                        (or (< pointer (min from-idx to-idx)) (> pointer (max from-idx to-idx)))
+                        (or (< pointer (min ([] from-idx to-idx))) (> pointer (max ([] from-idx to-idx))))
                           , pointer
                         true $ if (> from-idx to-idx) (inc pointer) (dec pointer)
                     update :stack $ fn (stack)
