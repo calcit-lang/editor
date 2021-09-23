@@ -9,21 +9,21 @@ Calcit Editor
 * **Call Stack Navigation**: more fine-grained functions navigation
 * **Collaboration**: changes real-time synced among multiple clients via WebSockets
 
-One function/definition in a screen, `Command d` to open called function at next tab, `Command j` `Command k` `Command i` to switch:
+One function/definition in a screen, `Command d` to open called function at next tab, `Command j` `Command k` `Command i` to switch. Screenshots from Chrome App:
 
-![Expression editor](https://pbs.twimg.com/media/ES6_JjPU4AEJ7zt?format=png&name=large)
+![Expression editor](https://pbs.twimg.com/media/E_8Rv2UUYAQDd52?format=jpg&name=large)
 
 Based on DOM/CSS, easy for another theme:
 
-![Styling](https://pbs.twimg.com/media/ES6_PiQU4AM0ceN?format=png&name=large)
+![Styling](https://pbs.twimg.com/media/E_8RyuHVkAA2hU-?format=jpg&name=large)
 
 `Command p` to search and jump inspired by Sublime Text :
 
-![Search panel](https://pbs.twimg.com/media/ES68XGoUwAAzudc?format=png&name=large)
+![Search panel](https://pbs.twimg.com/media/E_8R3F4VQAAUGWf?format=jpg&name=large)
 
 Browse namespaces and functions/variables:
 
-![Definitions browser](https://pbs.twimg.com/media/ES68ScLUEAAiW3Z?format=png&name=large)
+![Definitions browser](https://pbs.twimg.com/media/E_8R63kVIAQ8-AM?format=jpg&name=large)
 
 ### Usages
 
