@@ -1,6 +1,6 @@
 
 {}
-  :configs $ {} (:reload-fn |app.server/reload!) (:port 6001) (:output |src) (:compact-output? true) (:storage-key |calcit.edn) (:version |0.6.11)
+  :configs $ {} (:reload-fn |app.server/reload!) (:port 6001) (:output |src) (:compact-output? true) (:storage-key |calcit.edn) (:version |0.6.12)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
     :init-fn |app.server/main!
     :extension |.cljs
@@ -13623,15 +13623,12 @@
               |r $ {}
                 :data $ {}
                   |T $ {} (:text |path/join) (:type :leaf) (:at 1546165265053) (:by |root)
-                  |j $ {}
+                  |b $ {}
                     :data $ {}
-                      |D $ {} (:text |->) (:type :leaf) (:at 1625732904201) (:by |S1lNv50FW)
-                      |T $ {} (:text |js/process) (:type :leaf) (:at 1546165808126) (:by |root)
-                      |j $ {} (:text |.-env) (:type :leaf) (:at 1625732916072) (:by |S1lNv50FW)
-                      |r $ {} (:text |.-PWD) (:type :leaf) (:at 1625732918145) (:by |S1lNv50FW)
+                      |T $ {} (:text |js/process.cwd) (:type :leaf) (:at 1634876706977) (:by |S1lNv50FW)
                     :type :expr
-                    :at 1546165798078
-                    :by |root
+                    :at 1634876703141
+                    :by |S1lNv50FW
                   |r $ {}
                     :data $ {}
                       |T $ {} (:text |:storage-file) (:type :leaf) (:at 1546165265053) (:by |root)
