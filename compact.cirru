@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.11
+    :version |0.6.12
   :files $ {}
     |app.keycode $ {}
       :ns $ quote (ns app.keycode)
@@ -1077,7 +1077,7 @@
                 if (some? configs)
                   {} $ :configs configs
         |storage-file $ quote
-          def storage-file $ path/join (-> js/process .-env .-PWD) (:storage-file config/site)
+          def storage-file $ path/join (js/process.cwd) (:storage-file config/site)
         |on-file-change! $ quote
           defn on-file-change! () $ let
               file-content $ fs/readFileSync storage-file "\"utf8"
