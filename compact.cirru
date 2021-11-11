@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.12
+    :version |0.6.13
   :files $ {}
     |app.keycode $ {}
       :ns $ quote (ns app.keycode)
@@ -1006,6 +1006,7 @@
             :ir ir-file
             :saved-files $ {}
             :configs configs
+            :entries $ {}
         |bookmark $ quote
           def bookmark $ {} (:kind :def) (:ns nil) (:extra nil)
             :focus $ []
@@ -1712,7 +1713,7 @@
                     - (unix-time!) started-time
                     , "|ms to wrote calcit.cirru"
         |handle-compact-files! $ quote
-          defn handle-compact-files! (pkg old-files latest-files added-names removed-names changed-names configs filter-ns)
+          defn handle-compact-files! (pkg old-files latest-files added-names removed-names changed-names configs entries filter-ns)
             let
                 new-files $ if (some? filter-ns)
                   let
@@ -1725,6 +1726,7 @@
                     :reload-fn $ :reload-fn configs
                     :modules $ :modules configs
                     :version $ :version configs
+                  :entries entries
                   :files $ -> new-files
                     map-kv $ fn (k v)
                       [] k $ file->cirru v
@@ -1791,7 +1793,7 @@
                     filter-by-ns
                 handle-compact-files!
                   get-in db $ [] :ir :package
-                  , old-files new-files added-names removed-names changed-names (:configs db) filter-ns
+                  , old-files new-files added-names removed-names changed-names (:configs db) (:entries db) filter-ns
                 dispatch! :writer/save-files filter-ns
                 if save-ir? $ js/setTimeout
                   fn () $ let
