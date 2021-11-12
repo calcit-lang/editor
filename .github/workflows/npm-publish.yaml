@@ -46,15 +46,15 @@ jobs:
         run: >
           mkdir -p ~/.config/calcit/modules/ && cd ~/.config/calcit/modules/
           && git clone https://github.com/calcit-lang/lilac.git
-          && git clone https://github.com/calcit-lang/memof.git --branch 0.0.8
+          && git clone https://github.com/calcit-lang/memof.git
           && git clone https://github.com/calcit-lang/recollect.git
-          && git clone https://github.com/calcit-lang/bisection-key.git
+          && git clone https://github.com/calcit-lang/bisection-key.git --branch 0.0.9
           && git clone https://github.com/Respo/respo.calcit.git
           && git clone https://github.com/Respo/respo-ui.calcit.git
           && git clone https://github.com/Respo/respo-message.calcit.git
           && git clone https://github.com/Respo/respo-markdown.calcit.git
           && git clone https://github.com/Cumulo/cumulo-util.calcit.git
-          && git clone https://github.com/mvc-works/ws-edn.calcit.git --branch 0.0.4
+          && git clone https://github.com/mvc-works/ws-edn.calcit.git
           && git clone https://github.com/Respo/respo-feather.calcit.git
           && git clone https://github.com/Respo/alerts.calcit.git
 
