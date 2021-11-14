@@ -41,7 +41,7 @@ jobs:
         && git clone https://github.com/calcit-lang/lilac.git
         && git clone https://github.com/calcit-lang/memof.git
         && git clone https://github.com/calcit-lang/recollect.git
-        && git clone https://github.com/calcit-lang/bisection-key.git --branch 0.0.9
+        && git clone https://github.com/calcit-lang/bisection-key.git --branch 0.0.12
         && git clone https://github.com/Respo/respo.calcit.git
         && git clone https://github.com/Respo/respo-ui.calcit.git
         && git clone https://github.com/Respo/respo-message.calcit.git
