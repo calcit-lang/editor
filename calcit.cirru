@@ -20248,7 +20248,7 @@
                       |r $ {} (:type :expr) (:by |root) (:at 1563385609480)
                         :data $ {}
                           |T $ {} (:type :leaf) (:by |root) (:at 1563385609480) (:text |comp-md-block)
-                          |j $ {} (:type :leaf) (:by |root) (:at 1563386247375) (:text "|\"Calcit Editor is a syntax tree editor of [Cirru Project](http://cirru.org). Read more at [Calcit Editor](https://github.com/Cirru/calcit-editor).\n")
+                          |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1637139163019) (:text "|\"Calcit Editor is a syntax tree editor of [Cirru Project](http://cirru.org). Read more at [Calcit Editor](https://github.com/calcit-lang/editor).\n")
                           |r $ {} (:type :expr) (:by |root) (:at 1563385609480)
                             :data $ {}
                               |T $ {} (:type :leaf) (:by |root) (:at 1563385609480) (:text |{})
@@ -20256,7 +20256,7 @@
             :data $ {}
               |T $ {} (:type :leaf) (:by |root) (:at 1563385890329) (:text |def)
               |j $ {} (:type :leaf) (:by |root) (:at 1563385889441) (:text |install-commands)
-              |r $ {} (:type :leaf) (:by |root) (:at 1563385896203) (:text "|\"npm install -g calcit-editor\ncalcit-editor\n")
+              |r $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1637139182455) (:text "|\"npm install -g @calcit/editor\nct\n")
         :proc $ {} (:type :expr) (:by |root) (:at 1506854615870)
           :data $ {}
       |app.comp.login $ {}
@@ -21911,7 +21911,7 @@
                                                   |T $ {} (:type :expr) (:by |root) (:at 1505982287249)
                                                     :data $ {}
                                                       |D $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1625724471372) (:text |str)
-                                                      |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1625724475735) (:text "|\"http://calcit-editor.cirru.org?port=")
+                                                      |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1637139101410) (:text "|\"http://editor.calcit-lang.org?port=")
                                                       |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1625724476376) (:text |port)
                                       |T $ {} (:type :expr) (:by |root) (:at 1546181244479)
                                         :data $ {}
@@ -22177,298 +22177,6 @@
                                                           |T $ {} (:type :leaf) (:by |root) (:at 1504777570689) (:text |:extra)
                                                           |j $ {} (:type :leaf) (:by |root) (:at 1504777570689) (:text |f-k)
         :proc $ {} (:type :expr) (:at 1504777570689)
-          :data $ {}
-      |app.page $ {}
-        :ns $ {} (:type :expr) (:by nil) (:at 1504777353661)
-          :data $ {}
-            |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |ns)
-            |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |app.page)
-            |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-              :data $ {}
-                |xT $ {} (:type :expr) (:by |root) (:at 1546019023710)
-                  :data $ {}
-                    |T $ {} (:type :leaf) (:by |root) (:at 1546019023710) (:text |[])
-                    |j $ {} (:type :leaf) (:by |root) (:at 1546019023710) (:text |app.config)
-                    |r $ {} (:type :leaf) (:by |root) (:at 1546019023710) (:text |:as)
-                    |v $ {} (:type :leaf) (:by |root) (:at 1546019023710) (:text |config)
-                |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |:require)
-                |j $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                  :data $ {}
-                    |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |[])
-                    |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |respo.render.html)
-                    |r $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |:refer)
-                    |v $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                      :data $ {}
-                        |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |[])
-                        |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |make-string)
-                |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                  :data $ {}
-                    |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |[])
-                    |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |shell-page.core)
-                    |r $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |:refer)
-                    |v $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                      :data $ {}
-                        |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |[])
-                        |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |make-page)
-                        |r $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |spit)
-                        |v $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |slurp)
-                |v $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                  :data $ {}
-                    |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |[])
-                    |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |app.comp.container)
-                    |r $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |:refer)
-                    |v $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                      :data $ {}
-                        |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |[])
-                        |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |comp-container)
-                |x $ {} (:type :expr) (:by |root) (:at 1511263791972)
-                  :data $ {}
-                    |T $ {} (:type :leaf) (:by |root) (:at 1511263792549) (:text |[])
-                    |b $ {} (:type :leaf) (:by |root) (:at 1511263798143) (:text |cljs.reader)
-                    |f $ {} (:type :leaf) (:by |root) (:at 1511263800009) (:text |:refer)
-                    |j $ {} (:type :expr) (:by |root) (:at 1511263801219)
-                      :data $ {}
-                        |D $ {} (:type :leaf) (:by |root) (:at 1511263801969) (:text |[])
-                        |T $ {} (:type :leaf) (:by |root) (:at 1511263793862) (:text |read-string)
-                |y $ {} (:type :expr) (:by |root) (:at 1546019018487)
-                  :data $ {}
-                    |T $ {} (:type :leaf) (:by |root) (:at 1546019018487) (:text |[])
-                    |j $ {} (:type :leaf) (:by |root) (:at 1546019018487) (:text |cumulo-util.build)
-                    |r $ {} (:type :leaf) (:by |root) (:at 1546019018487) (:text |:refer)
-                    |v $ {} (:type :expr) (:by |root) (:at 1546019018487)
-                      :data $ {}
-                        |T $ {} (:type :leaf) (:by |root) (:at 1546019018487) (:text |[])
-                        |j $ {} (:type :leaf) (:by |root) (:at 1546019018487) (:text |get-ip!)
-        :defs $ {}
-          |base-info $ {} (:type :expr) (:by nil) (:at 1504777353661)
-            :data $ {}
-              |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |def)
-              |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |base-info)
-              |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                :data $ {}
-                  |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |{})
-                  |j $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                    :data $ {}
-                      |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |:title)
-                      |j $ {} (:type :expr) (:by |root) (:at 1546019005080)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:by |root) (:at 1546019006462) (:text |:title)
-                          |j $ {} (:type :leaf) (:by |root) (:at 1546019011567) (:text |config/site)
-                  |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                    :data $ {}
-                      |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |:icon)
-                      |j $ {} (:type :expr) (:by |root) (:at 1546019055298)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:by |root) (:at 1546019055298) (:text |:icon)
-                          |j $ {} (:type :leaf) (:by |root) (:at 1546019055298) (:text |config/site)
-                  |v $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                    :data $ {}
-                      |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |:ssr)
-                      |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |nil)
-                  |x $ {} (:type :expr) (:by |root) (:at 1510158646521)
-                    :data $ {}
-                      |T $ {} (:type :leaf) (:by |root) (:at 1510158648577) (:text |:inline-styles)
-                      |j $ {} (:type :expr) (:by |root) (:at 1510158649424)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:by |root) (:at 1510158649771) (:text |[])
-                          |j $ {} (:type :expr) (:by |root) (:at 1510158651398)
-                            :data $ {}
-                              |T $ {} (:type :leaf) (:by |root) (:at 1510158653883) (:text |slurp)
-                              |j $ {} (:type :leaf) (:by |root) (:at 1546019045099) (:text "|\"entry/main.css")
-          |prod-page $ {} (:type :expr) (:by nil) (:at 1504777353661)
-            :data $ {}
-              |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |defn)
-              |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |prod-page)
-              |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                :data $ {}
-              |v $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                :data $ {}
-                  |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |let)
-                  |j $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                    :data $ {}
-                      |T $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |html-content)
-                          |j $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                            :data $ {}
-                              |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |make-string)
-                              |j $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                                :data $ {}
-                                  |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |comp-container)
-                                  |j $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                                    :data $ {}
-                                      |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |{})
-                                  |r $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |nil)
-                      |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:by |root) (:at 1511259748819) (:text |assets)
-                          |j $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                            :data $ {}
-                              |T $ {} (:type :leaf) (:by |root) (:at 1511259753751) (:text |read-string)
-                              |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                                :data $ {}
-                                  |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |slurp)
-                                  |j $ {} (:type :leaf) (:by |root) (:at 1546019102257) (:text "|\"dist/assets.edn")
-                      |v $ {} (:type :expr) (:by |S1lNv50FW) (:at 1506597523062)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1506597526020) (:text |cdn)
-                          |j $ {} (:type :expr) (:by |S1lNv50FW) (:at 1506597526329)
-                            :data $ {}
-                              |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1506597526595) (:text |if)
-                              |f $ {} (:type :leaf) (:by |root) (:at 1546019115993) (:text |config/cdn?)
-                              |l $ {} (:type :expr) (:by |root) (:at 1546019121093)
-                                :data $ {}
-                                  |T $ {} (:type :leaf) (:by |root) (:at 1546019121093) (:text |:cdn-url)
-                                  |j $ {} (:type :leaf) (:by |root) (:at 1546019121093) (:text |config/site)
-                              |r $ {} (:type :leaf) (:by |root) (:at 1546019122574) (:text "|\"")
-                      |x $ {} (:type :expr) (:by |root) (:at 1508169997730)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:by |root) (:at 1508170000278) (:text |font-styles)
-                          |j $ {} (:type :expr) (:by |root) (:at 1546179412501)
-                            :data $ {}
-                              |T $ {} (:type :leaf) (:by |root) (:at 1546179412501) (:text |:release-ui)
-                              |j $ {} (:type :leaf) (:by |root) (:at 1546179412501) (:text |config/site)
-                      |y $ {} (:type :expr) (:by |root) (:at 1511259801901)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:by |root) (:at 1511259804764) (:text |prefix-cdn)
-                          |j $ {} (:type :expr) (:by |S1lNv50FW) (:at 1581650181910)
-                            :data $ {}
-                              |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1581650182192) (:text |fn)
-                              |j $ {} (:type :expr) (:by |S1lNv50FW) (:at 1581650183619)
-                                :data $ {}
-                                  |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1581650183924) (:text |x)
-                              |r $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1581650184772) (:text |x)
-                  |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                    :data $ {}
-                      |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |make-page)
-                      |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |html-content)
-                      |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |merge)
-                          |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |base-info)
-                          |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                            :data $ {}
-                              |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |{})
-                              |j $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                                :data $ {}
-                                  |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |:styles)
-                                  |j $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                                    :data $ {}
-                                      |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |[])
-                                      |b $ {} (:type :leaf) (:by |root) (:at 1508169995522) (:text |font-styles)
-                              |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                                :data $ {}
-                                  |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |:scripts)
-                                  |r $ {} (:type :expr) (:by |root) (:at 1511259770376)
-                                    :data $ {}
-                                      |T $ {} (:type :leaf) (:by |root) (:at 1511259772469) (:text |map)
-                                      |j $ {} (:type :expr) (:by |S1lNv50FW) (:at 1592845445807)
-                                        :data $ {}
-                                          |D $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845446315) (:text |fn)
-                                          |L $ {} (:type :expr) (:by |S1lNv50FW) (:at 1592845446574)
-                                            :data $ {}
-                                              |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845446838) (:text |x)
-                                          |T $ {} (:type :expr) (:by |S1lNv50FW) (:at 1592845451083)
-                                            :data $ {}
-                                              |D $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845451677) (:text |{})
-                                              |T $ {} (:type :expr) (:by |S1lNv50FW) (:at 1592845452920)
-                                                :data $ {}
-                                                  |D $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845453820) (:text |:src)
-                                                  |T $ {} (:type :expr) (:by |root) (:at 1511259772848)
-                                                    :data $ {}
-                                                      |j $ {} (:type :leaf) (:by |root) (:at 1511259777267) (:text |->)
-                                                      |r $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845450283) (:text |x)
-                                                      |v $ {} (:type :leaf) (:by |root) (:at 1511259783313) (:text |:output-name)
-                                                      |x $ {} (:type :leaf) (:by |root) (:at 1511259786867) (:text |prefix-cdn)
-                                              |j $ {} (:type :expr) (:by |S1lNv50FW) (:at 1592845454148)
-                                                :data $ {}
-                                                  |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845455501) (:text |:defer?)
-                                                  |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845456147) (:text |true)
-                                      |r $ {} (:type :leaf) (:by |root) (:at 1511259820046) (:text |assets)
-          |main! $ {} (:type :expr) (:by nil) (:at 1504777353661)
-            :data $ {}
-              |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |defn)
-              |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |main!)
-              |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                :data $ {}
-              |v $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                :data $ {}
-                  |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |if)
-                  |j $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                    :data $ {}
-                      |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |=)
-                      |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845688890) (:text |js/process.env.release)
-                      |r $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845690082) (:text ||true)
-                  |v $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                    :data $ {}
-                      |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |spit)
-                      |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text ||dist/index.html)
-                      |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |prod-page)
-                  |x $ {} (:type :expr) (:by |S1lNv50FW) (:at 1592845692533)
-                    :data $ {}
-                      |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845692533) (:text |spit)
-                      |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845692533) (:text ||target/index.html)
-                      |r $ {} (:type :expr) (:by |S1lNv50FW) (:at 1592845692533)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845692533) (:text |dev-page)
-          |dev-page $ {} (:type :expr) (:by nil) (:at 1504777353661)
-            :data $ {}
-              |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |defn)
-              |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |dev-page)
-              |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                :data $ {}
-              |v $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                :data $ {}
-                  |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |make-page)
-                  |j $ {} (:type :leaf) (:by |root) (:at 1546019067880) (:text "|\"")
-                  |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                    :data $ {}
-                      |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |merge)
-                      |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |base-info)
-                      |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                        :data $ {}
-                          |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |{})
-                          |j $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                            :data $ {}
-                              |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |:styles)
-                              |j $ {} (:type :expr) (:by |root) (:at 1546019077760)
-                                :data $ {}
-                                  |T $ {} (:type :leaf) (:by |root) (:at 1546019077760) (:text |[])
-                                  |j $ {} (:type :expr) (:by |root) (:at 1546019077760)
-                                    :data $ {}
-                                      |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1625724373574) (:text |str)
-                                      |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1625724385153) (:text "|\"http://")
-                                      |n $ {} (:type :expr) (:by |S1lNv50FW) (:at 1625724386060)
-                                        :data $ {}
-                                          |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1625724386585) (:text |get-ip!)
-                                      |r $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1625724380593) (:text "|\":8100/main-fonts.css")
-                                  |r $ {} (:type :leaf) (:by |root) (:at 1546019077760) (:text "|\"/entry/main.css")
-                          |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                            :data $ {}
-                              |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |:scripts)
-                              |j $ {} (:type :expr) (:by nil) (:at 1504777353661)
-                                :data $ {}
-                                  |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |[])
-                                  |v $ {} (:type :expr) (:by |S1lNv50FW) (:at 1592845436361)
-                                    :data $ {}
-                                      |D $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845436998) (:text |{})
-                                      |T $ {} (:type :expr) (:by |S1lNv50FW) (:at 1592845437528)
-                                        :data $ {}
-                                          |D $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845438542) (:text |:src)
-                                          |T $ {} (:type :leaf) (:by |root) (:at 1546019082926) (:text "|\"/client.js")
-                                      |j $ {} (:type :expr) (:by |S1lNv50FW) (:at 1592845438896)
-                                        :data $ {}
-                                          |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845441128) (:text |:defer?)
-                                          |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1592845441715) (:text |true)
-                          |v $ {} (:type :expr) (:by |root) (:at 1546019087522)
-                            :data $ {}
-                              |T $ {} (:type :leaf) (:by |root) (:at 1546019087522) (:text |:inline-styles)
-                              |j $ {} (:type :expr) (:by |root) (:at 1546019087522)
-                                :data $ {}
-                                  |T $ {} (:type :leaf) (:by |root) (:at 1546019087522) (:text |[])
-        :proc $ {} (:type :expr) (:by nil) (:at 1504777353661)
           :data $ {}
       |app.util $ {}
         :ns $ {} (:type :expr) (:at 1504777570689)
@@ -34666,10 +34374,6 @@
                     :data $ {}
                       |T $ {} (:type :leaf) (:by |root) (:at 1546018393081) (:text |:storage-file)
                       |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1574589932376) (:text "|\"calcit.cirru")
-                  |yT $ {} (:type :expr) (:by |root) (:at 1546018393081)
-                    :data $ {}
-                      |T $ {} (:type :leaf) (:by |root) (:at 1546018393081) (:text |:cdn-url)
-                      |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1546181989879) (:text "|\"https://cdn.tiye.me/calcit-editor/")
                   |yx $ {} (:type :expr) (:by |root) (:at 1546018393081)
                     :data $ {}
                       |T $ {} (:type :leaf) (:by |root) (:at 1546018393081) (:text |:theme)
@@ -34691,20 +34395,12 @@
                     :data $ {}
                       |T $ {} (:type :leaf) (:by |root) (:at 1546018393081) (:text |:icon)
                       |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1546182028358) (:text "|\"https://cdn.tiye.me/logo/cirru.png")
-                  |x $ {} (:type :expr) (:by |root) (:at 1546018393081)
-                    :data $ {}
-                      |T $ {} (:type :leaf) (:by |root) (:at 1546018393081) (:text |:dev-ui)
-                      |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1583153208070) (:text "|\"http://localhost:8100/main-fonts.css")
-                  |y $ {} (:type :expr) (:by |root) (:at 1546018393081)
-                    :data $ {}
-                      |T $ {} (:type :leaf) (:by |root) (:at 1546018393081) (:text |:release-ui)
-                      |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1583153212302) (:text "|\"//cdn.tiye.me/favored-fonts/main-fonts.css")
         :proc $ {} (:type :expr) (:by |root) (:at 1528995711679)
           :data $ {}
     :root $ {} (:def |main!) (:ns |main)
   :configs $ {} (:port 6001) (:storage-key |calcit.edn) (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.15
+    :version |0.6.16
     :output |src
     :compact-output? true
     :extension |.cljs

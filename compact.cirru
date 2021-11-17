@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.15
+    :version |0.6.16
   :entries $ {}
   :files $ {}
     |app.keycode $ {}
@@ -2732,8 +2732,8 @@
                 :style $ merge ui/center
                   {} (:padding "\"8px 8px")
                     :color $ hsl 0 0 50
-              comp-md-block "\"Calcit Editor is a syntax tree editor of [Cirru Project](http://cirru.org). Read more at [Calcit Editor](https://github.com/Cirru/calcit-editor).\n" $ {}
-        |install-commands $ quote (def install-commands "\"npm install -g calcit-editor\ncalcit-editor\n")
+              comp-md-block "\"Calcit Editor is a syntax tree editor of [Cirru Project](http://cirru.org). Read more at [Calcit Editor](https://github.com/calcit-lang/editor).\n" $ {}
+        |install-commands $ quote (def install-commands "\"npm install -g @calcit/editor\nct\n")
     |app.comp.login $ {}
       :ns $ quote
         ns app.comp.login $ :require
@@ -2983,7 +2983,7 @@
                     pick-port! (inc port) next-fn
                   do
                     let
-                        link $ chalk/blue (str "\"http://calcit-editor.cirru.org?port=" port)
+                        link $ chalk/blue (str "\"http://editor.calcit-lang.org?port=" port)
                       println $ str "\"port " port "\" is ok, please edit on " link
                     next-fn port
         |get-cli-configs! $ quote
@@ -3023,52 +3023,6 @@
                               [] f-k file
                               , f-entry
                           {} (:kind :def) (:ns k) (:extra f-k)
-    |app.page $ {}
-      :ns $ quote
-        ns app.page $ :require
-          [] respo.render.html :refer $ [] make-string
-          [] shell-page.core :refer $ [] make-page spit slurp
-          [] app.comp.container :refer $ [] comp-container
-          [] cljs.reader :refer $ [] read-string
-          [] app.config :as config
-          [] cumulo-util.build :refer $ [] get-ip!
-      :defs $ {}
-        |base-info $ quote
-          def base-info $ {}
-            :title $ :title config/site
-            :icon $ :icon config/site
-            :ssr nil
-            :inline-styles $ [] (slurp "\"entry/main.css")
-        |prod-page $ quote
-          defn prod-page () $ let
-              html-content $ make-string
-                comp-container ({}) nil
-              assets $ read-string (slurp "\"dist/assets.edn")
-              cdn $ if config/cdn? (:cdn-url config/site) "\""
-              font-styles $ :release-ui config/site
-              prefix-cdn $ fn (x) x
-            make-page html-content $ merge base-info
-              {}
-                :styles $ [] font-styles
-                :scripts $ map
-                  fn (x)
-                    {}
-                      :src $ -> x :output-name prefix-cdn
-                      :defer? true
-                  , assets
-        |main! $ quote
-          defn main! () $ if (= js/process.env.release |true)
-            spit |dist/index.html $ prod-page
-            spit |target/index.html $ dev-page
-        |dev-page $ quote
-          defn dev-page () $ make-page "\""
-            merge base-info $ {}
-              :styles $ []
-                str "\"http://" (get-ip!) "\":8100/main-fonts.css"
-                , "\"/entry/main.css"
-              :scripts $ []
-                {} (:src "\"/client.js") (:defer? true)
-              :inline-styles $ []
     |app.util $ {}
       :ns $ quote
         ns app.util $ :require ([] app.schema :as schema) ([] bisection-key.core :as bisection) ([] |shortid :as shortid)
@@ -4759,4 +4713,4 @@
         |dev? $ quote
           def dev? $ = "\"dev" (get-env "\"mode")
         |site $ quote
-          def site $ {} (:port nil) (:title "\"Calcit Editor") (:icon "\"https://cdn.tiye.me/logo/cirru.png") (:dev-ui "\"http://localhost:8100/main-fonts.css") (:release-ui "\"//cdn.tiye.me/favored-fonts/main-fonts.css") (:cdn-url "\"https://cdn.tiye.me/calcit-editor/") (:theme "\"#eeeeff") (:storage-key "\"calcit-storage") (:storage-file "\"calcit.cirru")
+          def site $ {} (:port nil) (:title "\"Calcit Editor") (:icon "\"https://cdn.tiye.me/logo/cirru.png") (:theme "\"#eeeeff") (:storage-key "\"calcit-storage") (:storage-file "\"calcit.cirru")
