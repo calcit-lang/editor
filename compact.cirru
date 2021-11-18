@@ -1534,7 +1534,7 @@
                 let
                     possible-names $ ->
                       concat (.to-list imported-names) (.to-list defined-names)
-                      .distinct
+                      distinct
                       filter hint-func
                   if-not (empty? possible-names)
                     div ({})

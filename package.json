@@ -30,7 +30,7 @@
     "webpack-cli": "^4.9.1"
   },
   "dependencies": {
-    "@calcit/procs": "^0.5.8",
+    "@calcit/procs": "^0.5.9",
     "chalk": "^4.1.1",
     "dayjs": "^1.10.7",
     "gaze": "^1.1.3",
