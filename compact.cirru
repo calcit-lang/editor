@@ -3327,10 +3327,11 @@
               , false
         |coord-contains? $ quote
           defn coord-contains? (xs ys)
-            if (empty? ys) true $ if
-              = (first xs) (first ys)
-              recur (rest xs) (rest ys)
-              , false
+            if (empty? ys) true $ if (empty? xs) false
+              if
+                = (first xs) (first ys)
+                recur (rest xs) (rest ys)
+                , false
     |app.twig.page-editor $ {}
       :ns $ quote
         ns app.twig.page-editor $ :require
