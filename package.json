@@ -25,12 +25,12 @@
     "bottom-tip": "^0.1.2",
     "feather-icons": "^4.28.0",
     "url-parse": "^1.5.1",
-    "vite": "^2.6.14",
+    "vite": "^2.7.1",
     "webpack": "5.65.0",
     "webpack-cli": "^4.9.1"
   },
   "dependencies": {
-    "@calcit/procs": "^0.5.12",
+    "@calcit/procs": "^0.5.14",
     "chalk": "^4.1.1",
     "dayjs": "^1.10.7",
     "gaze": "^1.1.3",
