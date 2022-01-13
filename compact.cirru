@@ -637,7 +637,6 @@
                   case-default (:kind op-data)
                     raise $ str "|Malformed data: " (pr-str op-data)
                     :ns $ assoc file :ns (:ns old-file)
-                    :proc $ assoc file :proc (:proc old-file)
                     :def $ let
                         def-text $ :extra op-data
                       assoc-in file ([] :defs def-text)
@@ -819,7 +818,7 @@
                 empty-expr $ cirru->tree ([]) user-id op-time
               -> db
                 assoc-in ([] :ir :files op-data)
-                  -> schema/file (assoc :ns default-expr) (assoc :proc empty-expr)
+                  -> schema/file $ assoc :ns default-expr
                 assoc-in ([] :sessions session-id :writer :selected-ns) op-data
         |duplicate $ quote
           defn duplicate (db op-data session-id op-id op-time)
@@ -973,7 +972,6 @@
           def file $ {}
             :ns $ {}
             :defs $ {}
-            :proc $ {}
             :configs $ {}
         |leaf $ quote
           def leaf $ {} (:type :leaf) (:by nil) (:at nil) (:text |)
@@ -2222,10 +2220,6 @@
                     :on-click $ fn (e d!)
                       d! :writer/edit $ {} (:kind :ns)
                   =< 16 nil
-                  span $ {} (:inner-text |proc) (:style style-link)
-                    :on-click $ fn (e d!)
-                      d! :writer/edit $ {} (:kind :proc)
-                  =< 16 nil
                   comp-icon :plus
                     {} (:font-size 14)
                       :color $ hsl 0 0 70
@@ -2442,7 +2436,6 @@
                     saved-file $ get saved-files ns-text
                   [] ns-text $ {}
                     :ns $ compare-entry (:ns file) (:ns saved-file)
-                    :proc $ compare-entry (:proc file) (:proc saved-file)
                     :defs $ let
                         all-defs $ union
                           keys $ or (:defs file) ({})
@@ -2459,7 +2452,6 @@
                 let[] (k info) pair $ not
                   and
                     = :same $ :ns info
-                    = :same $ :proc info
                     empty? $ :defs info
               pairs-map
         |keys-set $ quote
@@ -3014,9 +3006,7 @@
                       [] k file
                       , entry
                   concat
-                    []
-                      {} (:kind :ns) (:ns k)
-                      {} (:kind :proc) (:ns k)
+                    [] $ {} (:kind :ns) (:ns k)
                     -> (:defs file) (.to-list)
                       map $ fn (f-entry)
                         let-sugar
@@ -3029,7 +3019,7 @@
       :defs $ {}
         |file-tree->cirru $ quote
           defn file-tree->cirru (file)
-            -> file (update :ns tree->cirru) (update :proc tree->cirru)
+            -> file (update :ns tree->cirru)
               update :defs $ fn (defs)
                 -> defs $ map-kv
                   fn (def-text def-tree)
@@ -3086,7 +3076,7 @@
           defn expr? (x)
             = :expr $ :type x
         |kinds $ quote
-          def kinds $ #{} :ns :def :proc
+          def kinds $ #{} :ns :def
         |leaf? $ quote
           defn leaf? (x)
             = :leaf $ :type x
@@ -3192,7 +3182,6 @@
           defn cirru->file (file author timestamp)
             -> file
               update :ns $ \ cirru->tree % author timestamp
-              update :proc $ \ cirru->tree % author timestamp
               update :defs $ fn (defs)
                 -> defs $ map-kv
                   fn (k xs)
@@ -3391,7 +3380,6 @@
                       pairs-map
                     :expr $ case-default (:kind bookmark) nil
                       :ns $ get-in files ([] ns-text :ns)
-                      :proc $ get-in files ([] ns-text :proc)
                       :def $ get-in files
                         [] ns-text :defs $ :extra bookmark
                     :peek-def $ let
@@ -3407,7 +3395,6 @@
                         old-file $ get old-files ns-text
                       case-default (:kind bookmark) (do :unknown)
                         :ns $ compare-entry (:ns file) (:ns old-file)
-                        :proc $ compare-entry (:proc file) (:proc old-file)
                         :def $ compare-entry
                           get (:defs file) (:extra bookmark)
                           get (:defs old-file) (:extra bookmark)
@@ -3474,10 +3461,6 @@
                 if
                   not= :same $ :ns info
                   render-status ns-text :ns $ :ns info
-                =< 8 nil
-                if
-                  not= :same $ :proc info
-                  render-status ns-text :proc $ :proc info
               div
                 {} $ :style
                   merge ui/row-parted $ {} (:align-items :flex-end)
@@ -3497,7 +3480,6 @@
               d! :ir/reset-at $ case-default kind
                 {} (:ns ns-text) (:kind :def) (:extra kind)
                 :ns $ {} (:ns ns-text) (:kind :ns)
-                :proc $ {} (:ns ns-text) (:kind :proc)
               d! :states/clear nil
         |style-status-card $ quote
           def style-status-card $ {} (:cursor :pointer)
@@ -3507,7 +3489,6 @@
               d! :writer/select $ case-default kind
                 {} (:kind :def) (:ns ns-text) (:extra kind)
                 :ns $ {} (:kind :ns) (:ns ns-text) (:extra nil)
-                :proc $ {} (:kind :proc) (:ns ns-text) (:extra nil)
         |style-status $ quote
           def style-status $ {} (:font-size 12) (:font-family "|Josefin Sans")
             :color $ hsl 160 70 40
@@ -3755,10 +3736,6 @@
                               let
                                   old-expr $ :ns old-file
                                 if (= expr old-expr) old-expr expr
-                            update :proc $ fn (expr)
-                              let
-                                  old-expr $ :proc old-file
-                                if (= expr old-expr) old-expr expr
                             update :defs $ fn (defs)
                               -> defs $ map-kv
                                 fn (def-text expr)
@@ -3907,7 +3884,6 @@
                 ns-text $ :ns bookmark
               d! :ir/reset-at $ case kind
                 :ns $ {} (:ns ns-text) (:kind :ns)
-                :proc $ {} (:ns ns-text) (:kind :proc)
                 :def $ {} (:ns ns-text) (:kind :def)
                   :extra $ :extra bookmark
                 do $ println "\"Unknown" bookmark
@@ -4225,7 +4201,7 @@
                 bookmark $ to-bookmark writer
                 ns-text $ :ns bookmark
               if
-                contains? (#{} :def :proc) (:kind bookmark)
+                = :def $ :kind bookmark
                 -> db $ update-in ([] :sessions sid :writer)
                   push-bookmark $ assoc schema/bookmark :kind :ns :ns ns-text
                 , db
