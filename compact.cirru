@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.17-a1
+    :version |0.6.17-a2
   :entries $ {}
   :files $ {}
     |app.keycode $ {}
@@ -1025,12 +1025,10 @@
           app.util :refer $ db->string
           |chalk :default chalk
           |path :as path
-          |shortid :as shortid
           |fs :as fs
           |md5 :default md5
           |gaze :default gaze
           ws-edn.server :refer $ wss-serve! wss-send! wss-each!
-          |shortid :as shortid
           recollect.twig :refer $ clear-twig-caches! new-twig-loop!
           recollect.diff :refer $ diff-twig
           app.twig.container :refer $ twig-container
@@ -3010,7 +3008,7 @@
                           {} (:kind :def) (:ns k) (:extra f-k)
     |app.util $ {}
       :ns $ quote
-        ns app.util $ :require (app.schema :as schema) (bisection-key.core :as bisection) (|shortid :as shortid)
+        ns app.util $ :require (app.schema :as schema) (bisection-key.core :as bisection)
       :defs $ {}
         |file-tree->cirru $ quote
           defn file-tree->cirru (file)

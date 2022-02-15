@@ -7848,11 +7848,6 @@
                         |j $ {} (:type :leaf) (:by |root) (:at 1546107117288) (:text |wss-serve!)
                         |r $ {} (:type :leaf) (:by |root) (:at 1546107117288) (:text |wss-send!)
                         |v $ {} (:type :leaf) (:by |root) (:at 1546107117288) (:text |wss-each!)
-                |yyy $ {} (:type :expr) (:by |root) (:at 1546107139108)
-                  :data $ {}
-                    |j $ {} (:type :leaf) (:by |root) (:at 1546107139108) (:text ||shortid)
-                    |r $ {} (:type :leaf) (:by |root) (:at 1546107139108) (:text |:as)
-                    |v $ {} (:type :leaf) (:by |root) (:at 1546107139108) (:text |shortid)
                 |yyyT $ {} (:type :expr) (:by |root) (:at 1546107146012)
                   :data $ {}
                     |j $ {} (:type :leaf) (:by |root) (:at 1546107146012) (:text |recollect.twig)
@@ -7944,11 +7939,6 @@
                     |j $ {} (:type :leaf) (:by |root) (:at 1508168641253) (:text ||path)
                     |r $ {} (:type :leaf) (:by |root) (:at 1508168643334) (:text |:as)
                     |v $ {} (:type :leaf) (:by |root) (:at 1508168643994) (:text |path)
-                |yy $ {} (:type :expr) (:by |root) (:at 1511497135813)
-                  :data $ {}
-                    |j $ {} (:type :leaf) (:by |root) (:at 1511497139027) (:text ||shortid)
-                    |r $ {} (:type :leaf) (:by |root) (:at 1511497139813) (:text |:as)
-                    |v $ {} (:type :leaf) (:by |root) (:at 1511497143262) (:text |shortid)
                 |T $ {} (:type :leaf) (:by |root) (:at 1504777570689) (:text |:require)
                 |j $ {} (:type :expr) (:at 1504777570689)
                   :data $ {}
@@ -21711,12 +21701,6 @@
                     |j $ {} (:type :leaf) (:by |root) (:at 1504777570689) (:text |bisection-key.core)
                     |r $ {} (:type :leaf) (:by |root) (:at 1504777570689) (:text |:as)
                     |v $ {} (:type :leaf) (:by |root) (:at 1504777570689) (:text |bisection)
-                |x $ {} (:type :expr) (:at 1512701395373)
-                  :data $ {}
-                    |j $ {} (:type :leaf) (:at 1512701401136) (:text ||shortid) (:author |SJhrjuzlG)
-                    |r $ {} (:type :leaf) (:at 1512701402315) (:text |:as) (:author |SJhrjuzlG)
-                    |v $ {} (:type :leaf) (:at 1512701403282) (:text |shortid) (:author |SJhrjuzlG)
-                  :author |SJhrjuzlG
         :defs $ {}
           |file-tree->cirru $ {} (:type :expr) (:by |root) (:at 1511262149126)
             :data $ {}
@@ -33586,7 +33570,7 @@
     :root $ {} (:def |main!) (:ns |main)
   :configs $ {} (:port 6001) (:storage-key |calcit.edn) (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.17-a1
+    :version |0.6.17-a2
     :output |src
     :compact-output? true
     :extension |.cljs
