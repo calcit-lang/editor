@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.16
+    :version |0.6.17-a2
   :entries $ {}
   :files $ {}
     |app.keycode $ {}
@@ -35,17 +35,17 @@
     |app.comp.expr $ {}
       :ns $ quote
         ns app.comp.expr $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp list-> >> <> span div a
-          [] respo.comp.space :refer $ [] =<
-          [] app.keycode :as keycode
-          [] app.comp.leaf :refer $ [] comp-leaf
-          [] app.client-util :refer $ [] coord-contains? leaf? expr? expr-many-items?
-          [] app.util.shortcuts :refer $ [] on-window-keydown on-paste!
-          [] app.theme :refer $ [] decide-expr-theme
-          [] app.util :refer $ [] tree->cirru
-          [] app.util.dom :refer $ [] do-copy-logics!
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp list-> >> <> span div a
+          respo.comp.space :refer $ =<
+          app.keycode :as keycode
+          app.comp.leaf :refer $ comp-leaf
+          app.client-util :refer $ coord-contains? leaf? expr? expr-many-items?
+          app.util.shortcuts :refer $ on-window-keydown on-paste!
+          app.theme :refer $ decide-expr-theme
+          app.util :refer $ tree->cirru
+          app.util.dom :refer $ do-copy-logics!
           bisection-key.util :refer $ get-min-key get-max-key
       :defs $ {}
         |comp-expr $ quote
@@ -179,17 +179,17 @@
     |app.comp.leaf $ {}
       :ns $ quote
         ns app.comp.leaf $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp <> span div input textarea a
-          [] respo.comp.space :refer $ [] =<
-          [] polyfill.core :refer $ [] text-width*
-          [] app.keycode :as keycode
-          [] app.util :as util
-          [] app.util.shortcuts :refer $ [] on-window-keydown on-paste!
-          [] app.theme :refer $ [] decide-leaf-theme
-          [] app.util :refer $ [] tree->cirru
-          [] app.util.dom :refer $ [] do-copy-logics!
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp <> span div input textarea a
+          respo.comp.space :refer $ =<
+          polyfill.core :refer $ text-width*
+          app.keycode :as keycode
+          app.util :as util
+          app.util.shortcuts :refer $ on-window-keydown on-paste!
+          app.theme :refer $ decide-leaf-theme
+          app.util :refer $ tree->cirru
+          app.util.dom :refer $ do-copy-logics!
       :defs $ {}
         |comp-leaf $ quote
           defcomp comp-leaf (states leaf focus coord by-other? first? readonly? picker-mode? theme)
@@ -307,13 +307,13 @@
     |app.comp.header $ {}
       :ns $ quote
         ns app.comp.header $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp >> <> span div a
-          [] respo.comp.space :refer $ [] =<
-          [] app.util.dom :refer $ [] focus-search!
-          [] feather.core :refer $ [] comp-icon
-          [] respo-alerts.core :refer $ [] use-prompt
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp >> <> span div a
+          respo.comp.space :refer $ =<
+          app.util.dom :refer $ focus-search!
+          feather.core :refer $ comp-icon
+          respo-alerts.core :refer $ use-prompt
       :defs $ {}
         |style-entry $ quote
           def style-entry $ {} (:cursor :pointer) (:padding "\"0 12px")
@@ -379,22 +379,22 @@
     |app.comp.container $ {}
       :ns $ quote
         ns app.comp.container $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp >> <> div span
-          [] respo.comp.inspect :refer $ [] comp-inspect
-          [] app.comp.header :refer $ [] comp-header
-          [] app.comp.profile :refer $ [] comp-profile
-          [] app.comp.login :refer $ [] comp-login
-          [] app.comp.page-files :refer $ [] comp-page-files
-          [] app.comp.page-editor :refer $ [] comp-page-editor
-          [] app.comp.page-members :refer $ [] comp-page-members
-          [] app.comp.search :refer $ [] comp-search
-          [] app.comp.messages :refer $ [] comp-messages
-          [] app.comp.watching :refer $ [] comp-watching
-          [] app.comp.about :refer $ [] comp-about
-          [] app.comp.configs :refer $ [] comp-configs
-          [] app.config :refer $ [] dev?
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp >> <> div span
+          respo.comp.inspect :refer $ comp-inspect
+          app.comp.header :refer $ comp-header
+          app.comp.profile :refer $ comp-profile
+          app.comp.login :refer $ comp-login
+          app.comp.page-files :refer $ comp-page-files
+          app.comp.page-editor :refer $ comp-page-editor
+          app.comp.page-members :refer $ comp-page-members
+          app.comp.search :refer $ comp-search
+          app.comp.messages :refer $ comp-messages
+          app.comp.watching :refer $ comp-watching
+          app.comp.about :refer $ comp-about
+          app.comp.configs :refer $ comp-configs
+          app.config :refer $ dev?
       :defs $ {}
         |comp-container $ quote
           defcomp comp-container (states store)
@@ -442,12 +442,11 @@
           def style-body $ {} (:padding-top 12)
     |app.updater.ir $ {}
       :ns $ quote
-        ns app.updater.ir $ :require ([] app.schema :as schema) ([] bisection-key.core :as bisection)
-          [] app.util :refer $ [] expr? leaf? bookmark->path to-writer to-bookmark to-keys cirru->tree cirru->file
-          [] app.util.list :refer $ [] dissoc-idx
-          [] bisection-key.util :refer $ [] key-before key-after key-prepend key-append assoc-prepend key-nth assoc-nth val-nth get-min-key
-          [] clojure.string :as string
-          [] app.util :refer $ [] push-warning
+        ns app.updater.ir $ :require (app.schema :as schema) (bisection-key.core :as bisection)
+          app.util :refer $ expr? leaf? bookmark->path to-writer to-bookmark to-keys cirru->tree cirru->file
+          app.util.list :refer $ dissoc-idx
+          bisection-key.util :refer $ key-before key-after key-prepend key-append assoc-prepend key-nth assoc-nth val-nth get-min-key
+          app.util :refer $ push-warning
       :defs $ {}
         |replace-file $ quote
           defn replace-file (db op-data sid op-id op-time)
@@ -1019,29 +1018,25 @@
             :version "\"0.0.1"
     |app.server $ {}
       :ns $ quote
-        ns app.server $ :require ([] app.schema :as schema)
-          [] app.updater :refer $ [] updater
-          [] cljs.core.async :refer $ [] <! >!
-          [] cljs.reader :refer $ [] read-string
-          [] app.util.compile :refer $ [] handle-files! persist!
-          [] app.util.env :refer $ [] pick-port!
-          [] app.util :refer $ [] db->string
-          [] |chalk :as chalk
-          [] |path :as path
-          [] |shortid :as shortid
-          [] |fs :as fs
-          [] |md5 :default md5
-          [] |gaze :default gaze
-          [] ws-edn.server :refer $ [] wss-serve! wss-send! wss-each!
-          [] |shortid :as shortid
-          [] recollect.twig :refer $ [] clear-twig-caches! new-twig-loop!
-          [] recollect.diff :refer $ [] diff-twig
-          [] app.twig.container :refer $ [] twig-container
-          [] app.util.env :refer $ [] check-version!
-          [] app.config :as config
-          [] cumulo-util.file :refer $ [] write-mildly!
-          [] cumulo-util.core :refer $ [] unix-time! id! delay!
-          [] app.util.env :refer $ [] get-cli-configs!
+        ns app.server $ :require (app.schema :as schema)
+          app.updater :refer $ updater
+          app.util.compile :refer $ handle-files! persist!
+          app.util.env :refer $ pick-port!
+          app.util :refer $ db->string
+          |chalk :default chalk
+          |path :as path
+          |fs :as fs
+          |md5 :default md5
+          |gaze :default gaze
+          ws-edn.server :refer $ wss-serve! wss-send! wss-each!
+          recollect.twig :refer $ clear-twig-caches! new-twig-loop!
+          recollect.diff :refer $ diff-twig
+          app.twig.container :refer $ twig-container
+          app.util.env :refer $ check-version!
+          app.config :as config
+          cumulo-util.file :refer $ write-mildly!
+          cumulo-util.core :refer $ unix-time! id! delay!
+          app.util.env :refer $ get-cli-configs!
       :defs $ {}
         |sync-clients! $ quote
           defn sync-clients! (db)
@@ -1065,14 +1060,14 @@
                 found? $ fs/existsSync storage-file
                 configs $ :configs schema/database
               if found?
-                println $ chalk/gray "\"Loading calcit.cirru"
-                println $ chalk/yellow "\"Using default schema."
+                println $ .!gray chalk "\"Loading calcit.cirru"
+                println $ .!yellow chalk "\"Using default schema."
               if found?
                 let
                     started-at $ unix-time!
                     data $ parse-cirru-edn (fs/readFileSync storage-file "\"utf8")
                     cost $ - (unix-time!) started-at
-                  println $ chalk/gray (str "\"Took " cost "\"ms to load.")
+                  println $ .!gray chalk (str "\"Took " cost "\"ms to load.")
                   , data
                 if (some? configs)
                   {} $ :configs configs
@@ -1085,7 +1080,7 @@
             if (not= new-md5 @*calcit-md5)
               let
                   calcit $ parse-cirru-edn file-content
-                println $ chalk/blue "\"calcit storage file changed!"
+                println $ .!blue chalk "\"calcit storage file changed!"
                 reset! *calcit-md5 new-md5
                 dispatch! :watcher/file-change calcit nil
         |compile-all-files! $ quote
@@ -1147,13 +1142,13 @@
           defn run-server! (dispatch! port)
             wss-serve! port $ {}
               :on-open $ fn (sid socket) (dispatch! :session/connect nil sid)
-                println $ chalk/gray (str "\"client connected: " sid)
+                println $ .!gray chalk (str "\"client connected: " sid)
               :on-data $ fn (sid action)
                 case-default (:kind action) (println "\"unknown data" action)
                   :op $ dispatch! (:op action) (:data action) sid
                   :ping nil
               :on-close $ fn (sid event)
-                println $ chalk/gray (str "\"client disconnected: " sid)
+                println $ .!gray chalk (str "\"client disconnected: " sid)
                 dispatch! :session/disconnect nil sid
               :on-error $ fn (error) (js/console.error error)
         |render-loop! $ quote
@@ -1165,20 +1160,20 @@
           defatom *client-caches $ {}
         |reload! $ quote
           defn reload! ()
-            println $ chalk/gray "|code updated."
+            println $ .!gray chalk "|code updated."
             clear-twig-caches!
             sync-clients! @*reader-db
     |app.comp.draft-box $ {}
       :ns $ quote
         ns app.comp.draft-box $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp <> span div textarea pre button a
-          [] respo.comp.space :refer $ [] =<
-          [] app.comp.modal :refer $ [] comp-modal
-          [] app.style :as style
-          [] app.util :refer $ [] tree->cirru now!
-          [] app.keycode :as keycode
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp <> span div textarea pre button a
+          respo.comp.space :refer $ =<
+          app.comp.modal :refer $ comp-modal
+          app.style :as style
+          app.util :refer $ tree->cirru now!
+          app.keycode :as keycode
       :defs $ {}
         |style-wrong $ quote
           def style-wrong $ {} (:color :red) (:font-size 24) (:font-weight 100) (:font-family "|Josefin Sans") (:cursor :pointer)
@@ -1282,15 +1277,15 @@
     |app.comp.search $ {}
       :ns $ quote
         ns app.comp.search $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp list-> <> span div input a
-          [] respo.comp.space :refer $ [] =<
-          [] app.polyfill :refer $ [] text-width*
-          [] app.keycode :as keycode
-          [] app.client-util :as util
-          [] app.style :as style
-          [] app.util.shortcuts :refer $ [] on-window-keydown
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp list-> <> span div input a
+          respo.comp.space :refer $ =<
+          app.polyfill :refer $ text-width*
+          app.keycode :as keycode
+          app.client-util :as util
+          app.style :as style
+          app.util.shortcuts :refer $ on-window-keydown
       :defs $ {}
         |initial-state $ quote
           def initial-state $ {} (:query |) (:selection 0)
@@ -1451,8 +1446,8 @@
     |app.twig.watching $ {}
       :ns $ quote
         ns app.twig.watching $ :require
-          [] app.util :refer $ [] to-bookmark
-          [] app.twig.user :refer $ [] twig-user
+          app.util :refer $ to-bookmark
+          app.twig.user :refer $ twig-user
       :defs $ {}
         |twig-watching $ quote
           defn twig-watching (session my-sid files users)
@@ -1478,8 +1473,8 @@
                     get-in files path
     |app.theme.beginner $ {}
       :ns $ quote
-        ns app.theme.beginner $ :require ([] app.theme.star-trail :as star-trail)
-          [] respo.util.format :refer $ [] hsl
+        ns app.theme.beginner $ :require (app.theme.star-trail :as star-trail)
+          respo.util.format :refer $ hsl
       :defs $ {}
         |style-expr-beginner $ quote
           def style-expr-beginner $ {}
@@ -1495,10 +1490,10 @@
     |app.comp.picker-notice $ {}
       :ns $ quote
         ns app.comp.picker-notice $ :require
-          [] respo.core :refer $ [] defcomp list-> >> <> span div a pre
-          [] respo-ui.core :as ui
-          [] respo.util.format :refer $ [] hsl
-          [] respo.comp.space :refer $ [] =<
+          respo.core :refer $ defcomp list-> >> <> span div a pre
+          respo-ui.core :as ui
+          respo.util.format :refer $ hsl
+          respo.comp.space :refer $ =<
       :defs $ {}
         |style-container $ quote
           def style-container $ {} (:padding "\"4px 8px") (:margin "\"8px 0")
@@ -1563,12 +1558,12 @@
     |app.twig.container $ {}
       :ns $ quote
         ns app.twig.container $ :require
-          [] app.twig.user :refer $ [] twig-user
-          [] app.twig.page-files :refer $ [] twig-page-files
-          [] app.twig.page-editor :refer $ [] twig-page-editor
-          [] app.twig.page-members :refer $ [] twig-page-members
-          [] app.twig.search :refer $ [] twig-search
-          [] app.twig.watching :refer $ [] twig-watching
+          app.twig.user :refer $ twig-user
+          app.twig.page-files :refer $ twig-page-files
+          app.twig.page-editor :refer $ twig-page-editor
+          app.twig.page-members :refer $ twig-page-members
+          app.twig.search :refer $ twig-search
+          app.twig.watching :refer $ twig-watching
       :defs $ {}
         |twig-container $ quote
           defn twig-container (db session)
@@ -1609,7 +1604,7 @@
                   :stats $ {} (:members-count 0)
     |app.updater $ {}
       :ns $ quote
-        ns app.updater $ :require ([] app.updater.session :as session) ([] app.updater.user :as user) ([] app.updater.router :as router) ([] app.updater.ir :as ir) ([] app.updater.writer :as writer) ([] app.updater.notify :as notify) ([] app.updater.analyze :as analyze) ([] app.updater.watcher :as watcher) ([] app.updater.configs :as configs)
+        ns app.updater $ :require (app.updater.session :as session) (app.updater.user :as user) (app.updater.router :as router) (app.updater.ir :as ir) (app.updater.writer :as writer) (app.updater.notify :as notify) (app.updater.analyze :as analyze) (app.updater.watcher :as watcher) (app.updater.configs :as configs)
       :defs $ {}
         |updater $ quote
           defn updater (db op op-data sid op-id op-time)
@@ -1689,16 +1684,15 @@
     |app.util.compile $ {}
       :ns $ quote
         ns app.util.compile $ :require
-          [] app.util :refer $ [] file->cirru db->string tree->cirru now! hide-empty-fields
-          [] "\"chalk" :as chalk
-          [] "\"path" :as path
-          [] "\"fs" :as fs
-          [] "\"child_process" :as cp
-          [] "\"md5" :default md5
-          [] app.config :as config
-          [] cumulo-util.core :refer $ [] unix-time!
-          [] applied-science.js-interop :as j
-          [] cirru-edn.core :as cirru-edn
+          app.util :refer $ file->cirru db->string tree->cirru now! hide-empty-fields
+          "\"chalk" :default chalk
+          "\"path" :as path
+          "\"fs" :as fs
+          "\"child_process" :as cp
+          "\"md5" :default md5
+          app.config :as config
+          cumulo-util.core :refer $ unix-time!
+          cirru-edn.core :as cirru-edn
       :defs $ {}
         |path $ quote
           def path $ js/require |path
@@ -1706,8 +1700,8 @@
           defn persist-async! (storage-path db-str started-time)
             fs/writeFile storage-path db-str $ fn (err)
               if (some? err)
-                js/console.log $ chalk/red "\"Failed to write storage!" err
-                println $ chalk/gray
+                js/console.log $ .!red chalk "\"Failed to write storage!" err
+                println $ .!gray chalk
                   str "|took "
                     - (unix-time!) started-time
                     , "|ms to wrote calcit.cirru"
@@ -1802,7 +1796,7 @@
                     persist-async! (:storage-file config/site) db-content started-time
               fn (e)
                 do
-                  println $ chalk/red e
+                  println $ .!red chalk e
                   js/console.error e
                   dispatch! :notify/push-message $ [] :error (aget e "\"message")
         |remove-file! $ quote
@@ -1810,10 +1804,10 @@
             let
                 project-path $ path/join output-dir file-path
               cp/execSync $ str "|rm -rfv " project-path
-              println $ chalk/red (str "|removed " project-path)
+              println $ .!red chalk (str "|removed " project-path)
         |persist! $ quote
           defn persist! (storage-path db-str started-time) (fs/writeFileSync storage-path db-str)
-            println $ chalk/gray
+            println $ .!gray chalk
               str "|took "
                 - (unix-time!) started-time
                 , "|ms to wrote calcit.cirru"
@@ -1861,14 +1855,14 @@
     |app.comp.abstract $ {}
       :ns $ quote
         ns app.comp.abstract $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp <> span div pre input button a
-          [] respo.comp.inspect :refer $ [] comp-inspect
-          [] respo.comp.space :refer $ [] =<
-          [] app.style :as style
-          [] app.comp.modal :refer $ [] comp-modal
-          [] app.keycode :as keycode
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp <> span div pre input button a
+          respo.comp.inspect :refer $ comp-inspect
+          respo.comp.space :refer $ =<
+          app.style :as style
+          app.comp.modal :refer $ comp-modal
+          app.keycode :as keycode
       :defs $ {}
         |comp-abstract $ quote
           defcomp comp-abstract (states close-modal!)
@@ -1895,8 +1889,8 @@
                       do (d! :analyze/abstract-def state) (d! cursor nil) (close-modal! d!)
     |app.theme.curves $ {}
       :ns $ quote
-        ns app.theme.curves $ :require ([] app.theme.star-trail :as star-trail)
-          [] respo.util.format :refer $ [] hsl
+        ns app.theme.curves $ :require (app.theme.star-trail :as star-trail)
+          respo.util.format :refer $ hsl
       :defs $ {}
         |decide-expr-style $ quote
           defn decide-expr-style (expr has-others? focused? tail? layout-mode length depth)
@@ -1920,10 +1914,10 @@
             -> user $ dissoc :password
     |app.updater.analyze $ {}
       :ns $ quote
-        ns app.updater.analyze $ :require ([] clojure.string :as string)
-          [] app.util :refer $ [] bookmark->path to-writer to-bookmark parse-deps tree->cirru cirru->tree parse-def push-warning
-          [] app.util.stack :refer $ [] push-bookmark
-          [] app.schema :as schema
+        ns app.updater.analyze $ :require
+          app.util :refer $ bookmark->path to-writer to-bookmark parse-deps tree->cirru cirru->tree parse-def push-warning
+          app.util.stack :refer $ push-bookmark
+          app.schema :as schema
       :defs $ {}
         |peek-def $ quote
           defn peek-def (db op-data sid op-id op-time)
@@ -2071,10 +2065,10 @@
     |app.comp.bookmark $ {}
       :ns $ quote
         ns app.comp.bookmark $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp <> span div a
-          [] respo.comp.space :refer $ [] =<
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp <> span div a
+          respo.comp.space :refer $ =<
       :defs $ {}
         |style-bookmark $ quote
           def style-bookmark $ {} (:line-height |1.2em) (:padding "|4px 8px") (:cursor :pointer) (:position :relative) (:white-space :nowrap)
@@ -2159,7 +2153,7 @@
             assoc-in states ([] :editor :data :abstract?) true
     |app.util.detect $ {}
       :ns $ quote
-        ns app.util.detect $ :require ([] |net :as net)
+        ns app.util.detect $ :require (|net :as net)
       :defs $ {}
         |port-taken? $ quote
           defn port-taken? (port next-fn)
@@ -2179,18 +2173,18 @@
     |app.comp.page-files $ {}
       :ns $ quote
         ns app.comp.page-files $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp list-> >> <> span div pre input button a
-          [] respo.comp.inspect :refer $ [] comp-inspect
-          [] respo.comp.space :refer $ [] =<
-          [] app.style :as style
-          [] app.comp.changed-files :refer $ [] comp-changed-files
-          [] keycode.core :as keycode
-          [] app.comp.file-replacer :refer $ [] comp-file-replacer
-          [] app.util.shortcuts :refer $ [] on-window-keydown
-          [] respo-alerts.core :refer $ [] use-prompt use-confirm comp-select
-          [] feather.core :refer $ [] comp-icon comp-i
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp list-> >> <> span div pre input button a
+          respo.comp.inspect :refer $ comp-inspect
+          respo.comp.space :refer $ =<
+          app.style :as style
+          app.comp.changed-files :refer $ comp-changed-files
+          keycode.core :as keycode
+          app.comp.file-replacer :refer $ comp-file-replacer
+          app.util.shortcuts :refer $ on-window-keydown
+          respo-alerts.core :refer $ use-prompt use-confirm comp-select
+          feather.core :refer $ comp-icon comp-i
       :defs $ {}
         |style-input $ quote
           def style-input $ merge style/input
@@ -2393,9 +2387,9 @@
     |app.twig.page-files $ {}
       :ns $ quote
         ns app.twig.page-files $ :require
-          [] clojure.set :refer $ [] union
-          [] app.util :refer $ [] file->cirru
-          [] app.util.list :refer $ [] compare-entry
+          clojure.set :refer $ union
+          app.util :refer $ file->cirru
+          app.util.list :refer $ compare-entry
       :defs $ {}
         |twig-page-files $ quote
           defn twig-page-files (files selected-ns saved-files draft-ns sessions sid)
@@ -2459,12 +2453,12 @@
     |app.comp.theme-menu $ {}
       :ns $ quote
         ns app.comp.theme-menu $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp >> list-> <> span div pre input button a
-          [] respo.comp.inspect :refer $ [] comp-inspect
-          [] respo.comp.space :refer $ [] =<
-          [] app.style :as style
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp >> list-> <> span div pre input button a
+          respo.comp.inspect :refer $ comp-inspect
+          respo.comp.space :refer $ =<
+          app.style :as style
       :defs $ {}
         |theme-list $ quote
           def theme-list $ [] :star-trail :beginner :curves
@@ -2506,14 +2500,13 @@
     |app.comp.file-replacer $ {}
       :ns $ quote
         ns app.comp.file-replacer $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp >> <> span div pre input button a textarea
-          [] respo.comp.inspect :refer $ [] comp-inspect
-          [] respo.comp.space :refer $ [] =<
-          [] app.style :as style
-          [] app.comp.modal :refer $ [] comp-modal
-          [] cljs.reader :refer $ [] read-string
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp >> <> span div pre input button a textarea
+          respo.comp.inspect :refer $ comp-inspect
+          respo.comp.space :refer $ =<
+          app.style :as style
+          app.comp.modal :refer $ comp-modal
           app.util :refer $ file->cirru
       :defs $ {}
         |comp-file-replacer $ quote
@@ -2545,13 +2538,13 @@
     |app.comp.changed-files $ {}
       :ns $ quote
         ns app.comp.changed-files $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp list-> <> span div pre input button a
-          [] respo.comp.space :refer $ [] =<
-          [] app.client-util :as util
-          [] app.style :as style
-          [] app.comp.changed-info :refer $ [] comp-changed-info
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp list-> <> span div pre input button a
+          respo.comp.space :refer $ =<
+          app.client-util :as util
+          app.style :as style
+          app.comp.changed-info :refer $ comp-changed-info
       :defs $ {}
         |style-column $ quote
           def style-column $ {} (:overflow :auto) (:padding-bottom 120)
@@ -2579,10 +2572,10 @@
     |app.updater.user $ {}
       :ns $ quote
         ns app.updater.user $ :require
-          [] app.util :refer $ [] find-first push-warning
-          [] clojure.string :as string
-          [] |md5 :default md5
-          [] app.schema :as schema
+          app.util :refer $ find-first push-warning
+          clojure.string :as string
+          |md5 :default md5
+          app.schema :as schema
       :defs $ {}
         |sign-up $ quote
           defn sign-up (db op-data session-id op-id op-time)
@@ -2639,15 +2632,15 @@
     |app.comp.profile $ {}
       :ns $ quote
         ns app.comp.profile $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] app.schema :as schema
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp >> <> span div button input a
-          [] respo.comp.space :refer $ [] =<
-          [] app.style :as style
-          [] app.config :as config
-          [] feather.core :refer $ [] comp-i comp-icon
-          [] respo-alerts.core :refer $ [] use-prompt
+          respo.util.format :refer $ hsl
+          app.schema :as schema
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp >> <> span div button input a
+          respo.comp.space :refer $ =<
+          app.style :as style
+          app.config :as config
+          feather.core :refer $ comp-i comp-icon
+          respo-alerts.core :refer $ use-prompt
       :defs $ {}
         |style-greet $ quote
           def style-greet $ {} (:font-family "|Josefin Sans") (:font-size 40) (:font-weight 100)
@@ -2693,14 +2686,14 @@
     |app.comp.about $ {}
       :ns $ quote
         ns app.comp.about $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp <> span div pre input button img a br
-          [] respo.comp.inspect :refer $ [] comp-inspect
-          [] respo.comp.space :refer $ [] =<
-          [] app.style :as style
-          [] respo-md.comp.md :refer $ [] comp-md-block
-          [] app.util.dom :refer $ [] copy-silently!
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp <> span div pre input button img a br
+          respo.comp.inspect :refer $ comp-inspect
+          respo.comp.space :refer $ =<
+          app.style :as style
+          respo-md.comp.md :refer $ comp-md-block
+          app.util.dom :refer $ copy-silently!
       :defs $ {}
         |comp-about $ quote
           defcomp comp-about () $ div
@@ -2729,12 +2722,12 @@
     |app.comp.login $ {}
       :ns $ quote
         ns app.comp.login $ :require
-          [] respo.core :refer $ [] defcomp >> <> div input button span
-          [] respo.comp.space :refer $ [] =<
-          [] respo.comp.inspect :refer $ [] comp-inspect
-          [] respo-ui.core :as ui
-          [] app.style :as style
-          [] app.config :as config
+          respo.core :refer $ defcomp >> <> div input button span
+          respo.comp.space :refer $ =<
+          respo.comp.inspect :refer $ comp-inspect
+          respo-ui.core :as ui
+          app.style :as style
+          app.config :as config
       :defs $ {}
         |style-login $ quote
           def style-login $ {} (:padding 16)
@@ -2783,8 +2776,8 @@
             {} $ :text-align :right
     |app.style $ {}
       :ns $ quote
-        ns app.style $ :require ([] respo-ui.core :as ui)
-          [] respo.util.format :refer $ [] hsl
+        ns app.style $ :require (respo-ui.core :as ui)
+          respo.util.format :refer $ hsl
       :defs $ {}
         |link $ quote (def link ui/link)
         |font-code $ quote (def font-code "\"Source Code Pro, monospace")
@@ -2819,7 +2812,7 @@
             :cursor :pointer
     |app.theme $ {}
       :ns $ quote
-        ns app.theme $ :require ([] app.theme.star-trail :as star-trail) ([] app.theme.curves :as curves) ([] app.theme.beginner :as beginner)
+        ns app.theme $ :require (app.theme.star-trail :as star-trail) (app.theme.curves :as curves) (app.theme.beginner :as beginner)
       :defs $ {}
         |base-style-expr $ quote
           defn base-style-expr (theme)
@@ -2842,11 +2835,11 @@
     |app.comp.modal $ {}
       :ns $ quote
         ns app.comp.modal $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp >> <> span div pre input button a
-          [] respo.comp.inspect :refer $ [] comp-inspect
-          [] respo.comp.space :refer $ [] =<
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp >> <> span div pre input button a
+          respo.comp.inspect :refer $ comp-inspect
+          respo.comp.space :refer $ =<
       :defs $ {}
         |style-backdrop $ quote
           def style-backdrop $ merge ui/center
@@ -2920,9 +2913,9 @@
     |app.util.dom $ {}
       :ns $ quote
         ns app.util.dom $ :require
-          [] respo.core :refer $ [] style
-          [] respo.render.html :refer $ [] style->string
-          [] cumulo-util.core :refer $ [] delay!
+          respo.core :refer $ style
+          respo.render.html :refer $ style->string
+          cumulo-util.core :refer $ delay!
       :defs $ {}
         |inject-style $ quote
           defn inject-style (class-name styles)
@@ -2958,11 +2951,11 @@
                 d! :notify/push-message $ [] :error (str "\"Failed to copy! " error)
     |app.util.env $ {}
       :ns $ quote
-        ns app.util.env $ :require ([] "\"chalk" :as chalk)
-          [] app.util.detect :refer $ [] port-taken?
-          [] "\"latest-version" :default latest-version
-          [] "\"path" :as path
-          [] "\"fs" :as fs
+        ns app.util.env $ :require ("\"chalk" :default chalk)
+          app.util.detect :refer $ port-taken?
+          "\"latest-version" :default latest-version
+          "\"path" :as path
+          "\"fs" :as fs
       :defs $ {}
         |pick-port! $ quote
           defn pick-port! (port next-fn)
@@ -2975,7 +2968,7 @@
                     pick-port! (inc port) next-fn
                   do
                     let
-                        link $ chalk/blue (str "\"http://editor.calcit-lang.org?port=" port)
+                        link $ .!blue chalk (str "\"http://editor.calcit-lang.org?port=" port)
                       println $ str "\"port " port "\" is ok, please edit on " link
                     next-fn port
         |get-cli-configs! $ quote
@@ -2992,7 +2985,7 @@
             -> (latest-version pkg-name)
               .!then $ fn (npm-version)
                 println $ if (= version npm-version) (str "\"Running latest version " version)
-                  chalk/yellow $ str "\"Update is available tagged " npm-version "\", current one is " version
+                  .!yellow chalk $ str "\"Update is available tagged " npm-version "\", current one is " version
               .!catch $ fn (e) (js/console.log "\"failed to request version:" e)
     |app.twig.search $ {}
       :ns $ quote
@@ -3015,7 +3008,7 @@
                           {} (:kind :def) (:ns k) (:extra f-k)
     |app.util $ {}
       :ns $ quote
-        ns app.util $ :require ([] app.schema :as schema) ([] bisection-key.core :as bisection) ([] |shortid :as shortid)
+        ns app.util $ :require (app.schema :as schema) (bisection-key.core :as bisection)
       :defs $ {}
         |file-tree->cirru $ quote
           defn file-tree->cirru (file)
@@ -3210,11 +3203,11 @@
     |app.comp.page-members $ {}
       :ns $ quote
         ns app.comp.page-members $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp <> list-> span div a
-          [] respo.comp.space :refer $ [] =<
-          [] "\"url-parse" :default url-parse
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp <> list-> span div a
+          respo.comp.space :refer $ =<
+          "\"url-parse" :default url-parse
       :defs $ {}
         |style-bookmark $ quote
           def style-bookmark $ {} (:font-family |Menlo,monospace) (:min-width 200) (:display :inline-block)
@@ -3324,9 +3317,9 @@
     |app.twig.page-editor $ {}
       :ns $ quote
         ns app.twig.page-editor $ :require
-          [] app.util :refer $ [] same-buffer? tree->cirru
-          [] app.twig.user :refer $ [] twig-user
-          [] app.util.list :refer $ [] compare-entry
+          app.util :refer $ same-buffer? tree->cirru
+          app.twig.user :refer $ twig-user
+          app.util.list :refer $ compare-entry
       :defs $ {}
         |twig-page-editor $ quote
           defn twig-page-editor (files old-files sessions users writer session-id)
@@ -3425,12 +3418,12 @@
     |app.comp.changed-info $ {}
       :ns $ quote
         ns app.comp.changed-info $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp list-> >> <> span div pre input button a
-          [] respo.comp.space :refer $ [] =<
-          [] app.style :as style
-          [] feather.core :refer $ [] comp-icon
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp list-> >> <> span div pre input button a
+          respo.comp.space :refer $ =<
+          app.style :as style
+          feather.core :refer $ comp-icon
       :defs $ {}
         |style-reset $ quote
           def style-reset $ {} (:text-decoration :underline) (:font-size 12)
@@ -3502,13 +3495,13 @@
     |app.comp.messages $ {}
       :ns $ quote
         ns app.comp.messages $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp list-> <> span div pre input button a
-          [] respo.comp.space :refer $ [] =<
-          [] app.client-util :as util
-          [] app.style :as style
-          [] "\"dayjs" :default Dayjs
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp list-> <> span div pre input button a
+          respo.comp.space :refer $ =<
+          app.client-util :as util
+          app.style :as style
+          "\"dayjs" :default Dayjs
       :defs $ {}
         |comp-messages $ quote
           defcomp comp-messages (messages)
@@ -3543,11 +3536,10 @@
     |app.theme.star-trail $ {}
       :ns $ quote
         ns app.theme.star-trail $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] clojure.string :as string
-          [] respo-ui.core :as ui
-          [] app.polyfill :refer $ [] text-width*
-          [] app.style :as style
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          app.polyfill :refer $ text-width*
+          app.style :as style
       :defs $ {}
         |style-space $ quote
           def style-space $ {}
@@ -3642,12 +3634,12 @@
     |app.comp.replace-name $ {}
       :ns $ quote
         ns app.comp.replace-name $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp <> span div pre input button img a br
-          [] respo.comp.space :refer $ [] =<
-          [] app.style :as style
-          [] respo-alerts.core :refer $ [] comp-modal Modal-class
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp <> span div pre input button img a br
+          respo.comp.space :refer $ =<
+          app.style :as style
+          respo-alerts.core :refer $ comp-modal Modal-class
       :defs $ {}
         |use-replace-name-modal $ quote
           defn use-replace-name-modal (states on-replace)
@@ -3745,7 +3737,7 @@
     |app.twig.page-members $ {}
       :ns $ quote
         ns app.twig.page-members $ :require
-          [] app.twig.member :refer $ [] twig-member
+          app.twig.member :refer $ twig-member
       :defs $ {}
         |twig-page-members $ quote
           defn twig-page-members (sessions users)
@@ -3755,9 +3747,9 @@
                   get users $ :user-id session
     |app.util.shortcuts $ {}
       :ns $ quote
-        ns app.util.shortcuts $ :require ([] app.keycode :as keycode)
-          [] app.util.dom :refer $ [] focus-search!
-          [] app.util.list :refer $ [] cirru-form?
+        ns app.util.shortcuts $ :require (app.keycode :as keycode)
+          app.util.dom :refer $ focus-search!
+          app.util.list :refer $ cirru-form?
       :defs $ {}
         |on-window-keydown $ quote
           defn on-window-keydown (event dispatch! router)
@@ -3800,7 +3792,7 @@
     |app.updater.notify $ {}
       :ns $ quote
         ns app.updater.notify $ :require
-          [] app.util :refer $ [] push-info
+          app.util :refer $ push-info
       :defs $ {}
         |broadcast $ quote
           defn broadcast (db op-data sid op-id op-time)
@@ -3832,25 +3824,25 @@
     |app.comp.page-editor $ {}
       :ns $ quote
         ns app.comp.page-editor $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp list-> >> <> span div a pre
-          [] respo.comp.space :refer $ [] =<
-          [] respo.comp.inspect :refer $ [] comp-inspect
-          [] app.comp.bookmark :refer $ [] comp-bookmark
-          [] app.comp.expr :refer $ [] comp-expr
-          [] app.theme :refer $ [] base-style-leaf base-style-expr
-          [] app.style :as style
-          [] app.util.dom :refer $ [] inject-style
-          [] app.comp.draft-box :refer $ [] comp-draft-box
-          [] app.comp.abstract :refer $ [] comp-abstract
-          [] app.comp.theme-menu :refer $ [] comp-theme-menu
-          [] app.comp.peek-def :refer $ [] comp-peek-def
-          [] app.util :refer $ [] tree->cirru prepend-data bookmark-full-str
-          [] app.util.dom :refer $ [] do-copy-logics!
-          [] respo-alerts.core :refer $ [] use-confirm use-prompt
-          [] app.comp.replace-name :refer $ [] use-replace-name-modal
-          [] app.comp.picker-notice :refer $ [] comp-picker-notice
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp list-> >> <> span div a pre
+          respo.comp.space :refer $ =<
+          respo.comp.inspect :refer $ comp-inspect
+          app.comp.bookmark :refer $ comp-bookmark
+          app.comp.expr :refer $ comp-expr
+          app.theme :refer $ base-style-leaf base-style-expr
+          app.style :as style
+          app.util.dom :refer $ inject-style
+          app.comp.draft-box :refer $ comp-draft-box
+          app.comp.abstract :refer $ comp-abstract
+          app.comp.theme-menu :refer $ comp-theme-menu
+          app.comp.peek-def :refer $ comp-peek-def
+          app.util :refer $ tree->cirru prepend-data bookmark-full-str
+          app.util.dom :refer $ do-copy-logics!
+          respo-alerts.core :refer $ use-confirm use-prompt
+          app.comp.replace-name :refer $ use-replace-name-modal
+          app.comp.picker-notice :refer $ comp-picker-notice
       :defs $ {}
         |on-path-gen! $ quote
           defn on-path-gen! (bookmark)
@@ -4101,14 +4093,14 @@
     |app.comp.peek-def $ {}
       :ns $ quote
         ns app.comp.peek-def $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp >> <> span div pre input button a
-          [] respo.comp.inspect :refer $ [] comp-inspect
-          [] respo.comp.space :refer $ [] =<
-          [] app.style :as style
-          [] app.util :refer $ [] stringify-s-expr tree->cirru
-          [] feather.core :refer $ [] comp-icon
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp >> <> span div pre input button a
+          respo.comp.inspect :refer $ comp-inspect
+          respo.comp.space :refer $ =<
+          app.style :as style
+          app.util :refer $ stringify-s-expr tree->cirru
+          feather.core :refer $ comp-icon
       :defs $ {}
         |comp-peek-def $ quote
           defcomp comp-peek-def (simple-expr)
@@ -4130,12 +4122,12 @@
     |app.updater.writer $ {}
       :ns $ quote
         ns app.updater.writer $ :require
-          [] app.util :refer $ [] bookmark->path to-writer to-bookmark push-info cirru->tree
-          [] app.util.stack :refer $ [] push-bookmark
-          [] app.util.list :refer $ [] dissoc-idx
-          [] app.schema :as schema
-          [] app.util :refer $ [] push-info
-          [] app.util :refer $ [] stringify-s-expr
+          app.util :refer $ bookmark->path to-writer to-bookmark push-info cirru->tree
+          app.util.stack :refer $ push-bookmark
+          app.util.list :refer $ dissoc-idx
+          app.schema :as schema
+          app.util :refer $ push-info
+          app.util :refer $ stringify-s-expr
           bisection-key.util :refer $ get-min-key get-max-key
       :defs $ {}
         |edit $ quote
@@ -4388,12 +4380,12 @@
     |app.comp.configs $ {}
       :ns $ quote
         ns app.comp.configs $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp >> <> span div a pre code
-          [] respo.comp.space :refer $ [] =<
-          [] cirru-edn.core :as cirru-edn
-          [] respo-alerts.core :refer $ [] use-prompt
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp >> <> span div a pre code
+          respo.comp.space :refer $ =<
+          cirru-edn.core :as cirru-edn
+          respo-alerts.core :refer $ use-prompt
       :defs $ {}
         |style-value $ quote
           def style-value $ {} (:cursor :pointer) (:font-family ui/font-code)
@@ -4480,7 +4472,7 @@
             <> title $ {} (:font-family ui/font-fancy)
     |app.updater.session $ {}
       :ns $ quote
-        ns app.updater.session $ :require ([] app.schema :as schema)
+        ns app.updater.session $ :require (app.schema :as schema)
       :defs $ {}
         |disconnect $ quote
           defn disconnect (db op-data session-id op-id op-time)
@@ -4495,18 +4487,18 @@
     |app.comp.watching $ {}
       :ns $ quote
         ns app.comp.watching $ :require
-          [] respo.util.format :refer $ [] hsl
-          [] respo-ui.core :as ui
-          [] respo.core :refer $ [] defcomp >> <> span div input pre a
-          [] respo.comp.space :refer $ [] =<
-          [] keycode.core :as keycode
-          [] app.client-util :as util
-          [] app.style :as style
-          [] app.comp.expr :refer $ [] comp-expr
-          [] app.theme :refer $ [] base-style-leaf base-style-expr
-          [] app.util.dom :refer $ [] inject-style
-          [] app.util :refer $ [] bookmark-full-str
-          [] app.comp.theme-menu :refer $ [] comp-theme-menu
+          respo.util.format :refer $ hsl
+          respo-ui.core :as ui
+          respo.core :refer $ defcomp >> <> span div input pre a
+          respo.comp.space :refer $ =<
+          keycode.core :as keycode
+          app.client-util :as util
+          app.style :as style
+          app.comp.expr :refer $ comp-expr
+          app.theme :refer $ base-style-leaf base-style-expr
+          app.util.dom :refer $ inject-style
+          app.util :refer $ bookmark-full-str
+          app.comp.theme-menu :refer $ comp-theme-menu
       :defs $ {}
         |style-title $ quote
           def style-title $ {} (:font-family "|Josefin Sans")
@@ -4559,16 +4551,16 @@
     |app.client $ {}
       :ns $ quote
         ns app.client $ :require
-          [] respo.core :refer $ [] render! clear-cache! *changes-logger
-          [] app.comp.container :refer $ [] comp-container
-          [] app.client-util :refer $ [] ws-host parse-query!
-          [] app.util.dom :refer $ [] focus!
-          [] app.util.shortcuts :refer $ [] on-window-keydown
-          [] app.client-updater :as updater
-          [] ws-edn.client :refer $ [] ws-connect! ws-send! ws-connected?
-          [] recollect.patch :refer $ [] patch-twig
-          [] cumulo-util.core :refer $ [] delay!
-          [] app.config :as config
+          respo.core :refer $ render! clear-cache! *changes-logger
+          app.comp.container :refer $ comp-container
+          app.client-util :refer $ ws-host parse-query!
+          app.util.dom :refer $ focus!
+          app.util.shortcuts :refer $ on-window-keydown
+          app.client-updater :as updater
+          ws-edn.client :refer $ ws-connect! ws-send! ws-connected?
+          recollect.patch :refer $ patch-twig
+          cumulo-util.core :refer $ delay!
+          app.config :as config
           "\"bottom-tip" :default tip!
           "\"./calcit.build-errors" :default build-errors
       :defs $ {}

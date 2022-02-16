@@ -24,13 +24,12 @@ module.exports = {
   externals: {
     ws: "commonjs ws",
     randomcolor: "commonjs randomcolor",
-    shortid: "commonjs shortid",
     md5: "commonjs md5",
-    chalk: "commonjs chalk",
+    // chalk: "commonjs chalk",
     gaze: "commonjs gaze",
     ws: "commonjs ws",
     dayjs: "commonjs dayjs",
-    "got": "commonjs got",
+    got: "commonjs got",
     // "latest-version": "commonjs latest-version",
   },
   output: {
