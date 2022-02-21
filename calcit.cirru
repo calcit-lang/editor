@@ -14726,7 +14726,7 @@
                                       |j $ {} (:type :expr) (:by |S1lNv50FW) (:at 1563728818303)
                                         :data $ {}
                                           |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1563728818509) (:text |[])
-                                          |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1563728953773) (:text "|\"r")
+                                          |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1645456572177) (:text "|\"h")
                               |r $ {} (:type :expr) (:at 1504777570689)
                                 :data $ {}
                                   |T $ {} (:type :leaf) (:by |root) (:at 1504777570689) (:text |if)
@@ -33570,7 +33570,7 @@
     :root $ {} (:def |main!) (:ns |main)
   :configs $ {} (:port 6001) (:storage-key |calcit.edn) (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.17-a2
+    :version |0.6.17
     :output |src
     :compact-output? true
     :extension |.cljs
