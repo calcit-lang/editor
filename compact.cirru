@@ -1533,7 +1533,7 @@
                     div ({})
                       list-> ({})
                         -> possible-names
-                          .sort-by $ fn (x) (.index-of x hint)
+                          .sort-by $ fn (x) (.!indexOf x hint)
                           map $ fn (x)
                             [] x $ render-code x
                       =< nil 8
