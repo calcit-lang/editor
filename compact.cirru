@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.17-a2
+    :version |0.6.17
   :entries $ {}
   :files $ {}
     |app.keycode $ {}
@@ -1533,7 +1533,7 @@
                     div ({})
                       list-> ({})
                         -> possible-names
-                          .sort-by $ fn (x) (.index-of x hint)
+                          .sort-by $ fn (x) (.!indexOf x hint)
                           map $ fn (x)
                             [] x $ render-code x
                       =< nil 8
@@ -2015,7 +2015,7 @@
                 def-info $ parse-def (:text op-data)
                 forced? $ :forced? op-data
                 new-bookmark $ merge schema/bookmark
-                  {} $ :focus ([] "\"r")
+                  {} $ :focus ([] "\"h")
                   if
                     and
                       contains? deps-info $ :key def-info
