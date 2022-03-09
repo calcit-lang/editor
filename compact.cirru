@@ -4656,7 +4656,7 @@
               do $ dispatch! :user/log-in (parse-cirru-edn raw)
               do $ println "|Found no storage."
         |reload! $ quote
-          defn reload! () $ if (nil? build-errors) (tip! "\"ok~" nil)
+          defn reload! () $ if (nil? build-errors)
             do (clear-cache!) (render-app!) (remove-watch *states :changes) (remove-watch *store :changes)
               add-watch *states :changes $ fn (states prev) (render-app!)
               add-watch *store :changes $ fn (store prev) (render-app!)
@@ -4664,7 +4664,8 @@
                   = :editor $ get-in @*store ([] :router :name)
                   focus!
               println "|Code updated."
-              tip! "\"error" build-errors
+              tip! "\"ok~" nil
+            tip! "\"error" build-errors
         |retry-connect! $ quote
           defn retry-connect! () $ if
             and (nil? @*store) (not @*connecting?)
