@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.17
+    :version |0.6.18
   :entries $ {}
   :files $ {}
     |app.keycode $ {}
@@ -581,20 +581,35 @@
                 writer $ get-in db ([] :sessions session-id :writer)
                 ({} stack pointer) writer
                 bookmark $ get stack pointer
-                parent-bookmark $ update bookmark :focus butlast
-                data-path $ bookmark->path parent-bookmark
-                target-expr $ get-in db data-path
-                next-id $ key-after (:data target-expr)
-                  last $ :focus bookmark
                 user-id $ get-in db ([] :sessions session-id :user-id)
-                new-leaf $ assoc schema/leaf :at op-time :by user-id
-              -> db
-                update-in data-path $ fn (expr)
-                  assoc-in expr ([] :data next-id) new-leaf
-                update-in
-                  [] :sessions session-id :writer :stack (:pointer writer) :focus
-                  fn (focus)
-                    conj (butlast focus) next-id
+              if
+                empty? $ :focus bookmark
+                let
+                    data-path $ bookmark->path bookmark
+                    target-expr $ get-in db data-path
+                    next-id $ key-append (:data target-expr)
+                    new-leaf $ assoc schema/leaf :at op-time :by user-id
+                  ; "\"append new leaf at tail, this case is special"
+                  -> db
+                    update-in data-path $ fn (expr)
+                      assoc-in expr ([] :data next-id) new-leaf
+                    assoc-in
+                      [] :sessions session-id :writer :stack (:pointer writer) :focus
+                      [] next-id
+                let
+                    parent-bookmark $ update bookmark :focus butlast
+                    data-path $ bookmark->path parent-bookmark
+                    target-expr $ get-in db data-path
+                    next-id $ key-after (:data target-expr)
+                      last $ :focus bookmark
+                    new-leaf $ assoc schema/leaf :at op-time :by user-id
+                  -> db
+                    update-in data-path $ fn (expr)
+                      assoc-in expr ([] :data next-id) new-leaf
+                    update-in
+                      [] :sessions session-id :writer :stack (:pointer writer) :focus
+                      fn (focus)
+                        conj (butlast focus) next-id
         |update-leaf $ quote
           defn update-leaf (db op-data session-id op-id op-time)
             let
