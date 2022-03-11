@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.19
+    :version |0.6.20
   :entries $ {}
   :files $ {}
     |app.keycode $ {}
@@ -2030,7 +2030,6 @@
                 def-info $ parse-def (:text op-data)
                 forced? $ :forced? op-data
                 new-bookmark $ merge schema/bookmark
-                  {} $ :focus ([] "\"h")
                   if
                     and
                       contains? deps-info $ :key def-info
@@ -2987,21 +2986,19 @@
                       println $ str "\"port " port "\" is ok, please edit on " link
                     next-fn port
         |get-cli-configs! $ quote
-          defn get-cli-configs! () $ let
-              env js/process.env
-            {} $ :compile?
-              = "\"compile" $ aget env "\"op"
+          defn get-cli-configs! () $ {}
+            :compile? $ = "\"compile" js/process.env.op
         |check-version! $ quote
           defn check-version! () $ let
               pkg $ js/JSON.parse
                 fs/readFileSync $ path/join js/__dirname "\"../package.json"
-              version $ aget pkg "\"version"
-              pkg-name $ aget pkg "\"name"
+              version $ .-version pkg
+              pkg-name $ .-name pkg
             -> (latest-version pkg-name)
               .!then $ fn (npm-version)
                 println $ if (= version npm-version) (str "\"Running latest version " version)
                   .!yellow chalk $ str "\"Update is available tagged " npm-version "\", current one is " version
-              .!catch $ fn (e) (js/console.log "\"failed to request version:" e)
+              .!catch $ fn (e) (js/console.error "\"failed to request version:" e)
     |app.twig.search $ {}
       :ns $ quote
         ns app.twig.search $ :require
@@ -3126,25 +3123,23 @@
               = (:extra x) (:extra y)
         |parse-deps $ quote
           defn parse-deps (require-exprs)
-            let
-                require-rules $ -> require-exprs
-                  filter $ fn (xs)
-                    = |:require $ first xs
-                  first
-              if (some? require-rules)
-                loop
-                    result $ {}
-                    xs $ rest require-rules
-                  ; println |loop result xs
-                  if (empty? xs) result $ let
-                      rule $ first xs
-                    recur
-                      merge result $ parse-require
-                        if
-                          = (first rule) "\"[]"
-                          .slice rule 1
-                          , rule
-                      rest xs
+            if-let
+              require-rules $ -> require-exprs
+                find $ fn (xs)
+                  = |:require $ first xs
+              loop
+                  result $ {}
+                  xs $ rest require-rules
+                ; println |loop result xs
+                if (empty? xs) result $ let
+                    rule $ first xs
+                  recur
+                    merge result $ parse-require
+                      if
+                        = "\"[]" $ first rule
+                        rest rule
+                        , rule
+                    rest xs
         |find-first $ quote
           defn find-first (f xs)
             find xs $ fn (x) (f x)
@@ -3166,23 +3161,17 @@
                   tree->cirru $ last entry
         |parse-require $ quote
           defn parse-require (piece)
-            let
-                method $ get piece 1
-                ns-text $ get piece 0
-              case-default method
-                do (println "\"Unknown referring:" piece) nil
-                "\":as" $ {}
-                    get piece 2
-                    {} (:method :as) (:ns ns-text)
-                "\":refer" $ -> (get piece 2)
-                  filter $ fn (def-text) (not= def-text "\"[]")
-                  map $ fn (def-text)
-                    [] def-text $ {} (:method :refer) (:ns ns-text) (:def def-text)
-                  pairs-map
-                "\":default" $ {}
-                    get piece 2
-                    {} (:method :refer) (:ns ns-text)
-                      :def $ get piece 2
+            let[] (ns-text method extra) piece $ case-default method
+              do (println "\"Unknown referring:" piece) nil
+              "\":as" $ {}
+                extra $ {} (:method :as) (:ns ns-text)
+              "\":refer" $ -> extra
+                filter $ fn (def-text) (not= def-text "\"[]")
+                map $ fn (def-text)
+                  [] def-text $ {} (:method :refer) (:ns ns-text) (:def def-text)
+                pairs-map
+              "\":default" $ {}
+                extra $ {} (:method :refer) (:ns ns-text) (:def extra)
         |db->string $ quote
           defn db->string (db)
             format-cirru-edn $ -> db (dissoc :sessions) (dissoc :saved-files) (dissoc :repl)
@@ -3522,9 +3511,8 @@
           defcomp comp-messages (messages)
             list-> ({})
               -> messages
-                drop $ js/Math.max
+                drop $ js/Math.max 0
                   - (count messages) 4
-                  , 0
                 map-indexed $ fn (idx msg)
                   [] (:id msg)
                     div
