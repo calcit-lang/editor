@@ -53,9 +53,6 @@ jobs:
 
     - run: yarn && yarn compile-server && yarn compile-page && yarn release-page
 
-    - run: mkdir -p dist-server && mv js-out/bundle.js dist-server && cp package.json dist-server/
-      name: Copy server scripts
-
     - name: Upload web assets
       id: deploy
       uses: Pendect/action-rsyncer@v1.1.0
