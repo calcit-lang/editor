@@ -20354,7 +20354,7 @@
                   |r $ {} (:type :expr) (:by nil) (:at 1504777353661)
                     :data $ {}
                       |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |:font-size)
-                      |j $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |20)
+                      |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1648665631082) (:text |18)
                   |v $ {} (:type :expr) (:by nil) (:at 1504777353661)
                     :data $ {}
                       |T $ {} (:type :leaf) (:by |root) (:at 1504777353661) (:text |:font-weight)
@@ -28120,6 +28120,16 @@
                               |j $ {} (:type :expr) (:by |S1lNv50FW) (:at 1552215367705)
                                 :data $ {}
                                   |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1552215368048) (:text |{})
+                                  |b $ {} (:type :expr) (:by |S1lNv50FW) (:at 1648665546176)
+                                    :data $ {}
+                                      |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1648665547612) (:text |:style)
+                                      |b $ {} (:type :expr) (:by |S1lNv50FW) (:at 1648665547867)
+                                        :data $ {}
+                                          |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1648665548193) (:text |{})
+                                          |b $ {} (:type :expr) (:by |S1lNv50FW) (:at 1648665548420)
+                                            :data $ {}
+                                              |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1648665549441) (:text |:padding)
+                                              |b $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1648665582500) (:text "|\"12px 0")
                               |r $ {} (:type :expr) (:by |S1lNv50FW) (:at 1552215369160)
                                 :data $ {}
                                   |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1552215369527) (:text |<>)
@@ -33631,7 +33641,7 @@
     :root $ {} (:def |main!) (:ns |main)
   :configs $ {} (:port 6001) (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
-    :version |0.6.19
+    :version |0.6.21-a1
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
       :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/

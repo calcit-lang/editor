@@ -2803,7 +2803,7 @@
               :font-family |Menlo,monospace
               :border :none
         |title $ quote
-          def title $ {} (:font-family ui/font-fancy) (:font-size 20) (:font-weight 100)
+          def title $ {} (:font-family ui/font-fancy) (:font-size 18) (:font-weight 100)
             :color $ hsl 0 0 80
         |inspector $ quote
           def inspector $ {} (:opacity 0.9)
@@ -3908,7 +3908,10 @@
                       fn (idx bookmark)
                         [] idx $ comp-bookmark bookmark idx (= idx pointer)
                 if (empty? stack)
-                  div ({}) (<> "\"Nothing to edit" style-nothing)
+                  div
+                    {} $ :style
+                      {} $ :padding "\"12px 0"
+                    <> "\"Nothing to edit" style-nothing
                   div
                     {} $ :style style-editor
                     let
