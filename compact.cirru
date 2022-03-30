@@ -2,7 +2,7 @@
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
-    :version |0.6.19
+    :version |0.6.21-a1
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
       :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
@@ -372,7 +372,7 @@
                   if (= this-page router-name) style-highlight
               <> page-name nil
         |style-header $ quote
-          def style-header $ {} (:height 32) (:justify-content :space-between) (:padding "|0 16px") (:font-size 16) (:color :white)
+          def style-header $ {} (:height 30) (:justify-content :space-between) (:padding "|0 16px") (:font-size 15) (:line-height "\"18px") (:color :white)
             :border-bottom $ str "|1px solid " (hsl 0 0 100 0.2)
             :font-family "|Josefin Sans"
             :font-weight 300
@@ -411,7 +411,7 @@
                   {} $ :style (merge ui/global ui/fullscreen ui/column style-container)
                   comp-header (>> states :header) (:name router) (:logged-in? store) (:stats store)
                   div
-                    {} $ :style (merge ui/row ui/expand style-body)
+                    {} $ :style (merge ui/row ui/expand)
                     if (:logged-in? store)
                       case-default (:name router)
                         div ({})
@@ -440,8 +440,6 @@
             :background-color $ hsl 0 0 50
             :color :black
             :opacity 1
-        |style-body $ quote
-          def style-body $ {} (:padding-top 12)
     |app.updater.ir $ {}
       :ns $ quote
         ns app.updater.ir $ :require (app.schema :as schema) (bisection-key.core :as bisection)
@@ -3535,11 +3533,9 @@
                       =< 8 nil
                       <> (:text msg) nil
         |style-message $ quote
-          def style-message $ {} (:position :absolute) (:right 8) (:cursor :pointer) (:font-weight 100) (:font-family |Hind)
+          def style-message $ {} (:position :absolute) (:right 8) (:cursor :pointer) (:font-weight 100) (:font-family |Hind) (:padding "|0 8px") (:transition-duration |200ms) (:border-radius "\"6px")
             :background-color $ hsl 0 0 0 0.7
-            :border $ str "|1px solid " (hsl 0 0 100 0.2)
-            :padding "|0 8px"
-            :transition-duration |200ms
+            :border $ str "|1px solid " (hsl 0 0 100 0.3)
     |app.theme.star-trail $ {}
       :ns $ quote
         ns app.theme.star-trail $ :require
@@ -3556,7 +3552,7 @@
             :border-right $ str "|8px solid " (hsl 0 0 30)
             :padding-right 0
         |style-expr-simple $ quote
-          def style-expr-simple $ {} (:display :inline-block) (:border-width "|0 0 1px 0") (:min-width 32) (:padding-left 11) (:padding-right 11) (:vertical-align :top)
+          def style-expr-simple $ {} (:display :inline-block) (:border-width "|0 0 1px 0") (:min-width 32) (:padding-left 11) (:padding-right 11) (:padding-bottom -1) (:vertical-align :top)
         |style-highlight $ quote
           def style-highlight $ {}
             :background-color $ hsl 0 0 100 0.2
@@ -3581,7 +3577,7 @@
           defn decide-leaf-style (text focused? first? by-other?)
             let
                 has-blank? $ or (= text "\"") (.includes? text "\" ")
-                best-width $ + 10
+                best-width $ + 8
                   text-width* text (:font-size style-leaf) (:font-family style-leaf)
                 max-width 240
               merge
@@ -3614,30 +3610,11 @@
           def style-big $ {}
             :border-right $ str "|16px solid " (hsl 0 0 30)
         |style-expr $ quote
-          def style-expr $ {} (:border-width "|0 0 0px 1px") (:border-style :solid)
-            :border-color $ hsl 0 0 100 0.3
-            :min-height 24
-            :outline :none
-            :padding-left 10
-            :font-family |Menlo,monospace
-            :font-size 14
-            :margin-bottom 4
-            :margin-right 2
-            :margin-left 12
-            :margin-top 0
-            :line-height "\"1em"
+          def style-expr $ {} (:border-width "|0 0 0px 1px") (:border-style :solid) (:min-height 24) (:outline :none) (:padding-left 10) (:font-family |Menlo,monospace) (:font-size 13) (:margin-bottom 2) (:margin-right 1) (:margin-left 8) (:margin-top 1) (:line-height "\"1em") (:border-radius "\"8px")
+            :border-color $ hsl 200 100 76 0.5
         |style-leaf $ quote
-          def style-leaf $ {} (:line-height |24px) (:height 24) (:margin "|2px 2px") (:padding "|0px 4px") (:background-color :transparent) (:min-width 8)
+          def style-leaf $ {} (:line-height |24px) (:height 24) (:margin "|1px 1px") (:padding "|0px 4px") (:background-color :transparent) (:min-width 8) (:font-family style/font-code) (:font-size 14) (:vertical-align :baseline) (:text-align :left) (:border-width "|1px 1px 1px 1px") (:resize :none) (:white-space :nowrap) (:outline :none) (:border :none) (:border-radius "\"6px")
             :color $ hsl 200 14 60
-            :font-family style/font-code
-            :font-size 15
-            :vertical-align :baseline
-            :text-align :left
-            :border-width "|1px 1px 1px 1px"
-            :resize :none
-            :white-space :nowrap
-            :outline :none
-            :border :none
     |app.comp.replace-name $ {}
       :ns $ quote
         ns app.comp.replace-name $ :require
@@ -3867,7 +3844,7 @@
                       [] the-ns "\":as" $ last (split the-ns "\".")
                   do-copy-logics! d! (format-cirru code) (str "\"Copied path of " the-ns)
         |style-stack $ quote
-          def style-stack $ {} (:max-width 200) (:overflow :auto) (:padding-bottom 120)
+          def style-stack $ {} (:max-width 200) (:overflow :auto) (:padding-top 12) (:padding-bottom 120)
         |on-draft-box $ quote
           defn on-draft-box (state cursor)
             fn (e d!)
