@@ -54,11 +54,11 @@ jobs:
           && git clone https://github.com/Respo/respo-message.calcit.git
           && git clone https://github.com/Respo/respo-markdown.calcit.git
           && git clone https://github.com/Cumulo/cumulo-util.calcit.git
-          && git clone https://github.com/mvc-works/ws-edn.calcit.git
+          && git clone https://github.com/mvc-works/ws-edn.calcit.git --branch 0.0.7
           && git clone https://github.com/Respo/respo-feather.calcit.git
           && git clone https://github.com/Respo/alerts.calcit.git
 
-      - run: yarn && yarn compile-server && yarn compile-page && yarn release-page && prod=true yarn release-server
+      - run: yarn && yarn compile-server && yarn compile-page && yarn release-page
 
       - run: mkdir -p dist-server && mv js-out/bundle.js dist-server && cp package.json dist-server/
         name: Copy server scripts

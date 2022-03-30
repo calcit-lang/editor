@@ -1,9 +1,11 @@
 
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
-    :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
-    :version |0.6.20
+    :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
+    :version |0.6.19
   :entries $ {}
+    :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
+      :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
   :files $ {}
     |app.keycode $ {}
       :ns $ quote (ns app.keycode)
@@ -2969,6 +2971,7 @@
           app.util.detect :refer $ port-taken?
           "\"latest-version" :default latest-version
           "\"path" :as path
+          "\"url" :as url
           "\"fs" :as fs
       :defs $ {}
         |pick-port! $ quote
@@ -2990,8 +2993,9 @@
             :compile? $ = "\"compile" js/process.env.op
         |check-version! $ quote
           defn check-version! () $ let
+              __dirname $ path/dirname (url/fileURLToPath js/import.meta.url)
               pkg $ js/JSON.parse
-                fs/readFileSync $ path/join js/__dirname "\"../package.json"
+                fs/readFileSync $ path/join __dirname "\"../package.json"
               version $ .-version pkg
               pkg-name $ .-name pkg
             -> (latest-version pkg-name)
@@ -4577,16 +4581,15 @@
           def mount-target $ js/document.querySelector |.app
         |connect! $ quote
           defn connect! () (js/console.info "\"Connecting...") (reset! *connecting? true)
-            ws-connect! (w-log ws-host)
-              {}
-                :on-open $ fn (event) (simulate-login!) (detect-watching!) (heartbeat!)
-                :on-close $ fn (event) (reset! *store nil) (reset! *connecting? false) (js/console.error "\"Lost connection!") (dispatch! :states/clear nil)
-                :on-data $ fn (data)
-                  case-default (:kind data) (println "\"unknown kind:" data)
-                    :patch $ let
-                        changes $ :data data
-                      when config/dev? $ js/console.log "\"Changes" changes
-                      reset! *store $ patch-twig @*store changes
+            ws-connect! ws-host $ {}
+              :on-open $ fn (event) (simulate-login!) (detect-watching!) (heartbeat!)
+              :on-close $ fn (event) (reset! *store nil) (reset! *connecting? false) (js/console.error "\"Lost connection!") (dispatch! :states/clear nil)
+              :on-data $ fn (data)
+                case-default (:kind data) (println "\"unknown kind:" data)
+                  :patch $ let
+                      changes $ :data data
+                    when config/dev? $ js/console.log "\"Changes" changes
+                    reset! *store $ patch-twig @*store changes
         |main! $ quote
           defn main! ()
             when config/dev? $ load-console-formatter!

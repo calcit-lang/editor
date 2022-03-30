@@ -21439,6 +21439,11 @@
                     |j $ {} (:type :leaf) (:by |root) (:at 1546164220560) (:text "|\"fs")
                     |r $ {} (:type :leaf) (:by |root) (:at 1546164221629) (:text |:as)
                     |v $ {} (:type :leaf) (:by |root) (:at 1546164221993) (:text |fs)
+                |xT $ {} (:type :expr) (:by |root) (:at 1546164205313)
+                  :data $ {}
+                    |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1648659876695) (:text "|\"url")
+                    |r $ {} (:type :leaf) (:by |root) (:at 1546164208351) (:text |:as)
+                    |v $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1648659878584) (:text |url)
         :defs $ {}
           |pick-port! $ {} (:type :expr) (:by |root) (:at 1518923396797)
             :data $ {}
@@ -21575,7 +21580,7 @@
                                   |j $ {} (:type :expr) (:by |root) (:at 1542821123785)
                                     :data $ {}
                                       |T $ {} (:type :leaf) (:by |root) (:at 1542821126245) (:text |path/join)
-                                      |j $ {} (:type :leaf) (:by |root) (:at 1542821132190) (:text |js/__dirname)
+                                      |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1648659902673) (:text |__dirname)
                                       |r $ {} (:type :leaf) (:by |root) (:at 1542821137111) (:text "|\"../package.json")
                       |j $ {} (:type :expr) (:by |root) (:at 1542821139658)
                         :data $ {}
@@ -21591,6 +21596,16 @@
                             :data $ {}
                               |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1647019227623) (:text |.-name)
                               |j $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1564893108537) (:text |pkg)
+                      |D $ {} (:type :expr) (:by |S1lNv50FW) (:at 1648659883327)
+                        :data $ {}
+                          |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1648659885207) (:text |__dirname)
+                          |b $ {} (:type :expr) (:by |S1lNv50FW) (:at 1648659890462)
+                            :data $ {}
+                              |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1648659891089) (:text |path/dirname)
+                              |b $ {} (:type :expr) (:by |S1lNv50FW) (:at 1648659893966)
+                                :data $ {}
+                                  |T $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1648659895878) (:text |url/fileURLToPath)
+                                  |b $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1648659900421) (:text |js/import.meta.url)
                   |r $ {} (:type :expr) (:by |S1lNv50FW) (:at 1621690732122)
                     :data $ {}
                       |D $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1621690732858) (:text |->)
@@ -32774,10 +32789,7 @@
               |v $ {} (:type :expr) (:by |root) (:at 1546106377422)
                 :data $ {}
                   |T $ {} (:type :leaf) (:by |root) (:at 1546106377422) (:text |ws-connect!)
-                  |f $ {} (:type :expr) (:by |S1lNv50FW) (:at 1625770662545)
-                    :data $ {}
-                      |D $ {} (:type :leaf) (:by |S1lNv50FW) (:at 1625770665463) (:text |w-log)
-                      |T $ {} (:type :leaf) (:by |root) (:at 1546106400073) (:text |ws-host)
+                  |f $ {} (:type :leaf) (:by |root) (:at 1546106400073) (:text |ws-host)
                   |r $ {} (:type :expr) (:by |root) (:at 1546106377422)
                     :data $ {}
                       |T $ {} (:type :leaf) (:by |root) (:at 1546106377422) (:text |{})
@@ -33605,10 +33617,9 @@
         :proc $ {} (:type :expr) (:by |root) (:at 1528995711679)
           :data $ {}
     :root $ {} (:def |main!) (:ns |main)
-  :configs $ {} (:port 6001) (:storage-key |calcit.edn) (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
-    :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
+  :configs $ {} (:port 6001) (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
+    :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
     :version |0.6.19
-    :output |src
-    :compact-output? true
-    :extension |.cljs
   :entries $ {}
+    :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
+      :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
