@@ -9,7 +9,7 @@
 *.log
 .github/
 /out-page/
-/js-out/
+
 /server.js
 /webpack.config.js
 /index.html
