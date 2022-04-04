@@ -3610,7 +3610,7 @@
           def style-big $ {}
             :border-right $ str "|16px solid " (hsl 0 0 30)
         |style-expr $ quote
-          def style-expr $ {} (:border-width "|0 0 0px 1px") (:border-style :solid) (:min-height 24) (:outline :none) (:padding-left 10) (:font-family |Menlo,monospace) (:font-size 13) (:margin-bottom 2) (:margin-right 1) (:margin-left 8) (:margin-top 1) (:line-height "\"1em") (:border-radius "\"8px")
+          def style-expr $ {} (:border-width "|0 0 0px 1px") (:border-style :solid) (:min-height 24) (:outline :none) (:padding-left 10) (:font-family |Menlo,monospace) (:font-size 13) (:margin-bottom 2) (:margin-right 1) (:margin-left 8) (:line-height "\"1em") (:border-radius "\"8px")
             :border-color $ hsl 200 100 76 0.5
         |style-leaf $ quote
           def style-leaf $ {} (:line-height |24px) (:height 24) (:margin "|1px 1px") (:padding "|0px 4px") (:background-color :transparent) (:min-width 8) (:font-family style/font-code) (:font-size 14) (:vertical-align :baseline) (:text-align :left) (:border-width "|1px 1px 1px 1px") (:resize :none) (:white-space :nowrap) (:outline :none) (:border :none) (:border-radius "\"6px")
