@@ -2258,7 +2258,7 @@
                             {} $ :text (str "\"Sure to remove def: " def-text "\" ?")
                         div
                           {} (:class-name |hoverable)
-                            :style $ merge style-def
+                            :style $ merge ui/row-parted style-def
                               if
                                 includes? highlights $ {} (:ns selected-ns) (:extra def-text) (:kind :def)
                                 {} $ :color :white
@@ -2285,7 +2285,7 @@
               div
                 {}
                   :class-name $ if selected? "|hoverable is-selected" |hoverable
-                  :style $ merge style-ns
+                  :style $ merge ui/row-parted style-ns
                     if has-highlight? $ {} (:color :white)
                   :on-click $ fn (e d!) (d! :session/select-ns ns-text)
                 let
@@ -2363,13 +2363,11 @@
             :color $ hsl 0 0 74
         |style-remove $ quote
           def style-remove $ {}
-            :color $ hsl 0 0 80 0.5
+            :color $ hsl 0 50 90
             :font-size 12
             :cursor :pointer
             :vertical-align :middle
-            :position :absolute
-            :top 8
-            :right 8
+            :line-height "\"12px"
         |style-def $ quote
           def style-def $ {} (:padding "|0 8px") (:position :relative)
             :color $ hsl 0 0 74
