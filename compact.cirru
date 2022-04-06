@@ -2285,7 +2285,7 @@
               div
                 {}
                   :class-name $ if selected? "|hoverable is-selected" |hoverable
-                  :style $ merge style-ns
+                  :style $ merge ui/row-parted style-ns
                     if has-highlight? $ {} (:color :white)
                   :on-click $ fn (e d!) (d! :session/select-ns ns-text)
                 let
