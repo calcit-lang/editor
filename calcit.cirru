@@ -33630,7 +33630,7 @@
     :root $ {} (:def |main!) (:ns |main)
   :configs $ {} (:port 6001) (:init-fn |app.server/main!) (:reload-fn |app.server/reload!)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
-    :version |0.6.21-a1
+    :version |0.6.21
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
       :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
