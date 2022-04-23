@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.22)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.23)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -2419,8 +2419,10 @@
           defn main! () $ let
               configs $ :configs initial-db
               cli-configs $ get-cli-configs!
-            if (:compile? cli-configs) (compile-all-files! configs)
+            case-default (:op cli-configs)
               do (start-server! configs) (check-version!)
+              "\"compile" $ compile-all-files! configs
+              "\"file-transform" $ transform-compact-to-calcit!
         |on-file-change! $ quote
           defn on-file-change! () $ let
               file-content $ fs/readFileSync storage-file "\"utf8"
@@ -2489,6 +2491,21 @@
                     wss-send! sid $ {} (:kind :patch) (:data changes)
                     swap! *client-caches assoc sid new-store
             new-twig-loop!
+        |transform-compact-to-calcit! $ quote
+          defn transform-compact-to-calcit! () $ let
+              source $ parse-cirru-edn (fs/readFileSync "\"compact.cirru" "\"utf8")
+              next-files $ map-kv (:files source)
+                fn (ns file)
+                  [] ns $ file-compact-to-calcit file
+              target $ {}
+                :configs $ assoc (:configs source) :port 6001
+                :entries $ :entries source
+                :ir $ {}
+                  :package $ :package source
+                  :files next-files
+                :users $ {}
+            fs/writeFileSync "\"calcit-draft.cirru" $ format-cirru-edn target
+            println "\"transformed compact.cirru into calcit-draft.cirru"
         |watch-file! $ quote
           defn watch-file! () $ if (fs/existsSync storage-file)
             do
@@ -2501,7 +2518,7 @@
           app.updater :refer $ updater
           app.util.compile :refer $ handle-files! persist!
           app.util.env :refer $ pick-port!
-          app.util :refer $ db->string
+          app.util :refer $ db->string file-compact-to-calcit
           |chalk :default chalk
           |path :as path
           |fs :as fs
@@ -4212,6 +4229,17 @@
               :defs $ -> (:defs file)
                 map-kv $ fn (k xs)
                   [] k $ :: 'quote (tree->cirru xs)
+        |file-compact-to-calcit $ quote
+          defn file-compact-to-calcit (file)
+            let
+                now $ js/Date.now
+              -> file
+                update :ns $ fn (pair)
+                  cirru->tree (nth pair 1) "\"u0" now
+                update :defs $ fn (defs)
+                  -> defs $ map-kv
+                    fn (k v)
+                      [] k $ cirru->tree (nth v 1) "\"u0" now
         |file-tree->cirru $ quote
           defn file-tree->cirru (file)
             -> file (update :ns tree->cirru)
@@ -4530,8 +4558,7 @@
                   .!yellow chalk $ str "\"Update is available tagged " npm-version "\", current one is " version
               .!catch $ fn (e) (js/console.error "\"failed to request version:" e)
         |get-cli-configs! $ quote
-          defn get-cli-configs! () $ {}
-            :compile? $ = "\"compile" js/process.env.op
+          defn get-cli-configs! () $ {} (:op js/process.env.op)
         |pick-port! $ quote
           defn pick-port! (port next-fn)
             port-taken? port $ fn (err taken?)
