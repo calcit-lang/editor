@@ -79,6 +79,14 @@ There are also several options in `:configs` field in `calcit.cirru`:
 
 Editor UI is decoupled with WebSocket server, so it's okay to connect remote server from multiple pages with all expressions synced in real-time.
 
+##### `file-transform` operation
+
+Special mode `file-transform` added for transforming `compact.cirru` back to `calcit.cirru`.
+
+```bash
+op=file-transform ct
+```
+
 ### Workflow
 
 Previously it's https://github.com/Cirru/calcit-editor which is for ClojureScript. And this repo is for Calcit-js only.
