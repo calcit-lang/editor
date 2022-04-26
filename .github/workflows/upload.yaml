@@ -39,7 +39,7 @@ jobs:
       run: >
         mkdir -p ~/.config/calcit/modules/ && cd ~/.config/calcit/modules/
         && git clone https://github.com/calcit-lang/lilac.git
-        && git clone https://github.com/calcit-lang/memof.git
+        && git clone https://github.com/calcit-lang/memof.git --branch 0.0.11
         && git clone https://github.com/calcit-lang/recollect.git
         && git clone https://github.com/calcit-lang/bisection-key.git
         && git clone https://github.com/Respo/respo.calcit.git
