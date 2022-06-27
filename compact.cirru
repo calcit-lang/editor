@@ -188,7 +188,7 @@
       :defs $ {}
         |comp-about $ quote
           defcomp comp-about () $ div
-            {} $ :style (merge ui/global ui/fullscreen ui/column)
+            {} $ :class-name css-about
             div
               {} $ :style (merge ui/flex ui/center)
               img $ {} (:src "\"//cdn.tiye.me/logo/cirru.png")
@@ -209,12 +209,16 @@
                   {} (:padding "\"8px 8px")
                     :color $ hsl 0 0 50
               comp-md-block "\"Calcit Editor is a syntax tree editor of [Cirru Project](http://cirru.org). Read more at [Calcit Editor](https://github.com/calcit-lang/editor).\n" $ {}
+        |css-about $ quote
+          defstyle css-about $ {}
+            "\"$0" $ merge ui/global ui/fullscreen ui/column
         |install-commands $ quote (def install-commands "\"npm install -g @calcit/editor\nct\n")
       :ns $ quote
         ns app.comp.about $ :require
           respo.util.format :refer $ hsl
           respo-ui.core :as ui
           respo.core :refer $ defcomp <> span div pre input button img a br
+          respo.css :refer $ defstyle
           respo.comp.inspect :refer $ comp-inspect
           respo.comp.space :refer $ =<
           app.style :as style
@@ -273,15 +277,15 @@
                 :on-dragover $ fn (e d!) (-> e :event .!preventDefault)
               case-default (:kind bookmark)
                 div
-                  {} $ :style
-                    merge style-bookmark $ {} (:padding "\"8px")
+                  {} (:class-name css-bookmark)
+                    :style $ {} (:padding "\"8px")
                   <>
                     str $ :kind bookmark
                     , style-kind
                   <> (:ns bookmark)
                     merge style-main $ if selected? style-highlight
                 :def $ div
-                  {} $ :style (merge style-bookmark)
+                  {} $ :class-name css-bookmark
                   div ({})
                     span $ {}
                       :inner-text $ :extra bookmark
@@ -290,6 +294,9 @@
                     {} $ :style ui/row-middle
                     =< 4 nil
                     <> (:ns bookmark) style-minor
+        |css-bookmark $ quote
+          defstyle css-bookmark $ {}
+            "\"$0" $ {} (:line-height |1.2em) (:padding "|4px 8px") (:cursor :pointer) (:position :relative) (:white-space :nowrap)
         |on-pick $ quote
           defn on-pick (bookmark idx)
             fn (e d!)
@@ -302,8 +309,6 @@
                   meta? $ d! :writer/collapse idx
                   alt? $ d! :writer/remove-idx idx
                   true $ d! :writer/point-to idx
-        |style-bookmark $ quote
-          def style-bookmark $ {} (:line-height |1.2em) (:padding "|4px 8px") (:cursor :pointer) (:position :relative) (:white-space :nowrap)
         |style-highlight $ quote
           def style-highlight $ {}
             :color $ hsl 0 0 100
@@ -326,6 +331,7 @@
         ns app.comp.bookmark $ :require
           respo.util.format :refer $ hsl
           respo-ui.core :as ui
+          respo.css :refer $ defstyle
           respo.core :refer $ defcomp <> span div a
           respo.comp.space :refer $ =<
     |app.comp.changed-files $ {}
@@ -614,7 +620,7 @@
                     node $ get-in expr path
                     missing? $ nil? node
                   if missing?
-                    span $ {} (:style style-wrong) (:inner-text "|Does not edit expression!")
+                    span $ {} (:class-name css-wrong) (:inner-text "|Does not edit expression!")
                       :on-click $ fn (e d!) (close-modal! d!)
                     let
                         expr? $ = :expr (:type node)
@@ -627,14 +633,14 @@
                         div
                           {} $ :style style-original
                           if expr? (<> "|Cirru Mode" style-mode)
-                            textarea $ {}
+                            textarea $ {} (:spellcheck false) (:class-name css-text)
                               :value $ if expr?
                                 format-cirru $ tree->cirru node
                                 :text node
-                              :spellcheck false
-                              :style style-text
                         =< nil 8
-                        textarea $ {} (:style style-area) (:value state) (:class-name |el-draft-box)
+                        textarea $ {}
+                          :class-name $ str-spaced |el-draft-box css-draft-area
+                          :value state
                           :on-input $ fn (e d!)
                             d! cursor $ :value e
                           :on-keydown $ fn (e d!)
@@ -657,6 +663,33 @@
                             :on-click $ on-submit expr? state cursor close-modal! false
                           button $ {} (:style style/button) (:inner-text |Submit)
                             :on-click $ on-submit expr? state cursor close-modal! true
+        |css-draft-area $ quote
+          defstyle css-draft-area $ {}
+            "\"$0" $ {}
+              :background-color $ hsl 0 0 100 0.2
+              :min-height 320
+              :line-height |1.6em
+              :min-width 960
+              :color :white
+              :font-family style/font-code
+              :font-size 14
+              :outline :none
+              :border :none
+              :padding 8
+              :min-width 800
+              :vertical-align :top
+        |css-text $ quote
+          def css-text $ {} (:font-family style/font-code) (:color :white) (:padding "|8px 8px") (:height 60) (:display :block) (:width |100%)
+            :background-color $ hsl 0 0 100 0.2
+            :outline :none
+            :border :none
+            :font-size 14
+            :padding 8
+            :min-width 800
+            :vetical-align :top
+        |css-wrong $ quote
+          defstyle css-wrong $ {}
+            "\"$0" $ {} (:color :red) (:font-size 24) (:font-weight 100) (:font-family "|Josefin Sans") (:cursor :pointer)
         |on-submit $ quote
           defn on-submit (expr? text cursor close-modal! close?)
             fn (e d!)
@@ -665,20 +698,6 @@
                 d! :ir/update-leaf $ {} (:text text)
                   :at $ now!
               if close? $ do (d! cursor nil) (close-modal! d!)
-        |style-area $ quote
-          def style-area $ {}
-            :background-color $ hsl 0 0 100 0.2
-            :min-height 320
-            :line-height |1.6em
-            :min-width 960
-            :color :white
-            :font-family style/font-code
-            :font-size 14
-            :outline :none
-            :border :none
-            :padding 8
-            :min-width 800
-            :vertical-align :top
         |style-mode $ quote
           def style-mode $ {}
             :color $ hsl 0 0 100 0.6
@@ -688,24 +707,14 @@
             :border-radius |4px
         |style-original $ quote
           def style-original $ {} (:max-height 240) (:overflow :auto)
-        |style-text $ quote
-          def style-text $ {} (:font-family style/font-code) (:color :white) (:padding "|8px 8px") (:height 60) (:display :block) (:width |100%)
-            :background-color $ hsl 0 0 100 0.2
-            :outline :none
-            :border :none
-            :font-size 14
-            :padding 8
-            :min-width 800
-            :vetical-align :top
         |style-toolbar $ quote
           def style-toolbar $ {} (:justify-content :flex-end)
-        |style-wrong $ quote
-          def style-wrong $ {} (:color :red) (:font-size 24) (:font-weight 100) (:font-family "|Josefin Sans") (:cursor :pointer)
       :ns $ quote
         ns app.comp.draft-box $ :require
           respo.util.format :refer $ hsl
           respo-ui.core :as ui
           respo.core :refer $ defcomp <> span div textarea pre button a
+          respo.css :refer $ defstyle
           respo.comp.space :refer $ =<
           app.comp.modal :refer $ comp-modal
           app.style :as style
@@ -918,7 +927,7 @@
                   render-entry |Configs :configs router-name $ fn (e d!)
                     d! :router/change $ {} (:name :configs)
                   a
-                    {} (:href |https://github.com/Cirru/calcit-editor/wiki/Keyboard-Shortcuts) (:target |_blank) (:style style-entry)
+                    {} (:href |https://github.com/Cirru/calcit-editor/wiki/Keyboard-Shortcuts) (:target |_blank) (:class-name css-entry)
                     <> "\"Shortcuts" style-link
                     <> "\"↗" $ {} (:font-family ui/font-code)
                 div
@@ -934,6 +943,12 @@
                   render-entry (if logged-in? |Profile |Guest) :profile router-name $ fn (e d!)
                     d! :router/change $ {} (:name :profile) (:data nil) (:router nil)
                 .render broadcast-plugin
+        |css-entry $ quote
+          defstyle css-entry $ {}
+            "\"$0" $ {} (:cursor :pointer) (:padding "\"0 12px")
+              :color $ hsl 0 0 100 0.6
+              :text-decoration :none
+              :vertical-align :middle
         |css-header $ quote
           defstyle css-header $ {}
             "\"$0" $ merge ui/row-center
@@ -946,15 +961,9 @@
         |render-entry $ quote
           defn render-entry (page-name this-page router-name on-click)
             div
-              {} (:on-click on-click)
-                :style $ merge style-entry
-                  if (= this-page router-name) style-highlight
+              {} (:class-name css-entry) (:on-click on-click)
+                :style $ if (= this-page router-name) style-highlight
               <> page-name nil
-        |style-entry $ quote
-          def style-entry $ {} (:cursor :pointer) (:padding "\"0 12px")
-            :color $ hsl 0 0 100 0.6
-            :text-decoration :none
-            :vertical-align :middle
         |style-highlight $ quote
           def style-highlight $ {}
             :color $ hsl 0 0 100
@@ -1164,29 +1173,30 @@
                 map-indexed $ fn (idx msg)
                   [] (:id msg)
                     div
-                      {}
-                        :style $ merge style-message
-                          {}
-                            :bottom $ + 12 (* idx 40)
-                            :color $ case-default (:kind msg) (hsl 120 80 80)
-                              :error $ hsl 0 80 80
-                              :warning $ hsl 60 80 80
-                              :info $ hsl 240 80 80
+                      {} (:class-name css-message)
+                        :style $ {}
+                          :bottom $ + 12 (* idx 40)
+                          :color $ case-default (:kind msg) (hsl 120 80 80)
+                            :error $ hsl 0 80 80
+                            :warning $ hsl 60 80 80
+                            :info $ hsl 240 80 80
                         :on-click $ fn (e d!) (d! :notify/clear nil)
                       <>
                         -> (:time msg) Dayjs $ .!format "\"mm:ss"
                         {} (:font-size 12) (:font-family ui/font-code) (:opacity 0.7)
                       =< 8 nil
                       <> (:text msg) nil
-        |style-message $ quote
-          def style-message $ {} (:position :absolute) (:right 8) (:cursor :pointer) (:font-weight 100) (:font-family |Hind) (:padding "|0 8px") (:transition-duration |200ms) (:border-radius "\"6px")
-            :background-color $ hsl 0 0 0 0.7
-            :border $ str "|1px solid " (hsl 0 0 100 0.3)
+        |css-message $ quote
+          defstyle css-message $ {}
+            "\"$0" $ {} (:position :absolute) (:right 8) (:cursor :pointer) (:font-weight 100) (:font-family |Hind) (:padding "|0 8px") (:transition-duration |200ms) (:border-radius "\"6px")
+              :background-color $ hsl 0 0 0 0.7
+              :border $ str "|1px solid " (hsl 0 0 100 0.3)
       :ns $ quote
         ns app.comp.messages $ :require
           respo.util.format :refer $ hsl
           respo-ui.core :as ui
           respo.core :refer $ defcomp list-> <> span div pre input button a
+          respo.css :refer $ defstyle
           respo.comp.space :refer $ =<
           app.client-util :as util
           app.style :as style
@@ -1229,19 +1239,19 @@
                 close-abstract! $ fn (d!)
                   d! cursor $ assoc state :abstract? false
               div
-                {} $ :style (merge ui/row ui/flex style-container)
+                {} $ :class-name css-page-editor
                 if (empty? stack)
                   div
                     {} $ :style
                       {} $ :padding "\"12px 0"
                     <> "\"Nothing to edit" style-nothing
                   div
-                    {} $ :style style-editor
+                    {} $ :class-name css-editor
                     let
                         others $ -> (:others router-data) (vals)
                           map $ fn (x) (:focus x)
                       div
-                        {} $ :style style-area
+                        {} $ :class-name css-area
                         inject-style "\".cirru-expr" $ .to-list (base-style-expr theme)
                         inject-style "\".cirru-leaf" $ .to-list (base-style-leaf theme)
                         if (some? expr)
@@ -1374,6 +1384,16 @@
                 .render rename-plugin
                 .render add-plugin
                 .render replace-plugin
+        |css-area $ quote
+          defstyle css-area $ {}
+            "\"$0" $ {} (:overflow :auto) (:padding-bottom "\"60vh") (:padding-top 80) (:flex 1)
+        |css-editor $ quote
+          defstyle css-editor $ {}
+            "\"$0" $ merge ui/flex ui/column
+        |css-page-editor $ quote
+          defstyle css-page-editor $ {}
+            "\"$0" $ merge ui/row ui/flex
+              {} $ :position :relative
         |css-stack $ quote
           defstyle css-stack $ {}
             "\"$0" $ {} (:width 180) (:max-height "\"80vh") (:overflow :auto) (:position :fixed) (:right -100) (:top "\"40vh") (:bottom 40) (:opacity 0.8) (:transition-duration "\"240ms")
@@ -1435,12 +1455,6 @@
                   :extra $ :extra bookmark
                 do $ println "\"Unknown" bookmark
               d! :states/clear nil
-        |style-area $ quote
-          def style-area $ {} (:overflow :auto) (:padding-bottom "\"60vh") (:padding-top 80) (:flex 1)
-        |style-container $ quote
-          def style-container $ {} (:position :relative)
-        |style-editor $ quote
-          def style-editor $ merge ui/flex ui/column
         |style-hint $ quote
           def style-hint $ {}
             :color $ hsl 0 0 100 0.6
@@ -1504,7 +1518,7 @@
                 add-plugin $ use-prompt (>> states :add)
                   {} $ :text "\"New definition:"
               div
-                {} $ :style (merge ui/column style-file)
+                {} $ :class-name css-file
                 div ({}) (<> "\"File" style/title) (=< 16 nil)
                   span $ {} (:inner-text |Draft) (:style style/button)
                     :on-click $ fn (e d!) (d! :writer/draft-ns selected-ns)
@@ -1655,6 +1669,10 @@
                 if
                   some? $ :peeking-file router-data
                   comp-file-replacer (>> states :replacer) (:peeking-file router-data)
+        |css-file $ quote
+          defstyle css-file $ {}
+            "\"$0" $ merge ui/column
+              {} (:width 280) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
         |render-empty $ quote
           defn render-empty () $ div
             {} $ :style
@@ -1664,8 +1682,6 @@
         |style-def $ quote
           def style-def $ {} (:padding "|0 8px") (:position :relative)
             :color $ hsl 0 0 74
-        |style-file $ quote
-          def style-file $ {} (:width 280) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
         |style-input $ quote
           def style-input $ merge style/input
             {} $ :width |100%
@@ -1694,6 +1710,7 @@
           respo.util.format :refer $ hsl
           respo-ui.core :as ui
           respo.core :refer $ defcomp list-> >> <> span div pre input button a
+          respo.css :refer $ defstyle
           respo.comp.inspect :refer $ comp-inspect
           respo.comp.space :refer $ =<
           app.style :as style
@@ -1807,18 +1824,15 @@
                 imported-names $ :imported choices
                 defined-names $ :defined choices
                 render-code $ fn (x)
-                  span $ {} (:inner-text x) (:style style-name)
+                  span $ {} (:inner-text x) (:class-name css-name-code)
                     :on-click $ fn (e d!) (d! :writer/pick-node x)
                 hint $ if (some? target-node) (:text target-node) nil
                 hint-func $ fn (x)
                   if (blank? hint) false $ .includes? x hint
               div
-                {} $ :style style-container
+                {} $ :class-name css-picker-container
                 div
-                  {}
-                    :style $ {} (:font-family ui/font-fancy) (:font-size 16) (:font-weight 300)
-                      :color $ hsl 0 0 80
-                      :cursor :pointer
+                  {} (:class-name css-picker-tip)
                     :on-click $ fn (e d!) (d! :writer/picker-mode nil)
                   <> "\"Picker mode: pick a target..."
                 let
@@ -1847,25 +1861,33 @@
                   -> defined-names (.to-list) (filter-not hint-func) (sort)
                     map $ fn (x)
                       [] x $ render-code x
-        |style-container $ quote
-          def style-container $ {} (:padding "\"4px 8px") (:margin "\"8px 0")
-            :background-color $ hsl 0 0 30 0.5
-            :position :fixed
-            :top 8
-            :right 20
-            :z-index 100
-            :border-radius "\"4px"
-            :max-width "\"32vw"
-        |style-name $ quote
-          def style-name $ {} (:font-family ui/font-code) (:cursor :pointer) (:font-size 11) (:margin-right 3) (:margin-bottom 3) (:word-break :none) (:line-height "\"14px")
-            :background-color $ hsl 0 0 30
-            :padding "\"1px 3px"
-            :display :inline-block
+        |css-name-code $ quote
+          defstyle css-name-code $ {}
+            "\"$0" $ {} (:font-family ui/font-code) (:cursor :pointer) (:font-size 11) (:margin-right 3) (:margin-bottom 3) (:word-break :none) (:line-height "\"14px")
+              :background-color $ hsl 0 0 30
+              :padding "\"1px 3px"
+              :display :inline-block
+        |css-picker-container $ quote
+          defstyle css-picker-container $ {}
+            "\"$0" $ {} (:padding "\"4px 8px") (:margin "\"8px 0")
+              :background-color $ hsl 0 0 30 0.5
+              :position :fixed
+              :top 8
+              :right 20
+              :z-index 100
+              :border-radius "\"4px"
+              :max-width "\"32vw"
+        |css-picker-tip $ quote
+          defstyle css-picker-tip $ {}
+            "\"$0" $ {} (:font-family ui/font-fancy) (:font-size 16) (:font-weight 300)
+              :color $ hsl 0 0 80
+              :cursor :pointer
       :ns $ quote
         ns app.comp.picker-notice $ :require
           respo.core :refer $ defcomp list-> >> <> span div a pre
           respo-ui.core :as ui
           respo.util.format :refer $ hsl
+          respo.css :refer $ defstyle
           respo.comp.space :refer $ =<
     |app.comp.profile $ {}
       :defs $ {}
@@ -1896,8 +1918,7 @@
                     , style-id
                 =< nil 80
                 div ({})
-                  button $ {} (:inner-text "|Log out") (:style style/button)
-                    :on $ {} (:click on-log-out)
+                  button $ {} (:inner-text "|Log out") (:style style/button) (:on-click on-log-out)
                 .render rename-plugin
         |on-log-out $ quote
           defn on-log-out (e dispatch!) (dispatch! :user/log-out nil)
@@ -2037,8 +2058,7 @@
                     blank? $ :query state
                     , bookmark->str query-length
               div
-                {} $ :style
-                  merge ui/expand ui/row-middle $ {} (:height "\"100%") (:padding "\"40px 16px 0 16px")
+                {} $ :class-name css-search
                 div
                   {} $ :style
                     merge ui/column $ {} (:width 320) (:height "\"100%")
@@ -2093,6 +2113,10 @@
                                   {} $ :color (hsl 0 0 50)
                                 <> (last pieces)
                                   {} $ :color (hsl 0 0 80)
+        |css-search $ quote
+          defstyle css-search $ {}
+            "\"$0" $ merge ui/expand ui/row-middle
+              {} (:height "\"100%") (:padding "\"40px 16px 0 16px")
         |initial-state $ quote
           def initial-state $ {} (:query |) (:selection 0)
         |on-input $ quote
@@ -2157,6 +2181,7 @@
           respo-ui.core :as ui
           respo.core :refer $ defcomp list-> <> span div input a
           respo.comp.space :refer $ =<
+          respo.css :refer $ defstyle
           app.polyfill :refer $ text-width*
           app.keycode :as keycode
           app.client-util :as util
