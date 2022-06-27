@@ -349,7 +349,7 @@
                   a $ {} (:inner-text |Reset) (:style style/button)
                     :on-click $ fn (e d!) (d! :ir/reset-files nil) (d! :states/clear nil)
         |style-column $ quote
-          def style-column $ {} (:overflow :auto) (:padding-bottom 120)
+          def style-column $ {} (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
         |style-nothing $ quote
           def style-nothing $ {} (:font-family "|Josefin Sans")
             :color $ hsl 0 0 100 0.5
@@ -467,7 +467,7 @@
                     :input-style $ {} (:font-family ui/font-code)
               div
                 {} $ :style
-                  merge ui/expand ui/column $ {} (:padding "\"0 16px")
+                  merge ui/expand ui/column $ {} (:padding "\"40px 16px 0 16px")
                 =< nil 8
                 div ({}) (render-label "\"Version:") (=< 8 nil)
                   span
@@ -544,10 +544,11 @@
                 theme $ get-in store ([] :user :theme)
               if (nil? store) (comp-about)
                 div
-                  {} $ :style (merge ui/global ui/fullscreen ui/column style-container)
+                  {} $ :class-name css-container
                   comp-header (>> states :header) (:name router) (:logged-in? store) (:stats store)
                   div
-                    {} $ :style (merge ui/row ui/expand)
+                    {} $ :style
+                      merge ui/row ui/expand $ {} (; :padding-top 32)
                     if (:logged-in? store)
                       case-default (:name router)
                         div ({})
@@ -565,12 +566,15 @@
                         = :watching $ :name router
                         comp-watching (>> states :watching) (:data router) (:theme session)
                         comp-login $ >> states :login
-                  when dev? $ comp-inspect |Session store style-inspector
-                  ; when dev? $ comp-inspect "|Router data" states
-                    merge style-inspector $ {} (:left 100)
-                  comp-messages $ get-in store ([] :session :notifications)
-        |style-container $ quote
-          def style-container $ {} (:background-color :black) (:color :white)
+                  , 
+                    when dev? $ comp-inspect |Session store style-inspector
+                    ; when dev? $ comp-inspect "|Router data" states
+                      merge style-inspector $ {} (:left 100)
+                    comp-messages $ get-in store ([] :session :notifications)
+        |css-container $ quote
+          defstyle css-container $ {}
+            "\"$0" $ merge ui/global ui/fullscreen ui/column
+              {} (:background-color :black) (:color :white)
         |style-inspector $ quote
           def style-inspector $ {} (:bottom 0) (:left 0) (:max-width |100%)
             :background-color $ hsl 0 0 50
@@ -581,7 +585,9 @@
           respo.util.format :refer $ hsl
           respo-ui.core :as ui
           respo.core :refer $ defcomp >> <> div span
+          respo.css :refer $ defstyle
           respo.comp.inspect :refer $ comp-inspect
+          respo.comp.space :refer $ =<
           app.comp.header :refer $ comp-header
           app.comp.profile :refer $ comp-profile
           app.comp.login :refer $ comp-login
@@ -895,7 +901,7 @@
                 broadcast-plugin $ use-prompt (>> states :broadcast)
                   {} $ :text "\"Message to broadcast"
               div
-                {} $ :style (merge ui/row-center style-header)
+                {} $ :class-name css-header
                 div
                   {} $ :style ui/row-center
                   render-entry |Files :files router-name $ fn (e d!)
@@ -928,6 +934,15 @@
                   render-entry (if logged-in? |Profile |Guest) :profile router-name $ fn (e d!)
                     d! :router/change $ {} (:name :profile) (:data nil) (:router nil)
                 .render broadcast-plugin
+        |css-header $ quote
+          defstyle css-header $ {}
+            "\"$0" $ merge ui/row-center
+              {} (:height 30) (:justify-content :space-between) (:padding "|0 16px") (:font-size 15) (:line-height "\"18px") (:color :white) (:font-family "|Josefin Sans") (:font-weight 300) (:position :fixed) (:top 0) (:right 0) (:z-index 100) (:transition-duration "\"240ms") (; :opacity 0.1)
+                :background-color $ hsl 0 0 0 0.2
+                :border-bottom $ str "|1px solid " (hsl 0 0 100 0.2)
+            "\"$0 > *" $ {} (:opacity 0.5) (:transition-duration "\"240ms")
+            "\"$0:hover" $ {} (:opacity 1)
+            "\"$0:hover > *" $ {} (:opacity 1)
         |render-entry $ quote
           defn render-entry (page-name this-page router-name on-click)
             div
@@ -940,11 +955,6 @@
             :color $ hsl 0 0 100 0.6
             :text-decoration :none
             :vertical-align :middle
-        |style-header $ quote
-          def style-header $ {} (:height 30) (:justify-content :space-between) (:padding "|0 16px") (:font-size 15) (:line-height "\"18px") (:color :white)
-            :border-bottom $ str "|1px solid " (hsl 0 0 100 0.2)
-            :font-family "|Josefin Sans"
-            :font-weight 300
         |style-highlight $ quote
           def style-highlight $ {}
             :color $ hsl 0 0 100
@@ -954,6 +964,7 @@
         ns app.comp.header $ :require
           respo.util.format :refer $ hsl
           respo-ui.core :as ui
+          respo.css :refer $ defstyle
           respo.core :refer $ defcomp >> <> span div a
           respo.comp.space :refer $ =<
           app.util.dom :refer $ focus-search!
@@ -1221,15 +1232,6 @@
                 {} $ :style (merge ui/row ui/flex style-container)
                 if (empty? stack)
                   div
-                    {} $ :style style-stack
-                    <> "\"Empty" style-nothing
-                  list->
-                    {} $ :style style-stack
-                    -> stack $ map-indexed
-                      fn (idx bookmark)
-                        [] idx $ comp-bookmark bookmark idx (= idx pointer)
-                if (empty? stack)
-                  div
                     {} $ :style
                       {} $ :padding "\"12px 0"
                     <> "\"Nothing to edit" style-nothing
@@ -1256,6 +1258,15 @@
                     if (:abstract? state)
                       comp-abstract (>> states :abstract) close-abstract!
                     ; comp-inspect "\"Expr" router-data style/inspector
+                if (empty? stack)
+                  div
+                    {} $ :class-name css-stack
+                    <> "\"Empty" style-nothing
+                  list->
+                    {} $ :class-name css-stack
+                    -> stack $ map-indexed
+                      fn (idx bookmark)
+                        [] idx $ comp-bookmark bookmark idx (= idx pointer)
                 if picker-mode? $ comp-picker-notice (:picker-choices router-data)
                   get-in expr $ mapcat focus prepend-data
         |comp-status-bar $ quote
@@ -1284,7 +1295,7 @@
                   fn (from to d!)
                     d! :ir/expr-replace $ {} (:bookmark bookmark) (:from from) (:to to)
               div
-                {} $ :style style-status
+                {} $ :class-name css-status-bar
                 div ({})
                   <>
                     str "|Writers("
@@ -1363,6 +1374,16 @@
                 .render rename-plugin
                 .render add-plugin
                 .render replace-plugin
+        |css-stack $ quote
+          defstyle css-stack $ {}
+            "\"$0" $ {} (:width 180) (:max-height "\"80vh") (:overflow :auto) (:position :fixed) (:right -100) (:top "\"40vh") (:bottom 40) (:opacity 0.8) (:transition-duration "\"240ms")
+            "\"$0:hover" $ {} (:opacity 1) (:right 0)
+        |css-status-bar $ quote
+          defstyle css-status-bar $ {}
+            "\"$0" $ merge ui/row
+              {} (:justify-content :space-between) (:padding "|0 8px") (:position :fixed) (:bottom 0) (:right 0) (:opacity 0.4) (:transition-duration "\"240ms") (:transition-property "\"opacity")
+                :background-color $ hsl 0 0 0 0.5
+            "\"$0:hover" $ {} (:opacity 1)
         |initial-state $ quote
           def initial-state $ {} (:draft-box? false)
         |on-draft-box $ quote
@@ -1415,7 +1436,7 @@
                 do $ println "\"Unknown" bookmark
               d! :states/clear nil
         |style-area $ quote
-          def style-area $ {} (:overflow :auto) (:padding-bottom 240) (:padding-top 80) (:flex 1)
+          def style-area $ {} (:overflow :auto) (:padding-bottom "\"60vh") (:padding-top 80) (:flex 1)
         |style-container $ quote
           def style-container $ {} (:position :relative)
         |style-editor $ quote
@@ -1437,11 +1458,6 @@
             :color $ hsl 0 0 100 0.4
             :padding "|0 16px"
             :font-family "|Josefin Sans"
-        |style-stack $ quote
-          def style-stack $ {} (:max-width 200) (:overflow :auto) (:padding-top 12) (:padding-bottom 120)
-        |style-status $ quote
-          def style-status $ merge ui/row
-            {} (:justify-content :space-between) (:padding "|0 8px")
         |style-watcher $ quote
           def style-watcher $ {}
             :color $ hsl 0 0 100 0.7
@@ -1458,6 +1474,7 @@
           respo.util.format :refer $ hsl
           respo-ui.core :as ui
           respo.core :refer $ defcomp list-> >> <> span div a pre
+          respo.css :refer $ defstyle
           respo.comp.space :refer $ =<
           respo.comp.inspect :refer $ comp-inspect
           app.comp.bookmark :refer $ comp-bookmark
@@ -1648,7 +1665,7 @@
           def style-def $ {} (:padding "|0 8px") (:position :relative)
             :color $ hsl 0 0 74
         |style-file $ quote
-          def style-file $ {} (:width 280) (:overflow :auto) (:padding-bottom 120)
+          def style-file $ {} (:width 280) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
         |style-input $ quote
           def style-input $ merge style/input
             {} $ :width |100%
@@ -1659,7 +1676,7 @@
         |style-link $ quote
           def style-link $ {} (:cursor :pointer)
         |style-list $ quote
-          def style-list $ {} (:width 280) (:overflow :auto) (:padding-bottom 120)
+          def style-list $ {} (:width 280) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
         |style-ns $ quote
           def style-ns $ {} (:cursor :pointer) (:vertical-align :middle) (:position :relative) (:padding "|0 8px")
             :color $ hsl 0 0 74
@@ -1671,7 +1688,7 @@
             :vertical-align :middle
             :line-height "\"12px"
         |sytle-container $ quote
-          def sytle-container $ {} (:padding "|0 16px")
+          def sytle-container $ {} (:padding "|0px 16px")
       :ns $ quote
         ns app.comp.page-files $ :require
           respo.util.format :refer $ hsl
@@ -1707,7 +1724,7 @@
                           :on $ {}
                             :click $ on-watch k
                         <>
-                          str member-name $ if (= k session-id) "| (yourself)"
+                          str member-name $ if (= k session-id) "| (yourself)" "\""
                           , style-name
                         =< 32 nil
                         <> (:page member) style-page
@@ -1739,7 +1756,7 @@
         |style-bookmark $ quote
           def style-bookmark $ {} (:font-family |Menlo,monospace) (:min-width 200) (:display :inline-block)
         |style-members $ quote
-          def style-members $ {} (:padding "|0 16px")
+          def style-members $ {} (:padding "|40px 16px 0 16px")
         |style-name $ quote
           def style-name $ {} (:min-width 160) (:display :inline-block)
         |style-page $ quote
@@ -1892,7 +1909,7 @@
           def style-id $ {} (:font-family "|Josefin Sans") (:font-weight 100)
             :color $ hsl 0 0 60
         |style-profile $ quote
-          def style-profile $ {} (:padding "|0 16px")
+          def style-profile $ {} (:padding "|24px 16px")
       :ns $ quote
         ns app.comp.profile $ :require
           respo.util.format :refer $ hsl
@@ -2021,7 +2038,7 @@
                     , bookmark->str query-length
               div
                 {} $ :style
-                  merge ui/expand ui/row-middle $ {} (:height "\"100%") (:padding "\"0 16px")
+                  merge ui/expand ui/row-middle $ {} (:height "\"100%") (:padding "\"40px 16px 0 16px")
                 div
                   {} $ :style
                     merge ui/column $ {} (:width 320) (:height "\"100%")
@@ -2234,7 +2251,7 @@
                       =< 16 nil
                       comp-theme-menu (>> states :theme) (or theme :star-trail)
         |style-container $ quote
-          def style-container $ {} (:padding "|0 16px")
+          def style-container $ {} (:padding "|40px 16px 0 16px")
         |style-tip $ quote
           def style-tip $ {} (:font-family "|Josefin Sans")
             :background-color $ hsl 0 0 100 0.3
