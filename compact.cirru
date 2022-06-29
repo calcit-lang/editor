@@ -679,14 +679,15 @@
               :min-width 800
               :vertical-align :top
         |css-text $ quote
-          def css-text $ {} (:font-family style/font-code) (:color :white) (:padding "|8px 8px") (:height 60) (:display :block) (:width |100%)
-            :background-color $ hsl 0 0 100 0.2
-            :outline :none
-            :border :none
-            :font-size 14
-            :padding 8
-            :min-width 800
-            :vetical-align :top
+          defstyle css-text $ {}
+            "\"$0" $ {} (:font-family style/font-code) (:color :white) (:padding "|8px 8px") (:height 60) (:display :block) (:width |100%)
+              :background-color $ hsl 0 0 100 0.2
+              :outline :none
+              :border :none
+              :font-size 14
+              :padding 8
+              :min-width 800
+              :vetical-align :top
         |css-wrong $ quote
           defstyle css-wrong $ {}
             "\"$0" $ {} (:color :red) (:font-size 24) (:font-weight 100) (:font-family "|Josefin Sans") (:cursor :pointer)
