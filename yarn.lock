@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@calcit/procs@^0.5.46":
-  version "0.5.46"
-  resolved "https://registry.yarnpkg.com/@calcit/procs/-/procs-0.5.46.tgz#8a9153695b45501f489198d5fdf9045a4a3f8461"
-  integrity sha512-geOFZOym1iO5VJ+JINADz6DNBUizkapRCheRpHzOPWpZ08aiYmRaObKV3UjXZV+Oe+9oV9XLUQazw8AIiE3N5g==
+"@calcit/procs@^0.5.47":
+  version "0.5.47"
+  resolved "https://registry.yarnpkg.com/@calcit/procs/-/procs-0.5.47.tgz#fc2508490bb2b85d4bb4efc93c4e93a0ea13bb1d"
+  integrity sha512-/mZx78KU9+2maZ0z5x/xUySaqZOVCgLQnNwMcxgEEVIICn0vs5crdClJYw6wjYH/OleAEpi9+sk84jy/BXeqpA==
   dependencies:
     "@calcit/ternary-tree" "0.0.19"
     "@cirru/parser.ts" "^0.0.5"
@@ -811,10 +811,10 @@ virtual-dom@^2.1.1:
     x-is-array "0.1.0"
     x-is-string "0.1.0"
 
-vite@^2.9.12:
-  version "2.9.12"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-2.9.12.tgz#b1d636b0a8ac636afe9d83e3792d4895509a941b"
-  integrity sha512-suxC36dQo9Rq1qMB2qiRorNJtJAdxguu5TMvBHOc/F370KvqAe9t48vYp+/TbPKRNrMh/J55tOUmkuIqstZaew==
+vite@^2.9.13:
+  version "2.9.13"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-2.9.13.tgz#859cb5d4c316c0d8c6ec9866045c0f7858ca6abc"
+  integrity sha512-AsOBAaT0AD7Mhe8DuK+/kE4aWYFMx/i0ZNi98hJclxb4e0OhQcZYUrvLjIaQ8e59Ui7txcvKMiJC1yftqpQoDw==
   dependencies:
     esbuild "^0.14.27"
     postcss "^8.4.13"

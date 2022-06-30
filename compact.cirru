@@ -264,7 +264,9 @@
         |comp-bookmark $ quote
           defcomp comp-bookmark (bookmark idx selected?)
             div
-              {} (:class-name |stack-bookmark) (:draggable true)
+              {}
+                :class-name $ str |stack-bookmark (if selected? "\" selected-bookmark" "\"")
+                :draggable true
                 :on-click $ on-pick bookmark idx
                 :on-dragstart $ fn (e d!)
                   -> e :event .-dataTransfer $ .!setData "\"id" idx
@@ -1176,7 +1178,7 @@
                     div
                       {} (:class-name css-message)
                         :style $ {}
-                          :bottom $ + 12 (* idx 40)
+                          :bottom $ + 12 (* idx 28)
                           :color $ case-default (:kind msg) (hsl 120 80 80)
                             :error $ hsl 0 80 80
                             :warning $ hsl 60 80 80
@@ -1189,9 +1191,8 @@
                       <> (:text msg) nil
         |css-message $ quote
           defstyle css-message $ {}
-            "\"$0" $ {} (:position :absolute) (:right 8) (:cursor :pointer) (:font-weight 100) (:font-family |Hind) (:padding "|0 8px") (:transition-duration |200ms) (:border-radius "\"6px")
-              :background-color $ hsl 0 0 0 0.7
-              :border $ str "|1px solid " (hsl 0 0 100 0.3)
+            "\"$0" $ {} (:position :absolute) (:left 8) (:cursor :pointer) (:font-weight 100) (:font-family |Hind) (:padding "|0 8px") (:transition-duration |200ms) (:border-radius "\"6px")
+              :background-color $ hsl 0 0 0 0.5
       :ns $ quote
         ns app.comp.messages $ :require
           respo.util.format :refer $ hsl
@@ -1273,13 +1274,17 @@
                   div
                     {} $ :class-name css-stack
                     <> "\"Empty" style-nothing
-                  list->
-                    {} $ :class-name css-stack
-                    -> stack $ map-indexed
-                      fn (idx bookmark)
-                        [] idx $ comp-bookmark bookmark idx (= idx pointer)
+                  comp-stack stack pointer
                 if picker-mode? $ comp-picker-notice (:picker-choices router-data)
                   get-in expr $ mapcat focus prepend-data
+        |comp-stack $ quote
+          defcomp comp-stack (stack pointer)
+            [] (effect-focus-bookmark pointer)
+              list->
+                {} $ :class-name css-stack
+                -> stack $ map-indexed
+                  fn (idx bookmark)
+                    [] idx $ comp-bookmark bookmark idx (= idx pointer)
         |comp-status-bar $ quote
           defcomp comp-status-bar (states router-data bookmark theme)
             let
@@ -1397,7 +1402,7 @@
               {} $ :position :relative
         |css-stack $ quote
           defstyle css-stack $ {}
-            "\"$0" $ {} (:width 180) (:max-height "\"80vh") (:overflow :auto) (:position :fixed) (:right -100) (:top "\"40vh") (:bottom 40) (:opacity 0.8) (:transition-duration "\"240ms")
+            "\"$0" $ {} (:width 180) (:max-height "\"80vh") (:overflow :auto) (:position :fixed) (:right -80) (:top "\"40vh") (:max-height "\"40vh") (:opacity 0.8) (:transition-duration "\"240ms")
             "\"$0:hover" $ {} (:opacity 1) (:right 0)
         |css-status-bar $ quote
           defstyle css-status-bar $ {}
@@ -1405,6 +1410,12 @@
               {} (:justify-content :space-between) (:padding "|0 8px") (:position :fixed) (:bottom 0) (:right 0) (:opacity 0.4) (:transition-duration "\"240ms") (:transition-property "\"opacity")
                 :background-color $ hsl 0 0 0 0.5
             "\"$0:hover" $ {} (:opacity 1)
+        |effect-focus-bookmark $ quote
+          defeffect effect-focus-bookmark (pointer) (action el at?)
+            if (= action :update)
+              if-let
+                target $ .!querySelector el "\".selected-bookmark"
+                .!scrollIntoViewIfNeeded target
         |initial-state $ quote
           def initial-state $ {} (:draft-box? false)
         |on-draft-box $ quote
@@ -1488,7 +1499,7 @@
         ns app.comp.page-editor $ :require
           respo.util.format :refer $ hsl
           respo-ui.core :as ui
-          respo.core :refer $ defcomp list-> >> <> span div a pre
+          respo.core :refer $ defcomp defeffect list-> >> <> span div a pre
           respo.css :refer $ defstyle
           respo.comp.space :refer $ =<
           respo.comp.inspect :refer $ comp-inspect
