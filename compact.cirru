@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.24)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.25)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -1172,13 +1172,13 @@
             list-> ({})
               -> messages
                 drop $ js/Math.max 0
-                  - (count messages) 4
+                  - (count messages) 3
                 map-indexed $ fn (idx msg)
                   [] (:id msg)
                     div
                       {} (:class-name css-message)
                         :style $ {}
-                          :bottom $ + 12 (* idx 28)
+                          :bottom $ + 8 (* idx 28)
                           :color $ case-default (:kind msg) (hsl 120 80 80)
                             :error $ hsl 0 80 80
                             :warning $ hsl 60 80 80
@@ -1840,60 +1840,75 @@
                     :on-click $ fn (e d!) (d! :writer/pick-node x)
                 hint $ if (some? target-node) (:text target-node) nil
                 hint-func $ fn (x)
-                  if (blank? hint) false $ .includes? x hint
+                  if (blank? hint) true $ .includes? x hint
               div
                 {} $ :class-name css-picker-container
                 div
-                  {} (:class-name css-picker-tip)
-                    :on-click $ fn (e d!) (d! :writer/picker-mode nil)
-                  <> "\"Picker mode: pick a target..."
+                  {} $ :class-name css-picker-tip
+                  <> "\"Picker mode..."
+                comp-icon :x
+                  {} (:font-size 18) (:cursor :pointer) (:position :absolute) (:top 4) (:right 4)
+                    :color $ hsl 200 80 70 0.6
+                  fn (e d!) (d! :writer/picker-mode nil)
+                list->
+                  {} $ :style
+                    merge ui/row $ {} (:flex-wrap :wrap)
+                  -> imported-names (.to-list)
+                    filter $ fn (pair)
+                      .any? (nth pair 1) hint-func
+                    sort $ fn (a b)
+                      let
+                          a1 $ &compare
+                            count $ nth a 1
+                            count $ nth b 1
+                        if (= 0 a1)
+                          &compare (first a) (first b)
+                          , a1
+                    map $ fn (xs)
+                      let
+                          ns $ first xs 
+                        [] ns $ div
+                          {} $ :style
+                            merge ui/row $ {} (:margin-right 32)
+                          <> ns $ {} (:font-family ui/font-fancy)
+                            :color $ hsl 0 0 70
+                          =< 8 nil
+                          list-> ({})
+                            -> (nth xs 1)
+                              map $ fn (x)
+                                [] x $ render-code x
                 let
-                    possible-names $ ->
-                      concat (.to-list imported-names) (.to-list defined-names)
-                      distinct
-                      filter hint-func
-                  if-not (empty? possible-names)
-                    div ({})
+                    names $ -> defined-names (.to-list) (filter hint-func)
+                  if-not (empty? names)
+                    div
+                      {} $ :style ui/row
+                      <> "\"@" $ {} (:font-family ui/font-fancy)
+                        :color $ hsl 0 0 60
+                      =< 8 nil
                       list-> ({})
-                        -> possible-names
-                          .sort-by $ fn (x) (.!indexOf x hint)
+                        -> names (sort)
                           map $ fn (x)
                             [] x $ render-code x
-                      =< nil 8
-                let
-                    filtered-names $ -> imported-names (filter-not hint-func)
-                  if-not (empty? filtered-names)
-                    div ({})
-                      list-> ({})
-                        -> filtered-names (.to-list) (sort &compare)
-                          map $ fn (x)
-                            [] x $ render-code x
-                      =< nil 8
-                list-> ({})
-                  -> defined-names (.to-list) (filter-not hint-func) (sort)
-                    map $ fn (x)
-                      [] x $ render-code x
         |css-name-code $ quote
           defstyle css-name-code $ {}
-            "\"$0" $ {} (:font-family ui/font-code) (:cursor :pointer) (:font-size 11) (:margin-right 3) (:margin-bottom 3) (:word-break :none) (:line-height "\"14px")
-              :background-color $ hsl 0 0 30
-              :padding "\"1px 3px"
+            "\"$0" $ {} (:font-family ui/font-code) (:cursor :pointer) (:font-size 11) (:margin-right 4) (:margin-bottom 4) (:word-break :none) (:line-height "\"14px") (:border-radius "\"4px")
+              :color $ hsl 0 0 90
+              :background-color $ hsl 0 0 50 0.4
+              :padding "\"2px 3px"
               :display :inline-block
+            "\"$0:hover" $ {}
+              :background-color $ hsl 0 0 30 1
+              :color $ hsl 0 0 100
         |css-picker-container $ quote
           defstyle css-picker-container $ {}
-            "\"$0" $ {} (:padding "\"4px 8px") (:margin "\"8px 0")
-              :background-color $ hsl 0 0 30 0.5
-              :position :fixed
-              :top 8
-              :right 20
-              :z-index 100
-              :border-radius "\"4px"
-              :max-width "\"32vw"
+            "\"$0" $ merge ui/column
+              {} (:padding "\"4px 8px") (:position :fixed) (:line-height "\"1.6em") (:top 8) (:right 8) (:z-index 100) (:border-radius "\"4px") (:max-width "\"60vw") (:min-height "\"40px") (:min-width "\"200px")
+                :border $ str "\"1px solid " (hsl 0 0 70 0.4)
+                :background-color $ hsl 0 0 20 0.7
         |css-picker-tip $ quote
           defstyle css-picker-tip $ {}
-            "\"$0" $ {} (:font-family ui/font-fancy) (:font-size 16) (:font-weight 300)
-              :color $ hsl 0 0 80
-              :cursor :pointer
+            "\"$0" $ {} (:font-family ui/font-fancy) (:font-size 32) (:font-weight 300) (:line-height "\"21px") (:cursor :pointer) (:position :absolute) (:right 8) (:top 8) (:z-index -1)
+              :color $ hsl 0 0 80 0.3
       :ns $ quote
         ns app.comp.picker-notice $ :require
           respo.core :refer $ defcomp list-> >> <> span div a pre
@@ -1901,6 +1916,7 @@
           respo.util.format :refer $ hsl
           respo.css :refer $ defstyle
           respo.comp.space :refer $ =<
+          feather.core :refer $ comp-icon
     |app.comp.profile $ {}
       :defs $ {}
         |comp-profile $ quote
@@ -2825,22 +2841,18 @@
                 var-names $ keys (:defs ns-info)
                 rules $ ->
                   tree->cirru $ :ns ns-info
-                  drop 2
-                  mapcat $ fn (rule)
-                    if
-                      and (list? rule)
-                        contains? (#{} "\":require" "\":require-macros") (first rule)
-                      rest rule
-                      , nil
-                import-names $ #{} &
-                  -> rules $ mapcat
-                    fn (rule)
-                      filter
-                        if
-                          string? $ last rule
-                          [] $ last rule
-                          last rule
-                        fn (x) (not= x "\"[]")
+                  nth 2
+                  rest
+                import-names $ -> rules
+                  map $ fn (rule)
+                    let
+                        p0 $ first rule
+                        p2 $ last rule
+                      if (string? p2)
+                        [] p0 $ [] p2
+                        [] p0 $ filter p2
+                          fn (x) (not= x "\"[]")
+                  pairs-map
               {} (:imported import-names) (:defined var-names)
         |twig-page-editor $ quote
           defn twig-page-editor (files old-files sessions users writer session-id)
