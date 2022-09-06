@@ -1907,8 +1907,8 @@
                 :background-color $ hsl 0 0 20 0.7
         |css-picker-tip $ quote
           defstyle css-picker-tip $ {}
-            "\"$0" $ {} (:font-family ui/font-fancy) (:font-size 32) (:font-weight 300) (:line-height "\"21px") (:cursor :pointer) (:position :absolute) (:right 8) (:top 8) (:z-index -1)
-              :color $ hsl 0 0 80 0.3
+            "\"$0" $ {} (:font-family ui/font-fancy) (:font-size 28) (:font-weight 300) (:line-height "\"21px") (:cursor :pointer) (:position :absolute) (:right 4) (:bottom 4) (:z-index -1)
+              :color $ hsl 0 0 90 0.6
       :ns $ quote
         ns app.comp.picker-notice $ :require
           respo.core :refer $ defcomp list-> >> <> span div a pre

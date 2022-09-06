@@ -31,7 +31,7 @@ jobs:
     - name: add cr
       run: |
         mkdir -p $GITHUB_WORKSPACE/bin
-        wget -O $GITHUB_WORKSPACE/bin/cr https://github.com/calcit-lang/calcit/releases/download/0.6.0/cr
+        wget -O $GITHUB_WORKSPACE/bin/cr https://github.com/calcit-lang/calcit/releases/download/0.6.4/cr
         chmod +x $GITHUB_WORKSPACE/bin/cr
         echo "::add-path::$GITHUB_WORKSPACE/bin"
 
@@ -39,7 +39,7 @@ jobs:
       run: >
         mkdir -p ~/.config/calcit/modules/ && cd ~/.config/calcit/modules/
         && git clone https://github.com/calcit-lang/lilac.git
-        && git clone https://github.com/calcit-lang/memof.git --branch 0.0.11
+        && git clone https://github.com/calcit-lang/memof.git
         && git clone https://github.com/calcit-lang/recollect.git
         && git clone https://github.com/calcit-lang/bisection-key.git
         && git clone https://github.com/Respo/respo.calcit.git
@@ -47,7 +47,7 @@ jobs:
         && git clone https://github.com/Respo/respo-message.calcit.git
         && git clone https://github.com/Respo/respo-markdown.calcit.git
         && git clone https://github.com/Cumulo/cumulo-util.calcit.git
-        && git clone https://github.com/mvc-works/ws-edn.calcit.git --branch 0.0.7
+        && git clone https://github.com/mvc-works/ws-edn.calcit.git
         && git clone https://github.com/Respo/respo-feather.calcit.git
         && git clone https://github.com/Respo/alerts.calcit.git
 
