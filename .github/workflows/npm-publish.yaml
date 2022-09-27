@@ -38,7 +38,7 @@ jobs:
       - name: add cr
         run: |
           mkdir -p $GITHUB_WORKSPACE/bin
-          wget -O $GITHUB_WORKSPACE/bin/cr https://github.com/calcit-lang/calcit/releases/download/0.6.5/cr
+          wget -O $GITHUB_WORKSPACE/bin/cr https://github.com/calcit-lang/calcit/releases/download/0.6.6/cr
           chmod +x $GITHUB_WORKSPACE/bin/cr
           echo "::add-path::$GITHUB_WORKSPACE/bin"
 
