@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.26)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.28)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -697,7 +697,7 @@
           defn on-submit (expr? text cursor close-modal! close?)
             fn (e d!)
               if expr?
-                d! :ir/draft-expr $ first (parse-cirru text)
+                d! :ir/draft-expr $ first (parse-cirru-list text)
                 d! :ir/update-leaf $ {} (:text text)
                   :at $ now!
               if close? $ do (d! cursor nil) (close-modal! d!)
@@ -4263,13 +4263,16 @@
                     [] k $ cirru->tree xs author timestamp
         |cirru->tree $ quote
           defn cirru->tree (xs author timestamp)
-            if (tuple? xs)
-              if
-                = 'quote $ nth xs 0
-                cirru->tree (nth xs 1) author timestamp
-                do (println "\"unknown tuple from cirru:" xs)
+            cond
+                tuple? xs
+                if
+                  = 'quote $ nth xs 0
                   cirru->tree (nth xs 1) author timestamp
-              if (list? xs)
+                  do (eprintln "\"unknown tuple from cirru:" xs)
+                    cirru->tree (nth xs 1) author timestamp
+              (= (type-of xs) :cirru-quote)
+                cirru->tree (&cirru-quote:to-list xs) author timestamp
+              (list? xs)
                 merge schema/expr $ {} (:at timestamp) (:by author)
                   :data $ loop
                       result $ {}
@@ -4281,7 +4284,9 @@
                         assoc result next-id $ cirru->tree y author timestamp
                         rest ys
                         bisection/bisect next-id bisection/max-id
+              (string? xs)
                 merge schema/leaf $ {} (:at timestamp) (:by author) (:text xs)
+              true $ do (eprintln "\"unknown data for cirru converting:" xs) nil
         |db->string $ quote
           defn db->string (db)
             format-cirru-edn $ -> db (dissoc :sessions) (dissoc :saved-files) (dissoc :repl)
@@ -4683,7 +4688,7 @@
             -> js/navigator .-clipboard (.readText)
               .!then $ fn (text) (println "\"read from text...")
                 let
-                    cirru-code $ parse-cirru text
+                    cirru-code $ parse-cirru-list text
                   if (cirru-form? cirru-code)
                     d! :writer/paste $ first cirru-code
                     d! :notify/push-message $ [] :error "\"Not valid code"
