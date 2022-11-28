@@ -2720,7 +2720,8 @@
                   text-width* text (:font-size style-leaf) (:font-family style-leaf)
                 max-width 240
               merge
-                {} $ :width (js/Math.min best-width max-width)
+                {} $ :width
+                  js/Math.max 9 $ js/Math.min best-width max-width
                 if first? $ {}
                   :color $ hsl 40 85 60
                 if (.starts-with? text |:)
