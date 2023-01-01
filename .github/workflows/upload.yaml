@@ -42,7 +42,7 @@ jobs:
         && git clone https://github.com/Cumulo/cumulo-util.calcit.git
         && git clone https://github.com/mvc-works/ws-edn.calcit.git
         && git clone https://github.com/Respo/respo-feather.calcit.git
-        && git clone https://github.com/Respo/alerts.calcit.git
+        && git clone https://github.com/Respo/alerts.calcit.git --branch 0.8.14
 
     - run: yarn && yarn compile-server && yarn compile-page && yarn release-page
 
