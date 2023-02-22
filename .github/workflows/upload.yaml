@@ -17,34 +17,19 @@ jobs:
         node-version: 16
         cache: yarn
 
-    - name: ACTIONS_ALLOW_UNSECURE_COMMANDS
-      id: ACTIONS_ALLOW_UNSECURE_COMMANDS
-      run: echo 'ACTIONS_ALLOW_UNSECURE_COMMANDS=true' >> $GITHUB_ENV
+    - uses: supplypike/setup-bin@v3
+      with:
+        uri: 'https://github.com/calcit-lang/calcit/releases/download/0.6.23/cr'
+        name: 'cr'
+        version: '0.6.23'
 
-    - name: add cr
-      run: |
-        mkdir -p $GITHUB_WORKSPACE/bin
-        wget -O $GITHUB_WORKSPACE/bin/cr https://github.com/calcit-lang/calcit/releases/download/0.6.17/cr
-        chmod +x $GITHUB_WORKSPACE/bin/cr
-        echo "::add-path::$GITHUB_WORKSPACE/bin"
+    - uses: supplypike/setup-bin@v3
+      with:
+        uri: 'https://github.com/calcit-lang/calcit/releases/download/0.6.23/caps'
+        name: 'caps'
+        version: '0.6.23'
 
-    - name: "prepare modules"
-      run: >
-        mkdir -p ~/.config/calcit/modules/ && cd ~/.config/calcit/modules/
-        && git clone https://github.com/calcit-lang/lilac.git
-        && git clone https://github.com/calcit-lang/memof.git
-        && git clone https://github.com/calcit-lang/recollect.git
-        && git clone https://github.com/calcit-lang/bisection-key.git
-        && git clone https://github.com/Respo/respo.calcit.git
-        && git clone https://github.com/Respo/respo-ui.calcit.git
-        && git clone https://github.com/Respo/respo-message.calcit.git
-        && git clone https://github.com/Respo/respo-markdown.calcit.git
-        && git clone https://github.com/Cumulo/cumulo-util.calcit.git
-        && git clone https://github.com/mvc-works/ws-edn.calcit.git
-        && git clone https://github.com/Respo/respo-feather.calcit.git
-        && git clone https://github.com/Respo/alerts.calcit.git --branch 0.8.14
-
-    - run: yarn && yarn compile-server && yarn compile-page && yarn release-page
+    - run: caps --ci && yarn && yarn compile-server && yarn compile-page && yarn release-page
 
     - name: Upload web assets
       id: deploy
