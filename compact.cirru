@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.31)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.32)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -450,7 +450,7 @@
     |app.comp.configs $ {}
       :defs $ {}
         |comp-configs $ quote
-          defcomp comp-configs (states configs)
+          defcomp comp-configs (states configs entries)
             let
                 version-plugin $ use-prompt (>> states :version)
                   {} (:text "\"Set a version:")
@@ -517,10 +517,31 @@
                       :color $ hsl 0 0 60
                   code $ {}
                     :innerHTML $ trim (format-cirru-edn configs)
+                comp-entries states entries
                 .render version-plugin
                 .render modules-plugin
                 .render init-fn-plugin
                 .render reload-fn-plugin
+        |comp-entries $ quote
+          defcomp comp-entries (states entries)
+            let
+                code-plugin $ use-prompt (>> states :entries-code)
+                  {} (:text "\"Update entries:")
+                    :initial $ format-cirru-edn entries
+                    :placeholder "\"{} ..."
+                    :input-style $ {} (:font-family ui/font-code)
+                    :multiline? true
+              div ({})
+                pre $ {}
+                  :style $ merge
+                    {} (:max-width "\"100%") (:overflow :auto)
+                      :color $ hsl 0 0 60
+                  :inner-text $ format-cirru-edn entries
+                button $ {} (:style style/button) (:inner-text "\"Edit")
+                  :on-click $ fn (e d!)
+                    .show code-plugin d! $ fn (text)
+                      d! :configs/update-entries $ [] :reset (parse-cirru-edn text)
+                .render code-plugin
         |render-field $ quote
           defn render-field (v)
             <>
@@ -536,10 +557,11 @@
         ns app.comp.configs $ :require
           respo.util.format :refer $ hsl
           respo-ui.core :as ui
-          respo.core :refer $ defcomp >> <> span div a pre code
+          respo.core :refer $ defcomp >> <> span div a pre code button
           respo.comp.space :refer $ =<
           cirru-edn.core :as cirru-edn
           respo-alerts.core :refer $ use-prompt
+          app.style :as style
     |app.comp.container $ {}
       :defs $ {}
         |comp-container $ quote
@@ -569,7 +591,9 @@
                         :members $ comp-page-members (:data router) (:id session)
                         :search $ comp-search (>> states :search) (:data router)
                         :watching $ comp-watching (>> states :watching) (:data router) (:theme session)
-                        :configs $ comp-configs (>> states :configs) (:data router)
+                        :configs $ let
+                            d $ :data router
+                          comp-configs (>> states :configs) (:configs d) (:entries d)
                       if
                         = :watching $ :name router
                         comp-watching (>> states :watching) (:data router) (:theme session)
@@ -2809,7 +2833,9 @@
                         if (contains? sessions his-sid)
                           twig-watching (get sessions his-sid) (:id session) (:files ir) (:users db)
                           , nil
-                      :configs $ :configs db
+                      :configs $ {}
+                        :configs $ :configs db
+                        :entries $ :entries db
                   :stats $ {}
                     :members-count $ count (:sessions db)
                 {} (:session session) (:logged-in? false)
@@ -3069,7 +3095,7 @@
           defn updater (db op op-data sid op-id op-time)
             let
                 f $ case-default op
-                  do (println "|Unknown op:" op)
+                  do (eprintln "|Unknown op:" op)
                     fn (& args) db
                   :session/connect session/connect
                   :session/disconnect session/disconnect
@@ -3139,6 +3165,7 @@
                   :watcher/file-change watcher/file-change
                   :ping identity
                   :configs/update configs/update-configs
+                  :configs/update-entries configs/update-entries
               f db op-data sid op-id op-time
       :ns $ quote
         ns app.updater $ :require (app.updater.session :as session) (app.updater.user :as user) (app.updater.router :as router) (app.updater.ir :as ir) (app.updater.writer :as writer) (app.updater.notify :as notify) (app.updater.analyze :as analyze) (app.updater.watcher :as watcher) (app.updater.configs :as configs)
@@ -3296,6 +3323,17 @@
         |update-configs $ quote
           defn update-configs (db op-data session-id op-id op-time)
             update db :configs $ fn (configs) (merge configs op-data)
+        |update-entries $ quote
+          defn update-entries (db op-data session-id op-id op-time)
+            let
+                operation $ nth op-data 0
+                data $ nth op-data 1
+              update db :entries $ fn (d)
+                case-default operation
+                  do (eprintln "\"unknown entries operation" operation) d
+                  :reset data
+                  :merge $ merge d data
+                  :dissoc $ dissoc d data
       :ns $ quote (ns app.updater.configs)
     |app.updater.ir $ {}
       :defs $ {}
