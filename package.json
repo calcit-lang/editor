@@ -19,7 +19,7 @@
   "author": "jiyinyiyong",
   "license": "MIT",
   "devDependencies": {
-    "bottom-tip": "^0.1.3",
+    "bottom-tip": "^0.1.4",
     "feather-icons": "^4.29.0",
     "url-parse": "^1.5.10",
     "vite": "^4.1.4"

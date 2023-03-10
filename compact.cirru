@@ -1416,7 +1416,7 @@
                 .render replace-plugin
         |css-area $ quote
           defstyle css-area $ {}
-            "\"$0" $ {} (:overflow :auto) (:padding-bottom "\"60vh") (:padding-top 80) (:flex 1)
+            "\"$0" $ {} (:overflow :auto) (:padding-bottom "\"60vh") (:padding-top 120) (:flex 1)
         |css-editor $ quote
           defstyle css-editor $ {}
             "\"$0" $ merge ui/flex ui/column
@@ -1875,8 +1875,7 @@
                     :color $ hsl 200 80 70 0.6
                   fn (e d!) (d! :writer/picker-mode nil)
                 list->
-                  {} $ :style
-                    merge ui/row $ {} (:flex-wrap :wrap)
+                  {} $ :class-name style-list-container
                   -> imported-names (.to-list)
                     filter $ fn (pair)
                       .any? (nth pair 1) hint-func
@@ -1891,34 +1890,26 @@
                     map $ fn (xs)
                       let
                           ns $ first xs 
-                        [] ns $ div
-                          {} $ :style
-                            merge ui/row $ {} (:margin-right 32)
-                          <> ns $ {} (:font-family ui/font-fancy)
-                            :color $ hsl 0 0 70
-                          =< 8 nil
-                          list-> ({})
-                            -> (nth xs 1)
-                              map $ fn (x)
-                                [] x $ render-code x
+                        [] ns $ list->
+                          {} (:title ns) (:class-name style-list-container)
+                          -> (nth xs 1)
+                            map $ fn (x)
+                              [] x $ render-code x
+                =< nil 6
                 let
                     names $ -> defined-names (.to-list) (filter hint-func)
                   if-not (empty? names)
-                    div
-                      {} $ :style ui/row
-                      <> "\"@" $ {} (:font-family ui/font-fancy)
-                        :color $ hsl 0 0 60
-                      =< 8 nil
-                      list-> ({})
-                        -> names (sort)
-                          map $ fn (x)
-                            [] x $ render-code x
+                    list->
+                      {} $ :class-name style-list-container
+                      -> names (sort)
+                        map $ fn (x)
+                          [] x $ render-code x
         |css-name-code $ quote
           defstyle css-name-code $ {}
-            "\"$0" $ {} (:font-family ui/font-code) (:cursor :pointer) (:font-size 11) (:margin-right 4) (:margin-bottom 4) (:word-break :none) (:line-height "\"14px") (:border-radius "\"4px")
+            "\"$0" $ {} (:font-family ui/font-code) (:cursor :pointer) (:font-size 11) (:margin-bottom 4) (:word-break :none) (:line-height "\"12px") (:border-radius "\"4px")
               :color $ hsl 0 0 90
-              :background-color $ hsl 0 0 50 0.4
-              :padding "\"2px 3px"
+              :background-color $ hsl 0 0 50 0.2
+              :padding "\"2px 2px"
               :display :inline-block
             "\"$0:hover" $ {}
               :background-color $ hsl 0 0 30 1
@@ -1926,13 +1917,17 @@
         |css-picker-container $ quote
           defstyle css-picker-container $ {}
             "\"$0" $ merge ui/column
-              {} (:padding "\"4px 8px") (:position :fixed) (:line-height "\"1.6em") (:top 8) (:right 8) (:z-index 100) (:border-radius "\"4px") (:max-width "\"60vw") (:min-height "\"40px") (:min-width "\"200px")
+              {} (:padding "\"2px 4px") (:position :fixed) (:line-height "\"1.6em") (:top 6) (:left "\"50%") (:transform "\"translate(-50%,0)") (:margin "\"auto") (:z-index 100) (:border-radius "\"4px") (:max-width "\"66vw") (:min-height "\"40px") (:min-width "\"200px")
                 :border $ str "\"1px solid " (hsl 0 0 70 0.4)
                 :background-color $ hsl 0 0 20 0.7
         |css-picker-tip $ quote
           defstyle css-picker-tip $ {}
             "\"$0" $ {} (:font-family ui/font-fancy) (:font-size 28) (:font-weight 300) (:line-height "\"21px") (:cursor :pointer) (:position :absolute) (:right 4) (:bottom 4) (:z-index -1)
-              :color $ hsl 0 0 90 0.6
+              :color $ hsl 0 0 90 0.4
+        |style-list-container $ quote
+          defstyle style-list-container $ {}
+            "\"$0" $ merge ui/row
+              {} (:flex-wrap :wrap) (:column-gap "\"4px")
       :ns $ quote
         ns app.comp.picker-notice $ :require
           respo.core :refer $ defcomp list-> >> <> span div a pre
