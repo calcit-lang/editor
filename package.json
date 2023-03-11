@@ -1,6 +1,6 @@
 {
   "name": "@calcit/editor",
-  "version": "0.6.32",
+  "version": "0.6.33",
   "description": "Calcit Editor",
   "bin": {
     "ct": "./server.mjs"
@@ -32,6 +32,6 @@
     "latest-version": "^7.0.0",
     "md5": "^2.3.0",
     "nanoid": "^4.0.1",
-    "ws": "^8.12.1"
+    "ws": "^8.13.0"
   }
 }
