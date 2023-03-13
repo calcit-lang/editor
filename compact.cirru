@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.32)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.33)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -2407,7 +2407,7 @@
           def bookmark $ {} (:kind :def) (:ns nil) (:extra nil)
             :focus $ []
         |configs $ quote
-          def configs $ {} (:port 6001) (:init-fn "\"app.main/main!") (:reload-fn "\"app.main/reload!")
+          def configs $ {} (:port 6001) (:expose-port 6011) (:init-fn "\"app.main/main!") (:reload-fn "\"app.main/reload!")
             :modules $ []
             :version "\"0.0.1"
         |database $ quote
@@ -2487,6 +2487,39 @@
                 reset! *writer-db $ updater @*writer-db op op-data sid op-id op-time
                 :effect/save-files $ handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true nil
                 :effect/save-ns $ handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true op-data
+        |expose-files! $ quote
+          defn expose-files! (port)
+            let
+                server $ createServer
+                  fn (req res) (hint-fn async)
+                    ; js/console.log (.-url req) (.-headers req)
+                    .!setHeader res "\"Access-Control-Allow-Origin" "\"*"
+                    .!setHeader res "\"Access-Control-Allow-Headers" "\"*"
+                    if
+                      = "\"OPTIONS" $ .-method req
+                      do (.!writeHead res 200) (.!end res "\"OK")
+                      case-default (.-url req)
+                        do (.!writeHead res 404) (.!end res "\"not found. check url")
+                        "\"/" $ .!end res "\"echo from Calcit Editor"
+                        "\"/favicon.ico" $ do (.!writeHead res 404) (.!end res "\"")
+                        "\"/load-error" $ readFile "\"./.calcit-error.cirru" "\"utf8"
+                          fn (err ? content)
+                            if (some? err)
+                              do (.!writeHead res 400)
+                                .!end res $ format-cirru-edn
+                                  {} $ :message (str err)
+                              do (.!setHeader res "\"Content-Type" "\"text/plain") (.!writeHead res 200) (.!end res content)
+                        "\"/load-compact" $ readFile "\"./compact.cirru" "\"utf8"
+                          fn (err ? content)
+                            if (some? err)
+                              do (.!writeHead res 400)
+                                .!end res $ format-cirru-edn
+                                  {} $ :message (str err)
+                              do (.!setHeader res "\"Content-Type" "\"text/plain") (.!writeHead res 200) (.!end res content)
+              .!listen server port $ fn ()
+                let
+                    link $ .!blue chalk (str "\"http://localhost:" port)
+                  println $ str "\"port " port "\" ok, local configs exposed on " link
         |initial-db $ quote
           def initial-db $ merge schema/database
             let
@@ -2549,6 +2582,9 @@
           defn start-server! (configs)
             pick-port! (:port configs)
               fn (unoccupied-port) (run-server! dispatch! unoccupied-port)
+            pick-http-port!
+              either (:expose-port configs) (:expose-port schema/configs)
+              fn (unoccupied-port) (expose-files! unoccupied-port)
             render-loop!
             watch-file!
             js/process.on "\"SIGINT" $ fn (code & args)
@@ -2606,13 +2642,15 @@
         ns app.server $ :require (app.schema :as schema)
           app.updater :refer $ updater
           app.util.compile :refer $ handle-files! persist!
-          app.util.env :refer $ pick-port!
+          app.util.env :refer $ pick-port! pick-http-port!
           app.util :refer $ db->string file-compact-to-calcit
           |chalk :default chalk
           |path :as path
           |fs :as fs
           |md5 :default md5
           |gaze :default gaze
+          "\"node:http" :refer $ createServer
+          "\"node:fs" :refer $ readFile
           ws-edn.server :refer $ wss-serve! wss-send! wss-each!
           recollect.twig :refer $ clear-twig-caches! new-twig-loop!
           recollect.diff :refer $ diff-twig
@@ -4607,7 +4645,7 @@
                   -> tester
                     .!once |close $ fn () (next-fn nil false)
                     .!close
-                .!listen port
+                .!listen port "\"0.0.0.0"
       :ns $ quote
         ns app.util.detect $ :require (|net :as net)
     |app.util.dom $ {}
@@ -4665,6 +4703,16 @@
               .!catch $ fn (e) (js/console.error "\"failed to request version:" e)
         |get-cli-configs! $ quote
           defn get-cli-configs! () $ {} (:op js/process.env.op)
+        |pick-http-port! $ quote
+          defn pick-http-port! (port next-fn)
+            port-taken? port $ fn (err taken?)
+              if (some? err)
+                do (js/console.error err) (js/process.exit 1)
+                if taken?
+                  do
+                    println $ str "\"port " port "\" in use."
+                    pick-http-port! (inc port) next-fn
+                  next-fn port
         |pick-port! $ quote
           defn pick-port! (port next-fn)
             port-taken? port $ fn (err taken?)
@@ -4672,12 +4720,12 @@
                 do (js/console.error err) (js/process.exit 1)
                 if taken?
                   do
-                    println $ str "\"port " port "\" is in use."
+                    println $ str "\"port " port "\" in use."
                     pick-port! (inc port) next-fn
                   do
                     let
                         link $ .!blue chalk (str "\"http://editor.calcit-lang.org?port=" port)
-                      println $ str "\"port " port "\" is ok, please edit on " link
+                      println $ str "\"port " port "\" ok, please edit on " link
                     next-fn port
       :ns $ quote
         ns app.util.env $ :require ("\"chalk" :default chalk)
