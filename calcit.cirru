@@ -10797,8 +10797,13 @@
                       |j $ {} (:at 1580559895114) (:by |S1lNv50FW) (:text |:ir/reset-at) (:type :leaf)
                       |r $ {} (:at 1580559895114) (:by |S1lNv50FW) (:type :expr)
                         :data $ {}
-                          |T $ {} (:at 1580559895114) (:by |S1lNv50FW) (:text |case) (:type :leaf)
+                          |T $ {} (:at 1678981855864) (:by |S1lNv50FW) (:text |case-default) (:type :leaf)
                           |j $ {} (:at 1580559895114) (:by |S1lNv50FW) (:text |kind) (:type :leaf)
+                          |n $ {} (:at 1678981856700) (:by |S1lNv50FW) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1678981860201) (:by |S1lNv50FW) (:text |eprintln) (:type :leaf)
+                              |b $ {} (:at 1678981856700) (:by |S1lNv50FW) (:text "|\"Unknown") (:type :leaf)
+                              |h $ {} (:at 1678981856700) (:by |S1lNv50FW) (:text |bookmark) (:type :leaf)
                           |r $ {} (:at 1580559895114) (:by |S1lNv50FW) (:type :expr)
                             :data $ {}
                               |T $ {} (:at 1580559895114) (:by |S1lNv50FW) (:text |:ns) (:type :leaf)
@@ -10834,14 +10839,6 @@
                                         :data $ {}
                                           |T $ {} (:at 1580559932019) (:by |S1lNv50FW) (:text |:extra) (:type :leaf)
                                           |j $ {} (:at 1580559933731) (:by |S1lNv50FW) (:text |bookmark) (:type :leaf)
-                          |y $ {} (:at 1580559938538) (:by |S1lNv50FW) (:type :expr)
-                            :data $ {}
-                              |T $ {} (:at 1580559940649) (:by |S1lNv50FW) (:text |do) (:type :leaf)
-                              |j $ {} (:at 1580559940913) (:by |S1lNv50FW) (:type :expr)
-                                :data $ {}
-                                  |T $ {} (:at 1580559941562) (:by |S1lNv50FW) (:text |println) (:type :leaf)
-                                  |j $ {} (:at 1580559953106) (:by |S1lNv50FW) (:text "|\"Unknown") (:type :leaf)
-                                  |r $ {} (:at 1580559957434) (:by |S1lNv50FW) (:text |bookmark) (:type :leaf)
                   |j $ {} (:at 1580560018897) (:by |S1lNv50FW) (:type :expr)
                     :data $ {}
                       |T $ {} (:at 1580560018897) (:by |S1lNv50FW) (:text |d!) (:type :leaf)

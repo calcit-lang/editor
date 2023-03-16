@@ -1485,11 +1485,10 @@
             let
                 kind $ :kind bookmark
                 ns-text $ :ns bookmark
-              d! :ir/reset-at $ case kind
+              d! :ir/reset-at $ case-default kind (eprintln "\"Unknown" bookmark)
                 :ns $ {} (:ns ns-text) (:kind :ns)
                 :def $ {} (:ns ns-text) (:kind :def)
                   :extra $ :extra bookmark
-                do $ println "\"Unknown" bookmark
               d! :states/clear nil
         |style-hint $ quote
           def style-hint $ {}
