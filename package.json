@@ -22,10 +22,10 @@
     "bottom-tip": "^0.1.4",
     "feather-icons": "^4.29.0",
     "url-parse": "^1.5.10",
-    "vite": "^4.1.4"
+    "vite": "^4.2.0"
   },
   "dependencies": {
-    "@calcit/procs": "^0.6.23",
+    "@calcit/procs": "^0.6.24",
     "chalk": "^5.2.0",
     "dayjs": "^1.11.7",
     "gaze": "^1.1.3",
