@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.33)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.34)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -2501,20 +2501,9 @@
                         do (.!writeHead res 404) (.!end res "\"not found. check url")
                         "\"/" $ .!end res "\"echo from Calcit Editor"
                         "\"/favicon.ico" $ do (.!writeHead res 404) (.!end res "\"")
-                        "\"/load-error" $ readFile "\"./.calcit-error.cirru" "\"utf8"
-                          fn (err ? content)
-                            if (some? err)
-                              do (.!writeHead res 400)
-                                .!end res $ format-cirru-edn
-                                  {} $ :message (str err)
-                              do (.!setHeader res "\"Content-Type" "\"text/plain") (.!writeHead res 200) (.!end res content)
-                        "\"/load-compact" $ readFile "\"./compact.cirru" "\"utf8"
-                          fn (err ? content)
-                            if (some? err)
-                              do (.!writeHead res 400)
-                                .!end res $ format-cirru-edn
-                                  {} $ :message (str err)
-                              do (.!setHeader res "\"Content-Type" "\"text/plain") (.!writeHead res 200) (.!end res content)
+                        "\"/load-error" $ readFile "\"./.calcit-error.cirru" "\"utf8" (make-file-response res)
+                        "\"/load-compact" $ readFile "\"./compact.cirru" "\"utf8" (make-file-response res)
+                        "\"/compact-data" $ readFile "\"./compact.cirru" "\"utf8" (make-file-response res)
               .!listen server port $ fn ()
                 let
                     link $ .!blue chalk (str "\"http://localhost:" port)
@@ -2544,6 +2533,14 @@
               do (start-server! configs) (check-version!)
               "\"compile" $ compile-all-files! configs
               "\"file-transform" $ transform-compact-to-calcit!
+        |make-file-response $ quote
+          defn make-file-response (res)
+            fn (err ? content)
+              if (some? err)
+                do (.!writeHead res 400)
+                  .!end res $ format-cirru-edn
+                    {} $ :message (str err)
+                do (.!setHeader res "\"Content-Type" "\"text/plain") (.!writeHead res 200) (.!end res content)
         |on-file-change! $ quote
           defn on-file-change! () $ let
               file-content $ fs/readFileSync storage-file "\"utf8"
