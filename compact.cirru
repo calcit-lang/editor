@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.34)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.35)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -3287,10 +3287,17 @@
                             [] "\"defn" (:extra new-bookmark)
                               [] & $ :args op-data
                             [] "\"def" (:extra new-bookmark) ([])
+                          target-ns $ :ns new-bookmark
+                          target-def $ :extra new-bookmark
+                          def-code $ cirru->tree new-expr user-id op-time
                         -> db
-                          assoc-in
-                            [] :ir :files (:ns new-bookmark) :defs $ :extra new-bookmark
-                            cirru->tree new-expr user-id op-time
+                          update-in ([] :ir :files)
+                            fn (files)
+                              if (contains? files target-ns)
+                                assoc-in files ([] target-ns :defs target-def) def-code
+                                assoc files target-ns $ {}
+                                  :ns $ cirru->tree ([] "\"ns" target-ns) user-id op-time
+                                  :defs $ {} (target-def def-code)
                           update-in ([] :sessions sid :writer) (push-bookmark new-bookmark)
                       warn $ str "|Does not exist: " (:ns new-bookmark) "| " (:extra new-bookmark)
                   warn $ str "|From external ns: " (:ns new-bookmark)
