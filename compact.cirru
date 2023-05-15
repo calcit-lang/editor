@@ -1268,6 +1268,11 @@
                 {} $ :class-name css-page-editor
                 if (empty? stack)
                   div
+                    {} $ :class-name css-stack
+                    <> "\"Empty" style-nothing
+                  comp-stack stack pointer
+                if (empty? stack)
+                  div
                     {} $ :style
                       {} $ :padding "\"12px 0"
                     <> "\"Nothing to edit" style-nothing
@@ -1294,11 +1299,6 @@
                     if (:abstract? state)
                       comp-abstract (>> states :abstract) close-abstract!
                     ; comp-inspect "\"Expr" router-data style/inspector
-                if (empty? stack)
-                  div
-                    {} $ :class-name css-stack
-                    <> "\"Empty" style-nothing
-                  comp-stack stack pointer
                 if picker-mode? $ comp-picker-notice (:picker-choices router-data)
                   get-in expr $ mapcat focus prepend-data
         |comp-stack $ quote
@@ -1416,18 +1416,21 @@
                 .render replace-plugin
         |css-area $ quote
           defstyle css-area $ {}
-            "\"$0" $ {} (:overflow :auto) (:padding-bottom "\"60vh") (:padding-top 120) (:flex 1)
+            "\"$0" $ {} (:position :fixed) (:right 0) (:left 80) (:bottom 0) (:top 0) (:overflow :auto) (:padding-bottom "\"60vh") (:padding-top 120) (:flex 1) (:padding-right 8)
+              :background-color $ hsl 0 0 0 0.4
         |css-editor $ quote
           defstyle css-editor $ {}
             "\"$0" $ merge ui/flex ui/column
+              {} (:position :absolute) (:left 100)
         |css-page-editor $ quote
           defstyle css-page-editor $ {}
             "\"$0" $ merge ui/row ui/flex
-              {} $ :position :relative
+              {} $ :z-index 80
         |css-stack $ quote
           defstyle css-stack $ {}
-            "\"$0" $ {} (:width 180) (:max-height "\"80vh") (:overflow :auto) (:position :fixed) (:right -80) (:top "\"40vh") (:max-height "\"40vh") (:opacity 0.8) (:transition-duration "\"240ms")
-            "\"$0:hover" $ {} (:opacity 1) (:right 0)
+            "\"$0" $ {} (:overflow :auto) (:padding "\"48px 0 80px 0") (:opacity 0.8) (:position :relative) (:box-shadow "\"0 0 4px black")
+              :background-color $ hsl 0 0 0 0.6
+            "\"$0:hover" $ {} (:opacity 1) (:z-index 100)
         |css-status-bar $ quote
           defstyle css-status-bar $ {}
             "\"$0" $ merge ui/row

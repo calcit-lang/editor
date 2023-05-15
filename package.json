@@ -22,7 +22,7 @@
     "bottom-tip": "^0.1.5",
     "feather-icons": "^4.29.0",
     "url-parse": "^1.5.10",
-    "vite": "^4.3.5"
+    "vite": "^4.3.6"
   },
   "dependencies": {
     "@calcit/procs": "^0.6.27",
