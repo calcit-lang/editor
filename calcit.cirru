@@ -8823,6 +8823,10 @@
                             :data $ {}
                               |T $ {} (:at 1648663891289) (:by |S1lNv50FW) (:text |:border-radius) (:type :leaf)
                               |b $ {} (:at 1648663898641) (:by |S1lNv50FW) (:text "|\"6px") (:type :leaf)
+                          |yxr $ {} (:at 1684341751614) (:by |S1lNv50FW) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1684341751614) (:by |S1lNv50FW) (:text |:z-index) (:type :leaf)
+                              |b $ {} (:at 1684341751614) (:by |S1lNv50FW) (:text |200) (:type :leaf)
                           |yy $ {} (:at 1648663888081) (:by |S1lNv50FW) (:type :expr)
                             :data $ {}
                               |T $ {} (:at 1648663888081) (:by |S1lNv50FW) (:text |:background-color) (:type :leaf)
@@ -8833,6 +8837,16 @@
                                   |h $ {} (:at 1648663888081) (:by |S1lNv50FW) (:text |0) (:type :leaf)
                                   |l $ {} (:at 1648663888081) (:by |S1lNv50FW) (:text |0) (:type :leaf)
                                   |o $ {} (:at 1656555159629) (:by |S1lNv50FW) (:text |0.5) (:type :leaf)
+                  |b $ {} (:at 1684341713072) (:by |S1lNv50FW) (:type :expr)
+                    :data $ {}
+                      |T $ {} (:at 1684341719059) (:by |S1lNv50FW) (:text "|\"$0:hover") (:type :leaf)
+                      |b $ {} (:at 1684341735732) (:by |S1lNv50FW) (:type :expr)
+                        :data $ {}
+                          |D $ {} (:at 1684341736677) (:by |S1lNv50FW) (:text |{}) (:type :leaf)
+                          |b $ {} (:at 1684341812616) (:by |S1lNv50FW) (:type :expr)
+                            :data $ {}
+                              |T $ {} (:at 1684341830000) (:by |S1lNv50FW) (:text |:transform) (:type :leaf)
+                              |b $ {} (:at 1684341877520) (:by |S1lNv50FW) (:text "|\"scale(1.03)") (:type :leaf)
         :ns $ {} (:at 1504777353661) (:by nil) (:type :expr)
           :data $ {}
             |T $ {} (:at 1504777353661) (:by |root) (:text |ns) (:type :leaf)

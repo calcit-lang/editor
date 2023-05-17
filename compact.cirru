@@ -1215,8 +1215,9 @@
                       <> (:text msg) nil
         |css-message $ quote
           defstyle css-message $ {}
-            "\"$0" $ {} (:position :absolute) (:left 8) (:cursor :pointer) (:font-weight 100) (:font-family |Hind) (:padding "|0 8px") (:transition-duration |200ms) (:border-radius "\"6px")
+            "\"$0" $ {} (:position :absolute) (:left 8) (:cursor :pointer) (:font-weight 100) (:font-family |Hind) (:padding "|0 8px") (:transition-duration |200ms) (:border-radius "\"6px") (:z-index 200)
               :background-color $ hsl 0 0 0 0.5
+            "\"$0:hover" $ {} (:transform "\"scale(1.03)")
       :ns $ quote
         ns app.comp.messages $ :require
           respo.util.format :refer $ hsl
