@@ -1,6 +1,6 @@
 {
   "name": "@calcit/editor",
-  "version": "0.6.35",
+  "version": "0.6.36",
   "description": "Calcit Editor",
   "bin": {
     "ct": "./server.mjs"
@@ -22,10 +22,10 @@
     "bottom-tip": "^0.1.5",
     "feather-icons": "^4.29.0",
     "url-parse": "^1.5.10",
-    "vite": "^4.3.8"
+    "vite": "^4.3.9"
   },
   "dependencies": {
-    "@calcit/procs": "^0.6.29",
+    "@calcit/procs": "^0.7.0-a2",
     "chalk": "^5.2.0",
     "dayjs": "^1.11.7",
     "gaze": "^1.1.3",

@@ -1,6 +1,6 @@
 
 {}
-  :configs $ {} (:init-fn |app.server/main!) (:port 6001) (:reload-fn |app.server/reload!) (:version |0.6.35)
+  :configs $ {} (:init-fn |app.server/main!) (:port 6001) (:reload-fn |app.server/reload!) (:version |0.6.36)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -958,7 +958,7 @@
                                       |P $ {} (:at 1625684208183) (:by |S1lNv50FW) (:text |pair) (:type :leaf)
                                       |T $ {} (:at 1533748078929) (:by |S1lNv50FW) (:type :expr)
                                         :data $ {}
-                                          |T $ {} (:at 1533748081760) (:by |S1lNv50FW) (:text |keyword?) (:type :leaf)
+                                          |T $ {} (:at 1685269247834) (:by |S1lNv50FW) (:text |tag?) (:type :leaf)
                                           |j $ {} (:at 1533748082144) (:by |S1lNv50FW) (:text |k) (:type :leaf)
                           |v $ {} (:at 1625684215976) (:by |S1lNv50FW) (:type :expr)
                             :data $ {}
