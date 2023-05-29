@@ -2006,7 +2006,7 @@
                       not $ = (:new-name state) "\""
                     on-replace (:old-name state) (:new-name state) d!
                     d! cursor $ assoc state :show? false
-              ::
+              %::
                 %{} Modal-class
                   :render $ fn (self) (nth self 1)
                   :show $ fn (self d!)
@@ -2017,7 +2017,7 @@
                         if (some? el) (.select el)
                   :close $ fn (self d!)
                     d! cursor $ assoc state :show? false
-                comp-modal
+                , :modal $ comp-modal
                   {} (:title "\"Replace variable")
                     :style $ {} (:width 240)
                     :container-style $ {}
