@@ -12,4 +12,4 @@
     |Cumulo/cumulo-util.calcit |main
     |mvc-works/ws-edn.calcit |main
     |Respo/respo-feather.calcit |0.2.4
-    |Respo/alerts.calcit |0.8.15
+    |Respo/alerts.calcit |0.8.16
