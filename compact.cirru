@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.35)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.36)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -137,7 +137,7 @@
             update states :editor $ fn (scope)
               -> scope .to-list
                 filter $ fn (pair)
-                  let[] (k v) pair $ keyword? k
+                  let[] (k v) pair $ tag? k
                 pairs-map
         |draft-box $ quote
           defn draft-box (states)
@@ -753,13 +753,14 @@
           defcomp comp-expr (states expr focus coord others tail? layout-mode readonly? picker-mode? theme depth)
             let
                 focused? $ = focus coord
+                focus-in? $ coord-contains? focus coord
                 first-id $ get-min-key (:data expr)
                 last-id $ get-max-key (:data expr)
                 sorted-children $ -> (:data expr) (.to-list) (.sort-by first)
               list->
                 {} (:tab-index 0)
-                  :class-name $ str |cirru-expr (if focused? "| cirru-focused" |)
-                  :style $ decide-expr-theme expr (includes? others coord) focused? tail? layout-mode (count coord) depth theme
+                  :class-name $ str-spaced (base-style-expr theme) (if focused? |cirru-focused |)
+                  :style $ decide-expr-theme expr (includes? others coord) focused? focus-in? tail? layout-mode (count coord) depth theme
                   :on $ if readonly?
                     {} $ :click
                       fn (e d!)
@@ -887,7 +888,7 @@
           app.comp.leaf :refer $ comp-leaf
           app.client-util :refer $ coord-contains? leaf? expr? expr-many-items?
           app.util.shortcuts :refer $ on-window-keydown on-paste!
-          app.theme :refer $ decide-expr-theme
+          app.theme :refer $ decide-expr-theme base-style-expr
           app.util :refer $ tree->cirru
           app.util.dom :refer $ do-copy-logics!
           bisection-key.util :refer $ get-min-key get-max-key
@@ -1021,8 +1022,8 @@
                   , "\""
                 focused? $ = focus coord
               textarea $ {} (:value text) (:spellcheck false)
-                :class-name $ str "\"cirru-leaf"
-                  if (= focus coord) "\" cirru-focused" "\""
+                :class-name $ str-spaced (base-style-leaf theme)
+                  if (= focus coord) "\"cirru-focused" "\""
                 :read-only readonly?
                 :style $ decide-leaf-theme text focused? first? by-other? theme
                 :on $ if readonly?
@@ -1131,7 +1132,7 @@
           app.keycode :as keycode
           app.util :as util
           app.util.shortcuts :refer $ on-window-keydown on-paste!
-          app.theme :refer $ decide-leaf-theme
+          app.theme :refer $ decide-leaf-theme base-style-leaf
           app.util :refer $ tree->cirru
           app.util.dom :refer $ do-copy-logics!
     |app.comp.login $ {}
@@ -1284,8 +1285,6 @@
                           map $ fn (x) (:focus x)
                       div
                         {} $ :class-name css-area
-                        inject-style "\".cirru-expr" $ .to-list (base-style-expr theme)
-                        inject-style "\".cirru-leaf" $ .to-list (base-style-leaf theme)
                         if (some? expr)
                           comp-expr
                             >> states $ bookmark-full-str bookmark
@@ -2007,7 +2006,7 @@
                       not $ = (:new-name state) "\""
                     on-replace (:old-name state) (:new-name state) d!
                     d! cursor $ assoc state :show? false
-              ::
+              %::
                 %{} Modal-class
                   :render $ fn (self) (nth self 1)
                   :show $ fn (self d!)
@@ -2018,7 +2017,7 @@
                         if (some? el) (.select el)
                   :close $ fn (self d!)
                     d! cursor $ assoc state :show? false
-                comp-modal
+                , :modal $ comp-modal
                   {} (:title "\"Replace variable")
                     :style $ {} (:width 240)
                     :container-style $ {}
@@ -2700,16 +2699,16 @@
       :defs $ {}
         |base-style-expr $ quote
           defn base-style-expr (theme)
-            case-default theme ({}) (:star-trail star-trail/style-expr) (:curves curves/style-expr) (:beginner beginner/style-expr)
+            case-default theme "\"css-expr-unknown" (:star-trail star-trail/css-expr) (:curves curves/css-expr) (:beginner beginner/css-expr)
         |base-style-leaf $ quote
           defn base-style-leaf (theme)
-            case-default theme ({}) (:star-trail star-trail/style-leaf) (:curves curves/style-leaf) (:beginner beginner/style-leaf)
+            case-default theme "\"css-leaf-unknown" (:star-trail star-trail/css-leaf) (:curves curves/css-leaf) (:beginner beginner/css-leaf)
         |decide-expr-theme $ quote
-          defn decide-expr-theme (expr has-others? focused? tail? layout-mode length depth theme)
+          defn decide-expr-theme (expr has-others? focused? focus-in? tail? layout-mode length depth theme)
             case-default theme ({})
-              :star-trail $ star-trail/decide-expr-style expr has-others? focused? tail? layout-mode length depth
-              :curves $ curves/decide-expr-style expr has-others? focused? tail? layout-mode length depth
-              :beginner $ beginner/decide-expr-style expr has-others? focused? tail? layout-mode length depth
+              :star-trail $ star-trail/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth
+              :curves $ curves/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth
+              :beginner $ beginner/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth
         |decide-leaf-theme $ quote
           defn decide-leaf-theme (text focused? first? by-other? theme)
             case-default theme ({})
@@ -2720,24 +2719,26 @@
         ns app.theme $ :require (app.theme.star-trail :as star-trail) (app.theme.curves :as curves) (app.theme.beginner :as beginner)
     |app.theme.beginner $ {}
       :defs $ {}
+        |css-expr $ quote (def css-expr star-trail/css-expr)
+        |css-leaf $ quote (def css-leaf star-trail/css-leaf)
         |decide-expr-style $ quote
-          defn decide-expr-style (expr has-others? focused? tail? layout-mode length depth)
-            merge (star-trail/decide-expr-style expr has-others? focused? tail? layout-mode length depth) style-expr-beginner
+          defn decide-expr-style (expr has-others? focused? focus-in? tail? layout-mode length depth)
+            merge (star-trail/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth) style-expr-beginner
         |decide-leaf-style $ quote
           defn decide-leaf-style (text focused? first? by-other?)
             merge $ star-trail/decide-leaf-style text focused? first? by-other?
-        |style-expr $ quote (def style-expr star-trail/style-expr)
         |style-expr-beginner $ quote
           def style-expr-beginner $ {}
             :outline $ str "|1px solid " (hsl 200 80 70 0.2)
-        |style-leaf $ quote (def style-leaf star-trail/style-leaf)
       :ns $ quote
         ns app.theme.beginner $ :require (app.theme.star-trail :as star-trail)
           respo.util.format :refer $ hsl
     |app.theme.curves $ {}
       :defs $ {}
+        |css-expr $ quote (def css-expr star-trail/css-expr)
+        |css-leaf $ quote (def css-leaf star-trail/css-leaf)
         |decide-expr-style $ quote
-          defn decide-expr-style (expr has-others? focused? tail? layout-mode length depth)
+          defn decide-expr-style (expr has-others? focused? focus-in? tail? layout-mode length depth)
             merge
               {} (:border-radius |16px) (:display :inline-block) (:border-width "|0 1px")
                 :border-color $ hsl 0 0 80 0.5
@@ -2747,24 +2748,32 @@
         |decide-leaf-style $ quote
           defn decide-leaf-style (text focused? first? by-other?)
             merge (star-trail/decide-leaf-style text focused? first? by-other?) ({})
-        |style-expr $ quote (def style-expr star-trail/style-expr)
-        |style-leaf $ quote (def style-leaf star-trail/style-leaf)
       :ns $ quote
         ns app.theme.curves $ :require (app.theme.star-trail :as star-trail)
           respo.util.format :refer $ hsl
+          respo.css :refer $ defstyle
     |app.theme.star-trail $ {}
       :defs $ {}
         |base-style-expr $ quote
           defn base-style-expr () style-expr
         |base-style-leaf $ quote
           defn base-style-leaf () style-leaf
+        |css-expr $ quote
+          defstyle css-expr $ {}
+            "\"$0" $ {} (:border-width "|0 0 0px 1px") (:border-style :solid) (:min-height 24) (:outline :none) (:padding-left 10) (:font-family |Menlo,monospace) (:font-size 13) (:margin-bottom 2) (:margin-right 1) (:margin-left 8) (:line-height "\"1em") (:border-radius "\"8px") (:transition-duration "\"200ms")
+              :border-color $ hsl 200 100 76 0.5
+              :opacity 0.94
+            "\"$0:hover" $ {} (:opacity 1)
+        |css-leaf $ quote
+          defstyle css-leaf $ {} ("\"$0" style-leaf)
         |decide-expr-style $ quote
-          defn decide-expr-style (expr has-others? focused? tail? layout-mode length depth)
+          defn decide-expr-style (expr has-others? focused? focus-in? tail? layout-mode length depth)
             merge ({})
               if has-others? $ {}
                 :border-color $ hsl 0 0 100 0.6
               if focused? $ {}
                 :border-color $ hsl 0 0 100 0.9
+              if focus-in? $ {} (:opacity 1)
               if
                 and (> length 0) (not tail?) (not= layout-mode :block)
                 , style-expr-simple
@@ -2803,9 +2812,6 @@
         |style-big $ quote
           def style-big $ {}
             :border-right $ str "|16px solid " (hsl 0 0 30)
-        |style-expr $ quote
-          def style-expr $ {} (:border-width "|0 0 0px 1px") (:border-style :solid) (:min-height 24) (:outline :none) (:padding-left 10) (:font-family |Menlo,monospace) (:font-size 13) (:margin-bottom 2) (:margin-right 1) (:margin-left 8) (:line-height "\"1em") (:border-radius "\"8px")
-            :border-color $ hsl 200 100 76 0.5
         |style-expr-simple $ quote
           def style-expr-simple $ {} (:display :inline-block) (:border-width "|0 0 1px 0") (:min-width 32) (:padding-left 11) (:padding-right 11) (:padding-bottom -1) (:vertical-align :top)
         |style-expr-tail $ quote
@@ -2832,6 +2838,7 @@
           respo-ui.core :as ui
           app.polyfill :refer $ text-width*
           app.style :as style
+          respo.css :refer $ defstyle
     |app.twig.container $ {}
       :defs $ {}
         |twig-container $ quote
