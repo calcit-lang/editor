@@ -1,6 +1,6 @@
 {
   "name": "@calcit/editor",
-  "version": "0.6.38",
+  "version": "0.7.0-a1",
   "description": "Calcit Editor",
   "bin": {
     "ct": "./server.mjs"
