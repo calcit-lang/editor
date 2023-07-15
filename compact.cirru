@@ -18,7 +18,8 @@
           defn connect! () (js/console.info "\"Connecting...") (reset! *connecting? true)
             ws-connect! ws-host $ {}
               :on-open $ fn (event) (simulate-login!) (detect-watching!) (heartbeat!)
-              :on-close $ fn (event) (reset! *store nil) (reset! *connecting? false) (js/console.error "\"Lost connection!") (dispatch! :states/clear nil)
+              :on-close $ fn (event) (reset! *store nil) (reset! *connecting? false) (js/console.error "\"Lost connection!")
+                dispatch! $ :: :states/clear
               :on-data $ fn (data)
                 case-default (:kind data) (println "\"unknown kind:" data)
                   :patch $ let
@@ -30,36 +31,42 @@
               query $ parse-query!
             when
               some? $ get query "\"watching"
-              dispatch! :router/change $ {} (:name :watching)
-                :data $ get query "\"watching"
+              dispatch! $ :: :router/change
+                {} (:name :watching)
+                  :data $ get query "\"watching"
         |dispatch! $ quote
-          defn dispatch! (op op-data)
+          defn dispatch! (op)
             when
-              and config/dev? $ not= op :states
-              js/console.info |Dispatch (str op) (to-js-data op-data)
-            case-default op (send-op! op op-data)
-              :states $ reset! *states
-                let-sugar
-                      [] cursor new-state
-                      , op-data
-                  assoc-in @*states (conj cursor :data) new-state
-              :states/clear $ reset! *states
-                {} $ :states
-                  {} $ :cursor ([])
-              :manual-state/abstract $ reset! *states (updater/abstract @*states)
-              :manual-state/draft-box $ reset! *states (updater/draft-box @*states)
-              :effect/save-files $ do
-                reset! *states $ updater/clear-editor @*states
-                send-op! op op-data
-              :ir/indent $ do
-                reset! *states $ updater/clear-editor @*states
-                send-op! op op-data
-              :ir/unindent $ do
-                reset! *states $ updater/clear-editor @*states
-                send-op! op op-data
-              :ir/reset-files $ do
-                reset! *states $ updater/clear-editor @*states
-                send-op! op op-data
+              and config/dev? $ not= (nth op 0) :states
+              js/console.info |Dispatch op
+            tag-match op
+                :states cursor new-state
+                reset! *states $ assoc-in @*states (conj cursor :data) new-state
+              (:states/clear)
+                reset! *states $ {}
+                  :states $ {}
+                    :cursor $ []
+              (:manual-state/abstract)
+                reset! *states $ updater/abstract @*states
+              (:manual-state/draft-box)
+                reset! *states $ updater/draft-box @*states
+              (:effect/save-files)
+                do
+                  reset! *states $ updater/clear-editor @*states
+                  send-op! op
+              (:ir/indent)
+                do
+                  reset! *states $ updater/clear-editor @*states
+                  send-op! op
+              (:ir/unindent)
+                do
+                  reset! *states $ updater/clear-editor @*states
+                  send-op! op
+              (:ir/reset-files)
+                do
+                  reset! *states $ updater/clear-editor @*states
+                  send-op! op
+              _ $ send-op! op
         |heartbeat! $ quote
           defn heartbeat! () $ delay! 30
             fn () $ if (ws-connected?)
@@ -105,13 +112,16 @@
             and (nil? @*store) (not @*connecting?)
             connect!
         |send-op! $ quote
-          defn send-op! (op op-data)
-            ws-send! $ {} (:kind :op) (:op op) (:data op-data)
+          defn send-op! (op)
+            ws-send! $ {} (:kind :op)
+              :op $ nth op 0
+              :data $ nth op 1
         |simulate-login! $ quote
           defn simulate-login! () $ let
               raw $ js/window.localStorage.getItem (:storage-key config/site)
             if (some? raw)
-              do $ dispatch! :user/log-in (parse-cirru-edn raw)
+              do $ dispatch!
+                :: :user/log-in $ parse-cirru-edn raw
               do $ println "|Found no storage."
       :ns $ quote
         ns app.client $ :require
