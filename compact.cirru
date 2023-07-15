@@ -21,11 +21,12 @@
               :on-close $ fn (event) (reset! *store nil) (reset! *connecting? false) (js/console.error "\"Lost connection!")
                 dispatch! $ :: :states/clear
               :on-data $ fn (data)
-                case-default (:kind data) (println "\"unknown kind:" data)
-                  :patch $ let
-                      changes $ :data data
-                    when config/dev? $ js/console.log "\"Changes" changes
-                    reset! *store $ patch-twig @*store changes
+                tag-match data
+                    :patch changes
+                    do
+                      when config/dev? $ js/console.log "\"Changes" changes
+                      reset! *store $ patch-twig @*store changes
+                  _ $ eprintln "\"Unknown op:" data
         |detect-watching! $ quote
           defn detect-watching! () $ let
               query $ parse-query!
@@ -112,8 +113,7 @@
             and (nil? @*store) (not @*connecting?)
             connect!
         |send-op! $ quote
-          defn send-op! (op)
-            ws-send! $ :: :op op
+          defn send-op! (op) (ws-send! op)
         |simulate-login! $ quote
           defn simulate-login! () $ let
               raw $ js/window.localStorage.getItem (:storage-key config/site)
@@ -2498,6 +2498,7 @@
                   handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true nil
                 (:effect/save-ns ns)
                   handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true ns
+                (:ping) nil
                 _ $ do (eprintln "\"Other op:" op)
                   reset! *writer-db $ updater @*writer-db op sid op-id op-time
         |expose-files! $ quote
@@ -2581,12 +2582,7 @@
               :on-open $ fn (sid socket)
                 dispatch! (:: :session/connect) sid
                 println $ .!gray chalk (str "\"client connected: " sid)
-              :on-data $ fn (sid action)
-                tag-match action
-                    :op op
-                    dispatch! op sid
-                  (:ping) nil
-                  _ $ eprintln "\"unknown data" action
+              :on-data $ fn (sid action) (dispatch! action sid)
               :on-close $ fn (sid event)
                 println $ .!gray chalk (str "\"client disconnected: " sid)
                 dispatch! (:: :session/disconnect) sid
@@ -2626,7 +2622,7 @@
                 if
                   not= changes $ []
                   do
-                    wss-send! sid $ {} (:kind :patch) (:data changes)
+                    wss-send! sid $ :: :patch changes
                     swap! *client-caches assoc sid new-store
             new-twig-loop!
         |transform-compact-to-calcit! $ quote
@@ -2774,10 +2770,8 @@
           defn base-style-leaf () style-leaf
         |css-expr $ quote
           defstyle css-expr $ {}
-            "\"$0" $ {} (:border-width "|0 0 0px 1px") (:border-style :solid) (:min-height 24) (:outline :none) (:padding-left 10) (:font-family |Menlo,monospace) (:font-size 13) (:margin-bottom 2) (:margin-right 1) (:margin-left 8) (:line-height "\"1em") (:border-radius "\"8px") (:transition-duration "\"200ms")
+            "\"$0" $ {} (:border-width "|0 0 0px 1px") (:border-style :solid) (:min-height 24) (:outline :none) (:padding-left 10) (:font-family |Menlo,monospace) (:font-size 13) (:margin-bottom 2) (:margin-right 1) (:margin-left 8) (:line-height "\"1em") (:border-radius "\"8px")
               :border-color $ hsl 200 100 76 0.5
-              :opacity 0.94
-            "\"$0:hover" $ {} (:opacity 1)
         |css-leaf $ quote
           defstyle css-leaf $ {} ("\"$0" style-leaf)
         |decide-expr-style $ quote
