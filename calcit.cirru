@@ -1,6 +1,6 @@
 
 {}
-  :configs $ {} (:init-fn |app.server/main!) (:port 6001) (:reload-fn |app.server/reload!) (:version |0.7.0-a1)
+  :configs $ {} (:init-fn |app.server/main!) (:port 6001) (:reload-fn |app.server/reload!) (:version |0.7.0-a2)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -2464,7 +2464,7 @@
                   |j $ {} (:at 1504777353661) (:by nil) (:type :expr)
                     :data $ {}
                       |T $ {} (:at 1504777353661) (:by |root) (:text |:font-family) (:type :leaf)
-                      |j $ {} (:at 1504777353661) (:by |root) (:text "||Josefin Sans") (:type :leaf)
+                      |j $ {} (:at 1689441178598) (:by |S1lNv50FW) (:text "||Josefin Sans") (:type :leaf)
                   |r $ {} (:at 1504777353661) (:by nil) (:type :expr)
                     :data $ {}
                       |T $ {} (:at 1504777353661) (:by |root) (:text |:color) (:type :leaf)
@@ -17674,13 +17674,11 @@
                       |j $ {} (:at 1504777570689) (:type :expr)
                         :data $ {}
                           |T $ {} (:at 1504777570689) (:by |root) (:text |op) (:type :leaf)
-                          |j $ {} (:at 1504777570689) (:by |root) (:text |op-data) (:type :leaf)
                       |r $ {} (:at 1504777570689) (:type :expr)
                         :data $ {}
                           |T $ {} (:at 1504777570689) (:by |root) (:text |println) (:type :leaf)
                           |j $ {} (:at 1564893063084) (:author |SJhrjuzlG) (:by |S1lNv50FW) (:text "|\"After compile:") (:type :leaf)
                           |r $ {} (:at 1504777570689) (:by |root) (:text |op) (:type :leaf)
-                          |v $ {} (:at 1504777570689) (:by |root) (:text |op-data) (:type :leaf)
                   |x $ {} (:at 1504777570689) (:by |root) (:text |false) (:type :leaf)
                   |y $ {} (:at 1584465052407) (:by |S1lNv50FW) (:text |nil) (:type :leaf)
           |dispatch! $ {} (:at 1511324433562) (:by |root) (:text |global-configs) (:type :expr)
@@ -17792,26 +17790,18 @@
                       |y $ {} (:at 1689419812390) (:by |S1lNv50FW) (:type :expr)
                         :data $ {}
                           |T $ {} (:at 1689419812048) (:by |S1lNv50FW) (:text |_) (:type :leaf)
-                          |b $ {} (:at 1689419814818) (:by |S1lNv50FW) (:type :expr)
+                          |b $ {} (:at 1689419812978) (:by |S1lNv50FW) (:type :expr)
                             :data $ {}
-                              |D $ {} (:at 1689419815655) (:by |S1lNv50FW) (:text |do) (:type :leaf)
-                              |L $ {} (:at 1689419816141) (:by |S1lNv50FW) (:type :expr)
+                              |T $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |reset!) (:type :leaf)
+                              |b $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |*writer-db) (:type :leaf)
+                              |h $ {} (:at 1689419812978) (:by |S1lNv50FW) (:type :expr)
                                 :data $ {}
-                                  |T $ {} (:at 1689419957514) (:by |S1lNv50FW) (:text |eprintln) (:type :leaf)
-                                  |b $ {} (:at 1689419828110) (:by |S1lNv50FW) (:text "|\"Other op:") (:type :leaf)
-                                  |h $ {} (:at 1689419826490) (:by |S1lNv50FW) (:text |op) (:type :leaf)
-                              |T $ {} (:at 1689419812978) (:by |S1lNv50FW) (:type :expr)
-                                :data $ {}
-                                  |T $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |reset!) (:type :leaf)
-                                  |b $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |*writer-db) (:type :leaf)
-                                  |h $ {} (:at 1689419812978) (:by |S1lNv50FW) (:type :expr)
-                                    :data $ {}
-                                      |T $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |updater) (:type :leaf)
-                                      |b $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |@*writer-db) (:type :leaf)
-                                      |h $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |op) (:type :leaf)
-                                      |o $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |sid) (:type :leaf)
-                                      |q $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |op-id) (:type :leaf)
-                                      |s $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |op-time) (:type :leaf)
+                                  |T $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |updater) (:type :leaf)
+                                  |b $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |@*writer-db) (:type :leaf)
+                                  |h $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |op) (:type :leaf)
+                                  |o $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |sid) (:type :leaf)
+                                  |q $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |op-id) (:type :leaf)
+                                  |s $ {} (:at 1689419812978) (:by |S1lNv50FW) (:text |op-time) (:type :leaf)
           |expose-files! $ {} (:at 1678516206678) (:by |S1lNv50FW) (:type :expr)
             :data $ {}
               |T $ {} (:at 1678516206678) (:by |S1lNv50FW) (:text |defn) (:type :leaf)

@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.7.0-a1)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.7.0-a2)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -2483,7 +2483,7 @@
             handle-files!
               assoc @*writer-db :saved-files $ {}
               , *calcit-md5 configs
-                fn (op op-data) (println "\"After compile:" op op-data)
+                fn (op) (println "\"After compile:" op)
                 , false nil
         |dispatch! $ quote
           defn dispatch! (op sid)
@@ -2499,8 +2499,7 @@
                 (:effect/save-ns ns)
                   handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true ns
                 (:ping) nil
-                _ $ do (eprintln "\"Other op:" op)
-                  reset! *writer-db $ updater @*writer-db op sid op-id op-time
+                _ $ reset! *writer-db (updater @*writer-db op sid op-id op-time)
         |expose-files! $ quote
           defn expose-files! (port)
             let
