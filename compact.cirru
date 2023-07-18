@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.6.38)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.7.0-a2)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -18,53 +18,61 @@
           defn connect! () (js/console.info "\"Connecting...") (reset! *connecting? true)
             ws-connect! ws-host $ {}
               :on-open $ fn (event) (simulate-login!) (detect-watching!) (heartbeat!)
-              :on-close $ fn (event) (reset! *store nil) (reset! *connecting? false) (js/console.error "\"Lost connection!") (dispatch! :states/clear nil)
+              :on-close $ fn (event) (reset! *store nil) (reset! *connecting? false) (js/console.error "\"Lost connection!")
+                dispatch! $ :: :states/clear
               :on-data $ fn (data)
-                case-default (:kind data) (println "\"unknown kind:" data)
-                  :patch $ let
-                      changes $ :data data
-                    when config/dev? $ js/console.log "\"Changes" changes
-                    reset! *store $ patch-twig @*store changes
+                tag-match data
+                    :patch changes
+                    do
+                      when config/dev? $ js/console.log "\"Changes" changes
+                      reset! *store $ patch-twig @*store changes
+                  _ $ eprintln "\"Unknown op:" data
         |detect-watching! $ quote
           defn detect-watching! () $ let
               query $ parse-query!
             when
               some? $ get query "\"watching"
-              dispatch! :router/change $ {} (:name :watching)
-                :data $ get query "\"watching"
+              dispatch! $ :: :router/change
+                {} (:name :watching)
+                  :data $ get query "\"watching"
         |dispatch! $ quote
-          defn dispatch! (op op-data)
+          defn dispatch! (op)
             when
-              and config/dev? $ not= op :states
-              js/console.info |Dispatch (str op) (to-js-data op-data)
-            case-default op (send-op! op op-data)
-              :states $ reset! *states
-                let-sugar
-                      [] cursor new-state
-                      , op-data
-                  assoc-in @*states (conj cursor :data) new-state
-              :states/clear $ reset! *states
-                {} $ :states
-                  {} $ :cursor ([])
-              :manual-state/abstract $ reset! *states (updater/abstract @*states)
-              :manual-state/draft-box $ reset! *states (updater/draft-box @*states)
-              :effect/save-files $ do
-                reset! *states $ updater/clear-editor @*states
-                send-op! op op-data
-              :ir/indent $ do
-                reset! *states $ updater/clear-editor @*states
-                send-op! op op-data
-              :ir/unindent $ do
-                reset! *states $ updater/clear-editor @*states
-                send-op! op op-data
-              :ir/reset-files $ do
-                reset! *states $ updater/clear-editor @*states
-                send-op! op op-data
+              and config/dev? $ not= (nth op 0) :states
+              js/console.info |Dispatch op
+            tag-match op
+                :states cursor new-state
+                reset! *states $ assoc-in @*states (conj cursor :data) new-state
+              (:states/clear)
+                reset! *states $ {}
+                  :states $ {}
+                    :cursor $ []
+              (:manual-state/abstract)
+                reset! *states $ updater/abstract @*states
+              (:manual-state/draft-box)
+                reset! *states $ updater/draft-box @*states
+              (:effect/save-files)
+                do
+                  reset! *states $ updater/clear-editor @*states
+                  send-op! op
+              (:ir/indent)
+                do
+                  reset! *states $ updater/clear-editor @*states
+                  send-op! op
+              (:ir/unindent)
+                do
+                  reset! *states $ updater/clear-editor @*states
+                  send-op! op
+              (:ir/reset-files)
+                do
+                  reset! *states $ updater/clear-editor @*states
+                  send-op! op
+              _ $ send-op! op
         |heartbeat! $ quote
           defn heartbeat! () $ delay! 30
             fn () $ if (ws-connected?)
               do
-                ws-send! $ {} (:kind :ping)
+                ws-send! $ :: :ping
                 heartbeat!
               println "\"Disabled heartbeat since connection lost."
         |main! $ quote
@@ -105,13 +113,13 @@
             and (nil? @*store) (not @*connecting?)
             connect!
         |send-op! $ quote
-          defn send-op! (op op-data)
-            ws-send! $ {} (:kind :op) (:op op) (:data op-data)
+          defn send-op! (op) (ws-send! op)
         |simulate-login! $ quote
           defn simulate-login! () $ let
               raw $ js/window.localStorage.getItem (:storage-key config/site)
             if (some? raw)
-              do $ dispatch! :user/log-in (parse-cirru-edn raw)
+              do $ dispatch!
+                :: :user/log-in $ parse-cirru-edn raw
               do $ println "|Found no storage."
       :ns $ quote
         ns app.client $ :require
@@ -2475,20 +2483,23 @@
             handle-files!
               assoc @*writer-db :saved-files $ {}
               , *calcit-md5 configs
-                fn (op op-data) (println "\"After compile:" op op-data)
+                fn (op) (println "\"After compile:" op)
                 , false nil
         |dispatch! $ quote
-          defn dispatch! (op op-data sid)
-            when config/dev? $ js/console.log "\"Action" (str op) (to-js-data op-data) sid
+          defn dispatch! (op sid)
+            when config/dev? $ js/console.log "\"Action" (str op) sid
             ; js/console.log "\"Database:" $ to-js-data @*writer-db
             let
-                d2! $ fn (op2 op-data2) (dispatch! op2 op-data2 sid)
+                d2! $ fn (op2) (dispatch! op2 sid)
                 op-id $ id!
                 op-time $ unix-time!
-              case-default op
-                reset! *writer-db $ updater @*writer-db op op-data sid op-id op-time
-                :effect/save-files $ handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true nil
-                :effect/save-ns $ handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true op-data
+              tag-match op
+                  :effect/save-files
+                  handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true nil
+                (:effect/save-ns ns)
+                  handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true ns
+                (:ping) nil
+                _ $ reset! *writer-db (updater @*writer-db op sid op-id op-time)
         |expose-files! $ quote
           defn expose-files! (port)
             let
@@ -2553,7 +2564,7 @@
                   calcit $ parse-cirru-edn file-content
                 println $ .!blue chalk "\"calcit storage file changed!"
                 reset! *calcit-md5 new-md5
-                dispatch! :watcher/file-change calcit nil
+                dispatch! (:: :watcher/file-change calcit) nil
         |reload! $ quote
           defn reload! ()
             println $ .!gray chalk "|code updated."
@@ -2567,15 +2578,13 @@
         |run-server! $ quote
           defn run-server! (dispatch! port)
             wss-serve! port $ {}
-              :on-open $ fn (sid socket) (dispatch! :session/connect nil sid)
+              :on-open $ fn (sid socket)
+                dispatch! (:: :session/connect) sid
                 println $ .!gray chalk (str "\"client connected: " sid)
-              :on-data $ fn (sid action)
-                case-default (:kind action) (println "\"unknown data" action)
-                  :op $ dispatch! (:op action) (:data action) sid
-                  :ping nil
+              :on-data $ fn (sid action) (dispatch! action sid)
               :on-close $ fn (sid event)
                 println $ .!gray chalk (str "\"client disconnected: " sid)
-                dispatch! :session/disconnect nil sid
+                dispatch! (:: :session/disconnect) sid
               :on-error $ fn (error) (js/console.error error)
         |start-server! $ quote
           defn start-server! (configs)
@@ -2612,7 +2621,7 @@
                 if
                   not= changes $ []
                   do
-                    wss-send! sid $ {} (:kind :patch) (:data changes)
+                    wss-send! sid $ :: :patch changes
                     swap! *client-caches assoc sid new-store
             new-twig-loop!
         |transform-compact-to-calcit! $ quote
@@ -2760,10 +2769,8 @@
           defn base-style-leaf () style-leaf
         |css-expr $ quote
           defstyle css-expr $ {}
-            "\"$0" $ {} (:border-width "|0 0 0px 1px") (:border-style :solid) (:min-height 24) (:outline :none) (:padding-left 10) (:font-family |Menlo,monospace) (:font-size 13) (:margin-bottom 2) (:margin-right 1) (:margin-left 8) (:line-height "\"1em") (:border-radius "\"8px") (:transition-duration "\"200ms")
+            "\"$0" $ {} (:border-width "|0 0 0px 1px") (:border-style :solid) (:min-height 24) (:outline :none) (:padding-left 10) (:font-family |Menlo,monospace) (:font-size 13) (:margin-bottom 2) (:margin-right 1) (:margin-left 8) (:line-height "\"1em") (:border-radius "\"8px")
               :border-color $ hsl 200 100 76 0.5
-              :opacity 0.94
-            "\"$0:hover" $ {} (:opacity 1)
         |css-leaf $ quote
           defstyle css-leaf $ {} ("\"$0" style-leaf)
         |decide-expr-style $ quote
@@ -3132,81 +3139,79 @@
     |app.updater $ {}
       :defs $ {}
         |updater $ quote
-          defn updater (db op op-data sid op-id op-time)
-            let
-                f $ case-default op
-                  do (eprintln "|Unknown op:" op)
-                    fn (& args) db
-                  :session/connect session/connect
-                  :session/disconnect session/disconnect
-                  :session/select-ns session/select-ns
-                  :user/nickname user/nickname
-                  :user/log-in user/log-in
-                  :user/sign-up user/sign-up
-                  :user/log-out user/log-out
-                  :user/change-theme user/change-theme
-                  :router/change router/change
-                  :writer/edit writer/edit
-                  :writer/edit-ns writer/edit-ns
-                  :writer/select writer/select
-                  :writer/point-to writer/point-to
-                  :writer/focus writer/focus
-                  :writer/go-up writer/go-up
-                  :writer/go-down writer/go-down
-                  :writer/go-left writer/go-left
-                  :writer/go-right writer/go-right
-                  :writer/remove-idx writer/remove-idx
-                  :writer/paste writer/paste
-                  :writer/save-files writer/save-files
-                  :writer/collapse writer/collapse
-                  :writer/move-next writer/move-next
-                  :writer/move-previous writer/move-previous
-                  :writer/move-order writer/move-order
-                  :writer/finish writer/finish
-                  :writer/draft-ns writer/draft-ns
-                  :writer/hide-peek writer/hide-peek
-                  :writer/picker-mode writer/picker-mode
-                  :writer/pick-node writer/pick-node
-                  :ir/add-ns ir/add-ns
-                  :ir/add-def ir/add-def
-                  :ir/remove-def ir/remove-def
-                  :ir/remove-ns ir/remove-ns
-                  :ir/prepend-leaf ir/prepend-leaf
-                  :ir/append-leaf ir/append-leaf
-                  :ir/delete-node ir/delete-node
-                  :ir/leaf-after ir/leaf-after
-                  :ir/leaf-before ir/leaf-before
-                  :ir/expr-before ir/expr-before
-                  :ir/expr-after ir/expr-after
-                  :ir/expr-replace ir/expr-replace
-                  :ir/indent ir/indent
-                  :ir/unindent ir/unindent
-                  :ir/unindent-leaf ir/unindent-leaf
-                  :ir/update-leaf ir/update-leaf
-                  :ir/duplicate ir/duplicate
-                  :ir/rename ir/rename
-                  :ir/cp-ns ir/cp-ns
-                  :ir/mv-ns ir/mv-ns
-                  :ir/delete-entry ir/delete-entry
-                  :ir/reset-files ir/reset-files
-                  :ir/reset-at ir/reset-at
-                  :ir/reset-ns ir/reset-ns
-                  :ir/draft-expr ir/draft-expr
-                  :ir/replace-file ir/replace-file
-                  :ir/file-config ir/file-config
-                  :ir/clone-ns ir/clone-ns
-                  :ir/toggle-comment ir/toggle-comment
-                  :notify/push-message notify/push-message
-                  :notify/clear notify/clear
-                  :notify/broadcast notify/broadcast
-                  :analyze/goto-def analyze/goto-def
-                  :analyze/abstract-def analyze/abstract-def
-                  :analyze/peek-def analyze/peek-def
-                  :watcher/file-change watcher/file-change
-                  :ping identity
-                  :configs/update configs/update-configs
-                  :configs/update-entries configs/update-entries
-              f db op-data sid op-id op-time
+          defn updater (db op sid op-id op-time)
+            tag-match op
+                :session/connect
+                session/connect db sid op-id op-time
+              (:session/disconnect) (session/disconnect db sid op-id op-time)
+              (:session/select-ns op-data) (session/select-ns db op-data sid op-id op-time)
+              (:user/nickname op-data) (user/nickname db op-data sid op-id op-time)
+              (:user/log-in op-data) (user/log-in db op-data sid op-id op-time)
+              (:user/sign-up op-data) (user/sign-up db op-data sid op-id op-time)
+              (:user/log-out op-data) (user/log-out db op-data sid op-id op-time)
+              (:user/change-theme op-data) (user/change-theme db op-data sid op-id op-time)
+              (:router/change op-data) (router/change db op-data sid op-id op-time)
+              (:writer/edit op-data) (writer/edit db op-data sid op-id op-time)
+              (:writer/edit-ns) (writer/edit-ns db sid op-id op-time)
+              (:writer/select op-data) (writer/select db op-data sid op-id op-time)
+              (:writer/point-to op-data) (writer/point-to db op-data sid op-id op-time)
+              (:writer/focus op-data) (writer/focus db op-data sid op-id op-time)
+              (:writer/go-up op-data) (writer/go-up db op-data sid op-id op-time)
+              (:writer/go-down op-data) (writer/go-down db op-data sid op-id op-time)
+              (:writer/go-left op-data) (writer/go-left db op-data sid op-id op-time)
+              (:writer/go-right op-data) (writer/go-right db op-data sid op-id op-time)
+              (:writer/remove-idx op-data) (writer/remove-idx db op-data sid op-id op-time)
+              (:writer/paste op-data) (writer/paste db op-data sid op-id op-time)
+              (:writer/save-files op-data) (writer/save-files db op-data sid op-id op-time)
+              (:writer/collapse op-data) (writer/collapse db op-data sid op-id op-time)
+              (:writer/move-next) (writer/move-next db sid op-id op-time)
+              (:writer/move-previous) (writer/move-previous db sid op-id op-time)
+              (:writer/move-order op-data) (writer/move-order db op-data sid op-id op-time)
+              (:writer/finish) (writer/finish db sid op-id op-time)
+              (:writer/draft-ns op-data) (writer/draft-ns db op-data sid op-id op-time)
+              (:writer/hide-peek op-data) (writer/hide-peek db op-data sid op-id op-time)
+              (:writer/picker-mode) (writer/picker-mode db sid op-id op-time)
+              (:writer/pick-node op-data) (writer/pick-node db op-data sid op-id op-time)
+              (:ir/add-ns op-data) (ir/add-ns db op-data sid op-id op-time)
+              (:ir/add-def op-data) (ir/add-def db op-data sid op-id op-time)
+              (:ir/remove-def op-data) (ir/remove-def db op-data sid op-id op-time)
+              (:ir/remove-ns op-data) (ir/remove-ns db op-data sid op-id op-time)
+              (:ir/prepend-leaf op-data) (ir/prepend-leaf db op-data sid op-id op-time)
+              (:ir/append-leaf op-data) (ir/append-leaf db op-data sid op-id op-time)
+              (:ir/delete-node op-data) (ir/delete-node db op-data sid op-id op-time)
+              (:ir/leaf-after op-data) (ir/leaf-after db op-data sid op-id op-time)
+              (:ir/leaf-before op-data) (ir/leaf-before db op-data sid op-id op-time)
+              (:ir/expr-before op-data) (ir/expr-before db op-data sid op-id op-time)
+              (:ir/expr-after op-data) (ir/expr-after db op-data sid op-id op-time)
+              (:ir/expr-replace op-data) (ir/expr-replace db op-data sid op-id op-time)
+              (:ir/indent op-data) (ir/indent db op-data sid op-id op-time)
+              (:ir/unindent op-data) (ir/unindent db op-data sid op-id op-time)
+              (:ir/unindent-leaf op-data) (ir/unindent-leaf db op-data sid op-id op-time)
+              (:ir/update-leaf op-data) (ir/update-leaf db op-data sid op-id op-time)
+              (:ir/duplicate op-data) (ir/duplicate db op-data sid op-id op-time)
+              (:ir/rename op-data) (ir/rename db op-data sid op-id op-time)
+              (:ir/cp-ns op-data) (ir/cp-ns db op-data sid op-id op-time)
+              (:ir/mv-ns op-data) (ir/mv-ns db op-data sid op-id op-time)
+              (:ir/delete-entry op-data) (ir/delete-entry db op-data sid op-id op-time)
+              (:ir/reset-files op-data) (ir/reset-files db op-data sid op-id op-time)
+              (:ir/reset-at op-data) (ir/reset-at db op-data sid op-id op-time)
+              (:ir/reset-ns op-data) (ir/reset-ns db op-data sid op-id op-time)
+              (:ir/draft-expr op-data) (ir/draft-expr db op-data sid op-id op-time)
+              (:ir/replace-file op-data) (ir/replace-file db op-data sid op-id op-time)
+              (:ir/file-config op-data) (ir/file-config db op-data sid op-id op-time)
+              (:ir/clone-ns op-data) (ir/clone-ns db op-data sid op-id op-time)
+              (:ir/toggle-comment op-data) (ir/toggle-comment db op-data sid op-id op-time)
+              (:notify/push-message op-data) (notify/push-message db op-data sid op-id op-time)
+              (:notify/clear op-data) (notify/clear db op-data sid op-id op-time)
+              (:notify/broadcast op-data) (notify/broadcast db op-data sid op-id op-time)
+              (:analyze/goto-def op-data) (analyze/goto-def db op-data sid op-id op-time)
+              (:analyze/abstract-def op-data) (analyze/abstract-def db op-data sid op-id op-time)
+              (:analyze/peek-def op-data) (analyze/peek-def db op-data sid op-id op-time)
+              (:watcher/file-change op-data) (watcher/file-change db op-data sid op-id op-time)
+              (:ping op-data) db
+              (:configs/update op-data) (configs/update-configs db op-data sid op-id op-time)
+              (:configs/update-entries op-data) (configs/update-entries db op-data sid op-id op-time)
+              _ $ do (eprintln "|Unknown op:" op) db
       :ns $ quote
         ns app.updater $ :require (app.updater.session :as session) (app.updater.user :as user) (app.updater.router :as router) (app.updater.ir :as ir) (app.updater.writer :as writer) (app.updater.notify :as notify) (app.updater.analyze :as analyze) (app.updater.watcher :as watcher) (app.updater.configs :as configs)
     |app.updater.analyze $ {}
@@ -3951,11 +3956,11 @@
     |app.updater.session $ {}
       :defs $ {}
         |connect $ quote
-          defn connect (db op-data session-id op-id op-time)
+          defn connect (db session-id op-id op-time)
             assoc-in db ([] :sessions session-id)
               merge schema/session $ {} (:id session-id)
         |disconnect $ quote
-          defn disconnect (db op-data session-id op-id op-time)
+          defn disconnect (db session-id op-id op-time)
             update db :sessions $ fn (session) (dissoc session session-id)
         |select-ns $ quote
           defn select-ns (db op-data session-id op-id op-time)
@@ -4081,7 +4086,7 @@
                 assoc-in ([] :sessions session-id :router)
                   {} $ :name :editor
         |edit-ns $ quote
-          defn edit-ns (db op-data sid op-id op-time)
+          defn edit-ns (db sid op-id op-time)
             let
                 writer $ to-writer db sid
                 bookmark $ to-bookmark writer
@@ -4092,7 +4097,7 @@
                   push-bookmark $ assoc schema/bookmark :kind :ns :ns ns-text
                 , db
         |finish $ quote
-          defn finish (db op-data sid op-id op-time)
+          defn finish (db sid op-id op-time)
             -> db $ update-in ([] :sessions sid :writer)
               fn (writer)
                 let
@@ -4181,7 +4186,7 @@
           defn hide-peek (db op-data sid op-id op-time)
             assoc-in db ([] :sessions sid :writer :peek-def) nil
         |move-next $ quote
-          defn move-next (db op-data sid op-id op-time)
+          defn move-next (db sid op-id op-time)
             -> db $ update-in ([] :sessions sid :writer)
               fn (writer)
                 let
@@ -4219,7 +4224,7 @@
                             []
                             .slice stack $ inc from-idx
         |move-previous $ quote
-          defn move-previous (db op-data sid op-id op-time)
+          defn move-previous (db sid op-id op-time)
             -> db $ update-in ([] :sessions sid :writer)
               fn (writer)
                 let
@@ -4255,7 +4260,7 @@
                         str (.slice code 0 40) "\"..."
                         , code
         |picker-mode $ quote
-          defn picker-mode (db op-data session-id op-id op-time)
+          defn picker-mode (db session-id op-id op-time)
             update-in db ([] :sessions session-id :writer)
               fn (writer)
                 if
@@ -4597,7 +4602,7 @@
                 handle-compact-files!
                   get-in db $ [] :ir :package
                   , old-files new-files added-names removed-names changed-names (:configs db) (:entries db) filter-ns
-                dispatch! :writer/save-files filter-ns
+                dispatch! $ :: :writer/save-files filter-ns
                 if save-ir? $ js/setTimeout
                   fn () $ let
                       db-content $ db->string db
@@ -4608,7 +4613,8 @@
                 do
                   println $ .!red chalk e
                   js/console.error e
-                  dispatch! :notify/push-message $ [] :error (aget e "\"message")
+                  dispatch! $ :: :notify/push-message
+                    [] :error $ aget e "\"message"
         |path $ quote
           def path $ js/require |path
         |persist! $ quote
@@ -4800,23 +4806,26 @@
                 cond
                     and meta? $ or (= code keycode/p) (= code keycode/o)
                     do
-                      dispatch! :router/change $ {} (:name :search)
+                      dispatch! $ :: :router/change
+                        {} $ :name :search
                       focus-search!
                       .!preventDefault event
                   (and meta? (= code keycode/e))
-                    dispatch! :writer/edit-ns nil
+                    dispatch! $ :: :writer/edit-ns
                   (and meta? (not shift?) (= code keycode/j))
-                    do (.!preventDefault event) (dispatch! :writer/move-next nil)
+                    do (.!preventDefault event)
+                      dispatch! $ :: :writer/move-next
                   (and meta? (not shift?) (= code keycode/i))
-                    do $ dispatch! :writer/move-previous nil
+                    do $ dispatch! (:: :writer/move-previous)
                   (and meta? (= code keycode/k))
-                    do $ dispatch! :writer/finish nil
+                    do $ dispatch! (:: :writer/finish)
                   (and meta? (= code keycode/s))
-                    do (.!preventDefault event) (dispatch! :effect/save-files nil)
+                    do (.!preventDefault event)
+                      dispatch! $ :: :effect/save-files
                   (and meta? shift? (= code keycode/f))
                     dispatch! :router/change $ {} (:name :files)
                   (and meta? (not shift?) (= code keycode/period))
-                    dispatch! :writer/picker-mode nil
+                    dispatch! $ :: :writer/picker-mode
       :ns $ quote
         ns app.util.shortcuts $ :require (app.keycode :as keycode)
           app.util.dom :refer $ focus-search!
