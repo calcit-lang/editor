@@ -3,7 +3,7 @@
   :dependencies $ {}
     |calcit-lang/lilac |main
     |calcit-lang/memof |main
-    |calcit-lang/recollect |0.0.10-a1
+    |calcit-lang/recollect |0.0.11-a1
     |calcit-lang/bisection-key |main
     |Respo/respo.calcit |main
     |Respo/respo-ui.calcit |main
