@@ -1124,8 +1124,8 @@
                           :forced? shift?
                   (and meta? (= code keycode/slash) (not shift?))
                     do $ js/window.open
-                      str |https://apis.calcit-lang.org/?q= $ last
-                        split (:text leaf) "\"/"
+                      str |https://apis.calcit-lang.org/?q= $ js/encodeURIComponent
+                        last $ split (:text leaf) "\"/"
                   (and picker-mode? (= code keycode/escape))
                     d! :writer/picker-mode nil
                   true $ do (; println "|Keydown leaf" code)
