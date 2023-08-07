@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.7.3)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.7.4)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -1124,8 +1124,8 @@
                           :forced? shift?
                   (and meta? (= code keycode/slash) (not shift?))
                     do $ js/window.open
-                      str |https://apis.calcit-lang.org/?q= $ last
-                        split (:text leaf) "\"/"
+                      str |https://apis.calcit-lang.org/?q= $ js/encodeURIComponent
+                        last $ split (:text leaf) "\"/"
                   (and picker-mode? (= code keycode/escape))
                     d! :writer/picker-mode nil
                   true $ do (; println "|Keydown leaf" code)
@@ -3894,7 +3894,10 @@
                 = 1 $ count (:data parent-expr)
                 -> db
                   update-in parent-path $ fn (expr)
-                    first $ vals (:data expr)
+                    tag-match
+                      destruct-map $ :data expr
+                      (:none) (raise "\"unexpected empty expr")
+                      (:some k v ms) v
                   update-in
                     [] :sessions session-id :writer :stack (:pointer writer) :focus
                     fn (focus) (butlast focus)

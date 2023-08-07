@@ -1,9 +1,9 @@
 
 {}
   :dependencies $ {}
-    |calcit-lang/lilac |0.3.2
+    |calcit-lang/lilac |0.3.3
     |calcit-lang/memof |main
-    |calcit-lang/recollect |0.0.11-a1
+    |calcit-lang/recollect |0.0.11
     |calcit-lang/bisection-key |main
     |Respo/respo.calcit |main
     |Respo/respo-ui.calcit |main
