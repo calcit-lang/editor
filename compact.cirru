@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.0-a1)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.0)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -3881,7 +3881,7 @@
                   bookmark $ to-bookmark writer
                   ns-text $ :ns bookmark
                   ns-expr $ tree->cirru
-                    get-in db $ [] :files ns-text :ns
+                    get-in db $ [] :files ns-text :ns :code
                   deps-info $ parse-deps (.slice ns-expr 2)
                   def-info $ parse-def (:text op-data)
                   forced? $ :forced? op-data
@@ -3931,10 +3931,12 @@
                             update-in ([] :files)
                               fn (files)
                                 if (contains? files target-ns)
-                                  assoc-in files ([] target-ns :defs target-def) def-code
+                                  assoc-in files ([] target-ns :defs target-def)
+                                    %{} schema/CodeEntry (:doc "\"") (:code def-code)
                                   assoc files target-ns $ {}
                                     :ns $ cirru->tree ([] "\"ns" target-ns) user-id op-time
-                                    :defs $ {} (target-def def-code)
+                                    :defs $ {}
+                                      target-def $ %{} schema/CodeEntry (:doc "\"") (:code def-code)
                             update-in ([] :sessions sid :writer) (push-bookmark new-bookmark)
                         warn $ str "|Does not exist: " (:ns new-bookmark) "| " (:extra new-bookmark)
                     warn $ str "|From external ns: " (:ns new-bookmark)
