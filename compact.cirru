@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.7.5)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.0-a1)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -170,11 +170,9 @@
                   any? (vals d) expr?
               , false
         |expr? $ quote
-          defn expr? (x)
-            = :expr $ :type x
+          defn expr? (x) (&record:matches? schema/CirruExpr x)
         |leaf? $ quote
-          defn leaf? (x)
-            = :leaf $ :type x
+          defn leaf? (x) (&record:matches? schema/CirruLeaf x)
         |parse-query! $ quote
           defn parse-query! () $ let
               url-obj $ url-parse js/location.href true
@@ -191,7 +189,7 @@
                 , |: $ or (get query "\"port") (:port schema/configs)
             , |ws://localhost:6001
       :ns $ quote
-        ns app.client-util $ :require ([] clojure.string :as string) ([] app.config :as config) ([] "\"url-parse" :default url-parse) ([] app.schema :as schema)
+        ns app.client-util $ :require ([] app.config :as config) ([] "\"url-parse" :default url-parse) (app.schema :as schema)
     |app.comp.about $ {}
       :defs $ {}
         |comp-about $ quote
@@ -657,9 +655,8 @@
                     span $ {} (:class-name css-wrong) (:inner-text "|Does not edit expression!")
                       :on-click $ fn (e d!) (close-modal! d!)
                     let
-                        expr? $ = :expr (:type node)
                         state $ or (:data states)
-                          if expr?
+                          if (expr? node)
                             format-cirru $ [] (tree->cirru node)
                             :text node
                       div
@@ -753,7 +750,7 @@
           respo.comp.space :refer $ =<
           app.comp.modal :refer $ comp-modal
           app.style :as style
-          app.util :refer $ tree->cirru now!
+          app.util :refer $ tree->cirru now! expr?
           app.keycode :as keycode
     |app.comp.expr $ {}
       :defs $ {}
@@ -797,11 +794,10 @@
                       mode $ if (leaf? child) :inline
                         if (expr-many-items? child 6) :block $ case-default prev-mode :block (:inline :inline-block)
                           :inline-block $ if (expr-many-items? child 2) :block :inline-block
-                    if (nil? cursor-key) (.warn js/console "|[Editor] missing cursor key" k child)
+                    if (nil? cursor-key) (js/console.warn "|[Editor] missing cursor key" k child)
                     recur
                       conj result $ [] k
-                        if
-                          = :leaf $ :type child
+                        if (&record:matches? child CirruLeaf)
                           comp-leaf (>> states cursor-key) child focus child-coord (includes? partial-others child-coord) (= first-id k) readonly? picker-mode? theme
                           comp-expr (>> states cursor-key) child focus child-coord partial-others (= last-id k) mode readonly? picker-mode? theme $ inc depth
                       rest children
@@ -900,6 +896,7 @@
           app.util :refer $ tree->cirru
           app.util.dom :refer $ do-copy-logics!
           bisection-key.util :refer $ get-min-key get-max-key
+          app.schema :refer $ CirruLeaf CirruExpr
     |app.comp.file-replacer $ {}
       :defs $ {}
         |comp-file-replacer $ quote
@@ -1267,7 +1264,8 @@
                 cursor $ :cursor states
                 state $ or (:data states) initial-state
                 bookmark $ get stack pointer
-                expr $ :expr router-data
+                expr-entry $ :expr router-data
+                expr $ :code expr-entry
                 focus $ :focus router-data
                 readonly? false
                 close-draft-box! $ fn (d!)
@@ -2413,6 +2411,12 @@
       :ns $ quote (ns app.polyfill)
     |app.schema $ {}
       :defs $ {}
+        |CirruExpr $ quote
+          def CirruExpr $ new-record :Expr :by :at :data
+        |CirruLeaf $ quote
+          def CirruLeaf $ new-record :Leaf :at :by :text
+        |CodeEntry $ quote
+          def CodeEntry $ new-record :CodeEntry :doc :code
         |bookmark $ quote
           def bookmark $ {} (:kind :def) (:ns nil) (:extra nil)
             :focus $ []
@@ -2424,23 +2428,15 @@
           def database $ {}
             :sessions $ {}
             :users $ {}
-            :ir ir-file
+            :package |app
+            :files $ {}
             :saved-files $ {}
             :configs configs
             :entries $ {}
-        |expr $ quote
-          def expr $ {} (:type :expr) (:by nil) (:at nil)
-            :data $ {}
         |file $ quote
-          def file $ {}
-            :ns $ {}
+          def file $ {} (:ns CodeEntry)
             :defs $ {}
             :configs $ {}
-        |ir-file $ quote
-          def ir-file $ {} (:package |app)
-            :files $ {}
-        |leaf $ quote
-          def leaf $ {} (:type :leaf) (:by nil) (:at nil) (:text |)
         |notification $ quote
           def notification $ {} (:id nil) (:kind nil) (:text nil) (:time nil)
         |page-data $ quote
@@ -2476,7 +2472,7 @@
         |*reader-db $ quote (defatom *reader-db @*writer-db)
         |*writer-db $ quote
           defatom *writer-db $ -> initial-db
-            assoc :saved-files $ get-in initial-db ([] :ir :files)
+            assoc :saved-files $ get initial-db :files
             assoc :sessions $ {}
         |compile-all-files! $ quote
           defn compile-all-files! (configs)
@@ -2534,6 +2530,7 @@
                 let
                     started-at $ unix-time!
                     data $ parse-cirru-edn (fs/readFileSync storage-file "\"utf8")
+                      {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf) (:CodeEntry schema/CodeEntry)
                     cost $ - (unix-time!) started-at
                   println $ .!gray chalk (str "\"Took " cost "\"ms to load.")
                   , data
@@ -2597,7 +2594,7 @@
             watch-file!
             js/process.on "\"SIGINT" $ fn (code & args)
               if
-                empty? $ get-in @*writer-db ([] :ir :files)
+                empty? $ get @*writer-db :files
                 println "\"Not writing empty project."
                 do
                   let
@@ -2633,11 +2630,11 @@
               target $ {}
                 :configs $ assoc (:configs source) :port 6001
                 :entries $ :entries source
-                :ir $ {}
-                  :package $ :package source
-                  :files next-files
+                :package $ :package source
+                :files next-files
                 :users $ {}
-            fs/writeFileSync "\"calcit-draft.cirru" $ format-cirru-edn target
+            ; fs/writeFileSync "\"calcit-draft.cirru" $ format-cirru-edn target
+            println "\"TODO need update"
             println "\"transformed compact.cirru into calcit-draft.cirru"
         |watch-file! $ quote
           defn watch-file! () $ if (fs/existsSync storage-file)
@@ -2854,7 +2851,6 @@
                 logged-in? $ some? (:user-id session)
                 router $ :router session
                 writer $ :writer session
-                ir $ :ir db
               if
                 or logged-in? $ = :watching (:name router)
                 {}
@@ -2865,20 +2861,20 @@
                       [] :users $ :user-id session
                   :router $ assoc router :data
                     case-default (:name router) ({})
-                      :files $ twig-page-files (:files ir)
+                      :files $ twig-page-files (:files db)
                         get-in session $ [] :writer :selected-ns
                         :saved-files db
                         get-in session $ [] :writer :draft-ns
                         :sessions db
                         :id session
-                      :editor $ twig-page-editor (:files ir) (:saved-files db) (:sessions db) (:users db) writer (:id session)
+                      :editor $ twig-page-editor (:files db) (:saved-files db) (:sessions db) (:users db) writer (:id session)
                       :members $ twig-page-members (:sessions db) (:users db)
-                      :search $ twig-search (:files ir)
+                      :search $ twig-search (:files db)
                       :watching $ let
                           sessions $ :sessions db
                           his-sid $ :data router
                         if (contains? sessions his-sid)
-                          twig-watching (get sessions his-sid) (:id session) (:files ir) (:users db)
+                          twig-watching (get sessions his-sid) (:id session) (:files db) (:users db)
                           , nil
                       :configs $ {}
                         :configs $ :configs db
@@ -2914,7 +2910,7 @@
             let
                 var-names $ keys (:defs ns-info)
                 rules $ ->
-                  tree->cirru $ :ns ns-info
+                  tree->cirru $ :code (:ns ns-info)
                   nth 2
                   rest
                   either $ []
@@ -3220,7 +3216,7 @@
           defn abstract-def (db op-data sid op-id op-time)
             let
                 writer $ to-writer db sid
-                files $ get-in db ([] :ir :files)
+                files $ get db :files
                 bookmark $ to-bookmark writer
                 ns-text $ :ns bookmark
                 def-text op-data
@@ -3241,7 +3237,7 @@
                       get-in $ [] ns-text :defs (:extra bookmark)
                       get-in target-path
                   -> db
-                    update-in ([] :ir :files ns-text :defs)
+                    update-in ([] :files ns-text :defs)
                       fn (defs)
                         ; println target-path (prepend target-path def-text) (tree->cirru target-expr) (keys defs)
                         -> defs
@@ -3256,11 +3252,11 @@
           defn goto-def (db op-data sid op-id op-time)
             let
                 writer $ to-writer db sid
-                pkg $ get-in db ([] :ir :package)
+                pkg $ get db :package
                 bookmark $ to-bookmark writer
                 ns-text $ :ns bookmark
                 ns-expr $ tree->cirru
-                  get-in db $ [] :ir :files ns-text :ns
+                  get-in db $ [] :files ns-text :ns
                 deps-info $ parse-deps (.slice ns-expr 2)
                 def-info $ parse-def (:text op-data)
                 forced? $ :forced? op-data
@@ -3284,7 +3280,7 @@
                       :ns $ :ns bookmark
                       :extra $ :def def-info
                 def-existed? $ some?
-                  get-in db $ [] :ir :files (:ns new-bookmark) :defs (:extra new-bookmark)
+                  get-in db $ [] :files (:ns new-bookmark) :defs (:extra new-bookmark)
                 user-id $ get-in db ([] :sessions sid :user-id)
                 warn $ fn (x)
                   -> db $ update-in ([] :sessions sid :notifications) (push-warning op-id op-time x)
@@ -3307,7 +3303,7 @@
                           target-def $ :extra new-bookmark
                           def-code $ cirru->tree new-expr user-id op-time
                         -> db
-                          update-in ([] :ir :files)
+                          update-in ([] :files)
                             fn (files)
                               if (contains? files target-ns)
                                 assoc-in files ([] target-ns :defs target-def) def-code
@@ -3322,11 +3318,11 @@
           defn peek-def (db op-data sid op-id op-time)
             let
                 writer $ to-writer db sid
-                pkg $ get-in db ([] :ir :package)
+                pkg $ get db :package
                 bookmark $ to-bookmark writer
                 ns-text $ :ns bookmark
                 ns-expr $ tree->cirru
-                  get-in db $ [] :ir :files ns-text :ns
+                  get-in db $ [] :files ns-text :ns
                 deps-info $ parse-deps (.slice ns-expr 2)
                 def-info $ parse-def op-data
                 new-bookmark $ merge schema/bookmark
@@ -3349,7 +3345,7 @@
                       :ns $ :ns bookmark
                       :extra $ :def def-info
                 def-existed? $ some?
-                  get-in db $ [] :ir :files (:ns new-bookmark) :defs (:extra new-bookmark)
+                  get-in db $ [] :files (:ns new-bookmark) :defs (:extra new-bookmark)
                 user-id $ get-in db ([] :sessions sid :user-id)
                 warn $ fn (x)
                   update-in db ([] :sessions sid :notifications) (push-warning op-id op-time x)
@@ -3400,7 +3396,9 @@
               when (nil? ns-part)
                 println $ get-in db ([] :sessions session-id :writer)
                 raise "\"Empty ns target."
-              assoc-in db ([] :ir :files ns-part :defs def-part) (cirru->tree cirru-expr user-id op-time)
+              assoc-in db ([] :files ns-part :defs def-part)
+                %{} schema/CodeEntry (:doc |)
+                  :code $ cirru->tree cirru-expr user-id op-time
         |add-ns $ quote
           defn add-ns (db op-data session-id op-id op-time)
             let
@@ -3409,8 +3407,9 @@
                 default-expr $ cirru->tree cirru-expr user-id op-time
                 empty-expr $ cirru->tree ([]) user-id op-time
               -> db
-                assoc-in ([] :ir :files op-data)
-                  -> schema/file $ assoc :ns default-expr
+                assoc-in ([] :files op-data)
+                  -> schema/file $ assoc :ns
+                    %{} schema/CodeEntry (:doc "\"") (:code default-expr)
                 assoc-in ([] :sessions session-id :writer :selected-ns) op-data
         |append-leaf $ quote
           defn append-leaf (db op-data session-id op-id op-time)
@@ -3420,7 +3419,7 @@
                 bookmark $ get stack pointer
                 focus $ :focus bookmark
                 user-id $ get-in db ([] :sessions session-id :user-id)
-                new-leaf $ assoc schema/leaf :by user-id :at op-time
+                new-leaf $ %{} schema/CirruLeaf (:by user-id) (:at op-time) (:text "\"")
                 expr-path $ bookmark->path bookmark
                 target-expr $ get-in db expr-path
                 new-id $ key-append (:data target-expr)
@@ -3434,19 +3433,16 @@
                   fn (focus) (conj focus new-id)
         |call-replace-expr $ quote
           defn call-replace-expr (expr from to)
-            case-default (:type expr)
-              do $ println "\"Unknown expr" expr
-              :expr $ update expr :data
-                fn (data)
-                  -> data (.to-list)
-                    map $ fn (pair)
-                      let[] (k v) pair $ [] k (call-replace-expr v from to)
-                    filter-not $ fn (pair)
-                      let[] (k v) pair $ and
-                        = (:type v) :leaf
-                        blank? $ :text v
-                    pairs-map
-              :leaf $ cond
+            if (expr? expr)
+              update expr :data $ fn (data)
+                -> data (.to-list)
+                  map $ fn (pair)
+                    let[] (k v) pair $ [] k (call-replace-expr v from to)
+                  filter-not $ fn (pair)
+                    let[] (k v) pair $ and (leaf? v)
+                      blank? $ :text v
+                  pairs-map
+              cond
                   = (:text expr) from
                   assoc expr :text to
                 (= (:text expr) (str "\"@" from))
@@ -3457,7 +3453,7 @@
             let
                 writer $ get-in db ([] :sessions sid :writer)
                 selected-ns $ :selected-ns writer
-                files $ get-in db ([] :ir :files)
+                files $ get db :files
                 warn $ fn (x)
                   update-in db ([] :sessions sid :notifications) (push-warning op-id op-time x)
                 new-ns op-data
@@ -3469,33 +3465,31 @@
                 (not (contains? files selected-ns))
                   warn "\"No selected namespace!"
                 true $ -> db
-                  update-in ([] :ir :files)
-                    fn (files)
-                      let
-                          the-file $ get files selected-ns
-                          ns-expr $ :ns the-file
-                          new-file $ update the-file :ns
-                            fn (expr)
-                              let
-                                  name-field $ key-nth (:data ns-expr) 1
-                                assert (str "\"old namespace to change:" selected-ns "\" " ns-expr)
-                                  = selected-ns $ get-in ns-expr ([] :data name-field :text)
-                                assoc-in expr ([] :data name-field :text) new-ns
-                        assoc files new-ns new-file
+                  update :files $ fn (files)
+                    let
+                        the-file $ get files selected-ns
+                        ns-expr $ :ns the-file
+                        new-file $ update the-file :ns
+                          fn (expr)
+                            let
+                                name-field $ key-nth (:data ns-expr) 1
+                              assert (str "\"old namespace to change:" selected-ns "\" " ns-expr)
+                                = selected-ns $ get-in ns-expr ([] :data name-field :text)
+                              assoc-in expr ([] :data name-field :text) new-ns
+                      assoc files new-ns new-file
                   assoc-in ([] :sessions sid :writer :selected-ns) new-ns
         |cp-ns $ quote
           defn cp-ns (db op-data session-id op-id op-time)
-            update-in db ([] :ir :files)
-              fn (files)
-                -> files $ assoc (:to op-data)
-                  get files $ :from op-data
+            update db :files $ fn (files)
+              -> files $ assoc (:to op-data)
+                get files $ :from op-data
         |delete-entry $ quote
           defn delete-entry (db op-data session-id op-id op-time) (; println |delete op-data)
             case-default (:kind op-data)
               do (println "\"[warning] no entry to delete") db
               :def $ -> db
                 update-in
-                  [] :ir :files (:ns op-data) :defs
+                  [] :files (:ns op-data) :defs
                   fn (defs)
                     dissoc defs $ :extra op-data
                 update-in ([] :sessions session-id :writer)
@@ -3505,9 +3499,8 @@
                         dissoc-idx stack $ :pointer writer
                       update :pointer dec
               :ns $ -> db
-                update-in ([] :ir :files)
-                  fn (files)
-                    dissoc files $ :ns op-data
+                update :files $ fn (files)
+                  dissoc files $ :ns op-data
                 update-in ([] :sessions session-id :writer)
                   fn (writer)
                     -> writer
@@ -3576,9 +3569,9 @@
                 next-id $ key-after (:data target-expr)
                   last $ :focus bookmark
                 user-id $ get-in db ([] :sessions session-id :user-id)
-                new-leaf $ assoc schema/leaf :at op-time :by user-id
-                new-expr $ -> schema/expr (assoc :at op-time :by user-id)
-                  assoc-in ([] :data bisection/mid-id) new-leaf
+                new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text "\"")
+                new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id)
+                  :data $ {} (bisection/mid-id new-leaf)
               -> db
                 update-in data-path $ fn (expr)
                   assoc-in expr ([] :data next-id) new-expr
@@ -3597,9 +3590,9 @@
                 next-id $ key-before (:data target-expr)
                   last $ :focus bookmark
                 user-id $ get-in db ([] :sessions session-id :user-id)
-                new-leaf $ assoc schema/leaf :at op-time :by user-id
-                new-expr $ -> schema/expr (assoc :at op-time :by user-id)
-                  assoc-in ([] :data bisection/mid-id) new-leaf
+                new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text "\"")
+                new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id)
+                  :data $ {} (bisection/mid-id new-leaf)
               -> db
                 update-in data-path $ fn (expr)
                   assoc-in expr ([] :data next-id) new-expr
@@ -3620,7 +3613,7 @@
             let
                 ns-text $ get-in db ([] :sessions sid :writer :selected-ns)
               if (some? ns-text)
-                update-in db ([] :ir :files ns-text :configs)
+                update-in db ([] :files ns-text :configs)
                   fn (configs) (merge configs op-data)
                 , db
         |indent $ quote
@@ -3631,7 +3624,8 @@
                 bookmark $ get stack pointer
                 data-path $ bookmark->path bookmark
                 user-id $ get-in db ([] :sessions session-id :user-id)
-                new-expr $ assoc schema/expr :at op-time :by user-id
+                new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id)
+                  :data $ {}
               -> db
                 update-in data-path $ fn (node)
                   assoc-in new-expr ([] :data bisection/mid-id) node
@@ -3653,7 +3647,7 @@
                     data-path $ bookmark->path bookmark
                     target-expr $ get-in db data-path
                     next-id $ key-append (:data target-expr)
-                    new-leaf $ assoc schema/leaf :at op-time :by user-id
+                    new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text "\"")
                   ; "\"append new leaf at tail, this case is special"
                   -> db
                     update-in data-path $ fn (expr)
@@ -3667,7 +3661,7 @@
                     target-expr $ get-in db data-path
                     next-id $ key-after (:data target-expr)
                       last $ :focus bookmark
-                    new-leaf $ assoc schema/leaf :at op-time :by user-id
+                    new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text "\"")
                   -> db
                     update-in data-path $ fn (expr)
                       assoc-in expr ([] :data next-id) new-leaf
@@ -3686,7 +3680,7 @@
                 next-id $ key-before (:data target-expr)
                   last $ :focus bookmark
                 user-id $ get-in db ([] :sessions session-id :user-id)
-                new-leaf $ assoc schema/leaf :at op-time :by user-id
+                new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text "\"")
               -> db
                 update-in data-path $ fn (expr)
                   assoc-in expr ([] :data next-id) new-leaf
@@ -3696,12 +3690,11 @@
                     conj (butlast focus) next-id
         |mv-ns $ quote
           defn mv-ns (db op-data session-id op-id op-time)
-            update-in db ([] :ir :files)
-              fn (files)
-                -> files
-                  dissoc $ :from op-data
-                  assoc (:to op-data)
-                    get files $ :from op-data
+            update db :files $ fn (files)
+              -> files
+                dissoc $ :from op-data
+                assoc (:to op-data)
+                  get files $ :from op-data
         |prepend-leaf $ quote
           defn prepend-leaf (db op-data session-id op-id op-time)
             let-sugar
@@ -3710,7 +3703,7 @@
                 bookmark $ get stack pointer
                 focus $ :focus bookmark
                 user-id $ get-in db ([] :sessions session-id :user-id)
-                new-leaf $ assoc schema/leaf :by user-id :at op-time
+                new-leaf $ %{} schema/CirruLeaf (:by user-id) (:at op-time) (:text "\"")
                 expr-path $ bookmark->path bookmark
                 target-expr $ get-in db expr-path
                 new-id $ key-prepend (:data target-expr)
@@ -3726,13 +3719,12 @@
           defn remove-def (db op-data session-id op-id op-time)
             let
                 selected-ns $ get-in db ([] :sessions session-id :writer :selected-ns)
-              update-in db ([] :ir :files selected-ns :defs)
+              update-in db ([] :files selected-ns :defs)
                 fn (defs) (dissoc defs op-data)
         |remove-ns $ quote
           defn remove-ns (db op-data session-id op-id op-time)
             -> db
-              update-in ([] :ir :files)
-                fn (files) (dissoc files op-data)
+              update :files $ fn (files) (dissoc files op-data)
               update-in ([] :sessions session-id :writer :selected-ns)
                 fn (x)
                   if (= x op-data) nil x
@@ -3749,15 +3741,14 @@
                   let
                       old-ns $ :from ns-info
                       new-ns $ :to ns-info
-                      expr $ get-in db ([] :ir :files old-ns :ns)
+                      expr $ get-in db ([] :files old-ns :ns)
                       next-id $ key-nth (:data expr) 1
                     -> db
-                      update-in ([] :ir :files)
-                        fn (files)
-                          -> files (dissoc old-ns)
-                            assoc new-ns $ get files old-ns
+                      update :files $ fn (files)
+                        -> files (dissoc old-ns)
+                          assoc new-ns $ get files old-ns
                       assoc-in ([] :sessions session-id :writer :stack idx :ns) new-ns
-                      update-in ([] :ir :files new-ns :ns :data next-id :text)
+                      update-in ([] :files new-ns :ns :data next-id :text)
                         fn (x) new-ns
                 (= :def kind)
                   let
@@ -3765,22 +3756,21 @@
                       new-ns $ :to ns-info
                       old-def $ :from extra-info
                       new-def $ :to extra-info
-                      expr $ get-in db ([] :ir :files old-ns :defs old-def)
+                      expr $ get-in db ([] :files old-ns :defs old-def)
                       next-id $ key-nth (:data expr) 1
-                      files $ get-in db ([] :ir :files)
+                      files $ get db :files
                     if (contains? files new-ns)
                       -> db
-                        update-in ([] :ir :files)
-                          fn (files)
-                            -> files
-                              update-in ([] old-ns :defs)
-                                fn (file) (dissoc file old-def)
-                              assoc-in ([] new-ns :defs new-def)
-                                get-in files $ [] old-ns :defs old-def
+                        update :files $ fn (files)
+                          -> files
+                            update-in ([] old-ns :defs)
+                              fn (file) (dissoc file old-def)
+                            assoc-in ([] new-ns :defs new-def)
+                              get-in files $ [] old-ns :defs old-def
                         update-in ([] :sessions session-id :writer :stack idx)
                           fn (bookmark)
                             -> bookmark (assoc :ns new-ns) (assoc :extra new-def)
-                        update-in ([] :ir :files new-ns :defs new-def :data)
+                        update-in ([] :files new-ns :defs new-def :data)
                           fn (def-data)
                             let
                                 try-1 $ :text (val-nth def-data 1)
@@ -3798,7 +3788,7 @@
                 user-id $ get-in db ([] :sessions sid :user-id)
                 ns-text $ get-in db ([] :sessions sid :writer :draft-ns)
               if (some? ns-text)
-                assoc-in db ([] :ir :files ns-text) (cirru->file op-data user-id op-time)
+                assoc-in db ([] :files ns-text) (cirru->file op-data user-id op-time)
                 do (println "|undefined draft-ns") db
         |reset-at $ quote
           defn reset-at (db op-data session-id op-id op-time)
@@ -3806,7 +3796,7 @@
                 saved-files $ :saved-files db
                 old-file $ get saved-files (:ns op-data)
               update-in db
-                [] :ir :files $ :ns op-data
+                [] :files $ :ns op-data
                 fn (file)
                   case-default (:kind op-data)
                     raise $ str "|Malformed data: " (pr-str op-data)
@@ -3817,12 +3807,12 @@
                         get-in old-file $ [] :defs def-text
         |reset-files $ quote
           defn reset-files (db op-data session-id op-id op-time)
-            assoc-in db ([] :ir :files) (:saved-files db)
+            assoc db :files $ :saved-files db
         |reset-ns $ quote
           defn reset-ns (db op-data session-id op-id op-time)
             let
                 ns-text op-data
-              assoc-in db ([] :ir :files ns-text)
+              assoc-in db ([] :files ns-text)
                 get-in db $ [] :saved-files ns-text
         |toggle-comment $ quote
           defn toggle-comment (db op-data sid op-id op-time)
@@ -3916,14 +3906,17 @@
                       some? $ :at op-data
                       some? $ :text op-data
                       > (:at op-data) (:at leaf)
-                    assoc leaf :text (:text op-data) :at (:at op-data) :by user-id
+                    %{} schema/CirruLeaf
+                      :text $ :text op-data
+                      :at $ :at op-data
+                      :by user-id
                     do (println "\"invalid updata op:" op-data) leaf
       :ns $ quote
         ns app.updater.ir $ :require (app.schema :as schema) (bisection-key.core :as bisection)
           app.util :refer $ expr? leaf? bookmark->path to-writer to-bookmark to-keys cirru->tree cirru->file
           app.util.list :refer $ dissoc-idx
           bisection-key.util :refer $ key-before key-after key-prepend key-append assoc-prepend key-nth assoc-nth val-nth get-min-key
-          app.util :refer $ push-warning
+          app.util :refer $ push-warning expr? leaf?
     |app.updater.notify $ {}
       :defs $ {}
         |broadcast $ quote
@@ -4035,13 +4028,10 @@
         |file-change $ quote
           defn file-change (db op-data _ op-id op-time)
             let
-                new-files $ get-in op-data ([] :ir :files)
+                new-files $ get op-data :files
               if
-                =
-                  get-in db $ [] :ir :files
-                  :saved-files db
-                -> db (assoc :saved-files new-files)
-                  assoc-in ([] :ir :files) new-files
+                = (get db :files) (:saved-files db)
+                -> db (assoc :saved-files new-files) (assoc :files new-files)
                 update db :saved-files $ fn (old-files)
                   -> new-files $ map-kv
                     fn (ns-text file)
@@ -4293,9 +4283,9 @@
                 update :saved-files $ fn (saved-files)
                   if (some? op-data)
                     let
-                        target $ get-in db ([] :ir :files op-data)
+                        target $ get-in db ([] :files op-data)
                       if (some? target) (assoc saved-files op-data target) (dissoc saved-files op-data)
-                    get-in db $ [] :ir :files
+                    get db :files
                 update :sessions $ fn (sessions)
                   -> sessions $ map-kv
                     fn (k session)
@@ -4330,12 +4320,12 @@
             if
               = :def $ :kind bookmark
               concat
-                [] :ir :files (:ns bookmark) :defs $ :extra bookmark
+                [] :files (:ns bookmark) :defs (:extra bookmark) :code
                 mapcat
                   or (:focus bookmark) ([])
                   , prepend-data
               concat
-                [] :ir :files (:ns bookmark) (:kind bookmark)
+                [] :files (:ns bookmark) (:kind bookmark) :code
                 mapcat
                   or (:focus bookmark) ([])
                   , prepend-data
@@ -4367,7 +4357,7 @@
               (= (type-of xs) :cirru-quote)
                 cirru->tree (&cirru-quote:to-list xs) author timestamp
               (list? xs)
-                merge schema/expr $ {} (:at timestamp) (:by author)
+                %{} schema/CirruExpr (:at timestamp) (:by author)
                   :data $ loop
                       result $ {}
                       ys xs
@@ -4379,22 +4369,24 @@
                         rest ys
                         bisection/bisect next-id bisection/max-id
               (string? xs)
-                merge schema/leaf $ {} (:at timestamp) (:by author) (:text xs)
+                %{} schema/CirruLeaf (:at timestamp) (:by author) (:text xs)
               true $ do (eprintln "\"unknown data for cirru converting:" xs) nil
         |db->string $ quote
           defn db->string (db)
             format-cirru-edn $ -> db (dissoc :sessions) (dissoc :saved-files) (dissoc :repl)
         |expr? $ quote
-          defn expr? (x)
-            = :expr $ :type x
+          defn expr? (x) (&record:matches? schema/CirruExpr x)
         |file->cirru $ quote
           defn file->cirru (file)
             {}
-              :ns $ :: 'quote
-                tree->cirru $ :ns file
+              :ns $ -> (:ns file)
+                update :code $ fn (code)
+                  :: 'quote $ tree->cirru code
               :defs $ -> (:defs file)
                 map-kv $ fn (k xs)
-                  [] k $ :: 'quote (tree->cirru xs)
+                  [] k $ -> xs
+                    update :code $ fn (code)
+                      :: 'quote $ tree->cirru code
         |file-compact-to-calcit $ quote
           defn file-compact-to-calcit (file)
             let
@@ -4425,8 +4417,7 @@
         |kinds $ quote
           def kinds $ #{} :ns :def
         |leaf? $ quote
-          defn leaf? (x)
-            = :leaf $ :type x
+          defn leaf? (x) (&record:matches? schema/CirruLeaf x)
         |now! $ quote
           defn now! () $ js/Date.now
         |parse-def $ quote
@@ -4513,9 +4504,7 @@
             get-in db $ [] :sessions session-id :writer
         |tree->cirru $ quote
           defn tree->cirru (x)
-            if
-              = :leaf $ :type x
-              :text x
+            if (&record:matches? schema/CirruLeaf x) (:text x)
               -> (:data x) (.to-list) (.sort-by first)
                 map $ fn (entry)
                   tree->cirru $ last entry
@@ -4565,17 +4554,18 @@
                             :ns $ if
                               = (:ns old-file) (:ns new-file)
                               , nil
-                                :: 'quote $ tree->cirru (:ns new-file)
+                                :: 'quote $ tree->cirru
+                                  :code $ :ns new-file
                             :removed-defs removed-defs
                             :added-defs $ -> added-defs
                               map $ fn (x)
                                 [] x $ :: 'quote
-                                  tree->cirru $ get new-defs x
+                                  tree->cirru $ get-in new-defs ([] x :code)
                               hide-empty-fields
                             :changed-defs $ -> changed-defs
                               map $ fn (x)
                                 [] x $ :: 'quote
-                                  tree->cirru $ get new-defs x
+                                  tree->cirru $ get-in new-defs ([] x :code)
                               hide-empty-fields
                       pairs-map
               fs/writeFile "\"compact.cirru" (format-cirru-edn compact-data)
@@ -4588,7 +4578,7 @@
           defn handle-files! (db *calcit-md5 configs dispatch! save-ir? filter-ns)
             try
               let
-                  new-files $ get-in db ([] :ir :files)
+                  new-files $ get db :files
                   old-files $ get db :saved-files
                   new-names $ keys new-files
                   old-names $ keys old-files
@@ -4602,9 +4592,7 @@
                     filter $ fn (ns-text)
                       not= (get new-files ns-text) (get old-files ns-text)
                     filter-by-ns
-                handle-compact-files!
-                  get-in db $ [] :ir :package
-                  , old-files new-files added-names removed-names changed-names (:configs db) (:entries db) filter-ns
+                handle-compact-files! (get db :package) old-files new-files added-names removed-names changed-names (:configs db) (:entries db) filter-ns
                 dispatch! $ :: :writer/save-files filter-ns
                 if save-ir? $ js/setTimeout
                   fn () $ let
