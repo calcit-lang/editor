@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.0)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.1)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -8,19 +8,16 @@
   :files $ {}
     |app.client $ {}
       :defs $ {}
-        |*connecting? $ %{} :CodeEntry
+        |*connecting? $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *connecting? false)
-          :doc |
-        |*states $ %{} :CodeEntry
+        |*states $ %{} :CodeEntry (:doc |)
           :code $ quote
             defatom *states $ {}
               :states $ {}
                 :cursor $ []
-          :doc |
-        |*store $ %{} :CodeEntry
+        |*store $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *store nil)
-          :doc |
-        |connect! $ %{} :CodeEntry
+        |connect! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn connect! () (js/console.info "\"Connecting...") (reset! *connecting? true)
               ws-connect! ws-host $ {}
@@ -34,8 +31,7 @@
                         when config/dev? $ js/console.log "\"Changes" changes
                         reset! *store $ patch-twig @*store changes
                     _ $ eprintln "\"Unknown op:" data
-          :doc |
-        |detect-watching! $ %{} :CodeEntry
+        |detect-watching! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn detect-watching! () $ let
                 query $ parse-query!
@@ -44,8 +40,7 @@
                 dispatch! $ :: :router/change
                   {} (:name :watching)
                     :data $ get query "\"watching"
-          :doc |
-        |dispatch! $ %{} :CodeEntry
+        |dispatch! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op)
               when
@@ -79,8 +74,7 @@
                     reset! *states $ updater/clear-editor @*states
                     send-op! op
                 _ $ send-op! op
-          :doc |
-        |heartbeat! $ %{} :CodeEntry
+        |heartbeat! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn heartbeat! () $ delay! 30
               fn () $ if (ws-connected?)
@@ -88,8 +82,7 @@
                   ws-send! $ :: :ping
                   heartbeat!
                 println "\"Disabled heartbeat since connection lost."
-          :doc |
-        |main! $ %{} :CodeEntry
+        |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn main! ()
               when config/dev? $ load-console-formatter!
@@ -108,12 +101,10 @@
               js/window.addEventListener "\"visibilitychange" $ fn (event)
                 when (= "\"visible" js/document.visibilityState) (retry-connect!)
               println "\"App started!"
-          :doc |
-        |mount-target $ %{} :CodeEntry
+        |mount-target $ %{} :CodeEntry (:doc |)
           :code $ quote
             def mount-target $ js/document.querySelector |.app
-          :doc |
-        |reload! $ %{} :CodeEntry
+        |reload! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reload! () $ if (nil? build-errors)
               do (clear-cache!) (render-app!) (remove-watch *states :changes) (remove-watch *store :changes)
@@ -125,22 +116,18 @@
                 println "|Code updated."
                 tip! "\"ok~" nil
               tip! "\"error" build-errors
-          :doc |
-        |render-app! $ %{} :CodeEntry
+        |render-app! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-app! () $ render! mount-target (comp-container @*states @*store) dispatch!
-          :doc |
-        |retry-connect! $ %{} :CodeEntry
+        |retry-connect! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn retry-connect! () $ if
               and (nil? @*store) (not @*connecting?)
               connect!
-          :doc |
-        |send-op! $ %{} :CodeEntry
+        |send-op! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn send-op! (op) (ws-send! op)
-          :doc |
-        |simulate-login! $ %{} :CodeEntry
+        |simulate-login! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn simulate-login! () $ let
                 raw $ js/window.localStorage.getItem (:storage-key config/site)
@@ -148,8 +135,7 @@
                 do $ dispatch!
                   :: :user/log-in $ parse-cirru-edn raw
                 do $ println "|Found no storage."
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.client $ :require
             respo.core :refer $ render! clear-cache! *changes-logger
@@ -164,15 +150,13 @@
             app.config :as config
             "\"bottom-tip" :default tip!
             "\"./calcit.build-errors" :default build-errors
-        :doc |
     |app.client-updater $ {}
       :defs $ {}
-        |abstract $ %{} :CodeEntry
+        |abstract $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn abstract (states)
               assoc-in states ([] :editor :data :abstract?) true
-          :doc |
-        |clear-editor $ %{} :CodeEntry
+        |clear-editor $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn clear-editor (states)
               update states :editor $ fn (scope)
@@ -180,18 +164,15 @@
                   filter $ fn (pair)
                     let[] (k v) pair $ tag? k
                   pairs-map
-          :doc |
-        |draft-box $ %{} :CodeEntry
+        |draft-box $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn draft-box (states)
               assoc-in states ([] :editor :data :draft-box?) true
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.client-updater)
-        :doc |
     |app.client-util $ {}
       :defs $ {}
-        |coord-contains? $ %{} :CodeEntry
+        |coord-contains? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn coord-contains? (xs ys)
               if (empty? ys) true $ if (empty? xs) false
@@ -199,8 +180,7 @@
                   = (first xs) (first ys)
                   recur (rest xs) (rest ys)
                   , false
-          :doc |
-        |expr-many-items? $ %{} :CodeEntry
+        |expr-many-items? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expr-many-items? (x size)
               if (expr? x)
@@ -210,22 +190,18 @@
                     > (count d) size
                     any? (vals d) expr?
                 , false
-          :doc |
-        |expr? $ %{} :CodeEntry
+        |expr? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expr? (x) (&record:matches? schema/CirruExpr x)
-          :doc |
-        |leaf? $ %{} :CodeEntry
+        |leaf? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn leaf? (x) (&record:matches? schema/CirruLeaf x)
-          :doc |
-        |parse-query! $ %{} :CodeEntry
+        |parse-query! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn parse-query! () $ let
                 url-obj $ url-parse js/location.href true
               to-calcit-data $ .-query url-obj
-          :doc |
-        |ws-host $ %{} :CodeEntry
+        |ws-host $ %{} :CodeEntry (:doc |)
           :code $ quote
             def ws-host $ if
               and (exists? js/location)
@@ -237,14 +213,12 @@
                   or (get query "\"host") |localhost
                   , |: $ or (get query "\"port") (:port schema/configs)
               , |ws://localhost:6001
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.client-util $ :require ([] app.config :as config) ([] "\"url-parse" :default url-parse) (app.schema :as schema)
-        :doc |
     |app.comp.about $ {}
       :defs $ {}
-        |comp-about $ %{} :CodeEntry
+        |comp-about $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-about () $ div
               {} $ :class-name css-about
@@ -268,16 +242,13 @@
                     {} (:padding "\"8px 8px")
                       :color $ hsl 0 0 50
                 comp-md-block "\"Calcit Editor is a syntax tree editor of [Cirru Project](http://cirru.org). Read more at [Calcit Editor](https://github.com/calcit-lang/editor).\n" $ {}
-          :doc |
-        |css-about $ %{} :CodeEntry
+        |css-about $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-about $ {}
               "\"$0" $ merge ui/global ui/fullscreen ui/column
-          :doc |
-        |install-commands $ %{} :CodeEntry
+        |install-commands $ %{} :CodeEntry (:doc |)
           :code $ quote (def install-commands "\"npm install -g @calcit/editor\nct\n")
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.about $ :require
             respo.util.format :refer $ hsl
@@ -289,10 +260,9 @@
             app.style :as style
             respo-md.comp.md :refer $ comp-md-block
             app.util.dom :refer $ copy-silently!
-        :doc |
     |app.comp.abstract $ {}
       :defs $ {}
-        |comp-abstract $ %{} :CodeEntry
+        |comp-abstract $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-abstract (states close-modal!)
               comp-modal close-modal! $ let
@@ -316,8 +286,7 @@
                       if
                         not $ blank? state
                         do (d! :analyze/abstract-def state) (d! cursor nil) (close-modal! d!)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.abstract $ :require
             respo.util.format :refer $ hsl
@@ -328,10 +297,9 @@
             app.style :as style
             app.comp.modal :refer $ comp-modal
             app.keycode :as keycode
-        :doc |
     |app.comp.bookmark $ {}
       :defs $ {}
-        |comp-bookmark $ %{} :CodeEntry
+        |comp-bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-bookmark (bookmark idx selected?)
               div
@@ -367,13 +335,11 @@
                       {} $ :style ui/row-middle
                       =< 4 nil
                       <> (:ns bookmark) style-minor
-          :doc |
-        |css-bookmark $ %{} :CodeEntry
+        |css-bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-bookmark $ {}
               "\"$0" $ {} (:line-height |1.2em) (:padding "|4px 8px") (:cursor :pointer) (:position :relative) (:white-space :nowrap)
-          :doc |
-        |on-pick $ %{} :CodeEntry
+        |on-pick $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-pick (bookmark idx)
               fn (e d!)
@@ -386,13 +352,11 @@
                     meta? $ d! :writer/collapse idx
                     alt? $ d! :writer/remove-idx idx
                     true $ d! :writer/point-to idx
-          :doc |
-        |style-highlight $ %{} :CodeEntry
+        |style-highlight $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-highlight $ {}
               :color $ hsl 0 0 100
-          :doc |
-        |style-kind $ %{} :CodeEntry
+        |style-kind $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-kind $ {}
               :color $ hsl 340 80 60
@@ -400,20 +364,17 @@
               :font-size 12
               :margin-right 4
               :vertical-align :middle
-          :doc |
-        |style-main $ %{} :CodeEntry
+        |style-main $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-main $ {} (:vertical-align :middle)
               :color $ hsl 0 0 70
               :font-family ui/font-normal
-          :doc |
-        |style-minor $ %{} :CodeEntry
+        |style-minor $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-minor $ {}
               :color $ hsl 0 0 40
               :font-size 12
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.bookmark $ :require
             respo.util.format :refer $ hsl
@@ -421,10 +382,9 @@
             respo.css :refer $ defstyle
             respo.core :refer $ defcomp <> span div a
             respo.comp.space :refer $ =<
-        :doc |
     |app.comp.changed-files $ {}
       :defs $ {}
-        |comp-changed-files $ %{} :CodeEntry
+        |comp-changed-files $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-changed-files (states changed-files)
               div
@@ -443,17 +403,14 @@
                       :on-click $ fn (e d!) (d! :effect/save-files nil)
                     a $ {} (:inner-text |Reset) (:style style/button)
                       :on-click $ fn (e d!) (d! :ir/reset-files nil) (d! :states/clear nil)
-          :doc |
-        |style-column $ %{} :CodeEntry
+        |style-column $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-column $ {} (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
-          :doc |
-        |style-nothing $ %{} :CodeEntry
+        |style-nothing $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-nothing $ {} (:font-family "|Josefin Sans")
               :color $ hsl 0 0 100 0.5
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.changed-files $ :require
             respo.util.format :refer $ hsl
@@ -463,10 +420,9 @@
             app.client-util :as util
             app.style :as style
             app.comp.changed-info :refer $ comp-changed-info
-        :doc |
     |app.comp.changed-info $ {}
       :defs $ {}
-        |comp-changed-info $ %{} :CodeEntry
+        |comp-changed-info $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-changed-info (info ns-text)
               div
@@ -492,16 +448,14 @@
                           [] def-text $ div ({}) (render-status ns-text def-text status)
                   div ({})
                     comp-icon :save style-reset $ fn (e d!) (d! :effect/save-ns ns-text)
-          :doc |
-        |on-preview $ %{} :CodeEntry
+        |on-preview $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-preview (ns-text kind status)
               fn (e d!) (; println |peek ns-text kind status)
                 d! :writer/select $ case-default kind
                   {} (:kind :def) (:ns ns-text) (:extra kind)
                   :ns $ {} (:kind :ns) (:ns ns-text) (:extra nil)
-          :doc |
-        |on-reset-def $ %{} :CodeEntry
+        |on-reset-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-reset-def (ns-text kind)
               fn (e d!)
@@ -509,8 +463,7 @@
                   {} (:ns ns-text) (:kind :def) (:extra kind)
                   :ns $ {} (:ns ns-text) (:kind :ns)
                 d! :states/clear nil
-          :doc |
-        |render-status $ %{} :CodeEntry
+        |render-status $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-status (ns-text kind status)
               span
@@ -524,34 +477,28 @@
                 span
                   {} $ :class-name "\"is-minor"
                   comp-icon :corner-up-left style-reset $ on-reset-def ns-text kind
-          :doc |
-        |style-defs $ %{} :CodeEntry
+        |style-defs $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-defs $ {} (:padding-left 16)
-          :doc |
-        |style-info $ %{} :CodeEntry
+        |style-info $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-info $ {}
               :background-color $ hsl 0 0 100 0.1
               :padding 8
               :margin-bottom 8
-          :doc |
-        |style-reset $ %{} :CodeEntry
+        |style-reset $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-reset $ {} (:text-decoration :underline) (:font-size 12)
               :color $ hsl 220 60 80 0.6
               :cursor :pointer
-          :doc |
-        |style-status $ %{} :CodeEntry
+        |style-status $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-status $ {} (:font-size 12) (:font-family "|Josefin Sans")
               :color $ hsl 160 70 40
-          :doc |
-        |style-status-card $ %{} :CodeEntry
+        |style-status-card $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-status-card $ {} (:cursor :pointer)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.changed-info $ :require
             respo.util.format :refer $ hsl
@@ -560,10 +507,9 @@
             respo.comp.space :refer $ =<
             app.style :as style
             feather.core :refer $ comp-icon
-        :doc |
     |app.comp.configs $ {}
       :defs $ {}
-        |comp-configs $ %{} :CodeEntry
+        |comp-configs $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-configs (states configs entries)
               let
@@ -637,8 +583,7 @@
                   .render modules-plugin
                   .render init-fn-plugin
                   .render reload-fn-plugin
-          :doc |
-        |comp-entries $ %{} :CodeEntry
+        |comp-entries $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-entries (states entries)
               let
@@ -659,25 +604,21 @@
                       .show code-plugin d! $ fn (text)
                         d! :configs/update-entries $ [] :reset (parse-cirru-edn text)
                   .render code-plugin
-          :doc |
-        |render-field $ %{} :CodeEntry
+        |render-field $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-field (v)
               <>
                 if (blank? v) "\"-" v
                 , style-value
-          :doc |
-        |render-label $ %{} :CodeEntry
+        |render-label $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-label (title)
               <> title $ {} (:font-family ui/font-fancy)
-          :doc |
-        |style-value $ %{} :CodeEntry
+        |style-value $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-value $ {} (:cursor :pointer) (:font-family ui/font-code)
               :color $ hsl 200 90 80
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.configs $ :require
             respo.util.format :refer $ hsl
@@ -687,10 +628,9 @@
             cirru-edn.core :as cirru-edn
             respo-alerts.core :refer $ use-prompt
             app.style :as style
-        :doc |
     |app.comp.container $ {}
       :defs $ {}
-        |comp-container $ %{} :CodeEntry
+        |comp-container $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-container (states store)
               let
@@ -730,21 +670,18 @@
                       ; when dev? $ comp-inspect "|Router data" states
                         merge style-inspector $ {} (:left 100)
                       comp-messages $ get-in store ([] :session :notifications)
-          :doc |
-        |css-container $ %{} :CodeEntry
+        |css-container $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-container $ {}
               "\"$0" $ merge ui/global ui/fullscreen ui/column
                 {} (:background-color :black) (:color :white)
-          :doc |
-        |style-inspector $ %{} :CodeEntry
+        |style-inspector $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-inspector $ {} (:bottom 0) (:left 0) (:max-width |100%)
               :background-color $ hsl 0 0 50
               :color :black
               :opacity 1
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.container $ :require
             respo.util.format :refer $ hsl
@@ -765,10 +702,9 @@
             app.comp.about :refer $ comp-about
             app.comp.configs :refer $ comp-configs
             app.config :refer $ dev?
-        :doc |
     |app.comp.draft-box $ {}
       :defs $ {}
-        |comp-draft-box $ %{} :CodeEntry
+        |comp-draft-box $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-draft-box (states expr focus close-modal!)
               let
@@ -823,8 +759,7 @@
                               :on-click $ on-submit expr? state cursor close-modal! false
                             button $ {} (:style style/button) (:inner-text |Submit)
                               :on-click $ on-submit expr? state cursor close-modal! true
-          :doc |
-        |css-draft-area $ %{} :CodeEntry
+        |css-draft-area $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-draft-area $ {}
               "\"$0" $ {}
@@ -840,8 +775,7 @@
                 :padding 8
                 :min-width 800
                 :vertical-align :top
-          :doc |
-        |css-text $ %{} :CodeEntry
+        |css-text $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-text $ {}
               "\"$0" $ {} (:font-family style/font-code) (:color :white) (:padding "|8px 8px") (:height 60) (:display :block) (:width |100%)
@@ -852,13 +786,11 @@
                 :padding 8
                 :min-width 800
                 :vetical-align :top
-          :doc |
-        |css-wrong $ %{} :CodeEntry
+        |css-wrong $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-wrong $ {}
               "\"$0" $ {} (:color :red) (:font-size 24) (:font-weight 100) (:font-family "|Josefin Sans") (:cursor :pointer)
-          :doc |
-        |on-submit $ %{} :CodeEntry
+        |on-submit $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-submit (expr? text cursor close-modal! close?)
               fn (e d!)
@@ -867,8 +799,7 @@
                   d! :ir/update-leaf $ {} (:text text)
                     :at $ now!
                 if close? $ do (d! cursor nil) (close-modal! d!)
-          :doc |
-        |style-mode $ %{} :CodeEntry
+        |style-mode $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-mode $ {}
               :color $ hsl 0 0 100 0.6
@@ -876,16 +807,13 @@
               :padding "|0 8px"
               :font-size 12
               :border-radius |4px
-          :doc |
-        |style-original $ %{} :CodeEntry
+        |style-original $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-original $ {} (:max-height 240) (:overflow :auto)
-          :doc |
-        |style-toolbar $ %{} :CodeEntry
+        |style-toolbar $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-toolbar $ {} (:justify-content :flex-end)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.draft-box $ :require
             respo.util.format :refer $ hsl
@@ -897,10 +825,9 @@
             app.style :as style
             app.util :refer $ tree->cirru now! expr?
             app.keycode :as keycode
-        :doc |
     |app.comp.expr $ {}
       :defs $ {}
-        |comp-expr $ %{} :CodeEntry
+        |comp-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-expr (states expr focus coord others tail? layout-mode readonly? picker-mode? theme depth)
               let
@@ -949,8 +876,7 @@
                             comp-expr (>> states cursor-key) child focus child-coord partial-others (= last-id k) mode readonly? picker-mode? theme $ inc depth
                         rest children
                         , mode
-          :doc |
-        |on-keydown $ %{} :CodeEntry
+        |on-keydown $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-keydown (coord expr picker-mode?)
               fn (e d!)
@@ -1031,8 +957,7 @@
                     true $ do
                       ; println |Keydown $ :key-code e
                       on-window-keydown event d! $ {} (:name :editor)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.expr $ :require
             respo.util.format :refer $ hsl
@@ -1048,10 +973,9 @@
             app.util.dom :refer $ do-copy-logics!
             bisection-key.util :refer $ get-min-key get-max-key
             app.schema :refer $ CirruLeaf CirruExpr
-        :doc |
     |app.comp.file-replacer $ {}
       :defs $ {}
-        |comp-file-replacer $ %{} :CodeEntry
+        |comp-file-replacer $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-file-replacer (states file)
               let
@@ -1078,8 +1002,7 @@
                             d! :ir/replace-file $ parse-cirru-edn state
                           d! cursor nil
                           d! :writer/draft-ns nil
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.file-replacer $ :require
             respo.util.format :refer $ hsl
@@ -1090,10 +1013,9 @@
             app.style :as style
             app.comp.modal :refer $ comp-modal
             app.util :refer $ file->cirru
-        :doc |
     |app.comp.header $ {}
       :defs $ {}
-        |comp-header $ %{} :CodeEntry
+        |comp-header $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-header (states router-name logged-in? stats)
               let
@@ -1133,16 +1055,14 @@
                     render-entry (if logged-in? |Profile |Guest) :profile router-name $ fn (e d!)
                       d! :router/change $ {} (:name :profile) (:data nil) (:router nil)
                   .render broadcast-plugin
-          :doc |
-        |css-entry $ %{} :CodeEntry
+        |css-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-entry $ {}
               "\"$0" $ {} (:cursor :pointer) (:padding "\"0 12px")
                 :color $ hsl 0 0 100 0.6
                 :text-decoration :none
                 :vertical-align :middle
-          :doc |
-        |css-header $ %{} :CodeEntry
+        |css-header $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-header $ {}
               "\"$0" $ merge ui/row-center
@@ -1152,25 +1072,21 @@
               "\"$0 > *" $ {} (:opacity 0.5) (:transition-duration "\"240ms")
               "\"$0:hover" $ {} (:opacity 1)
               "\"$0:hover > *" $ {} (:opacity 1)
-          :doc |
-        |render-entry $ %{} :CodeEntry
+        |render-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-entry (page-name this-page router-name on-click)
               div
                 {} (:class-name css-entry) (:on-click on-click)
                   :style $ if (= this-page router-name) style-highlight
                 <> page-name nil
-          :doc |
-        |style-highlight $ %{} :CodeEntry
+        |style-highlight $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-highlight $ {}
               :color $ hsl 0 0 100
-          :doc |
-        |style-link $ %{} :CodeEntry
+        |style-link $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-link $ {} (:font-size 14) (:font-weight 100)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.header $ :require
             respo.util.format :refer $ hsl
@@ -1181,10 +1097,9 @@
             app.util.dom :refer $ focus-search!
             feather.core :refer $ comp-icon
             respo-alerts.core :refer $ use-prompt
-        :doc |
     |app.comp.leaf $ {}
       :defs $ {}
-        |comp-leaf $ %{} :CodeEntry
+        |comp-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-leaf (states leaf focus coord by-other? first? readonly? picker-mode? theme)
               let
@@ -1208,12 +1123,10 @@
                       :click $ on-focus leaf coord picker-mode?
                       :keydown $ on-keydown state leaf coord picker-mode?
                       :input $ on-input state coord cursor
-          :doc |
-        |initial-state $ %{} :CodeEntry
+        |initial-state $ %{} :CodeEntry (:doc |)
           :code $ quote
             def initial-state $ {} (:text |) (:at 0)
-          :doc |
-        |on-focus $ %{} :CodeEntry
+        |on-focus $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-focus (leaf coord picker-mode?)
               fn (e d!)
@@ -1222,8 +1135,7 @@
                     .!preventDefault $ :event e
                     d! :writer/pick-node $ tree->cirru leaf
                   d! :writer/focus coord
-          :doc |
-        |on-input $ %{} :CodeEntry
+        |on-input $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-input (state coord cursor)
               fn (e d!)
@@ -1233,8 +1145,7 @@
                     :text $ :value e
                     :at now
                   d! cursor $ assoc state :text (:value e) :at now
-          :doc |
-        |on-keydown $ %{} :CodeEntry
+        |on-keydown $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-keydown (state leaf coord picker-mode?)
               fn (e d!)
@@ -1306,8 +1217,7 @@
                       d! :writer/picker-mode nil
                     true $ do (; println "|Keydown leaf" code)
                       on-window-keydown event d! $ {} (:name :editor)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.leaf $ :require
             respo.util.format :refer $ hsl
@@ -1321,10 +1231,9 @@
             app.theme :refer $ decide-leaf-theme base-style-leaf
             app.util :refer $ tree->cirru
             app.util.dom :refer $ do-copy-logics!
-        :doc |
     |app.comp.login $ {}
       :defs $ {}
-        |comp-login $ %{} :CodeEntry
+        |comp-login $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-login (states)
               let
@@ -1353,35 +1262,29 @@
                     =< 8 nil
                     button $ {} (:inner-text "|Log in") (:style style/button)
                       :on-click $ on-submit (:username state) (:password state) false
-          :doc |
-        |initial-state $ %{} :CodeEntry
+        |initial-state $ %{} :CodeEntry (:doc |)
           :code $ quote
             def initial-state $ {} (:username |) (:password |)
-          :doc |
-        |on-input $ %{} :CodeEntry
+        |on-input $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-input (state cursor k)
               fn (e dispatch!)
                 dispatch! cursor $ assoc state k (:value e)
-          :doc |
-        |on-submit $ %{} :CodeEntry
+        |on-submit $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-submit (username password signup?)
               fn (e dispatch!)
                 dispatch! (if signup? :user/sign-up :user/log-in) ([] username password)
                 js/window.localStorage.setItem (:storage-key config/site)
                   format-cirru-edn $ [] username password
-          :doc |
-        |style-control $ %{} :CodeEntry
+        |style-control $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-control $ merge ui/flex
               {} $ :text-align :right
-          :doc |
-        |style-login $ %{} :CodeEntry
+        |style-login $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-login $ {} (:padding 16)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.login $ :require
             respo.core :refer $ defcomp >> <> div input button span
@@ -1390,10 +1293,9 @@
             respo-ui.core :as ui
             app.style :as style
             app.config :as config
-        :doc |
     |app.comp.messages $ {}
       :defs $ {}
-        |comp-messages $ %{} :CodeEntry
+        |comp-messages $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-messages (messages)
               list-> ({})
@@ -1416,15 +1318,13 @@
                           {} (:font-size 12) (:font-family ui/font-code) (:opacity 0.7)
                         =< 8 nil
                         <> (:text msg) nil
-          :doc |
-        |css-message $ %{} :CodeEntry
+        |css-message $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-message $ {}
               "\"$0" $ {} (:position :absolute) (:left 8) (:cursor :pointer) (:font-weight 100) (:font-family |Hind) (:padding "|0 8px") (:transition-duration |200ms) (:border-radius "\"6px") (:z-index 200)
                 :background-color $ hsl 0 0 0 0.5
               "\"$0:hover" $ {} (:transform "\"scale(1.03)")
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.messages $ :require
             respo.util.format :refer $ hsl
@@ -1435,10 +1335,9 @@
             app.client-util :as util
             app.style :as style
             "\"dayjs" :default Dayjs
-        :doc |
     |app.comp.modal $ {}
       :defs $ {}
-        |comp-modal $ %{} :CodeEntry
+        |comp-modal $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-modal (close-modal! inner-tree)
               div
@@ -1448,14 +1347,12 @@
                   {} $ :on-click
                     fn (e d!) (println |nothing!)
                   , inner-tree
-          :doc |
-        |style-backdrop $ %{} :CodeEntry
+        |style-backdrop $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-backdrop $ merge ui/center
               {} (:position :fixed) (:width |100%) (:height |100%) (:top 0) (:left 0)
                 :background-color $ hsl 0 0 0 0.6
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.modal $ :require
             respo.util.format :refer $ hsl
@@ -1463,10 +1360,9 @@
             respo.core :refer $ defcomp >> <> span div pre input button a
             respo.comp.inspect :refer $ comp-inspect
             respo.comp.space :refer $ =<
-        :doc |
     |app.comp.page-editor $ {}
       :defs $ {}
-        |comp-page-editor $ %{} :CodeEntry
+        |comp-page-editor $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-page-editor (states stack router-data pointer picker-mode? theme)
               let
@@ -1516,8 +1412,7 @@
                       ; comp-inspect "\"Expr" router-data style/inspector
                   if picker-mode? $ comp-picker-notice (:picker-choices router-data)
                     get-in expr $ mapcat focus prepend-data
-          :doc |
-        |comp-stack $ %{} :CodeEntry
+        |comp-stack $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-stack (stack pointer)
               [] (effect-focus-bookmark pointer)
@@ -1526,8 +1421,7 @@
                   -> stack $ map-indexed
                     fn (idx bookmark)
                       [] idx $ comp-bookmark bookmark idx (= idx pointer)
-          :doc |
-        |comp-status-bar $ %{} :CodeEntry
+        |comp-status-bar $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-status-bar (states router-data bookmark theme)
               let
@@ -1633,53 +1527,45 @@
                   .render rename-plugin
                   .render add-plugin
                   .render replace-plugin
-          :doc |
-        |css-area $ %{} :CodeEntry
+        |css-area $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-area $ {}
               "\"$0" $ {} (:position :fixed) (:right 0) (:left 80) (:bottom 0) (:top 0) (:overflow :auto) (:padding-bottom "\"60vh") (:padding-top 120) (:flex 1) (:padding-right 8)
                 :background-color $ hsl 0 0 0 0.4
-          :doc |
-        |css-editor $ %{} :CodeEntry
+        |css-editor $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-editor $ {}
               "\"$0" $ merge ui/flex ui/column
                 {} (:position :absolute) (:left 100)
-          :doc |
-        |css-page-editor $ %{} :CodeEntry
+        |css-page-editor $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-page-editor $ {}
               "\"$0" $ merge ui/row ui/flex
                 {} $ :z-index 80
-          :doc |
-        |css-stack $ %{} :CodeEntry
+        |css-stack $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-stack $ {}
               "\"$0" $ {} (:overflow :auto) (:padding "\"48px 0 80px 0") (:opacity 0.8) (:position :relative) (:box-shadow "\"0 0 4px black")
                 :background-color $ hsl 0 0 0 0.6
               "\"$0:hover" $ {} (:opacity 1) (:z-index 100)
-          :doc |
-        |css-status-bar $ %{} :CodeEntry
+        |css-status-bar $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-status-bar $ {}
               "\"$0" $ merge ui/row
                 {} (:justify-content :space-between) (:padding "|0 8px") (:position :fixed) (:bottom 0) (:right 0) (:opacity 0.4) (:transition-duration "\"240ms") (:transition-property "\"opacity")
                   :background-color $ hsl 0 0 0 0.5
               "\"$0:hover" $ {} (:opacity 1)
-          :doc |
-        |effect-focus-bookmark $ %{} :CodeEntry
+        |effect-focus-bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             defeffect effect-focus-bookmark (pointer) (action el at?)
               if (= action :update)
                 if-let
                   target $ .!querySelector el "\".selected-bookmark"
                   .!scrollIntoViewIfNeeded target
-          :doc |
-        |initial-state $ %{} :CodeEntry
+        |initial-state $ %{} :CodeEntry (:doc |)
           :code $ quote
             def initial-state $ {} (:draft-box? false)
-          :doc |
-        |on-draft-box $ %{} :CodeEntry
+        |on-draft-box $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-draft-box (state cursor)
               fn (e d!)
@@ -1688,8 +1574,7 @@
                   let
                       el $ js/document.querySelector |.el-draft-box
                     if (some? el) (.!focus el)
-          :doc |
-        |on-path-gen! $ %{} :CodeEntry
+        |on-path-gen! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-path-gen! (bookmark)
               fn (e d!)
@@ -1705,8 +1590,7 @@
                       code $ []
                         [] the-ns "\":as" $ last (split the-ns "\".")
                     do-copy-logics! d! (format-cirru code) (str "\"Copied path of " the-ns)
-          :doc |
-        |on-rename-def $ %{} :CodeEntry
+        |on-rename-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-rename-def (new-name bookmark d!)
               when
@@ -1722,8 +1606,7 @@
                     :extra $ {}
                       :from $ :extra bookmark
                       :to def-text
-          :doc |
-        |on-reset-expr $ %{} :CodeEntry
+        |on-reset-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-reset-expr (bookmark d!)
               let
@@ -1734,50 +1617,42 @@
                   :def $ {} (:ns ns-text) (:kind :def)
                     :extra $ :extra bookmark
                 d! :states/clear nil
-          :doc |
-        |style-hint $ %{} :CodeEntry
+        |style-hint $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-hint $ {}
               :color $ hsl 0 0 100 0.6
               :font-family ui/font-fancy
-          :doc |
-        |style-link $ %{} :CodeEntry
+        |style-link $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-link $ {} (:font-family "|Josefin Sans") (:cursor :pointer) (:font-size 14)
               :color $ hsl 200 50 80
-          :doc |
-        |style-missing $ %{} :CodeEntry
+        |style-missing $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-missing $ {} (:font-family "|Josefin Sans")
               :color $ hsl 10 60 50
               :font-size 20
               :font-weight 100
-          :doc |
-        |style-nothing $ %{} :CodeEntry
+        |style-nothing $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-nothing $ {}
               :color $ hsl 0 0 100 0.4
               :padding "|0 16px"
               :font-family "|Josefin Sans"
-          :doc |
-        |style-watcher $ %{} :CodeEntry
+        |style-watcher $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-watcher $ {}
               :color $ hsl 0 0 100 0.7
               :margin-left 8
-          :doc |
-        |style-watchers $ %{} :CodeEntry
+        |style-watchers $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-watchers $ merge ui/row
               {} $ :display :inline-block
-          :doc |
-        |ui-missing $ %{} :CodeEntry
+        |ui-missing $ %{} :CodeEntry (:doc |)
           :code $ quote
             def ui-missing $ div
               {} $ :style style-missing
               <> "|Expression is missing!" nil
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.page-editor $ :require
             respo.util.format :refer $ hsl
@@ -1800,10 +1675,9 @@
             respo-alerts.core :refer $ use-confirm use-prompt
             app.comp.replace-name :refer $ use-replace-name-modal
             app.comp.picker-notice :refer $ comp-picker-notice
-        :doc |
     |app.comp.page-files $ {}
       :defs $ {}
-        |comp-file $ %{} :CodeEntry
+        |comp-file $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-file (states selected-ns defs-set highlights configs)
               let
@@ -1875,8 +1749,7 @@
                             .render confirm-remove-plugin
                   .render duplicate-plugin
                   .render add-plugin
-          :doc |
-        |comp-namespace-list $ %{} :CodeEntry
+        |comp-namespace-list $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-namespace-list (states ns-set selected-ns ns-highlights)
               let
@@ -1921,8 +1794,7 @@
                       map $ fn (ns-text)
                         [] ns-text $ comp-ns-entry (>> states ns-text) ns-text (= selected-ns ns-text) ns-highlights
                   .render plugin-add-ns
-          :doc |
-        |comp-ns-entry $ %{} :CodeEntry
+        |comp-ns-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-ns-entry (states ns-text selected? ns-highlights)
               let
@@ -1951,8 +1823,7 @@
                         .show plugin-rm-ns d! $ fn () (d! :ir/remove-ns ns-text)
                     comp-i :x 12 $ hsl 0 0 80 0.6
                   .render plugin-rm-ns
-          :doc |
-        |comp-page-files $ %{} :CodeEntry
+        |comp-page-files $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-page-files (states selected-ns router-data)
               let
@@ -1972,51 +1843,42 @@
                   if
                     some? $ :peeking-file router-data
                     comp-file-replacer (>> states :replacer) (:peeking-file router-data)
-          :doc |
-        |css-file $ %{} :CodeEntry
+        |css-file $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-file $ {}
               "\"$0" $ merge ui/column
                 {} (:width 280) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
-          :doc |
-        |render-empty $ %{} :CodeEntry
+        |render-empty $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-empty () $ div
               {} $ :style
                 {} (:width 280) (:font-family ui/font-fancy)
                   :color $ hsl 0 0 100 0.5
               <> |Empty nil
-          :doc |
-        |style-def $ %{} :CodeEntry
+        |style-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-def $ {} (:padding "|0 8px") (:position :relative)
               :color $ hsl 0 0 74
-          :doc |
-        |style-input $ %{} :CodeEntry
+        |style-input $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-input $ merge style/input
               {} $ :width |100%
-          :doc |
-        |style-inspect $ %{} :CodeEntry
+        |style-inspect $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-inspect $ {} (:opacity 1)
               :background-color $ hsl 0 0 100
               :color :black
-          :doc |
-        |style-link $ %{} :CodeEntry
+        |style-link $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-link $ {} (:cursor :pointer)
-          :doc |
-        |style-list $ %{} :CodeEntry
+        |style-list $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-list $ {} (:width 280) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
-          :doc |
-        |style-ns $ %{} :CodeEntry
+        |style-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-ns $ {} (:cursor :pointer) (:vertical-align :middle) (:position :relative) (:padding "|0 8px")
               :color $ hsl 0 0 74
-          :doc |
-        |style-remove $ %{} :CodeEntry
+        |style-remove $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-remove $ {}
               :color $ hsl 0 50 90
@@ -2024,12 +1886,10 @@
               :cursor :pointer
               :vertical-align :middle
               :line-height "\"12px"
-          :doc |
-        |sytle-container $ %{} :CodeEntry
+        |sytle-container $ %{} :CodeEntry (:doc |)
           :code $ quote
             def sytle-container $ {} (:padding "|0px 16px")
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.page-files $ :require
             respo.util.format :refer $ hsl
@@ -2045,10 +1905,9 @@
             app.util.shortcuts :refer $ on-window-keydown
             respo-alerts.core :refer $ use-prompt use-confirm comp-select
             feather.core :refer $ comp-icon comp-i
-        :doc |
     |app.comp.page-members $ {}
       :defs $ {}
-        |comp-page-members $ %{} :CodeEntry
+        |comp-page-members $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-page-members (router-data session-id)
               div
@@ -2093,34 +1952,27 @@
                                 :style $ {}
                                   :color $ hsl 240 80 80
                               <> "|Watching url" nil
-          :doc |
-        |on-watch $ %{} :CodeEntry
+        |on-watch $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-watch (session-id)
               fn (e d!)
                 d! :router/change $ {} (:name :watching) (:data session-id)
-          :doc |
-        |style-bookmark $ %{} :CodeEntry
+        |style-bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-bookmark $ {} (:font-family |Menlo,monospace) (:min-width 200) (:display :inline-block)
-          :doc |
-        |style-members $ %{} :CodeEntry
+        |style-members $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-members $ {} (:padding "|40px 16px 0 16px")
-          :doc |
-        |style-name $ %{} :CodeEntry
+        |style-name $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-name $ {} (:min-width 160) (:display :inline-block)
-          :doc |
-        |style-page $ %{} :CodeEntry
+        |style-page $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-page $ {} (:min-width 160) (:display :inline-block)
-          :doc |
-        |style-row $ %{} :CodeEntry
+        |style-row $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-row $ {} (:cursor :pointer)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.page-members $ :require
             respo.util.format :refer $ hsl
@@ -2128,10 +1980,9 @@
             respo.core :refer $ defcomp <> list-> span div a
             respo.comp.space :refer $ =<
             "\"url-parse" :default url-parse
-        :doc |
     |app.comp.peek-def $ {}
       :defs $ {}
-        |comp-peek-def $ %{} :CodeEntry
+        |comp-peek-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-peek-def (simple-expr)
               div
@@ -2149,8 +2000,7 @@
                     :cursor :pointer
                     :margin-left 8
                   fn (e d!) (d! :writer/hide-peek nil)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.peek-def $ :require
             respo.util.format :refer $ hsl
@@ -2161,10 +2011,9 @@
             app.style :as style
             app.util :refer $ stringify-s-expr tree->cirru
             feather.core :refer $ comp-icon
-        :doc |
     |app.comp.picker-notice $ {}
       :defs $ {}
-        |comp-picker-notice $ %{} :CodeEntry
+        |comp-picker-notice $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-picker-notice (choices target-node)
               let
@@ -2215,8 +2064,7 @@
                         -> names (sort)
                           map $ fn (x)
                             [] x $ render-code x
-          :doc |
-        |css-name-code $ %{} :CodeEntry
+        |css-name-code $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-name-code $ {}
               "\"$0" $ {} (:font-family ui/font-code) (:cursor :pointer) (:font-size 11) (:margin-bottom 4) (:word-break :none) (:line-height "\"12px") (:border-radius "\"4px")
@@ -2227,28 +2075,24 @@
               "\"$0:hover" $ {}
                 :background-color $ hsl 0 0 30 1
                 :color $ hsl 0 0 100
-          :doc |
-        |css-picker-container $ %{} :CodeEntry
+        |css-picker-container $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-picker-container $ {}
               "\"$0" $ merge ui/column
                 {} (:padding "\"2px 4px") (:position :fixed) (:line-height "\"1.6em") (:top 6) (:left "\"50%") (:transform "\"translate(-50%,0)") (:margin "\"auto") (:z-index 100) (:border-radius "\"4px") (:max-width "\"66vw") (:min-height "\"40px") (:min-width "\"200px")
                   :border $ str "\"1px solid " (hsl 0 0 70 0.4)
                   :background-color $ hsl 0 0 20 0.7
-          :doc |
-        |css-picker-tip $ %{} :CodeEntry
+        |css-picker-tip $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-picker-tip $ {}
               "\"$0" $ {} (:font-family ui/font-fancy) (:font-size 28) (:font-weight 300) (:line-height "\"21px") (:cursor :pointer) (:position :absolute) (:right 4) (:bottom 4) (:z-index -1)
                 :color $ hsl 0 0 90 0.4
-          :doc |
-        |style-list-container $ %{} :CodeEntry
+        |style-list-container $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-list-container $ {}
               "\"$0" $ merge ui/row
                 {} (:flex-wrap :wrap) (:column-gap "\"4px")
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.picker-notice $ :require
             respo.core :refer $ defcomp list-> >> <> span div a pre
@@ -2257,10 +2101,9 @@
             respo.css :refer $ defstyle
             respo.comp.space :refer $ =<
             feather.core :refer $ comp-icon
-        :doc |
     |app.comp.profile $ {}
       :defs $ {}
-        |comp-profile $ %{} :CodeEntry
+        |comp-profile $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-profile (states user)
               let
@@ -2290,27 +2133,22 @@
                   div ({})
                     button $ {} (:inner-text "|Log out") (:style style/button) (:on-click on-log-out)
                   .render rename-plugin
-          :doc |
-        |on-log-out $ %{} :CodeEntry
+        |on-log-out $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-log-out (e dispatch!) (dispatch! :user/log-out nil)
               js/window.localStorage.removeItem $ :storage-key config/site
-          :doc |
-        |style-greet $ %{} :CodeEntry
+        |style-greet $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-greet $ {} (:font-family "|Josefin Sans") (:font-size 40) (:font-weight 100)
               :color $ hsl 0 0 100 0.8
-          :doc |
-        |style-id $ %{} :CodeEntry
+        |style-id $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-id $ {} (:font-family "|Josefin Sans") (:font-weight 100)
               :color $ hsl 0 0 60
-          :doc |
-        |style-profile $ %{} :CodeEntry
+        |style-profile $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-profile $ {} (:padding "|24px 16px")
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.profile $ :require
             respo.util.format :refer $ hsl
@@ -2322,10 +2160,9 @@
             app.config :as config
             feather.core :refer $ comp-i comp-icon
             respo-alerts.core :refer $ use-prompt
-        :doc |
     |app.comp.replace-name $ {}
       :defs $ {}
-        |use-replace-name-modal $ %{} :CodeEntry
+        |use-replace-name-modal $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn use-replace-name-modal (states on-replace)
               let
@@ -2390,8 +2227,7 @@
                       fn (d!)
                         d! cursor $ assoc state :show? false
                   , klass
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.replace-name $ :require
             respo.util.format :refer $ hsl
@@ -2400,10 +2236,9 @@
             respo.comp.space :refer $ =<
             app.style :as style
             respo-alerts.core :refer $ comp-modal ModalShape PluginShape
-        :doc |
     |app.comp.search $ {}
       :defs $ {}
-        |bookmark->str $ %{} :CodeEntry
+        |bookmark->str $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn bookmark->str (bookmark)
               case-default (:kind bookmark)
@@ -2412,8 +2247,7 @@
                   , "\""
                 :def $ :extra bookmark
                 :ns $ :ns bookmark
-          :doc |
-        |comp-no-results $ %{} :CodeEntry
+        |comp-no-results $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-no-results () $ div
               {} $ :style
@@ -2421,8 +2255,7 @@
                   :color $ hsl 0 0 60
                   :font-weight 300
               <> "\"No results"
-          :doc |
-        |comp-search $ %{} :CodeEntry
+        |comp-search $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-search (states router-data)
               let
@@ -2505,26 +2338,22 @@
                                     {} $ :color (hsl 0 0 50)
                                   <> (last pieces)
                                     {} $ :color (hsl 0 0 80)
-          :doc |
-        |css-search $ %{} :CodeEntry
+        |css-search $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-search $ {}
               "\"$0" $ merge ui/expand ui/row-middle
                 {} (:height "\"100%") (:padding "\"40px 16px 0 16px")
-          :doc |
-        |initial-state $ %{} :CodeEntry
+        |initial-state $ %{} :CodeEntry (:doc |)
           :code $ quote
             def initial-state $ {} (:query |) (:selection 0)
-          :doc |
-        |on-input $ %{} :CodeEntry
+        |on-input $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-input (state cursor)
               fn (e d!)
                 d! cursor $ {}
                   :query $ :value e
                   :selection 0
-          :doc |
-        |on-keydown $ %{} :CodeEntry
+        |on-keydown $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-keydown (state candidates cursor)
               fn (e d!)
@@ -2555,14 +2384,12 @@
                           d! cursor $ update state :selection inc
                     true $ on-window-keydown (:event e) d!
                       {} $ :name :search
-          :doc |
-        |on-select $ %{} :CodeEntry
+        |on-select $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-select (bookmark cursor)
               fn (e d!) (d! :writer/select bookmark)
                 d! cursor $ {} (:position :0) (:query |)
-          :doc |
-        |query-length $ %{} :CodeEntry
+        |query-length $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn query-length (bookmark)
               case-default (:kind bookmark)
@@ -2571,22 +2398,18 @@
                   , 0
                 :def $ count (:extra bookmark)
                 :ns $ count (:ns bookmark)
-          :doc |
-        |style-body $ %{} :CodeEntry
+        |style-body $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-body $ {} (:overflow :auto) (:padding-bottom 80)
-          :doc |
-        |style-candidate $ %{} :CodeEntry
+        |style-candidate $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-candidate $ {} (:padding "|0 8px")
               :color $ hsl 0 0 100 0.6
               :cursor :pointer
-          :doc |
-        |style-highlight $ %{} :CodeEntry
+        |style-highlight $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-highlight $ {} (:color :white)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.search $ :require
             respo.util.format :refer $ hsl
@@ -2599,10 +2422,9 @@
             app.client-util :as util
             app.style :as style
             app.util.shortcuts :refer $ on-window-keydown
-        :doc |
     |app.comp.theme-menu $ {}
       :defs $ {}
-        |comp-theme-menu $ %{} :CodeEntry
+        |comp-theme-menu $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-theme-menu (states theme)
               let
@@ -2638,12 +2460,10 @@
                                 {} $ :color :white
                             :on-click $ fn (e d!) (d! :user/change-theme theme-name) (d! cursor false)
                           <> theme-name
-          :doc |
-        |theme-list $ %{} :CodeEntry
+        |theme-list $ %{} :CodeEntry (:doc |)
           :code $ quote
             def theme-list $ [] :star-trail :beginner :curves
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.theme-menu $ :require
             respo.util.format :refer $ hsl
@@ -2652,10 +2472,9 @@
             respo.comp.inspect :refer $ comp-inspect
             respo.comp.space :refer $ =<
             app.style :as style
-        :doc |
     |app.comp.watching $ {}
       :defs $ {}
-        |comp-watching $ %{} :CodeEntry
+        |comp-watching $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-watching (states router-data theme)
               let
@@ -2695,23 +2514,19 @@
                           , nil
                         =< 16 nil
                         comp-theme-menu (>> states :theme) (or theme :star-trail)
-          :doc |
-        |style-container $ %{} :CodeEntry
+        |style-container $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-container $ {} (:padding "|40px 16px 0 16px")
-          :doc |
-        |style-tip $ %{} :CodeEntry
+        |style-tip $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-tip $ {} (:font-family "|Josefin Sans")
               :background-color $ hsl 0 0 100 0.3
               :border-radius |4px
               :padding "|4px 8px"
-          :doc |
-        |style-title $ %{} :CodeEntry
+        |style-title $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-title $ {} (:font-family "|Josefin Sans")
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.watching $ :require
             respo.util.format :refer $ hsl
@@ -2726,116 +2541,85 @@
             app.util.dom :refer $ inject-style
             app.util :refer $ bookmark-full-str
             app.comp.theme-menu :refer $ comp-theme-menu
-        :doc |
     |app.config $ {}
       :defs $ {}
-        |cdn? $ %{} :CodeEntry
+        |cdn? $ %{} :CodeEntry (:doc |)
           :code $ quote
             def cdn? $ cond
                 exists? js/window
                 , false
               (exists? js/process) (= "\"true" js/process.env.cdn)
               :else false
-          :doc |
-        |dev? $ %{} :CodeEntry
+        |dev? $ %{} :CodeEntry (:doc |)
           :code $ quote
             def dev? $ = "\"dev" (get-env "\"mode" "\"release")
-          :doc |
-        |site $ %{} :CodeEntry
+        |site $ %{} :CodeEntry (:doc |)
           :code $ quote
             def site $ {} (:port nil) (:title "\"Calcit Editor") (:icon "\"https://cdn.tiye.me/logo/cirru.png") (:theme "\"#eeeeff") (:storage-key "\"calcit-storage") (:storage-file "\"calcit.cirru")
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.config $ :require ([] app.schema :as schema)
-        :doc |
     |app.keycode $ {}
       :defs $ {}
-        |b $ %{} :CodeEntry
+        |b $ %{} :CodeEntry (:doc |)
           :code $ quote (def b 66)
-          :doc |
-        |backspace $ %{} :CodeEntry
+        |backspace $ %{} :CodeEntry (:doc |)
           :code $ quote (def backspace 8)
-          :doc |
-        |c $ %{} :CodeEntry
+        |c $ %{} :CodeEntry (:doc |)
           :code $ quote (def c 67)
-          :doc |
-        |d $ %{} :CodeEntry
+        |d $ %{} :CodeEntry (:doc |)
           :code $ quote (def d 68)
-          :doc |
-        |down $ %{} :CodeEntry
+        |down $ %{} :CodeEntry (:doc |)
           :code $ quote (def down 40)
-          :doc |
-        |e $ %{} :CodeEntry
+        |e $ %{} :CodeEntry (:doc |)
           :code $ quote (def e 69)
-          :doc |
-        |enter $ %{} :CodeEntry
+        |enter $ %{} :CodeEntry (:doc |)
           :code $ quote (def enter 13)
-          :doc |
-        |escape $ %{} :CodeEntry
+        |escape $ %{} :CodeEntry (:doc |)
           :code $ quote (def escape 27)
-          :doc |
-        |f $ %{} :CodeEntry
+        |f $ %{} :CodeEntry (:doc |)
           :code $ quote (def f 70)
-          :doc |
-        |i $ %{} :CodeEntry
+        |i $ %{} :CodeEntry (:doc |)
           :code $ quote (def i 73)
-          :doc |
-        |j $ %{} :CodeEntry
+        |j $ %{} :CodeEntry (:doc |)
           :code $ quote (def j 74)
-          :doc |
-        |k $ %{} :CodeEntry
+        |k $ %{} :CodeEntry (:doc |)
           :code $ quote (def k 75)
-          :doc |
-        |left $ %{} :CodeEntry
+        |left $ %{} :CodeEntry (:doc |)
           :code $ quote (def left 37)
-          :doc |
-        |o $ %{} :CodeEntry
+        |o $ %{} :CodeEntry (:doc |)
           :code $ quote (def o 79)
-          :doc |
-        |p $ %{} :CodeEntry
+        |p $ %{} :CodeEntry (:doc |)
           :code $ quote (def p 80)
-          :doc |
-        |period $ %{} :CodeEntry
+        |period $ %{} :CodeEntry (:doc |)
           :code $ quote (def period 190)
-          :doc |
-        |right $ %{} :CodeEntry
+        |right $ %{} :CodeEntry (:doc |)
           :code $ quote (def right 39)
-          :doc |
-        |s $ %{} :CodeEntry
+        |s $ %{} :CodeEntry (:doc |)
           :code $ quote (def s 83)
-          :doc |
-        |slash $ %{} :CodeEntry
+        |slash $ %{} :CodeEntry (:doc |)
           :code $ quote (def slash 191)
-          :doc |
-        |space $ %{} :CodeEntry
+        |space $ %{} :CodeEntry (:doc |)
           :code $ quote (def space 32)
-          :doc |
-        |tab $ %{} :CodeEntry
+        |tab $ %{} :CodeEntry (:doc |)
           :code $ quote (def tab 9)
-          :doc |
-        |up $ %{} :CodeEntry
+        |up $ %{} :CodeEntry (:doc |)
           :code $ quote (def up 38)
-          :doc |
-        |v $ %{} :CodeEntry
+        |v $ %{} :CodeEntry (:doc |)
           :code $ quote (def v 86)
-          :doc |
-        |x $ %{} :CodeEntry
+        |x $ %{} :CodeEntry (:doc |)
           :code $ quote (def x 88)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.keycode)
-        :doc |
     |app.polyfill $ {}
       :defs $ {}
-        |ctx $ %{} :CodeEntry
+        |ctx $ %{} :CodeEntry (:doc |)
           :code $ quote
             def ctx $ if
               and (exists? js/document) (exists? js/window)
               .!getContext (.!createElement js/document "\"canvas") "\"2d"
               , nil
-          :doc |
-        |text-width* $ %{} :CodeEntry
+        |text-width* $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn text-width* (content font-size font-family)
               if (some? ctx)
@@ -2843,36 +2627,29 @@
                   set! (.-font ctx) (str font-size "\"px " font-family)
                   .-width $ .!measureText ctx content
                 , nil
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.polyfill)
-        :doc |
     |app.schema $ {}
       :defs $ {}
-        |CirruExpr $ %{} :CodeEntry
+        |CirruExpr $ %{} :CodeEntry (:doc |)
           :code $ quote
             def CirruExpr $ new-record :Expr :by :at :data
-          :doc |
-        |CirruLeaf $ %{} :CodeEntry
+        |CirruLeaf $ %{} :CodeEntry (:doc |)
           :code $ quote
             def CirruLeaf $ new-record :Leaf :at :by :text
-          :doc |
-        |CodeEntry $ %{} :CodeEntry
+        |CodeEntry $ %{} :CodeEntry (:doc |)
           :code $ quote
             def CodeEntry $ new-record :CodeEntry :doc :code
-          :doc |
-        |bookmark $ %{} :CodeEntry
+        |bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             def bookmark $ {} (:kind :def) (:ns nil) (:extra nil)
               :focus $ []
-          :doc |
-        |configs $ %{} :CodeEntry
+        |configs $ %{} :CodeEntry (:doc |)
           :code $ quote
             def configs $ {} (:port 6001) (:expose-port 6011) (:init-fn "\"app.main/main!") (:reload-fn "\"app.main/reload!")
               :modules $ []
               :version "\"0.0.1"
-          :doc |
-        |database $ %{} :CodeEntry
+        |database $ %{} :CodeEntry (:doc |)
           :code $ quote
             def database $ {}
               :sessions $ {}
@@ -2882,18 +2659,15 @@
               :saved-files $ {}
               :configs configs
               :entries $ {}
-          :doc |
-        |file $ %{} :CodeEntry
+        |file $ %{} :CodeEntry (:doc |)
           :code $ quote
             def file $ {} (:ns CodeEntry)
               :defs $ {}
               :configs $ {}
-          :doc |
-        |notification $ %{} :CodeEntry
+        |notification $ %{} :CodeEntry (:doc |)
           :code $ quote
             def notification $ {} (:id nil) (:kind nil) (:text nil) (:time nil)
-          :doc |
-        |page-data $ %{} :CodeEntry
+        |page-data $ %{} :CodeEntry (:doc |)
           :code $ quote
             def page-data $ {}
               :files $ {}
@@ -2904,14 +2678,12 @@
                 :focus $ []
                 :others $ #{}
                 :expr nil
-          :doc |
-        |router $ %{} :CodeEntry
+        |router $ %{} :CodeEntry (:doc |)
           :code $ quote
             def router $ {} (:name nil) (:title nil)
               :data $ {}
               :router nil
-          :doc |
-        |session $ %{} :CodeEntry
+        |session $ %{} :CodeEntry (:doc |)
           :code $ quote
             def session $ {} (:user-id nil) (:id nil)
               :router $ {} (:name :files) (:data nil) (:router nil)
@@ -2920,33 +2692,26 @@
                 :stack $ []
                 :picker-coord nil
               :theme :star-trail
-          :doc |
-        |user $ %{} :CodeEntry
+        |user $ %{} :CodeEntry (:doc |)
           :code $ quote
             def user $ {} (:name nil) (:id nil) (:nickname nil) (:avatar nil) (:password nil) (:theme :star-trail)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.schema)
-        :doc |
     |app.server $ {}
       :defs $ {}
-        |*calcit-md5 $ %{} :CodeEntry
+        |*calcit-md5 $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *calcit-md5 nil)
-          :doc |
-        |*client-caches $ %{} :CodeEntry
+        |*client-caches $ %{} :CodeEntry (:doc |)
           :code $ quote
             defatom *client-caches $ {}
-          :doc |
-        |*reader-db $ %{} :CodeEntry
+        |*reader-db $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *reader-db @*writer-db)
-          :doc |
-        |*writer-db $ %{} :CodeEntry
+        |*writer-db $ %{} :CodeEntry (:doc |)
           :code $ quote
             defatom *writer-db $ -> initial-db
               assoc :saved-files $ get initial-db :files
               assoc :sessions $ {}
-          :doc |
-        |compile-all-files! $ %{} :CodeEntry
+        |compile-all-files! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn compile-all-files! (configs)
               handle-files!
@@ -2954,8 +2719,7 @@
                 , *calcit-md5 configs
                   fn (op) (println "\"After compile:" op)
                   , false nil
-          :doc |
-        |dispatch! $ %{} :CodeEntry
+        |dispatch! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op sid)
               when config/dev? $ js/console.log "\"Action" (str op) sid
@@ -2971,8 +2735,7 @@
                     handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true ns
                   (:ping) nil
                   _ $ reset! *writer-db (updater @*writer-db op sid op-id op-time)
-          :doc |
-        |expose-files! $ %{} :CodeEntry
+        |expose-files! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expose-files! (port)
               let
@@ -2995,8 +2758,7 @@
                   let
                       link $ .!blue chalk (str "\"http://localhost:" port)
                     println $ str "\"port " port "\" ok, local configs exposed on " link
-          :doc |
-        |initial-db $ %{} :CodeEntry
+        |initial-db $ %{} :CodeEntry (:doc |)
           :code $ quote
             def initial-db $ merge schema/database
               let
@@ -3015,8 +2777,7 @@
                     , data
                   if (some? configs)
                     {} $ :configs configs
-          :doc |
-        |main! $ %{} :CodeEntry
+        |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn main! () $ let
                 configs $ :configs initial-db
@@ -3025,8 +2786,7 @@
                 do (start-server! configs) (check-version!)
                 "\"compile" $ compile-all-files! configs
                 "\"file-transform" $ transform-compact-to-calcit!
-          :doc |
-        |make-file-response $ %{} :CodeEntry
+        |make-file-response $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn make-file-response (res)
               fn (err ? content)
@@ -3035,8 +2795,7 @@
                     .!end res $ format-cirru-edn
                       {} $ :message (str err)
                   do (.!setHeader res "\"Content-Type" "\"text/plain") (.!writeHead res 200) (.!end res content)
-          :doc |
-        |on-file-change! $ %{} :CodeEntry
+        |on-file-change! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-file-change! () $ let
                 file-content $ fs/readFileSync storage-file "\"utf8"
@@ -3047,22 +2806,19 @@
                   println $ .!blue chalk "\"calcit storage file changed!"
                   reset! *calcit-md5 new-md5
                   dispatch! (:: :watcher/file-change calcit) nil
-          :doc |
-        |reload! $ %{} :CodeEntry
+        |reload! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reload! ()
               println $ .!gray chalk "|code updated."
               clear-twig-caches!
               sync-clients! @*reader-db
-          :doc |
-        |render-loop! $ %{} :CodeEntry
+        |render-loop! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-loop! ()
               if (not= @*reader-db @*writer-db)
                 do (reset! *reader-db @*writer-db) (; println "\"render loop") (sync-clients! @*reader-db)
               js/setTimeout render-loop! 20
-          :doc |
-        |run-server! $ %{} :CodeEntry
+        |run-server! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn run-server! (dispatch! port)
               wss-serve! port $ {}
@@ -3074,8 +2830,7 @@
                   println $ .!gray chalk (str "\"client disconnected: " sid)
                   dispatch! (:: :session/disconnect) sid
                 :on-error $ fn (error) (js/console.error error)
-          :doc |
-        |start-server! $ %{} :CodeEntry
+        |start-server! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn start-server! (configs)
               pick-port! (:port configs)
@@ -3096,12 +2851,10 @@
                     println (str &newline "\"Saved calcit.cirru")
                       str $ if (some? code) (str "|with " code)
                 js/process.exit
-          :doc |
-        |storage-file $ %{} :CodeEntry
+        |storage-file $ %{} :CodeEntry (:doc |)
           :code $ quote
             def storage-file $ path/join (js/process.cwd) (:storage-file config/site)
-          :doc |
-        |sync-clients! $ %{} :CodeEntry
+        |sync-clients! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn sync-clients! (db)
               wss-each! $ fn (sid socket)
@@ -3118,8 +2871,7 @@
                       wss-send! sid $ :: :patch changes
                       swap! *client-caches assoc sid new-store
               new-twig-loop!
-          :doc |
-        |transform-compact-to-calcit! $ %{} :CodeEntry
+        |transform-compact-to-calcit! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn transform-compact-to-calcit! () $ let
                 source $ parse-cirru-edn (fs/readFileSync "\"compact.cirru" "\"utf8")
@@ -3135,8 +2887,7 @@
               ; fs/writeFileSync "\"calcit-draft.cirru" $ format-cirru-edn target
               println "\"TODO need update"
               println "\"transformed compact.cirru into calcit-draft.cirru"
-          :doc |
-        |watch-file! $ %{} :CodeEntry
+        |watch-file! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn watch-file! () $ if (fs/existsSync storage-file)
               do
@@ -3144,8 +2895,7 @@
                 gaze storage-file $ fn (error watcher)
                   if (some? error) (js/console.log error)
                     .!on watcher "\"changed" $ fn (filepath) (delay! 0.02 on-file-change!)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.server $ :require (app.schema :as schema)
             app.updater :refer $ updater
@@ -3168,10 +2918,9 @@
             cumulo-util.file :refer $ write-mildly!
             cumulo-util.core :refer $ unix-time! id! delay!
             app.util.env :refer $ get-cli-configs!
-        :doc |
     |app.style $ {}
       :defs $ {}
-        |button $ %{} :CodeEntry
+        |button $ %{} :CodeEntry (:doc |)
           :code $ quote
             def button $ {}
               :background-color $ hsl 0 0 100 0
@@ -3187,11 +2936,9 @@
               :padding "\"0 8px"
               :outline :none
               :cursor :pointer
-          :doc |
-        |font-code $ %{} :CodeEntry
+        |font-code $ %{} :CodeEntry (:doc |)
           :code $ quote (def font-code "\"Source Code Pro, monospace")
-          :doc |
-        |input $ %{} :CodeEntry
+        |input $ %{} :CodeEntry (:doc |)
           :code $ quote
             def input $ merge ui/input
               {}
@@ -3199,95 +2946,77 @@
                 :color $ hsl 0 0 100
                 :font-family |Menlo,monospace
                 :border :none
-          :doc |
-        |inspector $ %{} :CodeEntry
+        |inspector $ %{} :CodeEntry (:doc |)
           :code $ quote
             def inspector $ {} (:opacity 0.9)
               :background-color $ hsl 0 0 90
               :color :black
-          :doc |
-        |link $ %{} :CodeEntry
+        |link $ %{} :CodeEntry (:doc |)
           :code $ quote (def link ui/link)
-          :doc |
-        |title $ %{} :CodeEntry
+        |title $ %{} :CodeEntry (:doc |)
           :code $ quote
             def title $ {} (:font-family ui/font-fancy) (:font-size 18) (:font-weight 100)
               :color $ hsl 0 0 80
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.style $ :require (respo-ui.core :as ui)
             respo.util.format :refer $ hsl
-        :doc |
     |app.theme $ {}
       :defs $ {}
-        |base-style-expr $ %{} :CodeEntry
+        |base-style-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn base-style-expr (theme)
               case-default theme "\"css-expr-unknown" (:star-trail star-trail/css-expr) (:curves curves/css-expr) (:beginner beginner/css-expr)
-          :doc |
-        |base-style-leaf $ %{} :CodeEntry
+        |base-style-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn base-style-leaf (theme)
               case-default theme "\"css-leaf-unknown" (:star-trail star-trail/css-leaf) (:curves curves/css-leaf) (:beginner beginner/css-leaf)
-          :doc |
-        |decide-expr-theme $ %{} :CodeEntry
+        |decide-expr-theme $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn decide-expr-theme (expr has-others? focused? focus-in? tail? layout-mode length depth theme)
               case-default theme ({})
                 :star-trail $ star-trail/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth
                 :curves $ curves/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth
                 :beginner $ beginner/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth
-          :doc |
-        |decide-leaf-theme $ %{} :CodeEntry
+        |decide-leaf-theme $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn decide-leaf-theme (text focused? first? by-other? theme)
               case-default theme ({})
                 :star-trail $ star-trail/decide-leaf-style text focused? first? by-other?
                 :curves $ curves/decide-leaf-style text focused? first? by-other?
                 :beginner $ beginner/decide-leaf-style text focused? first? by-other?
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.theme $ :require (app.theme.star-trail :as star-trail) (app.theme.curves :as curves) (app.theme.beginner :as beginner)
-        :doc |
     |app.theme.beginner $ {}
       :defs $ {}
-        |css-expr $ %{} :CodeEntry
+        |css-expr $ %{} :CodeEntry (:doc |)
           :code $ quote (def css-expr star-trail/css-expr)
-          :doc |
-        |css-leaf $ %{} :CodeEntry
+        |css-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote (def css-leaf star-trail/css-leaf)
-          :doc |
-        |decide-expr-style $ %{} :CodeEntry
+        |decide-expr-style $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn decide-expr-style (expr has-others? focused? focus-in? tail? layout-mode length depth)
               merge (star-trail/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth) style-expr-beginner
-          :doc |
-        |decide-leaf-style $ %{} :CodeEntry
+        |decide-leaf-style $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn decide-leaf-style (text focused? first? by-other?)
               merge $ star-trail/decide-leaf-style text focused? first? by-other?
-          :doc |
-        |style-expr-beginner $ %{} :CodeEntry
+        |style-expr-beginner $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-expr-beginner $ {}
               :outline $ str "|1px solid " (hsl 200 80 70 0.2)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.theme.beginner $ :require (app.theme.star-trail :as star-trail)
             respo.util.format :refer $ hsl
-        :doc |
     |app.theme.curves $ {}
       :defs $ {}
-        |css-expr $ %{} :CodeEntry
+        |css-expr $ %{} :CodeEntry (:doc |)
           :code $ quote (def css-expr star-trail/css-expr)
-          :doc |
-        |css-leaf $ %{} :CodeEntry
+        |css-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote (def css-leaf star-trail/css-leaf)
-          :doc |
-        |decide-expr-style $ %{} :CodeEntry
+        |decide-expr-style $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn decide-expr-style (expr has-others? focused? focus-in? tail? layout-mode length depth)
               merge
@@ -3296,39 +3025,32 @@
                   :padding "|4px 8px"
                 if focused? $ {}
                   :border-color $ hsl 0 0 100 0.8
-          :doc |
-        |decide-leaf-style $ %{} :CodeEntry
+        |decide-leaf-style $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn decide-leaf-style (text focused? first? by-other?)
               merge (star-trail/decide-leaf-style text focused? first? by-other?) ({})
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.theme.curves $ :require (app.theme.star-trail :as star-trail)
             respo.util.format :refer $ hsl
             respo.css :refer $ defstyle
-        :doc |
     |app.theme.star-trail $ {}
       :defs $ {}
-        |base-style-expr $ %{} :CodeEntry
+        |base-style-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn base-style-expr () style-expr
-          :doc |
-        |base-style-leaf $ %{} :CodeEntry
+        |base-style-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn base-style-leaf () style-leaf
-          :doc |
-        |css-expr $ %{} :CodeEntry
+        |css-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-expr $ {}
               "\"$0" $ {} (:border-width "|0 0 0px 1px") (:border-style :solid) (:min-height 24) (:outline :none) (:padding-left 10) (:font-family |Menlo,monospace) (:font-size 13) (:margin-bottom 2) (:margin-right 1) (:margin-left 8) (:line-height "\"1em") (:border-radius "\"8px")
                 :border-color $ hsl 200 100 76 0.5
-          :doc |
-        |css-leaf $ %{} :CodeEntry
+        |css-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-leaf $ {} ("\"$0" style-leaf)
-          :doc |
-        |decide-expr-style $ %{} :CodeEntry
+        |decide-expr-style $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn decide-expr-style (expr has-others? focused? focus-in? tail? layout-mode length depth)
               merge ({})
@@ -3341,8 +3063,7 @@
                   and (> length 0) (not tail?) (not= layout-mode :block)
                   , style-expr-simple
                 if tail? style-expr-tail
-          :doc |
-        |decide-leaf-style $ %{} :CodeEntry
+        |decide-leaf-style $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn decide-leaf-style (text focused? first? by-other?)
               let
@@ -3374,47 +3095,38 @@
                     , style-number
                   if has-blank? style-space
                   if (or focused? by-other?) style-highlight
-          :doc |
-        |style-big $ %{} :CodeEntry
+        |style-big $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-big $ {}
               :border-right $ str "|16px solid " (hsl 0 0 30)
-          :doc |
-        |style-expr-simple $ %{} :CodeEntry
+        |style-expr-simple $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-expr-simple $ {} (:display :inline-block) (:border-width "|0 0 1px 0") (:min-width 32) (:padding-left 11) (:padding-right 11) (:padding-bottom -1) (:vertical-align :top)
-          :doc |
-        |style-expr-tail $ %{} :CodeEntry
+        |style-expr-tail $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-expr-tail $ {} (:display :inline-block) (:vertical-align :top) (:padding-left 10)
-          :doc |
-        |style-highlight $ %{} :CodeEntry
+        |style-highlight $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-highlight $ {}
               :background-color $ hsl 0 0 100 0.2
-          :doc |
-        |style-leaf $ %{} :CodeEntry
+        |style-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-leaf $ {} (:line-height |24px) (:height 24) (:margin "|1px 1px") (:padding "|0px 4px") (:background-color :transparent) (:min-width 8) (:font-family style/font-code) (:font-size 14) (:vertical-align :baseline) (:text-align :left) (:border-width "|1px 1px 1px 1px") (:resize :none) (:white-space :nowrap) (:outline :none) (:border :none) (:border-radius "\"6px")
               :color $ hsl 200 14 60
-          :doc |
-        |style-number $ %{} :CodeEntry
+        |style-number $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-number $ {}
               :color $ hsl 0 70 40
-          :doc |
-        |style-partial $ %{} :CodeEntry
+        |style-partial $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-partial $ {}
               :border-right $ str "|8px solid " (hsl 0 0 30)
               :padding-right 0
-          :doc |
-        |style-space $ %{} :CodeEntry
+        |style-space $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-space $ {}
               :background-color $ hsl 0 0 100 0.12
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.theme.star-trail $ :require
             respo.util.format :refer $ hsl
@@ -3422,10 +3134,9 @@
             app.polyfill :refer $ text-width*
             app.style :as style
             respo.css :refer $ defstyle
-        :doc |
     |app.twig.container $ {}
       :defs $ {}
-        |twig-container $ %{} :CodeEntry
+        |twig-container $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn twig-container (db session)
               let
@@ -3464,8 +3175,7 @@
                       :members-count $ count (:sessions db)
                   {} (:session session) (:logged-in? false)
                     :stats $ {} (:members-count 0)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.twig.container $ :require
             app.twig.user :refer $ twig-user
@@ -3474,10 +3184,9 @@
             app.twig.page-members :refer $ twig-page-members
             app.twig.search :refer $ twig-search
             app.twig.watching :refer $ twig-watching
-        :doc |
     |app.twig.member $ {}
       :defs $ {}
-        |twig-member $ %{} :CodeEntry
+        |twig-member $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn twig-member (session user)
               {} (:user user)
@@ -3486,14 +3195,12 @@
                     writer $ :writer session
                   get (:stack writer) (:pointer writer)
                 :page $ get-in session ([] :router :name)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.twig.member $ :require
-        :doc |
     |app.twig.page-editor $ {}
       :defs $ {}
-        |pick-from-ns $ %{} :CodeEntry
+        |pick-from-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn pick-from-ns (ns-info)
               let
@@ -3514,8 +3221,7 @@
                             fn (x) (not= x "\"[]")
                     pairs-map
                 {} (:imported import-names) (:defined var-names)
-          :doc |
-        |twig-page-editor $ %{} :CodeEntry
+        |twig-page-editor $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn twig-page-editor (files old-files sessions users writer session-id)
               let
@@ -3587,21 +3293,18 @@
                             get (:defs file) (:extra bookmark)
                             get (:defs old-file) (:extra bookmark)
                   , nil
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.twig.page-editor $ :require
             app.util :refer $ same-buffer? tree->cirru
             app.twig.user :refer $ twig-user
             app.util.list :refer $ compare-entry
-        :doc |
     |app.twig.page-files $ {}
       :defs $ {}
-        |keys-set $ %{} :CodeEntry
+        |keys-set $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn keys-set (x) (keys x)
-          :doc |
-        |render-changed-files $ %{} :CodeEntry
+        |render-changed-files $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-changed-files (files saved-files)
               ->
@@ -3632,8 +3335,7 @@
                       = :same $ :ns info
                       empty? $ :defs info
                 pairs-map
-          :doc |
-        |twig-page-files $ %{} :CodeEntry
+        |twig-page-files $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn twig-page-files (files selected-ns saved-files draft-ns sessions sid)
               {}
@@ -3661,32 +3363,28 @@
                   filter $ fn (pair)
                     let[] (k session) pair $ if (= sid k) false (some? session)
                   pairs-map
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.twig.page-files $ :require
             clojure.set :refer $ union
             app.util :refer $ file->cirru
             app.util.list :refer $ compare-entry
-        :doc |
     |app.twig.page-members $ {}
       :defs $ {}
-        |twig-page-members $ %{} :CodeEntry
+        |twig-page-members $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn twig-page-members (sessions users)
               -> sessions $ map-kv
                 fn (k session)
                   [] k $ twig-member session
                     get users $ :user-id session
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.twig.page-members $ :require
             app.twig.member :refer $ twig-member
-        :doc |
     |app.twig.search $ {}
       :defs $ {}
-        |twig-search $ %{} :CodeEntry
+        |twig-search $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn twig-search (files)
               -> files (.to-list)
@@ -3702,25 +3400,21 @@
                                 [] f-k file
                                 , f-entry
                             {} (:kind :def) (:ns k) (:extra f-k)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.twig.search $ :require
-        :doc |
     |app.twig.user $ {}
       :defs $ {}
-        |twig-user $ %{} :CodeEntry
+        |twig-user $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn twig-user (user)
               -> user $ dissoc :password
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.twig.user $ :require
-        :doc |
     |app.twig.watching $ {}
       :defs $ {}
-        |twig-watching $ %{} :CodeEntry
+        |twig-watching $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn twig-watching (session my-sid files users)
               let
@@ -3743,16 +3437,14 @@
                           [] (:ns bookmark) :defs $ :extra bookmark
                           [] (:ns bookmark) (:kind bookmark)
                       get-in files path
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.twig.watching $ :require
             app.util :refer $ to-bookmark
             app.twig.user :refer $ twig-user
-        :doc |
     |app.updater $ {}
       :defs $ {}
-        |updater $ %{} :CodeEntry
+        |updater $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn updater (db op sid op-id op-time)
               tag-match op
@@ -3827,14 +3519,12 @@
                 (:configs/update op-data) (configs/update-configs db op-data sid op-id op-time)
                 (:configs/update-entries op-data) (configs/update-entries db op-data sid op-id op-time)
                 _ $ do (eprintln "|Unknown op:" op) db
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater $ :require (app.updater.session :as session) (app.updater.user :as user) (app.updater.router :as router) (app.updater.ir :as ir) (app.updater.writer :as writer) (app.updater.notify :as notify) (app.updater.analyze :as analyze) (app.updater.watcher :as watcher) (app.updater.configs :as configs)
-        :doc |
     |app.updater.analyze $ {}
       :defs $ {}
-        |abstract-def $ %{} :CodeEntry
+        |abstract-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn abstract-def (db op-data sid op-id op-time)
               let
@@ -3871,8 +3561,7 @@
                               prepend target-path $ :extra bookmark
                               cirru->tree def-text user-id op-time
                       update-in ([] :sessions sid :writer) (push-bookmark new-bookmark)
-          :doc |
-        |goto-def $ %{} :CodeEntry
+        |goto-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn goto-def (db op-data sid op-id op-time)
               let
@@ -3941,8 +3630,7 @@
                         warn $ str "|Does not exist: " (:ns new-bookmark) "| " (:extra new-bookmark)
                     warn $ str "|From external ns: " (:ns new-bookmark)
                   warn $ str "|Cannot locate: " def-info
-          :doc |
-        |peek-def $ %{} :CodeEntry
+        |peek-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn peek-def (db op-data sid op-id op-time)
               let
@@ -3990,22 +3678,19 @@
                       warn $ str "|Does not exist: " (:ns new-bookmark) "| " (:extra new-bookmark)
                     warn $ str "|External dep:" (:ns new-bookmark)
                   warn $ str "|Cannot locate:" def-info
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater.analyze $ :require
             app.util :refer $ bookmark->path to-writer to-bookmark parse-deps tree->cirru cirru->tree parse-def push-warning
             app.util.stack :refer $ push-bookmark
             app.schema :as schema
-        :doc |
     |app.updater.configs $ {}
       :defs $ {}
-        |update-configs $ %{} :CodeEntry
+        |update-configs $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn update-configs (db op-data session-id op-id op-time)
               update db :configs $ fn (configs) (merge configs op-data)
-          :doc |
-        |update-entries $ %{} :CodeEntry
+        |update-entries $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn update-entries (db op-data session-id op-id op-time)
               let
@@ -4017,13 +3702,11 @@
                     :reset data
                     :merge $ merge d data
                     :dissoc $ dissoc d data
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.updater.configs)
-        :doc |
     |app.updater.ir $ {}
       :defs $ {}
-        |add-def $ %{} :CodeEntry
+        |add-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn add-def (db op-data session-id op-id op-time)
               assert (list? op-data) "\"expects op-data of [ns text]"
@@ -4038,8 +3721,7 @@
                 assoc-in db ([] :files ns-part :defs def-part)
                   %{} schema/CodeEntry (:doc |)
                     :code $ cirru->tree cirru-expr user-id op-time
-          :doc |
-        |add-ns $ %{} :CodeEntry
+        |add-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn add-ns (db op-data session-id op-id op-time)
               let
@@ -4052,8 +3734,7 @@
                     -> schema/file $ assoc :ns
                       %{} schema/CodeEntry (:doc "\"") (:code default-expr)
                   assoc-in ([] :sessions session-id :writer :selected-ns) op-data
-          :doc |
-        |append-leaf $ %{} :CodeEntry
+        |append-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn append-leaf (db op-data session-id op-id op-time)
               let-sugar
@@ -4074,8 +3755,7 @@
                   update-in
                     [] :sessions session-id :writer :stack (:pointer writer) :focus
                     fn (focus) (conj focus new-id)
-          :doc |
-        |call-replace-expr $ %{} :CodeEntry
+        |call-replace-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn call-replace-expr (expr from to)
               if (expr? expr)
@@ -4093,8 +3773,7 @@
                   (= (:text expr) (str "\"@" from))
                     assoc expr :text $ str "\"@" to
                   true expr
-          :doc |
-        |clone-ns $ %{} :CodeEntry
+        |clone-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn clone-ns (db op-data sid op-id op-time)
               let
@@ -4125,15 +3804,13 @@
                                 assoc-in expr ([] :data name-field :text) new-ns
                         assoc files new-ns new-file
                     assoc-in ([] :sessions sid :writer :selected-ns) new-ns
-          :doc |
-        |cp-ns $ %{} :CodeEntry
+        |cp-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn cp-ns (db op-data session-id op-id op-time)
               update db :files $ fn (files)
                 -> files $ assoc (:to op-data)
                   get files $ :from op-data
-          :doc |
-        |delete-entry $ %{} :CodeEntry
+        |delete-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn delete-entry (db op-data session-id op-id op-time) (; println |delete op-data)
               case-default (:kind op-data)
@@ -4158,8 +3835,7 @@
                         update :stack $ fn (stack)
                           dissoc-idx stack $ :pointer writer
                         update :pointer dec
-          :doc |
-        |delete-node $ %{} :CodeEntry
+        |delete-node $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn delete-node (db op-data session-id op-id op-time)
               let
@@ -4185,8 +3861,7 @@
                           assoc focus
                             dec $ count focus
                             get child-keys $ dec idx
-          :doc |
-        |draft-expr $ %{} :CodeEntry
+        |draft-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn draft-expr (db op-data session-id op-id op-time)
               let
@@ -4196,8 +3871,7 @@
                   user-id $ get-in db ([] :sessions session-id :user-id)
                 -> db $ update-in data-path
                   fn (expr) (cirru->tree op-data user-id op-time)
-          :doc |
-        |duplicate $ %{} :CodeEntry
+        |duplicate $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn duplicate (db op-data session-id op-id op-time)
               let
@@ -4215,8 +3889,7 @@
                     [] :sessions session-id :writer :stack (:pointer writer) :focus
                     fn (focus)
                       conj (butlast focus) next-id
-          :doc |
-        |expr-after $ %{} :CodeEntry
+        |expr-after $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expr-after (db op-data session-id op-id op-time)
               let
@@ -4238,8 +3911,7 @@
                     [] :sessions session-id :writer :stack (:pointer writer) :focus
                     fn (focus)
                       -> (butlast focus) (conj next-id) (conj bisection/mid-id)
-          :doc |
-        |expr-before $ %{} :CodeEntry
+        |expr-before $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expr-before (db op-data session-id op-id op-time)
               let
@@ -4261,8 +3933,7 @@
                     [] :sessions session-id :writer :stack (:pointer writer) :focus
                     fn (focus)
                       -> (butlast focus) (conj next-id) (conj bisection/mid-id)
-          :doc |
-        |expr-replace $ %{} :CodeEntry
+        |expr-replace $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expr-replace (db op-data session-id op-id op-time)
               let
@@ -4271,8 +3942,7 @@
                   bookmark $ :bookmark op-data
                   data-path $ bookmark->path bookmark
                 update-in db data-path $ fn (expr) (call-replace-expr expr from to)
-          :doc |
-        |file-config $ %{} :CodeEntry
+        |file-config $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn file-config (db op-data sid op-id op-time)
               let
@@ -4281,8 +3951,7 @@
                   update-in db ([] :files ns-text :configs)
                     fn (configs) (merge configs op-data)
                   , db
-          :doc |
-        |indent $ %{} :CodeEntry
+        |indent $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn indent (db op-data session-id op-id op-time)
               let-sugar
@@ -4301,8 +3970,7 @@
                       if (empty? focus) ([] bisection/mid-id)
                         concat (butlast focus)
                           [] (last focus) bisection/mid-id
-          :doc |
-        |leaf-after $ %{} :CodeEntry
+        |leaf-after $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn leaf-after (db op-data session-id op-id op-time)
               let-sugar
@@ -4338,8 +4006,7 @@
                         [] :sessions session-id :writer :stack (:pointer writer) :focus
                         fn (focus)
                           conj (butlast focus) next-id
-          :doc |
-        |leaf-before $ %{} :CodeEntry
+        |leaf-before $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn leaf-before (db op-data session-id op-id op-time)
               let
@@ -4359,8 +4026,7 @@
                     [] :sessions session-id :writer :stack (:pointer writer) :focus
                     fn (focus)
                       conj (butlast focus) next-id
-          :doc |
-        |mv-ns $ %{} :CodeEntry
+        |mv-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn mv-ns (db op-data session-id op-id op-time)
               update db :files $ fn (files)
@@ -4368,8 +4034,7 @@
                   dissoc $ :from op-data
                   assoc (:to op-data)
                     get files $ :from op-data
-          :doc |
-        |prepend-leaf $ %{} :CodeEntry
+        |prepend-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn prepend-leaf (db op-data session-id op-id op-time)
               let-sugar
@@ -4390,16 +4055,14 @@
                   update-in
                     [] :sessions session-id :writer :stack (:pointer writer) :focus
                     fn (focus) (conj focus new-id)
-          :doc |
-        |remove-def $ %{} :CodeEntry
+        |remove-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn remove-def (db op-data session-id op-id op-time)
               let
                   selected-ns $ get-in db ([] :sessions session-id :writer :selected-ns)
                 update-in db ([] :files selected-ns :defs)
                   fn (defs) (dissoc defs op-data)
-          :doc |
-        |remove-ns $ %{} :CodeEntry
+        |remove-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn remove-ns (db op-data session-id op-id op-time)
               -> db
@@ -4407,8 +4070,7 @@
                 update-in ([] :sessions session-id :writer :selected-ns)
                   fn (x)
                     if (= x op-data) nil x
-          :doc |
-        |rename $ %{} :CodeEntry
+        |rename $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn rename (db op-data session-id op-id op-time)
               let
@@ -4463,8 +4125,7 @@
                         -> db $ update-in ([] :sessions session-id :notifications)
                           push-warning op-id op-time $ str "\"no namespace: " new-ns
                   true $ do (println "|Unexpected kind:" kind) db
-          :doc |
-        |replace-file $ %{} :CodeEntry
+        |replace-file $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn replace-file (db op-data sid op-id op-time)
               let
@@ -4473,8 +4134,7 @@
                 if (some? ns-text)
                   assoc-in db ([] :files ns-text) (cirru->file op-data user-id op-time)
                   do (println "|undefined draft-ns") db
-          :doc |
-        |reset-at $ %{} :CodeEntry
+        |reset-at $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reset-at (db op-data session-id op-id op-time)
               let
@@ -4490,21 +4150,18 @@
                           def-text $ :extra op-data
                         assoc-in file ([] :defs def-text)
                           get-in old-file $ [] :defs def-text
-          :doc |
-        |reset-files $ %{} :CodeEntry
+        |reset-files $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reset-files (db op-data session-id op-id op-time)
               assoc db :files $ :saved-files db
-          :doc |
-        |reset-ns $ %{} :CodeEntry
+        |reset-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reset-ns (db op-data session-id op-id op-time)
               let
                   ns-text op-data
                 assoc-in db ([] :files ns-text)
                   get-in db $ [] :saved-files ns-text
-          :doc |
-        |toggle-comment $ %{} :CodeEntry
+        |toggle-comment $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn toggle-comment (db op-data sid op-id op-time)
               let
@@ -4524,8 +4181,7 @@
                           dissoc data k0
                           assoc-prepend data $ cirru->tree "\";" user-id op-time
                     do (println "\"Toggle comment at wrong place," node) node
-          :doc |
-        |unindent $ %{} :CodeEntry
+        |unindent $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn unindent (db op-data session-id op-id op-time)
               let
@@ -4565,8 +4221,7 @@
                             assoc-in result ([] :data next-id) (first xs)
                             rest xs
                             bisection/bisect next-id limit-id
-          :doc |
-        |unindent-leaf $ %{} :CodeEntry
+        |unindent-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn unindent-leaf (db op-data session-id op-id op-time)
               let
@@ -4587,8 +4242,7 @@
                       [] :sessions session-id :writer :stack (:pointer writer) :focus
                       fn (focus) (butlast focus)
                   , db
-          :doc |
-        |update-leaf $ %{} :CodeEntry
+        |update-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn update-leaf (db op-data session-id op-id op-time)
               let
@@ -4608,18 +4262,16 @@
                         :at $ :at op-data
                         :by user-id
                       do (println "\"invalid updata op:" op-data) leaf
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater.ir $ :require (app.schema :as schema) (bisection-key.core :as bisection)
             app.util :refer $ expr? leaf? bookmark->path to-writer to-bookmark to-keys cirru->tree cirru->file
             app.util.list :refer $ dissoc-idx
             bisection-key.util :refer $ key-before key-after key-prepend key-append assoc-prepend key-nth assoc-nth val-nth get-min-key
             app.util :refer $ push-warning expr? leaf?
-        :doc |
     |app.updater.notify $ {}
       :defs $ {}
-        |broadcast $ %{} :CodeEntry
+        |broadcast $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn broadcast (db op-data sid op-id op-time)
               let
@@ -4630,13 +4282,11 @@
                     fn (k session)
                       [] k $ update session :notifications
                         push-info op-id op-time $ str user-name "\": " op-data
-          :doc |
-        |clear $ %{} :CodeEntry
+        |clear $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn clear (db op-data session-id op-id op-time)
               assoc-in db ([] :sessions session-id :notifications) ([])
-          :doc |
-        |push-message $ %{} :CodeEntry
+        |push-message $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn push-message (db op-data sid op-id op-time)
               let-sugar
@@ -4645,47 +4295,39 @@
                 update-in db ([] :sessions sid :notifications)
                   fn (xs)
                     conj xs $ {} (:id op-id) (:kind kind) (:text text) (:time op-time)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater.notify $ :require
             app.util :refer $ push-info
-        :doc |
     |app.updater.router $ {}
       :defs $ {}
-        |change $ %{} :CodeEntry
+        |change $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn change (db op-data session-id op-id op-time)
               assoc-in db ([] :sessions session-id :router) op-data
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.updater.router)
-        :doc |
     |app.updater.session $ {}
       :defs $ {}
-        |connect $ %{} :CodeEntry
+        |connect $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn connect (db session-id op-id op-time)
               assoc-in db ([] :sessions session-id)
                 merge schema/session $ {} (:id session-id)
-          :doc |
-        |disconnect $ %{} :CodeEntry
+        |disconnect $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn disconnect (db session-id op-id op-time)
               update db :sessions $ fn (session) (dissoc session session-id)
-          :doc |
-        |select-ns $ %{} :CodeEntry
+        |select-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn select-ns (db op-data session-id op-id op-time)
               assoc-in db ([] :sessions session-id :writer :selected-ns) op-data
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater.session $ :require (app.schema :as schema)
-        :doc |
     |app.updater.user $ {}
       :defs $ {}
-        |change-theme $ %{} :CodeEntry
+        |change-theme $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn change-theme (db op-data sid op-id op-time)
               let
@@ -4693,8 +4335,7 @@
                 -> db
                   assoc-in ([] :users user-id :theme) op-data
                   assoc-in ([] :sessions sid :theme) op-data
-          :doc |
-        |log-in $ %{} :CodeEntry
+        |log-in $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn log-in (db op-data session-id op-id op-time)
               let-sugar
@@ -4712,21 +4353,18 @@
                         -> session $ assoc :user-id (:id maybe-user)
                         update session :notifications $ push-warning op-id op-time (str "|Wrong password for " username)
                       update session :notifications $ push-warning op-id op-time (str "|No user named: " username)
-          :doc |
-        |log-out $ %{} :CodeEntry
+        |log-out $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn log-out (db op-data session-id op-id op-time)
               assoc-in db ([] :sessions session-id :user-id) nil
-          :doc |
-        |nickname $ %{} :CodeEntry
+        |nickname $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn nickname (db op-data sid op-id op-time)
               let
                   user-id $ get-in db ([] :sessions sid :user-id)
                 assoc-in db ([] :users user-id :nickname)
                   if (blank? op-data) |Someone op-data
-          :doc |
-        |sign-up $ %{} :CodeEntry
+        |sign-up $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn sign-up (db op-data session-id op-id op-time)
               let-sugar
@@ -4746,18 +4384,16 @@
                     assoc-in ([] :users new-user-id)
                       merge schema/user $ {} (:id new-user-id) (:name username) (:nickname username)
                         :password $ md5 password
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater.user $ :require
             app.util :refer $ find-first push-warning
             clojure.string :as string
             |md5 :default md5
             app.schema :as schema
-        :doc |
     |app.updater.watcher $ {}
       :defs $ {}
-        |file-change $ %{} :CodeEntry
+        |file-change $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn file-change (db op-data _ op-id op-time)
               let
@@ -4783,13 +4419,11 @@
                                     let
                                         old-expr $ get old-file def-text
                                       [] def-text $ if (= expr old-expr) old-expr expr
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.updater.watcher)
-        :doc |
     |app.updater.writer $ {}
       :defs $ {}
-        |collapse $ %{} :CodeEntry
+        |collapse $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn collapse (db op-data session-id op-id op-time)
               -> db $ update-in ([] :sessions session-id :writer)
@@ -4797,14 +4431,12 @@
                   -> writer
                     update :stack $ fn (stack) (.slice stack op-data)
                     assoc :pointer 0
-          :doc |
-        |draft-ns $ %{} :CodeEntry
+        |draft-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn draft-ns (db op-data sid op-id op-time)
               -> db $ update-in ([] :sessions sid :writer)
                 fn (writer) (assoc writer :draft-ns op-data)
-          :doc |
-        |edit $ %{} :CodeEntry
+        |edit $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn edit (db op-data session-id op-id op-time)
               let
@@ -4819,8 +4451,7 @@
                   update-in ([] :sessions session-id :writer) (push-bookmark bookmark)
                   assoc-in ([] :sessions session-id :router)
                     {} $ :name :editor
-          :doc |
-        |edit-ns $ %{} :CodeEntry
+        |edit-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn edit-ns (db sid op-id op-time)
               let
@@ -4832,8 +4463,7 @@
                   -> db $ update-in ([] :sessions sid :writer)
                     push-bookmark $ assoc schema/bookmark :kind :ns :ns ns-text
                   , db
-          :doc |
-        |finish $ %{} :CodeEntry
+        |finish $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn finish (db sid op-id op-time)
               -> db $ update-in ([] :sessions sid :writer)
@@ -4847,8 +4477,7 @@
                           dissoc-idx stack pointer
                           , stack
                       assoc :pointer $ if (> pointer 0) (dec pointer) pointer
-          :doc |
-        |focus $ %{} :CodeEntry
+        |focus $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn focus (db op-data session-id op-id op-time)
               let
@@ -4856,8 +4485,7 @@
                 assoc-in db
                   [] :sessions session-id :writer :stack (:pointer writer) :focus
                   , op-data
-          :doc |
-        |go-down $ %{} :CodeEntry
+        |go-down $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn go-down (db op-data session-id op-id op-time)
               let
@@ -4874,8 +4502,7 @@
                         conj focus $ if tail?
                           get-max-key $ :data target-expr
                           get-min-key $ :data target-expr
-          :doc |
-        |go-left $ %{} :CodeEntry
+        |go-left $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn go-left (db op-data session-id op-id op-time)
               let
@@ -4896,8 +4523,7 @@
                       fn (focus)
                         conj (butlast focus)
                           if (= 0 idx) last-coord $ get child-keys (dec idx)
-          :doc |
-        |go-right $ %{} :CodeEntry
+        |go-right $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn go-right (db op-data session-id op-id op-time)
               let
@@ -4920,8 +4546,7 @@
                           if
                             = idx $ dec (count child-keys)
                             , last-coord $ get child-keys (inc idx)
-          :doc |
-        |go-up $ %{} :CodeEntry
+        |go-up $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn go-up (db op-data session-id op-id op-time)
               -> db $ update-in ([] :sessions session-id :writer)
@@ -4930,13 +4555,11 @@
                     [] :stack (:pointer writer) :focus
                     fn (focus)
                       if (empty? focus) focus $ butlast focus
-          :doc |
-        |hide-peek $ %{} :CodeEntry
+        |hide-peek $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn hide-peek (db op-data sid op-id op-time)
               assoc-in db ([] :sessions sid :writer :peek-def) nil
-          :doc |
-        |move-next $ %{} :CodeEntry
+        |move-next $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn move-next (db sid op-id op-time)
               -> db $ update-in ([] :sessions sid :writer)
@@ -4947,8 +4570,7 @@
                       >= pointer $ dec
                         count $ :stack writer
                       , pointer (inc pointer)
-          :doc |
-        |move-order $ %{} :CodeEntry
+        |move-order $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn move-order (db op-data sid op-id op-time)
               -> db $ update-in ([] :sessions sid :writer)
@@ -4977,8 +4599,7 @@
                               >= (inc from-idx) (count stack)
                               []
                               .slice stack $ inc from-idx
-          :doc |
-        |move-previous $ %{} :CodeEntry
+        |move-previous $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn move-previous (db sid op-id op-time)
               -> db $ update-in ([] :sessions sid :writer)
@@ -4986,8 +4607,7 @@
                   let
                       pointer $ :pointer writer
                     assoc writer :pointer $ if (> pointer 0) (dec pointer) 0
-          :doc |
-        |paste $ %{} :CodeEntry
+        |paste $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn paste (db op-data sid op-id op-time)
               let
@@ -4998,8 +4618,7 @@
                 if (list? op-data)
                   -> db $ assoc-in data-path (cirru->tree op-data user-id op-time)
                   , db
-          :doc |
-        |pick-node $ %{} :CodeEntry
+        |pick-node $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn pick-node (db op-data sid op-id op-time)
               let
@@ -5019,8 +4638,7 @@
                           > (count code) 40
                           str (.slice code 0 40) "\"..."
                           , code
-          :doc |
-        |picker-mode $ %{} :CodeEntry
+        |picker-mode $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn picker-mode (db session-id op-id op-time)
               update-in db ([] :sessions session-id :writer)
@@ -5029,13 +4647,11 @@
                     some? $ :picker-mode writer
                     dissoc writer :picker-mode
                     assoc writer :picker-mode $ to-bookmark writer
-          :doc |
-        |point-to $ %{} :CodeEntry
+        |point-to $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn point-to (db op-data session-id op-id op-time)
               assoc-in db ([] :sessions session-id :writer :pointer) op-data
-          :doc |
-        |remove-idx $ %{} :CodeEntry
+        |remove-idx $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn remove-idx (db op-data session-id op-id op-time)
               -> db $ update-in ([] :sessions session-id :writer)
@@ -5047,8 +4663,7 @@
                         and (> pointer 0) (<= op-data pointer)
                         dec pointer
                         , pointer
-          :doc |
-        |save-files $ %{} :CodeEntry
+        |save-files $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn save-files (db op-data sid op-id op-time)
               let
@@ -5067,8 +4682,7 @@
                         [] k $ update session :notifications
                           push-info op-id op-time $ str user-name
                             if (some? op-data) (str "\" modified ns " op-data "\"!") "\" saved files!"
-          :doc |
-        |select $ %{} :CodeEntry
+        |select $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn select (db op-data session-id op-id op-time)
               let
@@ -5077,8 +4691,7 @@
                   update-in ([] :sessions session-id :writer) (push-bookmark bookmark)
                   assoc-in ([] :sessions session-id :router)
                     {} $ :name :editor
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater.writer $ :require
             app.util :refer $ bookmark->path to-writer to-bookmark push-info cirru->tree
@@ -5088,10 +4701,9 @@
             app.util :refer $ push-info
             app.util :refer $ stringify-s-expr
             bisection-key.util :refer $ get-min-key get-max-key
-        :doc |
     |app.util $ {}
       :defs $ {}
-        |bookmark->path $ %{} :CodeEntry
+        |bookmark->path $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn bookmark->path (bookmark)
               assert (map? bookmark) "|Bookmark should be data"
@@ -5110,8 +4722,7 @@
                   mapcat
                     or (:focus bookmark) ([])
                     , prepend-data
-          :doc |
-        |bookmark-full-str $ %{} :CodeEntry
+        |bookmark-full-str $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn bookmark-full-str (bookmark)
               case-default (:kind bookmark)
@@ -5120,8 +4731,7 @@
                   , "\""
                 :def $ str (:ns bookmark) "\"/" (:extra bookmark)
                 :ns $ str (:ns bookmark) "\"/"
-          :doc |
-        |cirru->file $ %{} :CodeEntry
+        |cirru->file $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn cirru->file (file author timestamp)
               -> file
@@ -5130,8 +4740,7 @@
                   -> defs $ map-kv
                     fn (k xs)
                       [] k $ cirru->tree xs author timestamp
-          :doc |
-        |cirru->tree $ %{} :CodeEntry
+        |cirru->tree $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn cirru->tree (xs author timestamp)
               cond
@@ -5158,17 +4767,14 @@
                 (string? xs)
                   %{} schema/CirruLeaf (:at timestamp) (:by author) (:text xs)
                 true $ do (eprintln "\"unknown data for cirru converting:" xs) nil
-          :doc |
-        |db->string $ %{} :CodeEntry
+        |db->string $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn db->string (db)
               format-cirru-edn $ -> db (dissoc :sessions) (dissoc :saved-files) (dissoc :repl)
-          :doc |
-        |expr? $ %{} :CodeEntry
+        |expr? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expr? (x) (&record:matches? schema/CirruExpr x)
-          :doc |
-        |file->cirru $ %{} :CodeEntry
+        |file->cirru $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn file->cirru (file)
               {}
@@ -5180,8 +4786,7 @@
                     [] k $ -> xs
                       update :code $ fn (code)
                         :: 'quote $ tree->cirru code
-          :doc |
-        |file-compact-to-calcit $ %{} :CodeEntry
+        |file-compact-to-calcit $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn file-compact-to-calcit (file)
               let
@@ -5193,8 +4798,7 @@
                     -> defs $ map-kv
                       fn (k v)
                         [] k $ cirru->tree (nth v 1) "\"u0" now
-          :doc |
-        |file-tree->cirru $ %{} :CodeEntry
+        |file-tree->cirru $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn file-tree->cirru (file)
               -> file (update :ns tree->cirru)
@@ -5202,33 +4806,27 @@
                   -> defs $ map-kv
                     fn (def-text def-tree)
                       [] def-text $ tree->cirru def-tree
-          :doc |
-        |find-first $ %{} :CodeEntry
+        |find-first $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn find-first (f xs)
               find xs $ fn (x) (f x)
-          :doc |
-        |hide-empty-fields $ %{} :CodeEntry
+        |hide-empty-fields $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn hide-empty-fields (x)
               -> x (.to-list)
                 filter-not $ fn (pair)
                   let[] (k v) pair $ nil? v
                 pairs-map
-          :doc |
-        |kinds $ %{} :CodeEntry
+        |kinds $ %{} :CodeEntry (:doc |)
           :code $ quote
             def kinds $ #{} :ns :def
-          :doc |
-        |leaf? $ %{} :CodeEntry
+        |leaf? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn leaf? (x) (&record:matches? schema/CirruLeaf x)
-          :doc |
-        |now! $ %{} :CodeEntry
+        |now! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn now! () $ js/Date.now
-          :doc |
-        |parse-def $ %{} :CodeEntry
+        |parse-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn parse-def (text)
               let
@@ -5239,8 +4837,7 @@
                         split clean-text |/
                     {} (:method :as) (:key ns-text) (:def def-text)
                   {} (:method :refer) (:key clean-text) (:def clean-text)
-          :doc |
-        |parse-deps $ %{} :CodeEntry
+        |parse-deps $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn parse-deps (require-exprs)
               if-let
@@ -5260,8 +4857,7 @@
                           rest rule
                           , rule
                       rest xs
-          :doc |
-        |parse-require $ %{} :CodeEntry
+        |parse-require $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn parse-require (piece)
               let[] (ns-text method extra) piece $ case-default method
@@ -5275,34 +4871,29 @@
                   pairs-map
                 "\":default" $ {}
                   extra $ {} (:method :refer) (:ns ns-text) (:def extra)
-          :doc |
-        |prepend-data $ %{} :CodeEntry
+        |prepend-data $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn prepend-data (x) ([] :data x)
-          :doc |
-        |push-info $ %{} :CodeEntry
+        |push-info $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn push-info (op-id op-time text)
               fn (xs)
                 conj xs $ merge schema/notification
                   {} (:id op-id) (:kind :info) (:text text) (:time op-time)
-          :doc |
-        |push-warning $ %{} :CodeEntry
+        |push-warning $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn push-warning (op-id op-time text)
               fn (xs)
                 conj xs $ merge schema/notification
                   {} (:id op-id) (:kind :warning) (:text text) (:time op-time)
-          :doc |
-        |same-buffer? $ %{} :CodeEntry
+        |same-buffer? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn same-buffer? (x y)
               and
                 = (:kind x) (:kind y)
                 = (:ns x) (:ns y)
                 = (:extra x) (:extra y)
-          :doc |
-        |stringify-s-expr $ %{} :CodeEntry
+        |stringify-s-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn stringify-s-expr (x)
               if (list? x)
@@ -5313,40 +4904,34 @@
                         if (.includes? y "| ") (pr-str y) y
                     join-str "| "
                   , "|)"
-          :doc |
-        |to-bookmark $ %{} :CodeEntry
+        |to-bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn to-bookmark (writer)
               let
                   stack $ :stack writer
                 if (empty? stack) nil $ get stack (:pointer writer)
-          :doc |
-        |to-keys $ %{} :CodeEntry
+        |to-keys $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn to-keys (target-expr)
               sort $ .to-list
                 keys $ :data target-expr
-          :doc |
-        |to-writer $ %{} :CodeEntry
+        |to-writer $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn to-writer (db session-id)
               get-in db $ [] :sessions session-id :writer
-          :doc |
-        |tree->cirru $ %{} :CodeEntry
+        |tree->cirru $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn tree->cirru (x)
               if (&record:matches? schema/CirruLeaf x) (:text x)
                 -> (:data x) (.to-list) (.sort-by first)
                   map $ fn (entry)
                     tree->cirru $ last entry
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util $ :require (app.schema :as schema) (bisection-key.core :as bisection)
-        :doc |
     |app.util.compile $ {}
       :defs $ {}
-        |handle-compact-files! $ %{} :CodeEntry
+        |handle-compact-files! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn handle-compact-files! (pkg old-files latest-files added-names removed-names changed-names configs entries filter-ns)
               let
@@ -5409,8 +4994,7 @@
                 fs/writeFile "\".compact-inc.cirru" (format-cirru-edn inc-data)
                   fn (err)
                     if (some? err) (js/console.log "\"Failed to write!" err)
-          :doc |
-        |handle-files! $ %{} :CodeEntry
+        |handle-files! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn handle-files! (db *calcit-md5 configs dispatch! save-ir? filter-ns)
               try
@@ -5443,20 +5027,17 @@
                     js/console.error e
                     dispatch! $ :: :notify/push-message
                       [] :error $ aget e "\"message"
-          :doc |
-        |path $ %{} :CodeEntry
+        |path $ %{} :CodeEntry (:doc |)
           :code $ quote
             def path $ js/require |path
-          :doc |
-        |persist! $ %{} :CodeEntry
+        |persist! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn persist! (storage-path db-str started-time) (fs/writeFileSync storage-path db-str)
               println $ .!gray chalk
                 str "|took "
                   - (unix-time!) started-time
                   , "|ms to wrote calcit.cirru"
-          :doc |
-        |persist-async! $ %{} :CodeEntry
+        |persist-async! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn persist-async! (storage-path db-str started-time)
               fs/writeFile storage-path db-str $ fn (err)
@@ -5466,16 +5047,14 @@
                     str "|took "
                       - (unix-time!) started-time
                       , "|ms to wrote calcit.cirru"
-          :doc |
-        |remove-file! $ %{} :CodeEntry
+        |remove-file! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn remove-file! (file-path output-dir)
               let
                   project-path $ path/join output-dir file-path
                 cp/execSync $ str "|rm -rfv " project-path
                 println $ .!red chalk (str "|removed " project-path)
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util.compile $ :require
             app.util :refer $ file->cirru db->string tree->cirru now! hide-empty-fields
@@ -5487,10 +5066,9 @@
             app.config :as config
             cumulo-util.core :refer $ unix-time!
             cirru-edn.core :as cirru-edn
-        :doc |
     |app.util.detect $ {}
       :defs $ {}
-        |port-taken? $ %{} :CodeEntry
+        |port-taken? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn port-taken? (port next-fn)
               let
@@ -5506,21 +5084,18 @@
                       .!once |close $ fn () (next-fn nil false)
                       .!close
                   .!listen port "\"0.0.0.0"
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util.detect $ :require (|net :as net)
-        :doc |
     |app.util.dom $ {}
       :defs $ {}
-        |copy-silently! $ %{} :CodeEntry
+        |copy-silently! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn copy-silently! (x)
               -> js/navigator .-clipboard (.!writeText x)
                 .!then $ fn () (println "\"Copied.")
                 .!catch $ fn (error) (js/console.error "\"Failed to copy:" error)
-          :doc |
-        |do-copy-logics! $ %{} :CodeEntry
+        |do-copy-logics! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn do-copy-logics! (d! x message)
               -> js/navigator .-clipboard (.!writeText x)
@@ -5528,8 +5103,7 @@
                   d! :notify/push-message $ [] :info message
                 .!catch $ fn (error) (js/console.error "\"Failed to copy:" error)
                   d! :notify/push-message $ [] :error (str "\"Failed to copy! " error)
-          :doc |
-        |focus! $ %{} :CodeEntry
+        |focus! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn focus! () $ js/requestAnimationFrame
               fn (timestamp)
@@ -5541,30 +5115,26 @@
                       not $ identical? current-focused cirru-focused
                       .!focus cirru-focused
                     println "|[Editor] .cirru-focused not found" cirru-focused
-          :doc |
-        |focus-search! $ %{} :CodeEntry
+        |focus-search! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn focus-search! () $ delay! 0.2
               fn () $ let
                   target $ js/document.querySelector |.search-input
                 if (some? target) (.!focus target)
-          :doc |
-        |inject-style $ %{} :CodeEntry
+        |inject-style $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn inject-style (class-name styles)
               style $ {}
                 :innerHTML $ str class-name "| {" (style->string styles) |}
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util.dom $ :require
             respo.core :refer $ style
             respo.render.html :refer $ style->string
             cumulo-util.core :refer $ delay!
-        :doc |
     |app.util.env $ {}
       :defs $ {}
-        |check-version! $ %{} :CodeEntry
+        |check-version! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn check-version! () $ let
                 __dirname $ path/dirname (url/fileURLToPath js/import.meta.url)
@@ -5577,12 +5147,10 @@
                   println $ if (= version npm-version) (str "\"Running latest version " version)
                     .!yellow chalk $ str "\"Update is available tagged " npm-version "\", current one is " version
                 .!catch $ fn (e) (js/console.error "\"failed to request version:" e)
-          :doc |
-        |get-cli-configs! $ %{} :CodeEntry
+        |get-cli-configs! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn get-cli-configs! () $ {} (:op js/process.env.op)
-          :doc |
-        |pick-http-port! $ %{} :CodeEntry
+        |pick-http-port! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn pick-http-port! (port next-fn)
               port-taken? port $ fn (err taken?)
@@ -5593,8 +5161,7 @@
                       println $ str "\"port " port "\" in use."
                       pick-http-port! (inc port) next-fn
                     next-fn port
-          :doc |
-        |pick-port! $ %{} :CodeEntry
+        |pick-port! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn pick-port! (port next-fn)
               port-taken? port $ fn (err taken?)
@@ -5609,8 +5176,7 @@
                           link $ .!blue chalk (str "\"http://editor.calcit-lang.org?port=" port)
                         println $ str "\"port " port "\" ok, please edit on " link
                       next-fn port
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util.env $ :require ("\"chalk" :default chalk)
             app.util.detect :refer $ port-taken?
@@ -5618,15 +5184,13 @@
             "\"path" :as path
             "\"url" :as url
             "\"fs" :as fs
-        :doc |
     |app.util.list $ {}
       :defs $ {}
-        |cirru-form? $ %{} :CodeEntry
+        |cirru-form? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn cirru-form? (x)
               if (string? x) true $ if (list? x) (map x cirru-form?) false
-          :doc |
-        |compare-entry $ %{} :CodeEntry
+        |compare-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn compare-entry (new-x old-x)
               cond
@@ -5637,8 +5201,7 @@
                 (and (some? old-x) (some? new-x) (not (identical? old-x new-x)))
                   , :changed
                 true :same
-          :doc |
-        |dissoc-idx $ %{} :CodeEntry
+        |dissoc-idx $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn dissoc-idx (xs idx)
               if
@@ -5652,13 +5215,11 @@
                   butlast xs
                 true $ concat (take xs idx)
                   drop xs $ inc idx
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.util.list)
-        :doc |
     |app.util.shortcuts $ {}
       :defs $ {}
-        |on-paste! $ %{} :CodeEntry
+        |on-paste! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-paste! (d!)
               -> js/navigator .-clipboard (.readText)
@@ -5670,8 +5231,7 @@
                       d! :notify/push-message $ [] :error "\"Not valid code"
                 .!catch $ fn (error) (js/console.error "\"Not able to read from paste:" error)
                   d! :notify/push-message $ [] :error "\"Failed to paste!"
-          :doc |
-        |on-window-keydown $ %{} :CodeEntry
+        |on-window-keydown $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-window-keydown (event dispatch! router)
               if (some? router)
@@ -5702,24 +5262,21 @@
                       dispatch! :router/change $ {} (:name :files)
                     (and meta? (not shift?) (= code keycode/period))
                       dispatch! $ :: :writer/picker-mode
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util.shortcuts $ :require (app.keycode :as keycode)
             app.util.dom :refer $ focus-search!
             app.util.list :refer $ cirru-form?
-        :doc |
     |app.util.stack $ {}
       :defs $ {}
-        |=bookmark? $ %{} :CodeEntry
+        |=bookmark? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn =bookmark? (x y)
               and
                 = (:kind x) (:kind y)
                 = (:ns x) (:ns y)
                 = (:extra x) (:extra y)
-          :doc |
-        |index-of-bookmark $ %{} :CodeEntry
+        |index-of-bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn index-of-bookmark (stack bookmark ? idx)
               if (empty? stack) -1 $ let
@@ -5727,8 +5284,7 @@
                 if
                   =bookmark? bookmark $ first stack
                   , idx $ recur (rest stack) bookmark (inc idx)
-          :doc |
-        |push-bookmark $ %{} :CodeEntry
+        |push-bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn push-bookmark (bookmark ? forced?)
               fn (writer)
@@ -5754,7 +5310,5 @@
                       update :pointer $ fn (p)
                         if (empty? stack) 0 $ inc p
                     -> writer $ assoc :pointer idx
-          :doc |
-      :ns $ %{} :CodeEntry
+      :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.util.stack)
-        :doc |

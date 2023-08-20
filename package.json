@@ -1,6 +1,6 @@
 {
   "name": "@calcit/editor",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Tree Editor for Calcit Language",
   "bin": {
     "ct": "./server.mjs"
@@ -25,7 +25,7 @@
     "vite": "^4.4.9"
   },
   "dependencies": {
-    "@calcit/procs": "^0.8.0-a1",
+    "@calcit/procs": "^0.8.0-a2",
     "chalk": "^5.3.0",
     "dayjs": "^1.11.9",
     "gaze": "^1.1.3",
