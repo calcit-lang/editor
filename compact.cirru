@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.1)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.2)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -4170,8 +4170,7 @@
                   data-path $ bookmark->path bookmark
                   user-id $ get-in db ([] :sessions sid :user-id)
                 update-in db data-path $ fn (node)
-                  if
-                    = :expr $ :type node
+                  if (expr? node)
                     update node :data $ fn (data)
                       let
                           k0 $ get-min-key data
