@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.2)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.3)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -3547,16 +3547,17 @@
                       target-path $ -> (:focus bookmark)
                         mapcat $ fn (x) ([] :data x)
                       target-expr $ -> files
-                        get-in $ [] ns-text :defs (:extra bookmark)
+                        get-in $ [] ns-text :defs (:extra bookmark) :code
                         get-in target-path
                     -> db
                       update-in ([] :files ns-text :defs)
                         fn (defs)
                           ; println target-path (prepend target-path def-text) (tree->cirru target-expr) (keys defs)
                           -> defs
-                            assoc def-text $ cirru->tree
-                              [] |def def-text $ tree->cirru target-expr
-                              , user-id op-time
+                            assoc def-text $ %{} schema/CodeEntry (:doc "\"")
+                              :code $ cirru->tree
+                                [] |def def-text $ tree->cirru target-expr
+                                , user-id op-time
                             assoc-in
                               prepend target-path $ :extra bookmark
                               cirru->tree def-text user-id op-time
