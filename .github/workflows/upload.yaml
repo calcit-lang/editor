@@ -19,15 +19,15 @@ jobs:
 
     - uses: supplypike/setup-bin@v3
       with:
-        uri: 'https://github.com/calcit-lang/calcit/releases/download/0.8.0-a2/cr'
+        uri: 'https://github.com/calcit-lang/calcit/releases/download/0.8.0-a3/cr'
         name: 'cr'
-        version: '0.8.0-a2'
+        version: '0.8.0-a3'
 
     - uses: supplypike/setup-bin@v3
       with:
-        uri: 'https://github.com/calcit-lang/calcit/releases/download/0.8.0-a2/caps'
+        uri: 'https://github.com/calcit-lang/calcit/releases/download/0.8.0-a3/caps'
         name: 'caps'
-        version: '0.8.0-a2'
+        version: '0.8.0-a3'
 
     - run: caps --ci && yarn && yarn compile-server && yarn compile-page && yarn release-page
 
