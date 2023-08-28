@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.3)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.4)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -2640,6 +2640,9 @@
         |CodeEntry $ %{} :CodeEntry (:doc |)
           :code $ quote
             def CodeEntry $ new-record :CodeEntry :doc :code
+        |FileEntry $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            def FileEntry $ new-record :FileEntry :ns :defs
         |bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             def bookmark $ {} (:kind :def) (:ns nil) (:extra nil)
@@ -2659,11 +2662,6 @@
               :saved-files $ {}
               :configs configs
               :entries $ {}
-        |file $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            def file $ {} (:ns CodeEntry)
-              :defs $ {}
-              :configs $ {}
         |notification $ %{} :CodeEntry (:doc |)
           :code $ quote
             def notification $ {} (:id nil) (:kind nil) (:text nil) (:time nil)
@@ -3346,9 +3344,6 @@
                     or $ {}
                     keys
                   #{}
-                :file-configs $ if (some? selected-ns)
-                  get-in files $ [] selected-ns :configs
-                  , nil
                 :changed-files $ render-changed-files files saved-files
                 :peeking-file $ if (some? draft-ns) (get files draft-ns) nil
                 :highlights $ -> sessions (.to-list)
@@ -3732,8 +3727,9 @@
                   empty-expr $ cirru->tree ([]) user-id op-time
                 -> db
                   assoc-in ([] :files op-data)
-                    -> schema/file $ assoc :ns
-                      %{} schema/CodeEntry (:doc "\"") (:code default-expr)
+                    %{} schema/FileEntry
+                      :ns $ %{} schema/CodeEntry (:doc "\"") (:code default-expr)
+                      :defs $ {}
                   assoc-in ([] :sessions session-id :writer :selected-ns) op-data
         |append-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -4783,9 +4779,11 @@
                     :: 'quote $ tree->cirru code
                 :defs $ -> (:defs file)
                   map-kv $ fn (k xs)
-                    [] k $ -> xs
-                      update :code $ fn (code)
-                        :: 'quote $ tree->cirru code
+                    if (some? xs)
+                      [] k $ -> xs
+                        update :code $ fn (code)
+                          :: 'quote $ tree->cirru code
+                      , nil
         |file-compact-to-calcit $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn file-compact-to-calcit (file)
