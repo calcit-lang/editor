@@ -1,12 +1,12 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.3)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.5)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
       :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
   :files $ {}
-    |app.client $ {}
+    |app.client $ %{} :FileEntry
       :defs $ {}
         |*connecting? $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *connecting? false)
@@ -150,7 +150,7 @@
             app.config :as config
             "\"bottom-tip" :default tip!
             "\"./calcit.build-errors" :default build-errors
-    |app.client-updater $ {}
+    |app.client-updater $ %{} :FileEntry
       :defs $ {}
         |abstract $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -170,7 +170,7 @@
               assoc-in states ([] :editor :data :draft-box?) true
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.client-updater)
-    |app.client-util $ {}
+    |app.client-util $ %{} :FileEntry
       :defs $ {}
         |coord-contains? $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -216,7 +216,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.client-util $ :require ([] app.config :as config) ([] "\"url-parse" :default url-parse) (app.schema :as schema)
-    |app.comp.about $ {}
+    |app.comp.about $ %{} :FileEntry
       :defs $ {}
         |comp-about $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -260,7 +260,7 @@
             app.style :as style
             respo-md.comp.md :refer $ comp-md-block
             app.util.dom :refer $ copy-silently!
-    |app.comp.abstract $ {}
+    |app.comp.abstract $ %{} :FileEntry
       :defs $ {}
         |comp-abstract $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -297,7 +297,7 @@
             app.style :as style
             app.comp.modal :refer $ comp-modal
             app.keycode :as keycode
-    |app.comp.bookmark $ {}
+    |app.comp.bookmark $ %{} :FileEntry
       :defs $ {}
         |comp-bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -382,7 +382,7 @@
             respo.css :refer $ defstyle
             respo.core :refer $ defcomp <> span div a
             respo.comp.space :refer $ =<
-    |app.comp.changed-files $ {}
+    |app.comp.changed-files $ %{} :FileEntry
       :defs $ {}
         |comp-changed-files $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -420,7 +420,7 @@
             app.client-util :as util
             app.style :as style
             app.comp.changed-info :refer $ comp-changed-info
-    |app.comp.changed-info $ {}
+    |app.comp.changed-info $ %{} :FileEntry
       :defs $ {}
         |comp-changed-info $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -507,7 +507,7 @@
             respo.comp.space :refer $ =<
             app.style :as style
             feather.core :refer $ comp-icon
-    |app.comp.configs $ {}
+    |app.comp.configs $ %{} :FileEntry
       :defs $ {}
         |comp-configs $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -628,7 +628,7 @@
             cirru-edn.core :as cirru-edn
             respo-alerts.core :refer $ use-prompt
             app.style :as style
-    |app.comp.container $ {}
+    |app.comp.container $ %{} :FileEntry
       :defs $ {}
         |comp-container $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -649,7 +649,7 @@
                       if (:logged-in? store)
                         case-default (:name router)
                           div ({})
-                            <> $ str "\"404 page: " (pr-str router)
+                            <> $ str "\"404 page: " (to-lispy-string router)
                           :profile $ comp-profile (>> states :profile) (:user store)
                           :files $ comp-page-files (>> states :files) (:selected-ns writer) (:data router)
                           :editor $ comp-page-editor (>> states :editor) (:stack writer) (:data router) (:pointer writer)
@@ -702,7 +702,7 @@
             app.comp.about :refer $ comp-about
             app.comp.configs :refer $ comp-configs
             app.config :refer $ dev?
-    |app.comp.draft-box $ {}
+    |app.comp.draft-box $ %{} :FileEntry
       :defs $ {}
         |comp-draft-box $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -825,7 +825,7 @@
             app.style :as style
             app.util :refer $ tree->cirru now! expr?
             app.keycode :as keycode
-    |app.comp.expr $ {}
+    |app.comp.expr $ %{} :FileEntry
       :defs $ {}
         |comp-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -973,7 +973,7 @@
             app.util.dom :refer $ do-copy-logics!
             bisection-key.util :refer $ get-min-key get-max-key
             app.schema :refer $ CirruLeaf CirruExpr
-    |app.comp.file-replacer $ {}
+    |app.comp.file-replacer $ %{} :FileEntry
       :defs $ {}
         |comp-file-replacer $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1013,7 +1013,7 @@
             app.style :as style
             app.comp.modal :refer $ comp-modal
             app.util :refer $ file->cirru
-    |app.comp.header $ {}
+    |app.comp.header $ %{} :FileEntry
       :defs $ {}
         |comp-header $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1097,7 +1097,7 @@
             app.util.dom :refer $ focus-search!
             feather.core :refer $ comp-icon
             respo-alerts.core :refer $ use-prompt
-    |app.comp.leaf $ {}
+    |app.comp.leaf $ %{} :FileEntry
       :defs $ {}
         |comp-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1231,7 +1231,7 @@
             app.theme :refer $ decide-leaf-theme base-style-leaf
             app.util :refer $ tree->cirru
             app.util.dom :refer $ do-copy-logics!
-    |app.comp.login $ {}
+    |app.comp.login $ %{} :FileEntry
       :defs $ {}
         |comp-login $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1293,7 +1293,7 @@
             respo-ui.core :as ui
             app.style :as style
             app.config :as config
-    |app.comp.messages $ {}
+    |app.comp.messages $ %{} :FileEntry
       :defs $ {}
         |comp-messages $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1335,7 +1335,7 @@
             app.client-util :as util
             app.style :as style
             "\"dayjs" :default Dayjs
-    |app.comp.modal $ {}
+    |app.comp.modal $ %{} :FileEntry
       :defs $ {}
         |comp-modal $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1360,7 +1360,7 @@
             respo.core :refer $ defcomp >> <> span div pre input button a
             respo.comp.inspect :refer $ comp-inspect
             respo.comp.space :refer $ =<
-    |app.comp.page-editor $ {}
+    |app.comp.page-editor $ %{} :FileEntry
       :defs $ {}
         |comp-page-editor $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1675,7 +1675,7 @@
             respo-alerts.core :refer $ use-confirm use-prompt
             app.comp.replace-name :refer $ use-replace-name-modal
             app.comp.picker-notice :refer $ comp-picker-notice
-    |app.comp.page-files $ {}
+    |app.comp.page-files $ %{} :FileEntry
       :defs $ {}
         |comp-file $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1905,7 +1905,7 @@
             app.util.shortcuts :refer $ on-window-keydown
             respo-alerts.core :refer $ use-prompt use-confirm comp-select
             feather.core :refer $ comp-icon comp-i
-    |app.comp.page-members $ {}
+    |app.comp.page-members $ %{} :FileEntry
       :defs $ {}
         |comp-page-members $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1980,7 +1980,7 @@
             respo.core :refer $ defcomp <> list-> span div a
             respo.comp.space :refer $ =<
             "\"url-parse" :default url-parse
-    |app.comp.peek-def $ {}
+    |app.comp.peek-def $ %{} :FileEntry
       :defs $ {}
         |comp-peek-def $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2011,7 +2011,7 @@
             app.style :as style
             app.util :refer $ stringify-s-expr tree->cirru
             feather.core :refer $ comp-icon
-    |app.comp.picker-notice $ {}
+    |app.comp.picker-notice $ %{} :FileEntry
       :defs $ {}
         |comp-picker-notice $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2101,7 +2101,7 @@
             respo.css :refer $ defstyle
             respo.comp.space :refer $ =<
             feather.core :refer $ comp-icon
-    |app.comp.profile $ {}
+    |app.comp.profile $ %{} :FileEntry
       :defs $ {}
         |comp-profile $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2160,7 +2160,7 @@
             app.config :as config
             feather.core :refer $ comp-i comp-icon
             respo-alerts.core :refer $ use-prompt
-    |app.comp.replace-name $ {}
+    |app.comp.replace-name $ %{} :FileEntry
       :defs $ {}
         |use-replace-name-modal $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2236,14 +2236,14 @@
             respo.comp.space :refer $ =<
             app.style :as style
             respo-alerts.core :refer $ comp-modal ModalShape PluginShape
-    |app.comp.search $ {}
+    |app.comp.search $ %{} :FileEntry
       :defs $ {}
         |bookmark->str $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn bookmark->str (bookmark)
               case-default (:kind bookmark)
                 do
-                  js/console.warn $ str "\"Unknown" (pr-str bookmark)
+                  js/console.warn $ str "\"Unknown" (to-lispy-string bookmark)
                   , "\""
                 :def $ :extra bookmark
                 :ns $ :ns bookmark
@@ -2394,7 +2394,7 @@
             defn query-length (bookmark)
               case-default (:kind bookmark)
                 do
-                  js/console.warn $ str "\"Unknown" (pr-str bookmark)
+                  js/console.warn $ str "\"Unknown" (to-lispy-string bookmark)
                   , 0
                 :def $ count (:extra bookmark)
                 :ns $ count (:ns bookmark)
@@ -2422,7 +2422,7 @@
             app.client-util :as util
             app.style :as style
             app.util.shortcuts :refer $ on-window-keydown
-    |app.comp.theme-menu $ {}
+    |app.comp.theme-menu $ %{} :FileEntry
       :defs $ {}
         |comp-theme-menu $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2472,7 +2472,7 @@
             respo.comp.inspect :refer $ comp-inspect
             respo.comp.space :refer $ =<
             app.style :as style
-    |app.comp.watching $ {}
+    |app.comp.watching $ %{} :FileEntry
       :defs $ {}
         |comp-watching $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2541,7 +2541,7 @@
             app.util.dom :refer $ inject-style
             app.util :refer $ bookmark-full-str
             app.comp.theme-menu :refer $ comp-theme-menu
-    |app.config $ {}
+    |app.config $ %{} :FileEntry
       :defs $ {}
         |cdn? $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2559,7 +2559,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.config $ :require ([] app.schema :as schema)
-    |app.keycode $ {}
+    |app.keycode $ %{} :FileEntry
       :defs $ {}
         |b $ %{} :CodeEntry (:doc |)
           :code $ quote (def b 66)
@@ -2611,7 +2611,7 @@
           :code $ quote (def x 88)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.keycode)
-    |app.polyfill $ {}
+    |app.polyfill $ %{} :FileEntry
       :defs $ {}
         |ctx $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2629,7 +2629,7 @@
                 , nil
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.polyfill)
-    |app.schema $ {}
+    |app.schema $ %{} :FileEntry
       :defs $ {}
         |CirruExpr $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2640,6 +2640,9 @@
         |CodeEntry $ %{} :CodeEntry (:doc |)
           :code $ quote
             def CodeEntry $ new-record :CodeEntry :doc :code
+        |FileEntry $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            def FileEntry $ new-record :FileEntry :ns :defs
         |bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             def bookmark $ {} (:kind :def) (:ns nil) (:extra nil)
@@ -2659,11 +2662,6 @@
               :saved-files $ {}
               :configs configs
               :entries $ {}
-        |file $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            def file $ {} (:ns CodeEntry)
-              :defs $ {}
-              :configs $ {}
         |notification $ %{} :CodeEntry (:doc |)
           :code $ quote
             def notification $ {} (:id nil) (:kind nil) (:text nil) (:time nil)
@@ -2697,7 +2695,7 @@
             def user $ {} (:name nil) (:id nil) (:nickname nil) (:avatar nil) (:password nil) (:theme :star-trail)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.schema)
-    |app.server $ {}
+    |app.server $ %{} :FileEntry
       :defs $ {}
         |*calcit-md5 $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *calcit-md5 nil)
@@ -2918,7 +2916,7 @@
             cumulo-util.file :refer $ write-mildly!
             cumulo-util.core :refer $ unix-time! id! delay!
             app.util.env :refer $ get-cli-configs!
-    |app.style $ {}
+    |app.style $ %{} :FileEntry
       :defs $ {}
         |button $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2961,7 +2959,7 @@
         :code $ quote
           ns app.style $ :require (respo-ui.core :as ui)
             respo.util.format :refer $ hsl
-    |app.theme $ {}
+    |app.theme $ %{} :FileEntry
       :defs $ {}
         |base-style-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2988,7 +2986,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.theme $ :require (app.theme.star-trail :as star-trail) (app.theme.curves :as curves) (app.theme.beginner :as beginner)
-    |app.theme.beginner $ {}
+    |app.theme.beginner $ %{} :FileEntry
       :defs $ {}
         |css-expr $ %{} :CodeEntry (:doc |)
           :code $ quote (def css-expr star-trail/css-expr)
@@ -3010,7 +3008,7 @@
         :code $ quote
           ns app.theme.beginner $ :require (app.theme.star-trail :as star-trail)
             respo.util.format :refer $ hsl
-    |app.theme.curves $ {}
+    |app.theme.curves $ %{} :FileEntry
       :defs $ {}
         |css-expr $ %{} :CodeEntry (:doc |)
           :code $ quote (def css-expr star-trail/css-expr)
@@ -3034,7 +3032,7 @@
           ns app.theme.curves $ :require (app.theme.star-trail :as star-trail)
             respo.util.format :refer $ hsl
             respo.css :refer $ defstyle
-    |app.theme.star-trail $ {}
+    |app.theme.star-trail $ %{} :FileEntry
       :defs $ {}
         |base-style-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3134,7 +3132,7 @@
             app.polyfill :refer $ text-width*
             app.style :as style
             respo.css :refer $ defstyle
-    |app.twig.container $ {}
+    |app.twig.container $ %{} :FileEntry
       :defs $ {}
         |twig-container $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3184,7 +3182,7 @@
             app.twig.page-members :refer $ twig-page-members
             app.twig.search :refer $ twig-search
             app.twig.watching :refer $ twig-watching
-    |app.twig.member $ {}
+    |app.twig.member $ %{} :FileEntry
       :defs $ {}
         |twig-member $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3198,7 +3196,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.twig.member $ :require
-    |app.twig.page-editor $ {}
+    |app.twig.page-editor $ %{} :FileEntry
       :defs $ {}
         |pick-from-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3299,7 +3297,7 @@
             app.util :refer $ same-buffer? tree->cirru
             app.twig.user :refer $ twig-user
             app.util.list :refer $ compare-entry
-    |app.twig.page-files $ {}
+    |app.twig.page-files $ %{} :FileEntry
       :defs $ {}
         |keys-set $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3346,9 +3344,6 @@
                     or $ {}
                     keys
                   #{}
-                :file-configs $ if (some? selected-ns)
-                  get-in files $ [] selected-ns :configs
-                  , nil
                 :changed-files $ render-changed-files files saved-files
                 :peeking-file $ if (some? draft-ns) (get files draft-ns) nil
                 :highlights $ -> sessions (.to-list)
@@ -3369,7 +3364,7 @@
             clojure.set :refer $ union
             app.util :refer $ file->cirru
             app.util.list :refer $ compare-entry
-    |app.twig.page-members $ {}
+    |app.twig.page-members $ %{} :FileEntry
       :defs $ {}
         |twig-page-members $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3382,7 +3377,7 @@
         :code $ quote
           ns app.twig.page-members $ :require
             app.twig.member :refer $ twig-member
-    |app.twig.search $ {}
+    |app.twig.search $ %{} :FileEntry
       :defs $ {}
         |twig-search $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3403,7 +3398,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.twig.search $ :require
-    |app.twig.user $ {}
+    |app.twig.user $ %{} :FileEntry
       :defs $ {}
         |twig-user $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3412,7 +3407,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.twig.user $ :require
-    |app.twig.watching $ {}
+    |app.twig.watching $ %{} :FileEntry
       :defs $ {}
         |twig-watching $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3442,7 +3437,7 @@
           ns app.twig.watching $ :require
             app.util :refer $ to-bookmark
             app.twig.user :refer $ twig-user
-    |app.updater $ {}
+    |app.updater $ %{} :FileEntry
       :defs $ {}
         |updater $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3522,7 +3517,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater $ :require (app.updater.session :as session) (app.updater.user :as user) (app.updater.router :as router) (app.updater.ir :as ir) (app.updater.writer :as writer) (app.updater.notify :as notify) (app.updater.analyze :as analyze) (app.updater.watcher :as watcher) (app.updater.configs :as configs)
-    |app.updater.analyze $ {}
+    |app.updater.analyze $ %{} :FileEntry
       :defs $ {}
         |abstract-def $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3685,7 +3680,7 @@
             app.util :refer $ bookmark->path to-writer to-bookmark parse-deps tree->cirru cirru->tree parse-def push-warning
             app.util.stack :refer $ push-bookmark
             app.schema :as schema
-    |app.updater.configs $ {}
+    |app.updater.configs $ %{} :FileEntry
       :defs $ {}
         |update-configs $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3705,7 +3700,7 @@
                     :dissoc $ dissoc d data
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.updater.configs)
-    |app.updater.ir $ {}
+    |app.updater.ir $ %{} :FileEntry
       :defs $ {}
         |add-def $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3732,8 +3727,9 @@
                   empty-expr $ cirru->tree ([]) user-id op-time
                 -> db
                   assoc-in ([] :files op-data)
-                    -> schema/file $ assoc :ns
-                      %{} schema/CodeEntry (:doc "\"") (:code default-expr)
+                    %{} schema/FileEntry
+                      :ns $ %{} schema/CodeEntry (:doc "\"") (:code default-expr)
+                      :defs $ {}
                   assoc-in ([] :sessions session-id :writer :selected-ns) op-data
         |append-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -4145,7 +4141,7 @@
                   [] :files $ :ns op-data
                   fn (file)
                     case-default (:kind op-data)
-                      raise $ str "|Malformed data: " (pr-str op-data)
+                      raise $ str "|Malformed data: " (to-lispy-string op-data)
                       :ns $ assoc file :ns (:ns old-file)
                       :def $ let
                           def-text $ :extra op-data
@@ -4269,7 +4265,7 @@
             app.util.list :refer $ dissoc-idx
             bisection-key.util :refer $ key-before key-after key-prepend key-append assoc-prepend key-nth assoc-nth val-nth get-min-key
             app.util :refer $ push-warning expr? leaf?
-    |app.updater.notify $ {}
+    |app.updater.notify $ %{} :FileEntry
       :defs $ {}
         |broadcast $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -4299,7 +4295,7 @@
         :code $ quote
           ns app.updater.notify $ :require
             app.util :refer $ push-info
-    |app.updater.router $ {}
+    |app.updater.router $ %{} :FileEntry
       :defs $ {}
         |change $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -4307,7 +4303,7 @@
               assoc-in db ([] :sessions session-id :router) op-data
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.updater.router)
-    |app.updater.session $ {}
+    |app.updater.session $ %{} :FileEntry
       :defs $ {}
         |connect $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -4325,7 +4321,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater.session $ :require (app.schema :as schema)
-    |app.updater.user $ {}
+    |app.updater.user $ %{} :FileEntry
       :defs $ {}
         |change-theme $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -4391,7 +4387,7 @@
             clojure.string :as string
             |md5 :default md5
             app.schema :as schema
-    |app.updater.watcher $ {}
+    |app.updater.watcher $ %{} :FileEntry
       :defs $ {}
         |file-change $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -4421,7 +4417,7 @@
                                       [] def-text $ if (= expr old-expr) old-expr expr
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.updater.watcher)
-    |app.updater.writer $ {}
+    |app.updater.writer $ %{} :FileEntry
       :defs $ {}
         |collapse $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -4701,7 +4697,7 @@
             app.util :refer $ push-info
             app.util :refer $ stringify-s-expr
             bisection-key.util :refer $ get-min-key get-max-key
-    |app.util $ {}
+    |app.util $ %{} :FileEntry
       :defs $ {}
         |bookmark->path $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -4727,7 +4723,7 @@
             defn bookmark-full-str (bookmark)
               case-default (:kind bookmark)
                 do
-                  js/console.warn $ str "\"Unknown" (pr-str bookmark)
+                  js/console.warn $ str "\"Unknown" (to-lispy-string bookmark)
                   , "\""
                 :def $ str (:ns bookmark) "\"/" (:extra bookmark)
                 :ns $ str (:ns bookmark) "\"/"
@@ -4777,15 +4773,17 @@
         |file->cirru $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn file->cirru (file)
-              {}
+              %{} schema/FileEntry
                 :ns $ -> (:ns file)
                   update :code $ fn (code)
                     :: 'quote $ tree->cirru code
                 :defs $ -> (:defs file)
                   map-kv $ fn (k xs)
-                    [] k $ -> xs
-                      update :code $ fn (code)
-                        :: 'quote $ tree->cirru code
+                    if (some? xs)
+                      [] k $ -> xs
+                        update :code $ fn (code)
+                          :: 'quote $ tree->cirru code
+                      , nil
         |file-compact-to-calcit $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn file-compact-to-calcit (file)
@@ -4901,7 +4899,7 @@
                   -> x
                     map $ fn (y)
                       if (list? y) (stringify-s-expr y)
-                        if (.includes? y "| ") (pr-str y) y
+                        if (.includes? y "| ") (to-lispy-string y) y
                     join-str "| "
                   , "|)"
         |to-bookmark $ %{} :CodeEntry (:doc |)
@@ -4929,7 +4927,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util $ :require (app.schema :as schema) (bisection-key.core :as bisection)
-    |app.util.compile $ {}
+    |app.util.compile $ %{} :FileEntry
       :defs $ {}
         |handle-compact-files! $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -5066,7 +5064,7 @@
             app.config :as config
             cumulo-util.core :refer $ unix-time!
             cirru-edn.core :as cirru-edn
-    |app.util.detect $ {}
+    |app.util.detect $ %{} :FileEntry
       :defs $ {}
         |port-taken? $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -5087,7 +5085,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util.detect $ :require (|net :as net)
-    |app.util.dom $ {}
+    |app.util.dom $ %{} :FileEntry
       :defs $ {}
         |copy-silently! $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -5132,7 +5130,7 @@
             respo.core :refer $ style
             respo.render.html :refer $ style->string
             cumulo-util.core :refer $ delay!
-    |app.util.env $ {}
+    |app.util.env $ %{} :FileEntry
       :defs $ {}
         |check-version! $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -5184,7 +5182,7 @@
             "\"path" :as path
             "\"url" :as url
             "\"fs" :as fs
-    |app.util.list $ {}
+    |app.util.list $ %{} :FileEntry
       :defs $ {}
         |cirru-form? $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -5217,7 +5215,7 @@
                   drop xs $ inc idx
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.util.list)
-    |app.util.shortcuts $ {}
+    |app.util.shortcuts $ %{} :FileEntry
       :defs $ {}
         |on-paste! $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -5267,7 +5265,7 @@
           ns app.util.shortcuts $ :require (app.keycode :as keycode)
             app.util.dom :refer $ focus-search!
             app.util.list :refer $ cirru-form?
-    |app.util.stack $ {}
+    |app.util.stack $ %{} :FileEntry
       :defs $ {}
         |=bookmark? $ %{} :CodeEntry (:doc |)
           :code $ quote
