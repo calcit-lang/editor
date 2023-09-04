@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.5)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.6)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -2022,7 +2022,9 @@
                   render-code $ fn (x)
                     span $ {} (:inner-text x) (:class-name css-name-code)
                       :on-click $ fn (e d!) (d! :writer/pick-node x)
-                  hint $ if (some? target-node) (:text target-node) nil
+                  hint $ if (record? target-node)
+                    if (&record:matches? target-node schema/CirruLeaf) (:text target-node) nil
+                    , nil
                   hint-func $ fn (x)
                     if (blank? hint) true $ .includes? x hint
                 div
@@ -2101,6 +2103,7 @@
             respo.css :refer $ defstyle
             respo.comp.space :refer $ =<
             feather.core :refer $ comp-icon
+            app.schema :as schema
     |app.comp.profile $ %{} :FileEntry
       :defs $ {}
         |comp-profile $ %{} :CodeEntry (:doc |)
@@ -4081,14 +4084,14 @@
                     let
                         old-ns $ :from ns-info
                         new-ns $ :to ns-info
-                        expr $ get-in db ([] :files old-ns :ns)
+                        expr $ get-in db ([] :files old-ns :ns :code)
                         next-id $ key-nth (:data expr) 1
                       -> db
                         update :files $ fn (files)
                           -> files (dissoc old-ns)
                             assoc new-ns $ get files old-ns
                         assoc-in ([] :sessions session-id :writer :stack idx :ns) new-ns
-                        update-in ([] :files new-ns :ns :data next-id :text)
+                        update-in ([] :files new-ns :ns :code :data next-id :text)
                           fn (x) new-ns
                   (= :def kind)
                     let
@@ -4096,7 +4099,7 @@
                         new-ns $ :to ns-info
                         old-def $ :from extra-info
                         new-def $ :to extra-info
-                        expr $ get-in db ([] :files old-ns :defs old-def)
+                        expr $ get-in db ([] :files old-ns :defs old-def :code)
                         next-id $ key-nth (:data expr) 1
                         files $ get db :files
                       if (contains? files new-ns)
@@ -4110,7 +4113,7 @@
                           update-in ([] :sessions session-id :writer :stack idx)
                             fn (bookmark)
                               -> bookmark (assoc :ns new-ns) (assoc :extra new-def)
-                          update-in ([] :files new-ns :defs new-def :data)
+                          update-in ([] :files new-ns :defs new-def :code :data)
                             fn (def-data)
                               let
                                   try-1 $ :text (val-nth def-data 1)
