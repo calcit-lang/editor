@@ -1719,7 +1719,7 @@
       :defs $ {}
         |comp-file $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-file (states selected-ns defs-set highlights configs)
+            defcomp comp-file (states selected-ns defs-dict highlights configs)
               let
                   cursor $ :cursor states
                   state $ or (:data states)
@@ -1762,7 +1762,7 @@
                         d! cursor $ assoc state :def-text (:value e)
                   =< nil 8
                   list-> ({})
-                    -> defs-set (.to-list)
+                    -> defs-dict keys (.to-list)
                       filter $ fn (def-text)
                         .includes? def-text $ :def-text state
                       sort &compare
@@ -1772,17 +1772,19 @@
                               >> states $ str :rm def-text
                               {} $ :text (str "\"Sure to remove def: " def-text "\" ?")
                           div
-                            {} (:class-name |hoverable)
-                              :style $ merge ui/row-parted style-def
-                                if
-                                  includes? highlights $ {} (:ns selected-ns) (:extra def-text) (:kind :def)
-                                  {} $ :color :white
+                            {}
+                              :class-name $ str-spaced css/row-parted style-def |hoverable
+                              :style $ if
+                                includes? highlights $ {} (:ns selected-ns) (:extra def-text) (:kind :def)
+                                {} $ :color :white
                               :on-click $ fn (e d!)
                                 d! :writer/edit $ {} (:kind :def) (:extra def-text)
-                            <> def-text nil
+                            div ({}) (<> def-text nil) (=< 8 nil)
+                              <> (get defs-dict def-text) style-def-doc
                             =< 16 nil
                             span
-                              {} (:class-name "\"is-minor") (:style style-remove)
+                              {}
+                                :class-name $ str-spaced "\"is-minor" style-remove
                                 :on-click $ fn (e d!)
                                   .show confirm-remove-plugin d! $ fn () (d! :ir/remove-def def-text)
                               comp-i :x 12 $ hsl 0 0 80 0.5
@@ -1799,7 +1801,7 @@
                   plugin-add-ns $ use-prompt (>> states :add-ns)
                     {} $ :title "\"New namespace:"
                 div
-                  {} $ :style (merge ui/column style-list)
+                  {} $ :class-name (str-spaced css/column style-list)
                   div
                     {} $ :style style/title
                     <> |Namespaces
@@ -1848,9 +1850,9 @@
                   has-highlight? $ includes? ns-highlights ns-text
                 div
                   {}
-                    :class-name $ if selected? "|hoverable is-selected" |hoverable
-                    :style $ merge ui/row-parted style-ns
-                      if has-highlight? $ {} (:color :white)
+                    :class-name $ str-spaced css/row-parted style-ns (if selected? "|hoverable is-selected" |hoverable)
+                    :style $ if has-highlight?
+                      {} $ :color :white
                     :on-click $ fn (e d!) (d! :session/select-ns ns-text)
                   let
                       pieces $ split ns-text "\"."
@@ -1865,7 +1867,8 @@
                       =< 8 nil
                       <> ns-doc style-ns-doc
                   span
-                    {} (:class-name "\"is-minor") (:style style-remove)
+                    {}
+                      :class-name $ str-spaced "\"is-minor" style-remove
                       :on-click $ fn (e d!)
                         .show plugin-rm-ns d! $ fn () (d! :ir/remove-ns ns-text)
                     comp-i :x 12 $ hsl 0 0 80 0.6
@@ -1878,11 +1881,11 @@
                   ns-highlights $ map highlights
                     fn (x) (:ns x)
                 div
-                  {} $ :style (merge ui/flex ui/row sytle-container)
-                  comp-namespace-list (>> states :ns) (:ns-set router-data) selected-ns ns-highlights
+                  {} $ :class-name (str-spaced css/flex css/row sytle-container)
+                  comp-namespace-list (>> states :ns) (:ns-dict router-data) selected-ns ns-highlights
                   =< 32 nil
                   if (some? selected-ns)
-                    comp-file (>> states selected-ns) selected-ns (:defs-set router-data) highlights $ :file-configs router-data
+                    comp-file (>> states selected-ns) selected-ns (:defs-dict router-data) highlights $ :file-configs router-data
                     render-empty
                   =< 32 nil
                   comp-changed-files (>> states :files) (:changed-files router-data)
@@ -1894,7 +1897,7 @@
           :code $ quote
             defstyle css-file $ {}
               "\"$0" $ merge ui/column
-                {} (:width 280) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
+                {} (:width 360) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
         |render-empty $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-empty () $ div
@@ -1904,8 +1907,19 @@
               <> |Empty nil
         |style-def $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-def $ {} (:padding "|0 8px") (:position :relative)
-              :color $ hsl 0 0 74
+            defstyle style-def $ {}
+              "\"&" $ {} (:padding "|0 8px") (:position :relative)
+                :color $ hsl 0 0 74
+        |style-def-doc $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-def-doc $ {}
+              "\"&" $ {}
+                :color $ hsl 0 0 100 0.5
+                :max-width "\"120px"
+                :overflow :hidden
+                :white-space :nowrap
+                :text-overflow :ellipsis
+                :font-family ui/font-fancy
         |style-input $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-input $ merge style/input
@@ -1920,11 +1934,13 @@
             def style-link $ {} (:cursor :pointer)
         |style-list $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-list $ {} (:width 360) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
+            defstyle style-list $ {}
+              "\"&" $ {} (:width 360) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
         |style-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-ns $ {} (:cursor :pointer) (:vertical-align :middle) (:position :relative) (:padding "|0 8px")
-              :color $ hsl 0 0 74
+            defstyle style-ns $ {}
+              "\"&" $ {} (:cursor :pointer) (:vertical-align :middle) (:position :relative) (:padding "|0 8px")
+                :color $ hsl 0 0 74
         |style-ns-doc $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-ns-doc $ {}
@@ -1936,22 +1952,26 @@
                 :overflow :hidden
                 :text-overflow :ellipsis
                 :vertical-align :middle
+                :font-family ui/font-fancy
         |style-remove $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-remove $ {}
-              :color $ hsl 0 50 90
-              :font-size 12
-              :cursor :pointer
-              :vertical-align :middle
-              :line-height "\"12px"
+            defstyle style-remove $ {}
+              "\"&" $ {}
+                :color $ hsl 0 50 90
+                :font-size 12
+                :cursor :pointer
+                :vertical-align :middle
+                :line-height "\"12px"
         |sytle-container $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def sytle-container $ {} (:padding "|0px 16px")
+            defstyle sytle-container $ {}
+              "\"&" $ {} (:padding "|0px 16px")
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.page-files $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp list-> >> <> span div pre input button a
             respo.css :refer $ defstyle
             respo.comp.inspect :refer $ comp-inspect
@@ -2730,8 +2750,8 @@
           :code $ quote
             def page-data $ {}
               :files $ {}
-                :ns-set $ #{}
-                :defs-set $ #{}
+                :ns-dict $ #{}
+                :defs-dict $ #{}
                 :changed-files $ {}
               :editor $ {}
                 :focus $ []
@@ -3398,15 +3418,16 @@
           :code $ quote
             defn twig-page-files (files selected-ns saved-files draft-ns sessions sid)
               {}
-                :ns-set $ -> files
+                :ns-dict $ -> files
                   map-kv $ fn (k v)
                     [] k $ get-in v ([] :ns :doc)
-                :defs-set $ if (some? selected-ns)
-                  do $ ->
+                :defs-dict $ if (some? selected-ns)
+                  ->
                     get-in files $ [] selected-ns :defs
                     or $ {}
-                    keys
-                  #{}
+                    map-kv $ fn (k v)
+                      [] k $ :doc v
+                  {}
                 :changed-files $ render-changed-files files saved-files
                 :peeking-file $ if (some? draft-ns) (get files draft-ns) nil
                 :highlights $ -> sessions (.to-list)
