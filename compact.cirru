@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.6)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.7)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -2350,7 +2350,9 @@
                       and
                         = :def $ :kind bookmark
                         every? queries $ fn (y)
-                          .includes? (:extra bookmark) y
+                          .includes?
+                            or (:extra bookmark) "\""
+                            , y
                     .sort-by $ if
                       blank? $ :query state
                       , bookmark->str query-length
@@ -3572,7 +3574,7 @@
                 (:ir/expr-after op-data) (ir/expr-after db op-data sid op-id op-time)
                 (:ir/expr-replace op-data) (ir/expr-replace db op-data sid op-id op-time)
                 (:ir/indent op-data) (ir/indent db op-data sid op-id op-time)
-                (:ir/unindent op-data) (ir/unindent db op-data sid op-id op-time)
+                (:ir/unindent) (ir/unindent db sid op-id op-time)
                 (:ir/unindent-leaf op-data) (ir/unindent-leaf db op-data sid op-id op-time)
                 (:ir/update-leaf op-data) (ir/update-leaf db op-data sid op-id op-time)
                 (:ir/duplicate op-data) (ir/duplicate db op-data sid op-id op-time)
@@ -4264,7 +4266,7 @@
                     do (println "\"Toggle comment at wrong place," node) node
         |unindent $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn unindent (db op-data session-id op-id op-time)
+            defn unindent (db session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                   bookmark $ get (:stack writer) (:pointer writer)
@@ -4277,7 +4279,9 @@
                     fn (expr)
                       if
                         = 1 $ count (:data expr)
-                        last $ first (:data expr)
+                        nth
+                          &map:destruct $ :data expr
+                          , 1
                         , expr
                   -> db
                     update-in
