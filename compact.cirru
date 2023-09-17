@@ -1362,6 +1362,33 @@
             respo.comp.space :refer $ =<
     |app.comp.page-editor $ %{} :FileEntry
       :defs $ {}
+        |comp-doc $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defcomp comp-doc (states expr-entry bookmark)
+              let
+                  ns? $ = :ns (:kind bookmark)
+                  doc-plugin $ use-prompt (>> states :doc)
+                    {}
+                      :text $ if ns? "\"Namespace doc:" "\"Function doc:"
+                      :initial $ :doc expr-entry
+                      :placeholder "\"...some docs..."
+                      :input-style $ {}
+                  doc $ :doc expr-entry
+                  no-doc? $ blank? doc
+                div ({})
+                  span $ {}
+                    :inner-text $ if no-doc? "\"no doc" doc
+                    :class-name $ str-spaced style-doc (if no-doc? style-doc-empty)
+                    :on-click $ fn (e d!)
+                      .show doc-plugin d! $ fn (text)
+                        if ns?
+                          d! $ :: :writer/doc-set
+                            :: :ns $ :ns bookmark
+                            , text
+                          d! $ :: :writer/doc-set
+                            :: :def (:ns bookmark) (:extra bookmark)
+                            , text
+                  .render doc-plugin
         |comp-page-editor $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-page-editor (states stack router-data pointer picker-mode? theme)
@@ -1396,11 +1423,12 @@
                             map $ fn (x) (:focus x)
                         div
                           {} $ :class-name css-area
-                          if (some? expr)
-                            comp-expr
-                              >> states $ bookmark-full-str bookmark
-                              , expr focus ([]) others false false readonly? picker-mode? theme 0
-                            , ui-missing
+                          if (some? expr-entry)
+                            div ({})
+                              comp-doc (>> states :doc) expr-entry bookmark
+                              comp-expr
+                                >> states $ bookmark-full-str bookmark
+                                , expr focus ([]) others false false readonly? picker-mode? theme 0
                       let
                           peek-def $ :peek-def router-data
                         if (some? peek-def) (comp-peek-def peek-def)
@@ -1617,6 +1645,18 @@
                   :def $ {} (:ns ns-text) (:kind :def)
                     :extra $ :extra bookmark
                 d! :states/clear nil
+        |style-doc $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-doc $ {}
+              "\"&" $ {}
+                :color $ hsl 0 0 100 0.6
+                :transition-duration "\"200ms"
+              "\"&:hover" $ {}
+                :color $ hsl 0 0 100 1
+        |style-doc-empty $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-doc-empty $ {}
+              "\"&" $ {} (:font-style :italic) (:opacity 0.5)
         |style-hint $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-hint $ {}
@@ -1751,7 +1791,7 @@
                   .render add-plugin
         |comp-namespace-list $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-namespace-list (states ns-set selected-ns ns-highlights)
+            defcomp comp-namespace-list (states ns-dict selected-ns ns-highlights)
               let
                   cursor $ :cursor states
                   state $ or (:data states)
@@ -1783,20 +1823,25 @@
                         d! cursor $ assoc state :ns-text (:value e)
                   =< nil 8
                   list-> ({})
-                    -> ns-set (.to-list)
-                      filter $ fn (ns-text)
-                        includes?
-                          join-str
-                            rest $ split ns-text "\"."
-                            , "\"."
-                          :ns-text state
-                      sort &compare
-                      map $ fn (ns-text)
-                        [] ns-text $ comp-ns-entry (>> states ns-text) ns-text (= selected-ns ns-text) ns-highlights
+                    -> ns-dict (.to-list)
+                      filter $ fn (pair)
+                        let
+                            ns-text $ nth pair 0
+                          includes?
+                            join-str
+                              rest $ split ns-text "\"."
+                              , "\"."
+                            :ns-text state
+                      sort $ fn (a b)
+                        &compare (first a) (first b)
+                      map $ fn (pair)
+                        let
+                            ns-text $ nth pair 0
+                          [] ns-text $ comp-ns-entry (>> states ns-text) ns-text (nth pair 1) (= selected-ns ns-text) ns-highlights
                   .render plugin-add-ns
         |comp-ns-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-ns-entry (states ns-text selected? ns-highlights)
+            defcomp comp-ns-entry (states ns-text ns-doc selected? ns-highlights)
               let
                   plugin-rm-ns $ use-confirm (>> states :rm-ns)
                     {} $ :text (str "\"Sure to remove namespace: " ns-text "\" ?")
@@ -1817,6 +1862,8 @@
                         {} $ :color
                           if has-highlight? (hsl 0 0 76) (hsl 0 0 50)
                       <> $ last pieces
+                      =< 8 nil
+                      <> ns-doc style-ns-doc
                   span
                     {} (:class-name "\"is-minor") (:style style-remove)
                       :on-click $ fn (e d!)
@@ -1873,11 +1920,22 @@
             def style-link $ {} (:cursor :pointer)
         |style-list $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-list $ {} (:width 280) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
+            def style-list $ {} (:width 360) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
         |style-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-ns $ {} (:cursor :pointer) (:vertical-align :middle) (:position :relative) (:padding "|0 8px")
               :color $ hsl 0 0 74
+        |style-ns-doc $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-ns-doc $ {}
+              "\"&" $ {}
+                :color $ hsl 0 0 100 0.5
+                :white-space :nowrap
+                :max-width "\"120px"
+                :display :inline-block
+                :overflow :hidden
+                :text-overflow :ellipsis
+                :vertical-align :middle
         |style-remove $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-remove $ {}
@@ -2723,7 +2781,7 @@
         |dispatch! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op sid)
-              when config/dev? $ js/console.log "\"Action" (str op) sid
+              when config/dev? $ println "\"Action" (str op) sid
               ; js/console.log "\"Database:" $ to-js-data @*writer-db
               let
                   d2! $ fn (op2) (dispatch! op2 sid)
@@ -3340,7 +3398,9 @@
           :code $ quote
             defn twig-page-files (files selected-ns saved-files draft-ns sessions sid)
               {}
-                :ns-set $ keys files
+                :ns-set $ -> files
+                  map-kv $ fn (k v)
+                    [] k $ get-in v ([] :ns :doc)
                 :defs-set $ if (some? selected-ns)
                   do $ ->
                     get-in files $ [] selected-ns :defs
@@ -3477,6 +3537,7 @@
                 (:writer/hide-peek op-data) (writer/hide-peek db op-data sid op-id op-time)
                 (:writer/picker-mode) (writer/picker-mode db sid op-id op-time)
                 (:writer/pick-node op-data) (writer/pick-node db op-data sid op-id op-time)
+                (:writer/doc-set path docstring) (writer/doc-set db path docstring sid op-id op-time)
                 (:ir/add-ns op-data) (ir/add-ns db op-data sid op-id op-time)
                 (:ir/add-def op-data) (ir/add-def db op-data sid op-id op-time)
                 (:ir/remove-def op-data) (ir/remove-def db op-data sid op-id op-time)
@@ -4430,6 +4491,14 @@
                   -> writer
                     update :stack $ fn (stack) (.slice stack op-data)
                     assoc :pointer 0
+        |doc-set $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn doc-set (db path docstring sid op-id op-time)
+              tag-match path
+                  :ns ns-text
+                  assoc-in db ([] :files ns-text :ns :doc) docstring
+                (:def ns-text def-text)
+                  assoc-in db ([] :files ns-text :defs def-text :doc) docstring
         |draft-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn draft-ns (db op-data sid op-id op-time)

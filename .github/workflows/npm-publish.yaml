@@ -12,25 +12,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           registry-url: https://registry.npmjs.org/
           cache: yarn
 
       - uses: supplypike/setup-bin@v3
         with:
-          uri: 'https://github.com/calcit-lang/calcit/releases/download/0.8.0/cr'
+          uri: 'https://github.com/calcit-lang/calcit/releases/download/0.8.1/cr'
           name: 'cr'
-          version: '0.8.0'
+          version: '0.8.1'
 
       - uses: supplypike/setup-bin@v3
         with:
-          uri: 'https://github.com/calcit-lang/calcit/releases/download/0.8.0/caps'
+          uri: 'https://github.com/calcit-lang/calcit/releases/download/0.8.1/caps'
           name: 'caps'
-          version: '0.8.0'
+          version: '0.8.1'
 
       - run: caps --ci && yarn && yarn compile-server && yarn compile-page && yarn release-page
 
