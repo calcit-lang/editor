@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.7)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.8)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -2881,12 +2881,14 @@
             defn on-file-change! () $ let
                 file-content $ fs/readFileSync storage-file "\"utf8"
                 new-md5 $ md5 file-content
-              if (not= new-md5 @*calcit-md5)
-                let
-                    calcit $ parse-cirru-edn file-content
-                  println $ .!blue chalk "\"calcit storage file changed!"
-                  reset! *calcit-md5 new-md5
-                  dispatch! (:: :watcher/file-change calcit) nil
+              if (blank? file-content)
+                eprintln $ .!red chalk "\"got blank file on change, server might have staled"
+                if (not= new-md5 @*calcit-md5)
+                  let
+                      calcit $ parse-cirru-edn file-content
+                    println $ .!blue chalk "\"calcit storage file changed!"
+                    reset! *calcit-md5 new-md5
+                    dispatch! (:: :watcher/file-change calcit) nil
         |reload! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reload! ()
@@ -4863,7 +4865,7 @@
         |db->string $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn db->string (db)
-              format-cirru-edn $ -> db (dissoc :sessions) (dissoc :saved-files) (dissoc :repl)
+              format-cirru-edn $ -> db (dissoc :sessions) (dissoc :saved-files)
         |expr? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expr? (x) (&record:matches? schema/CirruExpr x)
@@ -5118,7 +5120,7 @@
                       persist-async! (:storage-file config/site) db-content started-time
                 fn (e)
                   do
-                    println $ .!red chalk e
+                    eprintln $ .!red chalk e
                     js/console.error e
                     dispatch! $ :: :notify/push-message
                       [] :error $ aget e "\"message"
