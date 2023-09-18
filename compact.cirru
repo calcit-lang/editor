@@ -221,31 +221,24 @@
         |comp-about $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-about () $ div
-              {} $ :class-name css-about
+              {} $ :class-name (str-spaced css/global css/fullscreen css/column)
               div
-                {} $ :style (merge ui/flex ui/center)
+                {} $ :class-name (str-spaced css/flex css/center)
                 img $ {} (:src "\"//cdn.tiye.me/logo/cirru.png")
                   :style $ {} (:width 64) (:height 64) (:border-radius "\"8px")
                 =< nil 16
                 <> "\"No connection to server..." $ {} (:font-family "|Josefin Sans") (:font-weight 300) (:font-size 24)
                   :color $ hsl 0 80 60
-                div
-                  {} $ :class-name |comp-about
-                  <> "\"Get editor server running with:"
+                div ({}) (<> "\"Get editor server running with:")
                   pre $ {} (:innerHTML install-commands) (:class-name "\"copy-commands")
                     :style $ {} (:cursor :pointer) (:padding "\"0 8px")
                     :title "\"Click to copy."
                     :on-click $ fn (e d!) (copy-silently! install-commands)
               div
-                {} (:class-name "\"comp-about")
-                  :style $ merge ui/center
-                    {} (:padding "\"8px 8px")
-                      :color $ hsl 0 0 50
+                {} (:class-name css/center)
+                  :style $ {} (:padding "\"8px 8px")
+                    :color $ hsl 0 0 50
                 comp-md-block "\"Calcit Editor is a syntax tree editor of [Cirru Project](http://cirru.org). Read more at [Calcit Editor](https://github.com/calcit-lang/editor).\n" $ {}
-        |css-about $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-about $ {}
-              "\"$0" $ merge ui/global ui/fullscreen ui/column
         |install-commands $ %{} :CodeEntry (:doc |)
           :code $ quote (def install-commands "\"npm install -g @calcit/editor\nct\n")
       :ns $ %{} :CodeEntry (:doc |)
@@ -253,6 +246,7 @@
           ns app.comp.about $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp <> span div pre input button img a br
             respo.css :refer $ defstyle
             respo.comp.inspect :refer $ comp-inspect
@@ -436,8 +430,8 @@
                     not= :same $ :ns info
                     render-status ns-text :ns $ :ns info
                 div
-                  {} $ :style
-                    merge ui/row-parted $ {} (:align-items :flex-end)
+                  {} (:class-name css/row-parted)
+                    :style $ {} (:align-items :flex-end)
                   list->
                     {} $ :style style-defs
                     -> (:defs info) (.to-list)
@@ -503,6 +497,7 @@
           ns app.comp.changed-info $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp list-> >> <> span div pre input button a
             respo.comp.space :refer $ =<
             app.style :as style
@@ -535,8 +530,9 @@
                       :placeholder "\"a path..."
                       :input-style $ {} (:font-family ui/font-code)
                 div
-                  {} $ :style
-                    merge ui/expand ui/column $ {} (:padding "\"40px 16px 0 16px")
+                  {}
+                    :class-name $ str-spaced css/expand css/column
+                    :style $ {} (:padding "\"40px 16px 0 16px")
                   =< nil 8
                   div ({}) (render-label "\"Version:") (=< 8 nil)
                     span
@@ -546,7 +542,7 @@
                             d! :configs/update $ {} (:version text)
                       render-field $ :version configs
                   div
-                    {} $ :style ui/row
+                    {} $ :class-name css/row
                     render-label "\"Modules:"
                     =< 8 nil
                     span
@@ -623,6 +619,7 @@
           ns app.comp.configs $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp >> <> span div a pre code button
             respo.comp.space :refer $ =<
             cirru-edn.core :as cirru-edn
@@ -642,12 +639,11 @@
                   picker-mode? $ some? (:picker-mode writer)
                 if (nil? store) (comp-about)
                   div
-                    {} $ :class-name css-container
+                    {} $ :class-name (str-spaced css/global css/fullscreen css/column css-container)
                     if (not picker-mode?)
                       comp-header (>> states :header) (:name router) (:logged-in? store) (:stats store)
                     div
-                      {} $ :style
-                        merge ui/row ui/expand $ {} (; :padding-top 32)
+                      {} $ :class-name (str-spaced css/row css/expand)
                       if (:logged-in? store)
                         case-default (:name router)
                           div ({})
@@ -673,8 +669,7 @@
         |css-container $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-container $ {}
-              "\"$0" $ merge ui/global ui/fullscreen ui/column
-                {} (:background-color :black) (:color :white)
+              "\"$0" $ {} (:background-color :black) (:color :white)
         |style-inspector $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-inspector $ {} (:bottom 0) (:left 0) (:max-width |100%)
@@ -686,6 +681,7 @@
           ns app.comp.container $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp >> <> div span
             respo.css :refer $ defstyle
             respo.comp.inspect :refer $ comp-inspect
@@ -1024,7 +1020,7 @@
                 div
                   {} $ :class-name css-header
                   div
-                    {} $ :style ui/row-center
+                    {} $ :class-name css/row-center
                     render-entry |Files :files router-name $ fn (e d!)
                       d! :router/change $ {} (:name :files)
                     render-entry |Editor :editor router-name $ fn (e d!)
@@ -1091,6 +1087,7 @@
           ns app.comp.header $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.css :refer $ defstyle
             respo.core :refer $ defcomp >> <> span div a
             respo.comp.space :refer $ =<
@@ -1240,9 +1237,9 @@
                   cursor $ :cursor states
                   state $ or (:data states) initial-state
                 div
-                  {} $ :style (merge ui/column style-login)
+                  {} (:class-name css/column) (:style style-login)
                   div
-                    {} $ :style ui/column
+                    {} $ :class-name css/column
                     div ({})
                       input $ {} (:placeholder |Username)
                         :value $ :username state
@@ -1291,6 +1288,7 @@
             respo.comp.space :refer $ =<
             respo.comp.inspect :refer $ comp-inspect
             respo-ui.core :as ui
+            respo-ui.css :as css
             app.style :as style
             app.config :as config
     |app.comp.messages $ %{} :FileEntry
