@@ -135,7 +135,7 @@
                 do $ dispatch!
                   :: :user/log-in $ parse-cirru-edn raw
                 do $ println "|Found no storage."
-      :ns $ %{} :CodeEntry (:doc |)
+      :ns $ %{} :CodeEntry (:doc "|browser side main file")
         :code $ quote
           ns app.client $ :require
             respo.core :refer $ render! clear-cache! *changes-logger
@@ -630,7 +630,7 @@
             app.style :as style
     |app.comp.container $ %{} :FileEntry
       :defs $ {}
-        |comp-container $ %{} :CodeEntry (:doc |)
+        |comp-container $ %{} :CodeEntry (:doc "|respo UI main entry")
           :code $ quote
             defcomp comp-container (states store)
               let
@@ -639,10 +639,12 @@
                   writer $ :writer session
                   router $ :router store
                   theme $ get-in store ([] :user :theme)
+                  picker-mode? $ some? (:picker-mode writer)
                 if (nil? store) (comp-about)
                   div
                     {} $ :class-name css-container
-                    comp-header (>> states :header) (:name router) (:logged-in? store) (:stats store)
+                    if (not picker-mode?)
+                      comp-header (>> states :header) (:name router) (:logged-in? store) (:stats store)
                     div
                       {} $ :style
                         merge ui/row ui/expand $ {} (; :padding-top 32)
@@ -652,9 +654,7 @@
                             <> $ str "\"404 page: " (to-lispy-string router)
                           :profile $ comp-profile (>> states :profile) (:user store)
                           :files $ comp-page-files (>> states :files) (:selected-ns writer) (:data router)
-                          :editor $ comp-page-editor (>> states :editor) (:stack writer) (:data router) (:pointer writer)
-                            some? $ :picker-mode writer
-                            , theme
+                          :editor $ comp-page-editor (>> states :editor) (:stack writer) (:data router) (:pointer writer) picker-mode? theme
                           :members $ comp-page-members (:data router) (:id session)
                           :search $ comp-search (>> states :search) (:data router)
                           :watching $ comp-watching (>> states :watching) (:data router) (:theme session)
@@ -1375,7 +1375,9 @@
                       :input-style $ {}
                   doc $ :doc expr-entry
                   no-doc? $ blank? doc
-                div ({})
+                div
+                  {} $ :style
+                    {} $ :margin-left 32
                   span $ {}
                     :inner-text $ if no-doc? "\"no doc" doc
                     :class-name $ str-spaced style-doc (if no-doc? style-doc-empty)
