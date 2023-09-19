@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.6)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.8)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -135,7 +135,7 @@
                 do $ dispatch!
                   :: :user/log-in $ parse-cirru-edn raw
                 do $ println "|Found no storage."
-      :ns $ %{} :CodeEntry (:doc |)
+      :ns $ %{} :CodeEntry (:doc "|browser side main file")
         :code $ quote
           ns app.client $ :require
             respo.core :refer $ render! clear-cache! *changes-logger
@@ -221,31 +221,24 @@
         |comp-about $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-about () $ div
-              {} $ :class-name css-about
+              {} $ :class-name (str-spaced css/global css/fullscreen css/column)
               div
-                {} $ :style (merge ui/flex ui/center)
+                {} $ :class-name (str-spaced css/flex css/center)
                 img $ {} (:src "\"//cdn.tiye.me/logo/cirru.png")
                   :style $ {} (:width 64) (:height 64) (:border-radius "\"8px")
                 =< nil 16
                 <> "\"No connection to server..." $ {} (:font-family "|Josefin Sans") (:font-weight 300) (:font-size 24)
                   :color $ hsl 0 80 60
-                div
-                  {} $ :class-name |comp-about
-                  <> "\"Get editor server running with:"
+                div ({}) (<> "\"Get editor server running with:")
                   pre $ {} (:innerHTML install-commands) (:class-name "\"copy-commands")
                     :style $ {} (:cursor :pointer) (:padding "\"0 8px")
                     :title "\"Click to copy."
                     :on-click $ fn (e d!) (copy-silently! install-commands)
               div
-                {} (:class-name "\"comp-about")
-                  :style $ merge ui/center
-                    {} (:padding "\"8px 8px")
-                      :color $ hsl 0 0 50
+                {} (:class-name css/center)
+                  :style $ {} (:padding "\"8px 8px")
+                    :color $ hsl 0 0 50
                 comp-md-block "\"Calcit Editor is a syntax tree editor of [Cirru Project](http://cirru.org). Read more at [Calcit Editor](https://github.com/calcit-lang/editor).\n" $ {}
-        |css-about $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-about $ {}
-              "\"$0" $ merge ui/global ui/fullscreen ui/column
         |install-commands $ %{} :CodeEntry (:doc |)
           :code $ quote (def install-commands "\"npm install -g @calcit/editor\nct\n")
       :ns $ %{} :CodeEntry (:doc |)
@@ -253,6 +246,7 @@
           ns app.comp.about $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp <> span div pre input button img a br
             respo.css :refer $ defstyle
             respo.comp.inspect :refer $ comp-inspect
@@ -436,8 +430,8 @@
                     not= :same $ :ns info
                     render-status ns-text :ns $ :ns info
                 div
-                  {} $ :style
-                    merge ui/row-parted $ {} (:align-items :flex-end)
+                  {} (:class-name css/row-parted)
+                    :style $ {} (:align-items :flex-end)
                   list->
                     {} $ :style style-defs
                     -> (:defs info) (.to-list)
@@ -503,6 +497,7 @@
           ns app.comp.changed-info $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp list-> >> <> span div pre input button a
             respo.comp.space :refer $ =<
             app.style :as style
@@ -535,8 +530,9 @@
                       :placeholder "\"a path..."
                       :input-style $ {} (:font-family ui/font-code)
                 div
-                  {} $ :style
-                    merge ui/expand ui/column $ {} (:padding "\"40px 16px 0 16px")
+                  {}
+                    :class-name $ str-spaced css/expand css/column
+                    :style $ {} (:padding "\"40px 16px 0 16px")
                   =< nil 8
                   div ({}) (render-label "\"Version:") (=< 8 nil)
                     span
@@ -546,7 +542,7 @@
                             d! :configs/update $ {} (:version text)
                       render-field $ :version configs
                   div
-                    {} $ :style ui/row
+                    {} $ :class-name css/row
                     render-label "\"Modules:"
                     =< 8 nil
                     span
@@ -623,6 +619,7 @@
           ns app.comp.configs $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp >> <> span div a pre code button
             respo.comp.space :refer $ =<
             cirru-edn.core :as cirru-edn
@@ -630,7 +627,7 @@
             app.style :as style
     |app.comp.container $ %{} :FileEntry
       :defs $ {}
-        |comp-container $ %{} :CodeEntry (:doc |)
+        |comp-container $ %{} :CodeEntry (:doc "|respo UI main entry")
           :code $ quote
             defcomp comp-container (states store)
               let
@@ -639,22 +636,21 @@
                   writer $ :writer session
                   router $ :router store
                   theme $ get-in store ([] :user :theme)
+                  picker-mode? $ some? (:picker-mode writer)
                 if (nil? store) (comp-about)
                   div
-                    {} $ :class-name css-container
-                    comp-header (>> states :header) (:name router) (:logged-in? store) (:stats store)
+                    {} $ :class-name (str-spaced css/global css/fullscreen css/column css-container)
+                    if (not picker-mode?)
+                      comp-header (>> states :header) (:name router) (:logged-in? store) (:stats store)
                     div
-                      {} $ :style
-                        merge ui/row ui/expand $ {} (; :padding-top 32)
+                      {} $ :class-name (str-spaced css/row css/expand)
                       if (:logged-in? store)
                         case-default (:name router)
                           div ({})
                             <> $ str "\"404 page: " (to-lispy-string router)
                           :profile $ comp-profile (>> states :profile) (:user store)
                           :files $ comp-page-files (>> states :files) (:selected-ns writer) (:data router)
-                          :editor $ comp-page-editor (>> states :editor) (:stack writer) (:data router) (:pointer writer)
-                            some? $ :picker-mode writer
-                            , theme
+                          :editor $ comp-page-editor (>> states :editor) (:stack writer) (:data router) (:pointer writer) picker-mode? theme
                           :members $ comp-page-members (:data router) (:id session)
                           :search $ comp-search (>> states :search) (:data router)
                           :watching $ comp-watching (>> states :watching) (:data router) (:theme session)
@@ -673,8 +669,7 @@
         |css-container $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-container $ {}
-              "\"$0" $ merge ui/global ui/fullscreen ui/column
-                {} (:background-color :black) (:color :white)
+              "\"$0" $ {} (:background-color :black) (:color :white)
         |style-inspector $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-inspector $ {} (:bottom 0) (:left 0) (:max-width |100%)
@@ -686,6 +681,7 @@
           ns app.comp.container $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp >> <> div span
             respo.css :refer $ defstyle
             respo.comp.inspect :refer $ comp-inspect
@@ -1024,7 +1020,7 @@
                 div
                   {} $ :class-name css-header
                   div
-                    {} $ :style ui/row-center
+                    {} $ :class-name css/row-center
                     render-entry |Files :files router-name $ fn (e d!)
                       d! :router/change $ {} (:name :files)
                     render-entry |Editor :editor router-name $ fn (e d!)
@@ -1091,6 +1087,7 @@
           ns app.comp.header $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.css :refer $ defstyle
             respo.core :refer $ defcomp >> <> span div a
             respo.comp.space :refer $ =<
@@ -1240,9 +1237,9 @@
                   cursor $ :cursor states
                   state $ or (:data states) initial-state
                 div
-                  {} $ :style (merge ui/column style-login)
+                  {} (:class-name css/column) (:style style-login)
                   div
-                    {} $ :style ui/column
+                    {} $ :class-name css/column
                     div ({})
                       input $ {} (:placeholder |Username)
                         :value $ :username state
@@ -1291,6 +1288,7 @@
             respo.comp.space :refer $ =<
             respo.comp.inspect :refer $ comp-inspect
             respo-ui.core :as ui
+            respo-ui.css :as css
             app.style :as style
             app.config :as config
     |app.comp.messages $ %{} :FileEntry
@@ -1362,6 +1360,35 @@
             respo.comp.space :refer $ =<
     |app.comp.page-editor $ %{} :FileEntry
       :defs $ {}
+        |comp-doc $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defcomp comp-doc (states expr-entry bookmark)
+              let
+                  ns? $ = :ns (:kind bookmark)
+                  doc-plugin $ use-prompt (>> states :doc)
+                    {}
+                      :text $ if ns? "\"Namespace doc:" "\"Function doc:"
+                      :initial $ :doc expr-entry
+                      :placeholder "\"...some docs..."
+                      :input-style $ {}
+                  doc $ :doc expr-entry
+                  no-doc? $ blank? doc
+                div
+                  {} $ :style
+                    {} $ :margin-left 32
+                  span $ {}
+                    :inner-text $ if no-doc? "\"no doc" doc
+                    :class-name $ str-spaced style-doc (if no-doc? style-doc-empty)
+                    :on-click $ fn (e d!)
+                      .show doc-plugin d! $ fn (text)
+                        if ns?
+                          d! $ :: :writer/doc-set
+                            :: :ns $ :ns bookmark
+                            , text
+                          d! $ :: :writer/doc-set
+                            :: :def (:ns bookmark) (:extra bookmark)
+                            , text
+                  .render doc-plugin
         |comp-page-editor $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-page-editor (states stack router-data pointer picker-mode? theme)
@@ -1396,11 +1423,12 @@
                             map $ fn (x) (:focus x)
                         div
                           {} $ :class-name css-area
-                          if (some? expr)
-                            comp-expr
-                              >> states $ bookmark-full-str bookmark
-                              , expr focus ([]) others false false readonly? picker-mode? theme 0
-                            , ui-missing
+                          if (some? expr-entry)
+                            div ({})
+                              comp-doc (>> states :doc) expr-entry bookmark
+                              comp-expr
+                                >> states $ bookmark-full-str bookmark
+                                , expr focus ([]) others false false readonly? picker-mode? theme 0
                       let
                           peek-def $ :peek-def router-data
                         if (some? peek-def) (comp-peek-def peek-def)
@@ -1617,6 +1645,18 @@
                   :def $ {} (:ns ns-text) (:kind :def)
                     :extra $ :extra bookmark
                 d! :states/clear nil
+        |style-doc $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-doc $ {}
+              "\"&" $ {}
+                :color $ hsl 0 0 100 0.6
+                :transition-duration "\"200ms"
+              "\"&:hover" $ {}
+                :color $ hsl 0 0 100 1
+        |style-doc-empty $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-doc-empty $ {}
+              "\"&" $ {} (:font-style :italic) (:opacity 0.5)
         |style-hint $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-hint $ {}
@@ -1679,7 +1719,7 @@
       :defs $ {}
         |comp-file $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-file (states selected-ns defs-set highlights configs)
+            defcomp comp-file (states selected-ns defs-dict highlights configs)
               let
                   cursor $ :cursor states
                   state $ or (:data states)
@@ -1722,7 +1762,7 @@
                         d! cursor $ assoc state :def-text (:value e)
                   =< nil 8
                   list-> ({})
-                    -> defs-set (.to-list)
+                    -> defs-dict keys (.to-list)
                       filter $ fn (def-text)
                         .includes? def-text $ :def-text state
                       sort &compare
@@ -1732,17 +1772,19 @@
                               >> states $ str :rm def-text
                               {} $ :text (str "\"Sure to remove def: " def-text "\" ?")
                           div
-                            {} (:class-name |hoverable)
-                              :style $ merge ui/row-parted style-def
-                                if
-                                  includes? highlights $ {} (:ns selected-ns) (:extra def-text) (:kind :def)
-                                  {} $ :color :white
+                            {}
+                              :class-name $ str-spaced css/row-parted style-def |hoverable
+                              :style $ if
+                                includes? highlights $ {} (:ns selected-ns) (:extra def-text) (:kind :def)
+                                {} $ :color :white
                               :on-click $ fn (e d!)
                                 d! :writer/edit $ {} (:kind :def) (:extra def-text)
-                            <> def-text nil
+                            div ({}) (<> def-text nil) (=< 8 nil)
+                              <> (get defs-dict def-text) style-def-doc
                             =< 16 nil
                             span
-                              {} (:class-name "\"is-minor") (:style style-remove)
+                              {}
+                                :class-name $ str-spaced "\"is-minor" style-remove
                                 :on-click $ fn (e d!)
                                   .show confirm-remove-plugin d! $ fn () (d! :ir/remove-def def-text)
                               comp-i :x 12 $ hsl 0 0 80 0.5
@@ -1751,7 +1793,7 @@
                   .render add-plugin
         |comp-namespace-list $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-namespace-list (states ns-set selected-ns ns-highlights)
+            defcomp comp-namespace-list (states ns-dict selected-ns ns-highlights)
               let
                   cursor $ :cursor states
                   state $ or (:data states)
@@ -1759,7 +1801,7 @@
                   plugin-add-ns $ use-prompt (>> states :add-ns)
                     {} $ :title "\"New namespace:"
                 div
-                  {} $ :style (merge ui/column style-list)
+                  {} $ :class-name (str-spaced css/column style-list)
                   div
                     {} $ :style style/title
                     <> |Namespaces
@@ -1783,29 +1825,34 @@
                         d! cursor $ assoc state :ns-text (:value e)
                   =< nil 8
                   list-> ({})
-                    -> ns-set (.to-list)
-                      filter $ fn (ns-text)
-                        includes?
-                          join-str
-                            rest $ split ns-text "\"."
-                            , "\"."
-                          :ns-text state
-                      sort &compare
-                      map $ fn (ns-text)
-                        [] ns-text $ comp-ns-entry (>> states ns-text) ns-text (= selected-ns ns-text) ns-highlights
+                    -> ns-dict (.to-list)
+                      filter $ fn (pair)
+                        let
+                            ns-text $ nth pair 0
+                          includes?
+                            join-str
+                              rest $ split ns-text "\"."
+                              , "\"."
+                            :ns-text state
+                      sort $ fn (a b)
+                        &compare (first a) (first b)
+                      map $ fn (pair)
+                        let
+                            ns-text $ nth pair 0
+                          [] ns-text $ comp-ns-entry (>> states ns-text) ns-text (nth pair 1) (= selected-ns ns-text) ns-highlights
                   .render plugin-add-ns
         |comp-ns-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-ns-entry (states ns-text selected? ns-highlights)
+            defcomp comp-ns-entry (states ns-text ns-doc selected? ns-highlights)
               let
                   plugin-rm-ns $ use-confirm (>> states :rm-ns)
                     {} $ :text (str "\"Sure to remove namespace: " ns-text "\" ?")
                   has-highlight? $ includes? ns-highlights ns-text
                 div
                   {}
-                    :class-name $ if selected? "|hoverable is-selected" |hoverable
-                    :style $ merge ui/row-parted style-ns
-                      if has-highlight? $ {} (:color :white)
+                    :class-name $ str-spaced css/row-parted style-ns (if selected? "|hoverable is-selected" |hoverable)
+                    :style $ if has-highlight?
+                      {} $ :color :white
                     :on-click $ fn (e d!) (d! :session/select-ns ns-text)
                   let
                       pieces $ split ns-text "\"."
@@ -1817,8 +1864,11 @@
                         {} $ :color
                           if has-highlight? (hsl 0 0 76) (hsl 0 0 50)
                       <> $ last pieces
+                      =< 8 nil
+                      <> ns-doc style-ns-doc
                   span
-                    {} (:class-name "\"is-minor") (:style style-remove)
+                    {}
+                      :class-name $ str-spaced "\"is-minor" style-remove
                       :on-click $ fn (e d!)
                         .show plugin-rm-ns d! $ fn () (d! :ir/remove-ns ns-text)
                     comp-i :x 12 $ hsl 0 0 80 0.6
@@ -1831,11 +1881,11 @@
                   ns-highlights $ map highlights
                     fn (x) (:ns x)
                 div
-                  {} $ :style (merge ui/flex ui/row sytle-container)
-                  comp-namespace-list (>> states :ns) (:ns-set router-data) selected-ns ns-highlights
+                  {} $ :class-name (str-spaced css/flex css/row sytle-container)
+                  comp-namespace-list (>> states :ns) (:ns-dict router-data) selected-ns ns-highlights
                   =< 32 nil
                   if (some? selected-ns)
-                    comp-file (>> states selected-ns) selected-ns (:defs-set router-data) highlights $ :file-configs router-data
+                    comp-file (>> states selected-ns) selected-ns (:defs-dict router-data) highlights $ :file-configs router-data
                     render-empty
                   =< 32 nil
                   comp-changed-files (>> states :files) (:changed-files router-data)
@@ -1847,7 +1897,7 @@
           :code $ quote
             defstyle css-file $ {}
               "\"$0" $ merge ui/column
-                {} (:width 280) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
+                {} (:width 360) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
         |render-empty $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-empty () $ div
@@ -1857,8 +1907,19 @@
               <> |Empty nil
         |style-def $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-def $ {} (:padding "|0 8px") (:position :relative)
-              :color $ hsl 0 0 74
+            defstyle style-def $ {}
+              "\"&" $ {} (:padding "|0 8px") (:position :relative)
+                :color $ hsl 0 0 74
+        |style-def-doc $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-def-doc $ {}
+              "\"&" $ {}
+                :color $ hsl 0 0 100 0.5
+                :max-width "\"120px"
+                :overflow :hidden
+                :white-space :nowrap
+                :text-overflow :ellipsis
+                :font-family ui/font-fancy
         |style-input $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-input $ merge style/input
@@ -1873,27 +1934,44 @@
             def style-link $ {} (:cursor :pointer)
         |style-list $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-list $ {} (:width 280) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
+            defstyle style-list $ {}
+              "\"&" $ {} (:width 360) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
         |style-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-ns $ {} (:cursor :pointer) (:vertical-align :middle) (:position :relative) (:padding "|0 8px")
-              :color $ hsl 0 0 74
+            defstyle style-ns $ {}
+              "\"&" $ {} (:cursor :pointer) (:vertical-align :middle) (:position :relative) (:padding "|0 8px")
+                :color $ hsl 0 0 74
+        |style-ns-doc $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-ns-doc $ {}
+              "\"&" $ {}
+                :color $ hsl 0 0 100 0.5
+                :white-space :nowrap
+                :max-width "\"120px"
+                :display :inline-block
+                :overflow :hidden
+                :text-overflow :ellipsis
+                :vertical-align :middle
+                :font-family ui/font-fancy
         |style-remove $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-remove $ {}
-              :color $ hsl 0 50 90
-              :font-size 12
-              :cursor :pointer
-              :vertical-align :middle
-              :line-height "\"12px"
+            defstyle style-remove $ {}
+              "\"&" $ {}
+                :color $ hsl 0 50 90
+                :font-size 12
+                :cursor :pointer
+                :vertical-align :middle
+                :line-height "\"12px"
         |sytle-container $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def sytle-container $ {} (:padding "|0px 16px")
+            defstyle sytle-container $ {}
+              "\"&" $ {} (:padding "|0px 16px")
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.page-files $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp list-> >> <> span div pre input button a
             respo.css :refer $ defstyle
             respo.comp.inspect :refer $ comp-inspect
@@ -2272,7 +2350,9 @@
                       and
                         = :def $ :kind bookmark
                         every? queries $ fn (y)
-                          .includes? (:extra bookmark) y
+                          .includes?
+                            or (:extra bookmark) "\""
+                            , y
                     .sort-by $ if
                       blank? $ :query state
                       , bookmark->str query-length
@@ -2672,8 +2752,8 @@
           :code $ quote
             def page-data $ {}
               :files $ {}
-                :ns-set $ #{}
-                :defs-set $ #{}
+                :ns-dict $ #{}
+                :defs-dict $ #{}
                 :changed-files $ {}
               :editor $ {}
                 :focus $ []
@@ -2723,7 +2803,7 @@
         |dispatch! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op sid)
-              when config/dev? $ js/console.log "\"Action" (str op) sid
+              when config/dev? $ println "\"Action" (str op) sid
               ; js/console.log "\"Database:" $ to-js-data @*writer-db
               let
                   d2! $ fn (op2) (dispatch! op2 sid)
@@ -2801,12 +2881,14 @@
             defn on-file-change! () $ let
                 file-content $ fs/readFileSync storage-file "\"utf8"
                 new-md5 $ md5 file-content
-              if (not= new-md5 @*calcit-md5)
-                let
-                    calcit $ parse-cirru-edn file-content
-                  println $ .!blue chalk "\"calcit storage file changed!"
-                  reset! *calcit-md5 new-md5
-                  dispatch! (:: :watcher/file-change calcit) nil
+              if (blank? file-content)
+                eprintln $ .!red chalk "\"got blank file on change, server might have staled"
+                if (not= new-md5 @*calcit-md5)
+                  let
+                      calcit $ parse-cirru-edn file-content
+                    println $ .!blue chalk "\"calcit storage file changed!"
+                    reset! *calcit-md5 new-md5
+                    dispatch! (:: :watcher/file-change calcit) nil
         |reload! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reload! ()
@@ -3340,13 +3422,16 @@
           :code $ quote
             defn twig-page-files (files selected-ns saved-files draft-ns sessions sid)
               {}
-                :ns-set $ keys files
-                :defs-set $ if (some? selected-ns)
-                  do $ ->
+                :ns-dict $ -> files
+                  map-kv $ fn (k v)
+                    [] k $ get-in v ([] :ns :doc)
+                :defs-dict $ if (some? selected-ns)
+                  ->
                     get-in files $ [] selected-ns :defs
                     or $ {}
-                    keys
-                  #{}
+                    map-kv $ fn (k v)
+                      [] k $ :doc v
+                  {}
                 :changed-files $ render-changed-files files saved-files
                 :peeking-file $ if (some? draft-ns) (get files draft-ns) nil
                 :highlights $ -> sessions (.to-list)
@@ -3477,6 +3562,7 @@
                 (:writer/hide-peek op-data) (writer/hide-peek db op-data sid op-id op-time)
                 (:writer/picker-mode) (writer/picker-mode db sid op-id op-time)
                 (:writer/pick-node op-data) (writer/pick-node db op-data sid op-id op-time)
+                (:writer/doc-set path docstring) (writer/doc-set db path docstring sid op-id op-time)
                 (:ir/add-ns op-data) (ir/add-ns db op-data sid op-id op-time)
                 (:ir/add-def op-data) (ir/add-def db op-data sid op-id op-time)
                 (:ir/remove-def op-data) (ir/remove-def db op-data sid op-id op-time)
@@ -3490,7 +3576,7 @@
                 (:ir/expr-after op-data) (ir/expr-after db op-data sid op-id op-time)
                 (:ir/expr-replace op-data) (ir/expr-replace db op-data sid op-id op-time)
                 (:ir/indent op-data) (ir/indent db op-data sid op-id op-time)
-                (:ir/unindent op-data) (ir/unindent db op-data sid op-id op-time)
+                (:ir/unindent) (ir/unindent db sid op-id op-time)
                 (:ir/unindent-leaf op-data) (ir/unindent-leaf db op-data sid op-id op-time)
                 (:ir/update-leaf op-data) (ir/update-leaf db op-data sid op-id op-time)
                 (:ir/duplicate op-data) (ir/duplicate db op-data sid op-id op-time)
@@ -4182,7 +4268,7 @@
                     do (println "\"Toggle comment at wrong place," node) node
         |unindent $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn unindent (db op-data session-id op-id op-time)
+            defn unindent (db session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                   bookmark $ get (:stack writer) (:pointer writer)
@@ -4195,7 +4281,9 @@
                     fn (expr)
                       if
                         = 1 $ count (:data expr)
-                        last $ first (:data expr)
+                        nth
+                          &map:destruct $ :data expr
+                          , 1
                         , expr
                   -> db
                     update-in
@@ -4430,6 +4518,14 @@
                   -> writer
                     update :stack $ fn (stack) (.slice stack op-data)
                     assoc :pointer 0
+        |doc-set $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn doc-set (db path docstring sid op-id op-time)
+              tag-match path
+                  :ns ns-text
+                  assoc-in db ([] :files ns-text :ns :doc) docstring
+                (:def ns-text def-text)
+                  assoc-in db ([] :files ns-text :defs def-text :doc) docstring
         |draft-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn draft-ns (db op-data sid op-id op-time)
@@ -4769,7 +4865,7 @@
         |db->string $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn db->string (db)
-              format-cirru-edn $ -> db (dissoc :sessions) (dissoc :saved-files) (dissoc :repl)
+              format-cirru-edn $ -> db (dissoc :sessions) (dissoc :saved-files)
         |expr? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expr? (x) (&record:matches? schema/CirruExpr x)
@@ -5024,7 +5120,7 @@
                       persist-async! (:storage-file config/site) db-content started-time
                 fn (e)
                   do
-                    println $ .!red chalk e
+                    eprintln $ .!red chalk e
                     js/console.error e
                     dispatch! $ :: :notify/push-message
                       [] :error $ aget e "\"message"
