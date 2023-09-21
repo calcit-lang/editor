@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.8)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.9)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -672,10 +672,11 @@
               "\"$0" $ {} (:background-color :black) (:color :white)
         |style-inspector $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-inspector $ {} (:bottom 0) (:left 0) (:max-width |100%)
+            def style-inspector $ {} (:bottom 40) (:left 0) (:max-width |100%)
               :background-color $ hsl 0 0 50
               :color :black
               :opacity 1
+              :z-index 100
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.container $ :require
@@ -2062,22 +2063,36 @@
       :defs $ {}
         |comp-peek-def $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-peek-def (simple-expr)
-              div
-                {} $ :style
-                  merge ui/row $ {} (:align-items :center)
-                    :color $ hsl 0 0 50
-                    :font-size 12
-                    :line-height "\"1.5em"
-                <>
-                  stringify-s-expr $ tree->cirru simple-expr
-                  {} (:font-family "|Source Code Pro, Iosevka,Consolas,monospace") (:white-space :nowrap) (:overflow :hidden) (:text-overflow :ellipsis) (:max-width 480)
-                comp-icon :delete
-                  {} (:font-size 12)
-                    :color $ hsl 0 0 50
-                    :cursor :pointer
-                    :margin-left 8
-                  fn (e d!) (d! :writer/hide-peek nil)
+            defcomp comp-peek-def (expr-entry)
+              let
+                  doc $ :doc expr-entry
+                  simple-expr $ :code expr-entry
+                div
+                  {} $ :class-name (str-spaced css/row style-peek-def)
+                  <>
+                    stringify-s-expr $ tree->cirru simple-expr
+                    {} (:font-family "|Source Code Pro, Iosevka,Consolas,monospace") (:white-space :nowrap) (:overflow :hidden) (:text-overflow :ellipsis) (:max-width 480)
+                  =< 8 nil
+                  if (blank? doc) (<> "\"...doc..." style-empty-doc) (<> doc style-doc)
+                  comp-icon :delete
+                    {} (:font-size 14)
+                      :color $ hsl 0 90 70
+                      :cursor :pointer
+                      :margin-left 8
+                    fn (e d!) (d! :writer/hide-peek nil)
+        |style-doc $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-doc $ {}
+              "\"&" $ {} (:font-family ui/font-fancy)
+        |style-empty-doc $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-empty-doc $ {}
+              "\"&" $ {} (:font-style :italic) (:opacity 0.6)
+        |style-peek-def $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-peek-def $ {}
+              "\"&" $ {} (:align-items :center) (:font-size 12) (:line-height "\"1.5em") (:position :fixed) (:bottom 4) (:opacity 0.5)
+              "\"&:hover" $ {} (:opacity 1)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.peek-def $ :require
@@ -2089,6 +2104,8 @@
             app.style :as style
             app.util :refer $ stringify-s-expr tree->cirru
             feather.core :refer $ comp-icon
+            respo-ui.css :as css
+            respo.css :refer $ defstyle
     |app.comp.picker-notice $ %{} :FileEntry
       :defs $ {}
         |comp-picker-notice $ %{} :CodeEntry (:doc |)
@@ -3724,7 +3741,7 @@
                   bookmark $ to-bookmark writer
                   ns-text $ :ns bookmark
                   ns-expr $ tree->cirru
-                    get-in db $ [] :files ns-text :ns
+                    get-in db $ [] :files ns-text :ns :code
                   deps-info $ parse-deps (.slice ns-expr 2)
                   def-info $ parse-def op-data
                   new-bookmark $ merge schema/bookmark
