@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.9)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.10)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -263,7 +263,9 @@
                   cursor $ :cursor states
                   state $ or (:data states) |style-
                 div ({})
-                  input $ {} (:style style/input) (:class-name |el-abstract) (:value state)
+                  input $ {}
+                    :class-name $ str-spaced style/input |el-abstract
+                    :value state
                     :on-input $ fn (e d!)
                       d! cursor $ :value e
                     :on-keydown $ fn (e d!)
@@ -275,7 +277,7 @@
                         (= (:keycode e) keycode/escape)
                           close-modal! d!
                   =< nil 8
-                  button $ {} (:style style/button) (:inner-text |Submit)
+                  button $ {} (:class-name style/button) (:inner-text |Submit)
                     :on-click $ fn (e d!)
                       if
                         not $ blank? state
@@ -393,9 +395,9 @@
                     {} $ :style style-nothing
                     <> "|No changes"
                   div ({})
-                    a $ {} (:inner-text |Save) (:style style/button)
+                    a $ {} (:inner-text |Save) (:class-name style/button)
                       :on-click $ fn (e d!) (d! :effect/save-files nil)
-                    a $ {} (:inner-text |Reset) (:style style/button)
+                    a $ {} (:inner-text |Reset) (:class-name style/button)
                       :on-click $ fn (e d!) (d! :ir/reset-files nil) (d! :states/clear nil)
         |style-column $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -595,7 +597,7 @@
                       {} (:max-width "\"100%") (:overflow :auto)
                         :color $ hsl 0 0 60
                     :inner-text $ format-cirru-edn entries
-                  button $ {} (:style style/button) (:inner-text "\"Edit")
+                  button $ {} (:class-name style/button) (:inner-text "\"Edit")
                     :on-click $ fn (e d!)
                       .show code-plugin d! $ fn (text)
                         d! :configs/update-entries $ [] :reset (parse-cirru-edn text)
@@ -713,21 +715,22 @@
                         mapcat $ fn (x) ([] :data x)
                       node $ get-in expr path
                       missing? $ nil? node
+                      an-expr? $ expr? node
                     if missing?
                       span $ {} (:class-name css-wrong) (:inner-text "|Does not edit expression!")
                         :on-click $ fn (e d!) (close-modal! d!)
                       let
                           state $ or (:data states)
-                            if (expr? node)
+                            if an-expr?
                               format-cirru $ [] (tree->cirru node)
                               :text node
                         div
-                          {} $ :style ui/column
+                          {} $ :class-name css/column
                           div
                             {} $ :style style-original
-                            if expr? (<> "|Cirru Mode" style-mode)
+                            if an-expr? (<> "|Cirru Mode" style-mode)
                               textarea $ {} (:spellcheck false) (:class-name css-text)
-                                :value $ if expr?
+                                :value $ if an-expr?
                                   format-cirru $ tree->cirru node
                                   :text node
                           =< nil 8
@@ -751,11 +754,11 @@
                                     close-modal! d!
                           =< nil 8
                           div
-                            {} $ :style (merge ui/row style-toolbar)
-                            button $ {} (:style style/button) (:inner-text |Apply)
-                              :on-click $ on-submit expr? state cursor close-modal! false
-                            button $ {} (:style style/button) (:inner-text |Submit)
-                              :on-click $ on-submit expr? state cursor close-modal! true
+                            {} $ :class-name (str-spaced css/row style-toolbar)
+                            button $ {} (:class-name style/button) (:inner-text |Apply)
+                              :on-click $ on-submit an-expr? state cursor close-modal! false
+                            button $ {} (:class-name style/button) (:inner-text |Submit)
+                              :on-click $ on-submit an-expr? state cursor close-modal! true
         |css-draft-area $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-draft-area $ {}
@@ -765,7 +768,7 @@
                 :line-height |1.6em
                 :min-width 960
                 :color :white
-                :font-family style/font-code
+                :font-family ui/font-code
                 :font-size 14
                 :outline :none
                 :border :none
@@ -775,7 +778,7 @@
         |css-text $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-text $ {}
-              "\"$0" $ {} (:font-family style/font-code) (:color :white) (:padding "|8px 8px") (:height 60) (:display :block) (:width |100%)
+              "\"$0" $ {} (:font-family ui/font-code) (:color :white) (:padding "|8px 8px") (:height 60) (:display :block) (:width |100%)
                 :background-color $ hsl 0 0 100 0.2
                 :outline :none
                 :border :none
@@ -809,12 +812,14 @@
             def style-original $ {} (:max-height 240) (:overflow :auto)
         |style-toolbar $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-toolbar $ {} (:justify-content :flex-end)
+            defstyle style-toolbar $ {}
+              "\"&" $ {} (:justify-content :flex-end)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.draft-box $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp <> span div textarea pre button a
             respo.css :refer $ defstyle
             respo.comp.space :refer $ =<
@@ -983,16 +988,15 @@
                   fn (d!) (d! :writer/draft-ns nil)
                   div
                     {} $ :style ui/column
-                    textarea $ {} (:value state)
-                      :style $ merge style/input
-                        {} (:width 800) (:height 400) (:white-space :pre) (:line-height "\"20px")
+                    textarea $ {} (:value state) (:class-name style/input)
+                      :style $ {} (:width 800) (:height 400) (:white-space :pre) (:line-height "\"20px")
                       :on-input $ fn (e d!)
                         d! cursor $ :value e
                     =< nil 8
                     div
                       {} $ :style
                         merge ui/row $ {} (:justify-content :flex-end)
-                      button $ {} (:inner-text "\"Submit") (:style style/button)
+                      button $ {} (:inner-text "\"Submit") (:class-name style/button)
                         :on-click $ fn (e d!)
                           if
                             not= state $ format-cirru-edn file
@@ -1244,21 +1248,21 @@
                     div ({})
                       input $ {} (:placeholder |Username)
                         :value $ :username state
-                        :style style/input
+                        :class-name style/input
                         :on-input $ on-input state cursor :username
                     =< nil 8
                     div ({})
                       input $ {} (:placeholder |Password)
                         :value $ :password state
-                        :style style/input
+                        :class-name style/input
                         :on-input $ on-input state cursor :password
                   =< nil 8
                   div
                     {} $ :style style-control
-                    button $ {} (:inner-text "|Sign up") (:style style/button)
+                    button $ {} (:inner-text "|Sign up") (:class-name style/button)
                       :on-click $ on-submit (:username state) (:password state) true
                     =< 8 nil
-                    button $ {} (:inner-text "|Log in") (:style style/button)
+                    button $ {} (:inner-text "|Log in") (:class-name style/button)
                       :on-click $ on-submit (:username state) (:password state) false
         |initial-state $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1340,7 +1344,8 @@
           :code $ quote
             defcomp comp-modal (close-modal! inner-tree)
               div
-                {} (:style style-backdrop)
+                {}
+                  :class-name $ str-spaced css/center style-backdrop
                   :on-click $ fn (e d!) (close-modal! d!)
                 div
                   {} $ :on-click
@@ -1348,12 +1353,14 @@
                   , inner-tree
         |style-backdrop $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-backdrop $ merge ui/center
-              {} (:position :fixed) (:width |100%) (:height |100%) (:top 0) (:left 0)
+            defstyle style-backdrop $ {}
+              "\"&" $ {} (:position :fixed) (:width |100%) (:height |100%) (:top 0) (:left 0)
                 :background-color $ hsl 0 0 0 0.6
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.modal $ :require
+            respo.css :refer $ defstyle
+            respo-ui.css :as css
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo.core :refer $ defcomp >> <> span div pre input button a
@@ -1433,7 +1440,7 @@
                       let
                           peek-def $ :peek-def router-data
                         if (some? peek-def) (comp-peek-def peek-def)
-                      comp-status-bar states router-data bookmark theme
+                      comp-status-bar cursor state states router-data bookmark theme
                       if (:draft-box? state)
                         comp-draft-box (>> states :draft-box) expr focus close-draft-box!
                       if (:abstract? state)
@@ -1452,10 +1459,8 @@
                       [] idx $ comp-bookmark bookmark idx (= idx pointer)
         |comp-status-bar $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-status-bar (states router-data bookmark theme)
+            defcomp comp-status-bar (cursor state states router-data bookmark theme)
               let
-                  cursor $ :cursor states
-                  state $ or (:data states) initial-state
                   old-name $ if
                     = :def $ :kind bookmark
                     str (:ns bookmark) "\"/" $ :extra bookmark
@@ -1732,9 +1737,9 @@
                 div
                   {} $ :class-name css-file
                   div ({}) (<> "\"File" style/title) (=< 16 nil)
-                    span $ {} (:inner-text |Draft) (:style style/button)
+                    span $ {} (:inner-text |Draft) (:class-name style/button)
                       :on-click $ fn (e d!) (d! :writer/draft-ns selected-ns)
-                    span $ {} (:inner-text |Clone) (:style style/button)
+                    span $ {} (:inner-text |Clone) (:class-name style/button)
                       :on-click $ fn (e d!)
                         .show duplicate-plugin d! $ fn (result)
                           if (.includes? result "\".") (d! :ir/clone-ns result)
@@ -1921,10 +1926,6 @@
                 :white-space :nowrap
                 :text-overflow :ellipsis
                 :font-family ui/font-fancy
-        |style-input $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            def style-input $ merge style/input
-              {} $ :width |100%
         |style-inspect $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-inspect $ {} (:opacity 1)
@@ -2229,7 +2230,7 @@
                       , style-id
                   =< nil 80
                   div ({})
-                    button $ {} (:inner-text "|Log out") (:style style/button) (:on-click on-log-out)
+                    button $ {} (:inner-text "|Log out") (:class-name style/button) (:on-click on-log-out)
                   .render rename-plugin
         |on-log-out $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2390,9 +2391,8 @@
                     div ({})
                       input $ {} (:placeholder "|Type to search...")
                         :value $ :query state
-                        :class-name |search-input
-                        :style $ merge style/input
-                          {} $ :width "\"100%"
+                        :class-name $ str-spaced style/input |search-input
+                        :style $ {} (:width "\"100%")
                         :on-input $ on-input state cursor
                         :on-keydown $ on-keydown state def-candidates cursor
                     if (empty? def-candidates) (comp-no-results)
@@ -3022,37 +3022,38 @@
       :defs $ {}
         |button $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def button $ {}
-              :background-color $ hsl 0 0 100 0
-              :text-decoration :underline
-              :color $ hsl 0 0 100 0.4
-              :min-width 40
-              :vertical-align :middle
-              :border :none
-              :min-width 80
-              :line-height "\"30px"
-              :font-size 14
-              :text-align :center
-              :padding "\"0 8px"
-              :outline :none
-              :cursor :pointer
-        |font-code $ %{} :CodeEntry (:doc |)
-          :code $ quote (def font-code "\"Source Code Pro, monospace")
+            defstyle button $ {}
+              "\"&" $ {}
+                :background-color $ hsl 0 0 100 0
+                :text-decoration :underline
+                :color $ hsl 0 0 100 0.4
+                :min-width 40
+                :vertical-align :middle
+                :border :none
+                :min-width 80
+                :line-height "\"30px"
+                :font-size 14
+                :text-align :center
+                :padding "\"0 8px"
+                :outline :none
+                :cursor :pointer
+                :transition-duration "\"200ms"
+              "\"&:hover" $ {}
+                :color $ hsl 0 0 100 0.6
         |input $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def input $ merge ui/input
-              {}
-                :background-color $ hsl 0 0 100 0.16
-                :color $ hsl 0 0 100
-                :font-family |Menlo,monospace
-                :border :none
+            defstyle input $ {}
+              "\"&" $ merge ui/input
+                {}
+                  :background-color $ hsl 0 0 100 0.16
+                  :color $ hsl 0 0 100
+                  :font-family |Menlo,monospace
+                  :border :none
         |inspector $ %{} :CodeEntry (:doc |)
           :code $ quote
             def inspector $ {} (:opacity 0.9)
               :background-color $ hsl 0 0 90
               :color :black
-        |link $ %{} :CodeEntry (:doc |)
-          :code $ quote (def link ui/link)
         |title $ %{} :CodeEntry (:doc |)
           :code $ quote
             def title $ {} (:font-family ui/font-fancy) (:font-size 18) (:font-weight 100)
@@ -3061,6 +3062,7 @@
         :code $ quote
           ns app.style $ :require (respo-ui.core :as ui)
             respo.util.format :refer $ hsl
+            respo.css :refer $ defstyle
     |app.theme $ %{} :FileEntry
       :defs $ {}
         |base-style-expr $ %{} :CodeEntry (:doc |)
@@ -3211,7 +3213,7 @@
               :background-color $ hsl 0 0 100 0.2
         |style-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-leaf $ {} (:line-height |24px) (:height 24) (:margin "|1px 1px") (:padding "|0px 4px") (:background-color :transparent) (:min-width 8) (:font-family style/font-code) (:font-size 14) (:vertical-align :baseline) (:text-align :left) (:border-width "|1px 1px 1px 1px") (:resize :none) (:white-space :nowrap) (:outline :none) (:border :none) (:border-radius "\"6px")
+            def style-leaf $ {} (:line-height |24px) (:height 24) (:margin "|1px 1px") (:padding "|0px 4px") (:background-color :transparent) (:min-width 8) (:font-family ui/font-code) (:font-size 14) (:vertical-align :baseline) (:text-align :left) (:border-width "|1px 1px 1px 1px") (:resize :none) (:white-space :nowrap) (:outline :none) (:border :none) (:border-radius "\"6px")
               :color $ hsl 200 14 60
         |style-number $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -4847,11 +4849,13 @@
           :code $ quote
             defn cirru->file (file author timestamp)
               -> file
-                update :ns $ \ cirru->tree % author timestamp
+                update :ns $ fn (entry)
+                  update entry :code $ \ cirru->tree % author timestamp
                 update :defs $ fn (defs)
                   -> defs $ map-kv
-                    fn (k xs)
-                      [] k $ cirru->tree xs author timestamp
+                    fn (k entry)
+                      [] k $ update entry :code
+                        fn (xs) (cirru->tree xs author timestamp)
         |cirru->tree $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn cirru->tree (xs author timestamp)
