@@ -1,9 +1,9 @@
 {
   "name": "@calcit/editor",
-  "version": "0.8.9",
+  "version": "0.8.10",
   "description": "Tree Editor for Calcit Language",
   "bin": {
-    "ct": "./server.mjs"
+    "ct": "server.mjs"
   },
   "scripts": {
     "watch-server": "cr --emit-js",
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:calcit-lang/editor.git"
+    "url": "git+ssh://git@github.com/calcit-lang/editor.git"
   },
   "author": "jiyinyiyong",
   "license": "MIT",
