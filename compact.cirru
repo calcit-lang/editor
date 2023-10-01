@@ -1,7 +1,7 @@
 
 {} (:package |app)
   :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.10)
-    :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/
+    :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
       :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
@@ -190,7 +190,7 @@
                     > (count d) size
                     any? (vals d) expr?
                 , false
-        |expr? $ %{} :CodeEntry (:doc |)
+        |expr? $ %{} :CodeEntry (:doc "|a function to detect expression,\nan expression is represented with a record with `CirruExpr`\n")
           :code $ quote
             defn expr? (x) (&record:matches? schema/CirruExpr x)
         |leaf? $ %{} :CodeEntry (:doc |)
@@ -229,18 +229,22 @@
                 =< nil 16
                 <> "\"No connection to server..." $ {} (:font-family "|Josefin Sans") (:font-weight 300) (:font-size 24)
                   :color $ hsl 0 80 60
-                div ({}) (<> "\"Get editor server running with:")
+                div
+                  {} $ :style
+                    {} $ :color (hsl 0 0 80)
+                  <> "\"Get editor server running with:"
                   pre $ {} (:innerHTML install-commands) (:class-name "\"copy-commands")
                     :style $ {} (:cursor :pointer) (:padding "\"0 8px")
                     :title "\"Click to copy."
-                    :on-click $ fn (e d!) (copy-silently! install-commands)
+                    :on-click $ fn (e d!)
+                      copy-silently! $ .replace install-commands "\"$ " "\""
               div
                 {} (:class-name css/center)
                   :style $ {} (:padding "\"8px 8px")
                     :color $ hsl 0 0 50
                 comp-md-block "\"Calcit Editor is a syntax tree editor of [Cirru Project](http://cirru.org). Read more at [Calcit Editor](https://github.com/calcit-lang/editor).\n" $ {}
         |install-commands $ %{} :CodeEntry (:doc |)
-          :code $ quote (def install-commands "\"npm install -g @calcit/editor\nct\n")
+          :code $ quote (def install-commands "\"$ npm install -g @calcit/editor\n$ ct\n")
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.about $ :require
@@ -1378,24 +1382,28 @@
                       :text $ if ns? "\"Namespace doc:" "\"Function doc:"
                       :initial $ :doc expr-entry
                       :placeholder "\"...some docs..."
-                      :input-style $ {}
+                      :input-style $ {} (:height 600) (:resize :vertical) (:font-family ui/font-code) (:font-size 13)
+                      :class-name css/font-code!
+                      :multiline? true
                   doc $ :doc expr-entry
                   no-doc? $ blank? doc
                 div
                   {} $ :style
                     {} $ :margin-left 32
-                  span $ {}
-                    :inner-text $ if no-doc? "\"no doc" doc
-                    :class-name $ str-spaced style-doc (if no-doc? style-doc-empty)
-                    :on-click $ fn (e d!)
-                      .show doc-plugin d! $ fn (text)
-                        if ns?
-                          d! $ :: :writer/doc-set
-                            :: :ns $ :ns bookmark
-                            , text
-                          d! $ :: :writer/doc-set
-                            :: :def (:ns bookmark) (:extra bookmark)
-                            , text
+                  div
+                    {}
+                      :class-name $ str-spaced style-doc (if no-doc? style-doc-empty)
+                      :on-click $ fn (e d!)
+                        .show doc-plugin d! $ fn (text)
+                          if ns?
+                            d! $ :: :writer/doc-set
+                              :: :ns $ :ns bookmark
+                              , text
+                            d! $ :: :writer/doc-set
+                              :: :def (:ns bookmark) (:extra bookmark)
+                              , text
+                    if no-doc? (<> "\"no doc")
+                      comp-md-block doc $ {}
                   .render doc-plugin
         |comp-page-editor $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1657,6 +1665,17 @@
               "\"&" $ {}
                 :color $ hsl 0 0 100 0.6
                 :transition-duration "\"200ms"
+                :line-height "\"20px"
+              "\"& .md-p" $ {} (:margin-bottom 12)
+              "\"& div>code" $ {} (:font-family ui/font-code) (:border-radius "\"6px") (:margin "\"0 2px") (:padding "\"2px 6px") (:font-size 12)
+                :border $ str "\"1px solid " (hsl 0 0 98 0.25)
+              "\"& .md-code-block" $ {} (:font-family ui/font-code) (:border-radius "\"6px") (:margin "\"0 0 8px 8px") (:padding "\"6px 24px 6px 8px") (:width :fit-content) (:font-size 12)
+                :color $ hsl 0 0 50
+                :border $ str "\"1px solid " (hsl 0 0 98 0.18)
+              "\"& a[href]" $ {} (:pointer-events :none)
+                :color $ hsl 230 80 70
+              "\"& img" $ {} (:max-height 400) (:max-width 400) (:transform "\"scale(1)") (:border-radius "\"34x")
+                :box-shadow $ str "\"0 0 3px " (hsl 0 0 100 0.5)
               "\"&:hover" $ {}
                 :color $ hsl 0 0 100 1
         |style-doc-empty $ %{} :CodeEntry (:doc |)
@@ -1703,6 +1722,7 @@
           ns app.comp.page-editor $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp defeffect list-> >> <> span div a pre
             respo.css :refer $ defstyle
             respo.comp.space :refer $ =<
@@ -1721,6 +1741,7 @@
             respo-alerts.core :refer $ use-confirm use-prompt
             app.comp.replace-name :refer $ use-replace-name-modal
             app.comp.picker-notice :refer $ comp-picker-notice
+            respo-md.comp.md :refer $ comp-md-block
     |app.comp.page-files $ %{} :FileEntry
       :defs $ {}
         |comp-file $ %{} :CodeEntry (:doc |)
@@ -1785,8 +1806,13 @@
                                 {} $ :color :white
                               :on-click $ fn (e d!)
                                 d! :writer/edit $ {} (:kind :def) (:extra def-text)
-                            div ({}) (<> def-text nil) (=< 8 nil)
-                              <> (get defs-dict def-text) style-def-doc
+                            div
+                              {} $ :class-name css/row
+                              <> def-text nil
+                              =< 8 nil
+                              <>
+                                .replace (get defs-dict def-text) &newline "\""
+                                , style-def-doc
                             =< 16 nil
                             span
                               {}
@@ -1926,6 +1952,7 @@
                 :white-space :nowrap
                 :text-overflow :ellipsis
                 :font-family ui/font-fancy
+                :white-space :nowrap
         |style-inspect $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-inspect $ {} (:opacity 1)
@@ -5211,7 +5238,7 @@
           :code $ quote
             defn copy-silently! (x)
               -> js/navigator .-clipboard (.!writeText x)
-                .!then $ fn () (println "\"Copied.")
+                .!then $ fn (e) (println "\"Copied.")
                 .!catch $ fn (error) (js/console.error "\"Failed to copy:" error)
         |do-copy-logics! $ %{} :CodeEntry (:doc |)
           :code $ quote
