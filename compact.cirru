@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.10)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.11)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -1941,6 +1941,11 @@
             defstyle style-def $ {}
               "\"&" $ {} (:padding "|0 8px") (:position :relative)
                 :color $ hsl 0 0 74
+                :border-radius "\"8px"
+              (str "\"& ." style-remove)
+                {} (:opacity 0) (:transition-duration "\"200ms")
+              (str "\"&:hover ." style-remove)
+                {} $ :opacity 1
         |style-def-doc $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-def-doc $ {}
@@ -1968,7 +1973,12 @@
           :code $ quote
             defstyle style-ns $ {}
               "\"&" $ {} (:cursor :pointer) (:vertical-align :middle) (:position :relative) (:padding "|0 8px")
-                :color $ hsl 0 0 74
+                :color $ hsl 0 0 74 1
+                :border-radius "\"8px"
+              (str "\"& ." style-remove)
+                {} (:opacity 0) (:transition-duration "\"200ms")
+              (str "\"&:hover ." style-remove)
+                {} $ :opacity 1
         |style-ns-doc $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-ns-doc $ {}
@@ -1985,11 +1995,14 @@
           :code $ quote
             defstyle style-remove $ {}
               "\"&" $ {}
-                :color $ hsl 0 50 90
+                :color $ hsl 0 50 70
                 :font-size 12
                 :cursor :pointer
                 :vertical-align :middle
                 :line-height "\"12px"
+              "\"&:hover" $ {}
+                :color $ hsl 0 50 90
+                :transform "\"scale(1.1)"
         |sytle-container $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle sytle-container $ {}
