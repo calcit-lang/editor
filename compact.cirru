@@ -953,7 +953,7 @@
                             js/setTimeout $ fn ()
                               let
                                   el $ js/document.querySelector |.el-abstract
-                                if (some? el) (.focus el)
+                                if (some? el) (.!focus el)
                         .!preventDefault event
                     (and meta? (= code keycode/slash) (not shift?))
                       d! :ir/toggle-comment nil
@@ -1210,7 +1210,7 @@
                             js/setTimeout $ fn ()
                               let
                                   el $ js/document.querySelector |.el-draft-box
-                                if (some? el) (.focus el)
+                                if (some? el) (.!focus el)
                           d! :analyze/goto-def $ {}
                             :text $ :text leaf
                             :forced? shift?
