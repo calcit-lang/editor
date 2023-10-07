@@ -843,7 +843,7 @@
                   sorted-children $ -> (:data expr) (.to-list) (.sort-by first)
                 list->
                   {} (:tab-index 0)
-                    :class-name $ str-spaced (base-style-expr theme) (if focused? |cirru-focused |)
+                    :class-name $ str-spaced "\"comp-expr" (base-style-expr theme) (if focused? |cirru-focused |)
                     :style $ decide-expr-theme expr (includes? others coord) focused? focus-in? tail? layout-mode (count coord) depth theme
                     :on $ if readonly?
                       {} $ :click
@@ -1118,7 +1118,7 @@
                     , "\""
                   focused? $ = focus coord
                 textarea $ {} (:value text) (:spellcheck false)
-                  :class-name $ str-spaced (base-style-leaf theme)
+                  :class-name $ str-spaced "\"comp-leaf" (base-style-leaf theme)
                     if (= focus coord) "\"cirru-focused" "\""
                   :read-only readonly?
                   :style $ decide-leaf-theme text focused? first? by-other? theme

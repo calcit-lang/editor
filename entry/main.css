@@ -63,5 +63,43 @@ body * {
 }
 
 .copy-commands:active {
-  background-color: hsla(0,0%,100%,0.3)
+  background-color: hsla(0,0%,100%,0.3);
+}
+
+.comp-leaf:hover {
+  background-color: hsla(0,0%,100%,0.14);
+}
+
+.comp-expr:hover {
+  border-color: hsla(0,0%,100%,0.8);
+}
+
+/** tricky selector to reset parent hover color */
+div.comp-expr:has(.comp-expr:hover):hover,
+div.comp-expr:has(.comp-leaf:hover):hover {
+  border-color: hsl(200,100%,76%,0.5);
+}
+
+.comp-expr.cirru-focused {
+  animation: expr-breathing 2.4s ease-out infinite normal;
+}
+.comp-leaf.cirru-focused {
+  animation: leaf-breathing 2.4s ease-out infinite normal;
+}
+
+
+@keyframes expr-breathing {
+  0% { background-color: hsla(0, 100%, 100%, 0.1); }
+  10% { background-color: hsla(0, 100%, 100%, 0.1); }
+  50% { background-color: hsla(0, 100%, 100%, 0.0); }
+  90% { background-color: hsla(0, 100%, 100%, 0.1); }
+  100% { background-color: hsla(0, 100%, 100%, 0.1); }
+}
+
+@keyframes leaf-breathing {
+  0% { background-color: hsla(0, 100%, 100%, 0.3); }
+  10% { background-color: hsla(0, 100%, 100%, 0.3); }
+  50% { background-color: hsla(0, 100%, 100%, 0.1); }
+  10% { background-color: hsla(0, 100%, 100%, 0.3); }
+  100% { background-color: hsla(0, 100%, 100%, 0.3); }
 }
