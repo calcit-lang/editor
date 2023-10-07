@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.10)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.12)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -76,7 +76,7 @@
                 _ $ send-op! op
         |heartbeat! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn heartbeat! () $ delay! 30
+            defn heartbeat! () $ flipped js/setTimeout 3000
               fn () $ if (ws-connected?)
                 do
                   ws-send! $ :: :ping
@@ -146,7 +146,6 @@
             app.client-updater :as updater
             ws-edn.client :refer $ ws-connect! ws-send! ws-connected?
             recollect.patch :refer $ patch-twig
-            cumulo-util.core :refer $ delay!
             app.config :as config
             "\"bottom-tip" :default tip!
             "\"./calcit.build-errors" :default build-errors
@@ -954,7 +953,7 @@
                             js/setTimeout $ fn ()
                               let
                                   el $ js/document.querySelector |.el-abstract
-                                if (some? el) (.focus el)
+                                if (some? el) (.!focus el)
                         .!preventDefault event
                     (and meta? (= code keycode/slash) (not shift?))
                       d! :ir/toggle-comment nil
@@ -1211,7 +1210,7 @@
                             js/setTimeout $ fn ()
                               let
                                   el $ js/document.querySelector |.el-draft-box
-                                if (some? el) (.focus el)
+                                if (some? el) (.!focus el)
                           d! :analyze/goto-def $ {}
                             :text $ :text leaf
                             :forced? shift?
@@ -1817,7 +1816,7 @@
                             span
                               {}
                                 :class-name $ str-spaced "\"is-minor" style-remove
-                                :on-click $ fn (e d!)
+                                :on-click $ fn (e d!) (-> e :event .!preventDefault)
                                   .show confirm-remove-plugin d! $ fn () (d! :ir/remove-def def-text)
                               comp-i :x 12 $ hsl 0 0 80 0.5
                             .render confirm-remove-plugin
@@ -1901,7 +1900,7 @@
                   span
                     {}
                       :class-name $ str-spaced "\"is-minor" style-remove
-                      :on-click $ fn (e d!)
+                      :on-click $ fn (e d!) (-> e :event .!preventDefault)
                         .show plugin-rm-ns d! $ fn () (d! :ir/remove-ns ns-text)
                     comp-i :x 12 $ hsl 0 0 80 0.6
                   .render plugin-rm-ns
@@ -1942,6 +1941,11 @@
             defstyle style-def $ {}
               "\"&" $ {} (:padding "|0 8px") (:position :relative)
                 :color $ hsl 0 0 74
+                :border-radius "\"8px"
+              (str "\"& ." style-remove)
+                {} (:opacity 0) (:transition-duration "\"200ms")
+              (str "\"&:hover ." style-remove)
+                {} $ :opacity 1
         |style-def-doc $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-def-doc $ {}
@@ -1969,7 +1973,12 @@
           :code $ quote
             defstyle style-ns $ {}
               "\"&" $ {} (:cursor :pointer) (:vertical-align :middle) (:position :relative) (:padding "|0 8px")
-                :color $ hsl 0 0 74
+                :color $ hsl 0 0 74 1
+                :border-radius "\"8px"
+              (str "\"& ." style-remove)
+                {} (:opacity 0) (:transition-duration "\"200ms")
+              (str "\"&:hover ." style-remove)
+                {} $ :opacity 1
         |style-ns-doc $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-ns-doc $ {}
@@ -1986,11 +1995,14 @@
           :code $ quote
             defstyle style-remove $ {}
               "\"&" $ {}
-                :color $ hsl 0 50 90
+                :color $ hsl 0 50 70
                 :font-size 12
                 :cursor :pointer
                 :vertical-align :middle
                 :line-height "\"12px"
+              "\"&:hover" $ {}
+                :color $ hsl 0 50 90
+                :transform "\"scale(1.1)"
         |sytle-container $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle sytle-container $ {}
@@ -2288,6 +2300,26 @@
             respo-alerts.core :refer $ use-prompt
     |app.comp.replace-name $ %{} :FileEntry
       :defs $ {}
+        |%rename-plugin $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defrecord! %rename-plugin
+              :render $ fn (self)
+                tag-match self $ 
+                  :rename-plugin node cursor s
+                  , node
+              :show $ fn (self d!)
+                tag-match self $ 
+                  :rename-plugin node cursor state
+                  do
+                    d! cursor $ assoc state :old-name "\"" :new-name "\"" :show? true
+                    js/setTimeout $ fn ()
+                      let
+                          el $ js/document.querySelector "\"#replace-input"
+                        if (some? el) (.!select el)
+              :close $ fn (self d!)
+                tag-match self $ 
+                  :rename-plugin node cursor state
+                  d! cursor $ assoc state :show? false
         |use-replace-name-modal $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn use-replace-name-modal (states on-replace)
@@ -2302,57 +2334,45 @@
                         not $ = (:new-name state) "\""
                       on-replace (:old-name state) (:new-name state) d!
                       d! cursor $ assoc state :show? false
-                  klass $ %{} ModalShape
-                    :render $ fn (self) (:node self)
-                    :show $ fn (self d!)
-                      d! cursor $ assoc state :old-name "\"" :new-name "\"" :show? true
-                      js/setTimeout $ fn ()
-                        let
-                            el $ js/document.querySelector "\"#replace-input"
-                          if (some? el) (.select el)
-                    :close $ fn (self d!)
-                      d! cursor $ assoc state :show? false
-                &record:with-class
-                  %{} PluginShape (:name :modal)
-                    :node $ comp-modal
-                      {} (:title "\"Replace variable")
-                        :style $ {} (:width 240)
-                        :container-style $ {}
-                        :render-body $ fn (? arg)
+                  node $ comp-modal
+                    {} (:title "\"Replace variable")
+                      :style $ {} (:width 240)
+                      :container-style $ {}
+                      :render-body $ fn (? arg)
+                        div
+                          {} $ :style
+                            merge ui/column $ {} (:padding "\"8px 16px")
+                          div ({})
+                            input $ {} (:placeholder "\"from...")
+                              :style $ merge ui/input
+                                {} $ :font-family ui/font-code
+                              :value $ :old-name state
+                              :autofocus true
+                              :id "\"replace-input"
+                              :on-input $ fn (e d!)
+                                d! cursor $ assoc state :old-name (:value e)
+                          =< nil 8
+                          div ({})
+                            input $ {} (:placeholder "\"to...")
+                              :style $ merge ui/input
+                                {} $ :font-family ui/font-code
+                              :on-input $ fn (e d!)
+                                d! cursor $ assoc state :new-name (:value e)
+                              :value $ :new-name state
+                              :on-keydown $ fn (e d!)
+                                if
+                                  = 13 $ :key-code e
+                                  on-submit d!
+                          =< nil 8
                           div
-                            {} $ :style
-                              merge ui/column $ {} (:padding "\"8px 16px")
-                            div ({})
-                              input $ {} (:placeholder "\"from...")
-                                :style $ merge ui/input
-                                  {} $ :font-family ui/font-code
-                                :value $ :old-name state
-                                :autofocus true
-                                :id "\"replace-input"
-                                :on-input $ fn (e d!)
-                                  d! cursor $ assoc state :old-name (:value e)
-                            =< nil 8
-                            div ({})
-                              input $ {} (:placeholder "\"to...")
-                                :style $ merge ui/input
-                                  {} $ :font-family ui/font-code
-                                :on-input $ fn (e d!)
-                                  d! cursor $ assoc state :new-name (:value e)
-                                :value $ :new-name state
-                                :on-keydown $ fn (e d!)
-                                  if
-                                    = 13 $ :key-code e
-                                    on-submit d!
-                            =< nil 8
-                            div
-                              {} $ :style ui/row-parted
-                              span nil
-                              button $ {} (:style ui/button) (:inner-text "\"Replace")
-                                :on-click $ fn (e d!) (on-submit d!)
-                      :show? state
-                      fn (d!)
-                        d! cursor $ assoc state :show? false
-                  , klass
+                            {} $ :style ui/row-parted
+                            span nil
+                            button $ {} (:style ui/button) (:inner-text "\"Replace")
+                              :on-click $ fn (e d!) (on-submit d!)
+                    :show? state
+                    fn (d!)
+                      d! cursor $ assoc state :show? false
+                %:: %rename-plugin :rename-plugin node cursor state
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.replace-name $ :require
@@ -2361,7 +2381,7 @@
             respo.core :refer $ defcomp <> span div pre input button img a br
             respo.comp.space :refer $ =<
             app.style :as style
-            respo-alerts.core :refer $ comp-modal ModalShape PluginShape
+            respo-alerts.core :refer $ comp-modal
     |app.comp.search $ %{} :FileEntry
       :defs $ {}
         |bookmark->str $ %{} :CodeEntry (:doc |)
@@ -2851,8 +2871,8 @@
               ; js/console.log "\"Database:" $ to-js-data @*writer-db
               let
                   d2! $ fn (op2) (dispatch! op2 sid)
-                  op-id $ id!
-                  op-time $ unix-time!
+                  op-id $ nanoid
+                  op-time $ .!now js/Date
                 tag-match op
                     :effect/save-files
                     handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true nil
@@ -2894,10 +2914,10 @@
                   println $ .!yellow chalk "\"Using default schema."
                 if found?
                   let
-                      started-at $ unix-time!
+                      started-at $ .!now js/Date
                       data $ parse-cirru-edn (fs/readFileSync storage-file "\"utf8")
                         {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf) (:CodeEntry schema/CodeEntry)
-                      cost $ - (unix-time!) started-at
+                      cost $ - (.!now js/Date) started-at
                     println $ .!gray chalk (str "\"Took " cost "\"ms to load.")
                     , data
                   if (some? configs)
@@ -2973,7 +2993,7 @@
                   println "\"Not writing empty project."
                   do
                     let
-                        started-time $ unix-time!
+                        started-time $ .!now js/Date
                       persist! storage-file (db->string @*writer-db) started-time
                     println (str &newline "\"Saved calcit.cirru")
                       str $ if (some? code) (str "|with " code)
@@ -3021,7 +3041,7 @@
                 reset! *calcit-md5 $ md5 (fs/readFileSync storage-file |utf8)
                 gaze storage-file $ fn (error watcher)
                   if (some? error) (js/console.log error)
-                    .!on watcher "\"changed" $ fn (filepath) (delay! 0.02 on-file-change!)
+                    .!on watcher "\"changed" $ fn (filepath) (flipped js/setTimeout 20 on-file-change!)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.server $ :require (app.schema :as schema)
@@ -3043,8 +3063,8 @@
             app.util.env :refer $ check-version!
             app.config :as config
             cumulo-util.file :refer $ write-mildly!
-            cumulo-util.core :refer $ unix-time! id! delay!
             app.util.env :refer $ get-cli-configs!
+            "\"nanoid" :refer $ nanoid
     |app.style $ %{} :FileEntry
       :defs $ {}
         |button $ %{} :CodeEntry (:doc |)
@@ -5163,7 +5183,7 @@
                   if save-ir? $ js/setTimeout
                     fn () $ let
                         db-content $ db->string db
-                        started-time $ unix-time!
+                        started-time $ .!now js/Date
                       reset! *calcit-md5 $ md5 db-content
                       persist-async! (:storage-file config/site) db-content started-time
                 fn (e)
@@ -5180,7 +5200,7 @@
             defn persist! (storage-path db-str started-time) (fs/writeFileSync storage-path db-str)
               println $ .!gray chalk
                 str "|took "
-                  - (unix-time!) started-time
+                  - (.!now js/Date) started-time
                   , "|ms to wrote calcit.cirru"
         |persist-async! $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -5190,7 +5210,7 @@
                   js/console.log $ .!red chalk "\"Failed to write storage!" err
                   println $ .!gray chalk
                     str "|took "
-                      - (unix-time!) started-time
+                      - (.!now js/Date) started-time
                       , "|ms to wrote calcit.cirru"
         |remove-file! $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -5209,7 +5229,6 @@
             "\"child_process" :as cp
             "\"md5" :default md5
             app.config :as config
-            cumulo-util.core :refer $ unix-time!
             cirru-edn.core :as cirru-edn
     |app.util.detect $ %{} :FileEntry
       :defs $ {}
@@ -5262,7 +5281,7 @@
                     println "|[Editor] .cirru-focused not found" cirru-focused
         |focus-search! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn focus-search! () $ delay! 0.2
+            defn focus-search! () $ flipped js/setTimeout 200
               fn () $ let
                   target $ js/document.querySelector |.search-input
                 if (some? target) (.!focus target)
@@ -5276,7 +5295,6 @@
           ns app.util.dom $ :require
             respo.core :refer $ style
             respo.render.html :refer $ style->string
-            cumulo-util.core :refer $ delay!
     |app.util.env $ %{} :FileEntry
       :defs $ {}
         |check-version! $ %{} :CodeEntry (:doc |)
