@@ -1816,7 +1816,7 @@
                             span
                               {}
                                 :class-name $ str-spaced "\"is-minor" style-remove
-                                :on-click $ fn (e d!)
+                                :on-click $ fn (e d!) (-> e :event .!preventDefault)
                                   .show confirm-remove-plugin d! $ fn () (d! :ir/remove-def def-text)
                               comp-i :x 12 $ hsl 0 0 80 0.5
                             .render confirm-remove-plugin
@@ -1900,7 +1900,7 @@
                   span
                     {}
                       :class-name $ str-spaced "\"is-minor" style-remove
-                      :on-click $ fn (e d!)
+                      :on-click $ fn (e d!) (-> e :event .!preventDefault)
                         .show plugin-rm-ns d! $ fn () (d! :ir/remove-ns ns-text)
                     comp-i :x 12 $ hsl 0 0 80 0.6
                   .render plugin-rm-ns
