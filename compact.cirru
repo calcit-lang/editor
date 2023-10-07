@@ -912,7 +912,7 @@
                         if
                           not $ empty? coord
                           d! :writer/go-up nil
-                        .preventDefault event
+                        .!preventDefault event
                     (= code keycode/down)
                       do
                         d! :writer/go-down $ {} (:tail? shift?)
@@ -1199,7 +1199,7 @@
                     (and meta? (= code keycode/c) (= (.-selectionStart (.-target event)) (.-selectionEnd (.-target event))))
                       do-copy-logics! d! (tree->cirru leaf) "\"Copied!"
                     (and meta? shift? (= code keycode/v))
-                      do (on-paste! d!) (.preventDefault event)
+                      do (on-paste! d!) (.!preventDefault event)
                     (and meta? (= code keycode/d))
                       do (.!preventDefault event)
                         if
@@ -5422,7 +5422,8 @@
                       do (.!preventDefault event)
                         dispatch! $ :: :effect/save-files
                     (and meta? shift? (= code keycode/f))
-                      dispatch! :router/change $ {} (:name :files)
+                      dispatch! $ :: :router/change
+                        {} $ :name :files
                     (and meta? (not shift?) (= code keycode/period))
                       dispatch! $ :: :writer/picker-mode
       :ns $ %{} :CodeEntry (:doc |)
