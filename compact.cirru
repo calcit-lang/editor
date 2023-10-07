@@ -5385,7 +5385,7 @@
         |on-paste! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-paste! (d!)
-              -> js/navigator .-clipboard (.readText)
+              -> js/navigator .-clipboard (.!readText)
                 .!then $ fn (text) (println "\"read from text...")
                   let
                       cirru-code $ parse-cirru-list text
