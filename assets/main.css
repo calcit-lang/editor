@@ -66,12 +66,27 @@ body * {
   background-color: hsla(0,0%,100%,0.3);
 }
 
+.comp-leaf {
+  opacity: 0.8;
+}
 .comp-leaf:hover {
   background-color: hsla(0,0%,100%,0.14);
 }
 
+.comp-leaf:active {
+  transition-duration: 0ms;
+  /*  transform: scale(1.02);*/
+  transform: translate(1px, 0px);
+}
+
 .comp-expr:hover {
   border-color: hsla(0,0%,100%,0.8);
+}
+
+.comp-expr:active {
+  transition-duration: 0ms;
+  /*  transform: scale(1.02);*/
+  transform: translate(1px, 0px);
 }
 
 /** tricky selector to reset parent hover color */
@@ -80,26 +95,14 @@ div.comp-expr:has(.comp-leaf:hover):hover {
   border-color: hsl(200,100%,76%,0.5);
 }
 
-.comp-expr.cirru-focused {
-  animation: expr-breathing 2.4s ease-out infinite normal;
+
+/** tricky selector to reset parent click color */
+div.comp-expr:has(.comp-expr:active):active,
+div.comp-expr:has(.comp-leaf:active):active {
+  transform: translate(0px, 0px);
 }
+
+.comp-expr.cirru-focused .comp-leaf,
 .comp-leaf.cirru-focused {
-  animation: leaf-breathing 2.4s ease-out infinite normal;
-}
-
-
-@keyframes expr-breathing {
-  0% { background-color: hsla(0, 100%, 100%, 0.1); }
-  10% { background-color: hsla(0, 100%, 100%, 0.1); }
-  50% { background-color: hsla(0, 100%, 100%, 0.0); }
-  90% { background-color: hsla(0, 100%, 100%, 0.1); }
-  100% { background-color: hsla(0, 100%, 100%, 0.1); }
-}
-
-@keyframes leaf-breathing {
-  0% { background-color: hsla(0, 100%, 100%, 0.3); }
-  10% { background-color: hsla(0, 100%, 100%, 0.3); }
-  50% { background-color: hsla(0, 100%, 100%, 0.1); }
-  10% { background-color: hsla(0, 100%, 100%, 0.3); }
-  100% { background-color: hsla(0, 100%, 100%, 0.3); }
+  opacity: 1;
 }

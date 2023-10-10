@@ -3194,7 +3194,7 @@
         |css-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-expr $ {}
-              "\"$0" $ {} (:border-width "|0 0 0px 1px") (:border-style :solid) (:min-height 24) (:outline :none) (:padding-left 10) (:font-family |Menlo,monospace) (:font-size 13) (:margin-bottom 2) (:margin-right 1) (:margin-left 8) (:line-height "\"1em") (:border-radius "\"8px")
+              "\"$0" $ {} (:border-width "|0 0 0px 1px") (:border-style :solid) (:min-height 24) (:outline :none) (:padding-left 10) (:font-family |Menlo,monospace) (:font-size 13) (:margin-bottom 2) (:margin-right 1) (:margin-left 8) (:line-height "\"1em") (:border-radius "\"8px") (:transition-duration "\"200ms") (:transition-property "\"background,opacity,border-color")
                 :border-color $ hsl 200 100 76 0.5
         |css-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3260,7 +3260,7 @@
               :background-color $ hsl 0 0 100 0.2
         |style-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-leaf $ {} (:line-height |24px) (:height 24) (:margin "|1px 1px") (:padding "|0px 4px") (:background-color :transparent) (:min-width 8) (:font-family ui/font-code) (:font-size 14) (:vertical-align :baseline) (:text-align :left) (:border-width "|1px 1px 1px 1px") (:resize :none) (:white-space :nowrap) (:outline :none) (:border :none) (:border-radius "\"6px")
+            def style-leaf $ {} (:line-height |24px) (:height 24) (:margin "|1px 1px") (:padding "|0px 4px") (:background-color :transparent) (:min-width 8) (:font-family ui/font-code) (:font-size 14) (:vertical-align :baseline) (:text-align :left) (:border-width "|1px 1px 1px 1px") (:resize :none) (:white-space :nowrap) (:outline :none) (:border :none) (:border-radius "\"6px") (:transition-duration "\"100ms") (:transition-property "\"background,opacity,border-color")
               :color $ hsl 200 14 60
         |style-number $ %{} :CodeEntry (:doc |)
           :code $ quote
