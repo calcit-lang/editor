@@ -63,5 +63,46 @@ body * {
 }
 
 .copy-commands:active {
-  background-color: hsla(0,0%,100%,0.3)
+  background-color: hsla(0,0%,100%,0.3);
+}
+
+.comp-leaf {
+  opacity: 0.8;
+}
+.comp-leaf:hover {
+  background-color: hsla(0,0%,100%,0.14);
+}
+
+.comp-leaf:active {
+  transition-duration: 0ms;
+  /*  transform: scale(1.02);*/
+  transform: translate(1px, 0px);
+}
+
+.comp-expr:hover {
+  border-color: hsla(0,0%,100%,0.8);
+}
+
+.comp-expr:active {
+  transition-duration: 0ms;
+  /*  transform: scale(1.02);*/
+  transform: translate(1px, 0px);
+}
+
+/** tricky selector to reset parent hover color */
+div.comp-expr:has(.comp-expr:hover):hover,
+div.comp-expr:has(.comp-leaf:hover):hover {
+  border-color: hsl(200,100%,76%,0.5);
+}
+
+
+/** tricky selector to reset parent click color */
+div.comp-expr:has(.comp-expr:active):active,
+div.comp-expr:has(.comp-leaf:active):active {
+  transform: translate(0px, 0px);
+}
+
+.comp-expr.cirru-focused .comp-leaf,
+.comp-leaf.cirru-focused {
+  opacity: 1;
 }
