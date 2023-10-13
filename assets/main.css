@@ -80,7 +80,7 @@ body * {
 }
 
 .comp-expr:hover {
-  border-color: hsla(0,0%,100%,0.8);
+  border-color: hsla(0,0%,100%,0.86);
 }
 
 .comp-expr:active {
@@ -103,6 +103,7 @@ div.comp-expr:has(.comp-leaf:active):active {
 }
 
 .comp-expr.cirru-focused .comp-leaf,
+.comp-expr:has(> .cirru-focused.comp-leaf) .comp-leaf,
 .comp-leaf.cirru-focused {
   opacity: 1;
 }
