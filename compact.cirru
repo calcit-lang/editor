@@ -843,7 +843,7 @@
                   sorted-children $ -> (:data expr) (.to-list) (.sort-by first)
                 list->
                   {} (:tab-index 0)
-                    :class-name $ str-spaced "\"comp-expr" (base-style-expr theme) (if focused? |cirru-focused |)
+                    :class-name $ str-spaced "\"comp-expr" style-expr (base-style-expr theme) (if focused? |cirru-focused |)
                     :style $ decide-expr-theme expr (includes? others coord) focused? focus-in? tail? layout-mode (count coord) depth theme
                     :on $ if readonly?
                       {} $ :click
@@ -962,6 +962,11 @@
                     true $ do
                       ; println |Keydown $ :key-code e
                       on-window-keydown event d! $ {} (:name :editor)
+        |style-expr $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-expr $ {}
+              "\"&" $ {}
+              "\"&.cirru-focused" $ {} (:animation "\"border-blinking 1s ease infinite normal")
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.expr $ :require
@@ -978,6 +983,7 @@
             app.util.dom :refer $ do-copy-logics!
             bisection-key.util :refer $ get-min-key get-max-key
             app.schema :refer $ CirruLeaf CirruExpr
+            respo.css :refer $ defstyle
     |app.comp.file-replacer $ %{} :FileEntry
       :defs $ {}
         |comp-file-replacer $ %{} :CodeEntry (:doc |)
@@ -3017,7 +3023,6 @@
                     do
                       wss-send! sid $ :: :patch changes
                       swap! *client-caches assoc sid new-store
-              new-twig-loop!
         |transform-compact-to-calcit! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn transform-compact-to-calcit! () $ let
@@ -3057,7 +3062,7 @@
             "\"node:http" :refer $ createServer
             "\"node:fs" :refer $ readFile
             ws-edn.server :refer $ wss-serve! wss-send! wss-each!
-            recollect.twig :refer $ clear-twig-caches! new-twig-loop!
+            recollect.twig :refer $ clear-twig-caches!
             recollect.diff :refer $ diff-twig
             app.twig.container :refer $ twig-container
             app.util.env :refer $ check-version!
