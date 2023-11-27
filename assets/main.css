@@ -80,13 +80,14 @@ body * {
 }
 
 .comp-expr:hover {
-  border-color: hsla(0,0%,100%,0.86);
+  border-color: hsla(0,0%,100%,0.6);
 }
 
 .comp-expr:active {
   transition-duration: 0ms;
   /*  transform: scale(1.02);*/
   transform: translate(1px, 0px);
+  border-color: white;
 }
 
 /** tricky selector to reset parent hover color */
@@ -106,4 +107,22 @@ div.comp-expr:has(.comp-leaf:active):active {
 .comp-expr:has(> .cirru-focused.comp-leaf) .comp-leaf,
 .comp-leaf.cirru-focused {
   opacity: 1;
+}
+
+
+@keyframes border-blinking {
+  0% {
+    border-color: #888;
+  }
+
+  40% {
+    border-color: #fff;
+  }
+  60% {
+    border-color: #fff;
+  }
+
+  100% {
+    border-color: #888;
+  }
 }
