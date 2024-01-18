@@ -322,16 +322,19 @@
                     <>
                       str $ :kind bookmark
                       , style-kind
-                    <> (:ns bookmark)
-                      merge style-main $ if selected? style-highlight
+                    span $ {}
+                      :inner-text $ :ns bookmark
+                      :class-name $ str-spaced css/font-normal
+                      :style $ if selected? style-highlight
                   :def $ div
                     {} $ :class-name css-bookmark
                     div ({})
                       span $ {}
                         :inner-text $ :extra bookmark
-                        :style $ merge style-main (if selected? style-highlight)
+                        :class-name $ str-spaced css/font-normal
+                        :style $ if selected? style-highlight
                     div
-                      {} $ :style ui/row-middle
+                      {} $ :class-name css/row-middle
                       =< 4 nil
                       <> (:ns bookmark) style-minor
         |css-bookmark $ %{} :CodeEntry (:doc |)
@@ -365,19 +368,21 @@
               :vertical-align :middle
         |style-main $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-main $ {} (:vertical-align :middle)
-              :color $ hsl 0 0 70
-              :font-family ui/font-normal
+            defstyle style-main $ {}
+              "\"&" $ {} (:vertical-align :middle)
+                :color $ hsl 0 0 70
         |style-minor $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-minor $ {}
-              :color $ hsl 0 0 40
-              :font-size 12
+            defstyle style-minor $ {}
+              "\"&" $ {}
+                :color $ hsl 0 0 40
+                :font-size 12
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.bookmark $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.css :refer $ defstyle
             respo.core :refer $ defcomp <> span div a
             respo.comp.space :refer $ =<
@@ -517,23 +522,23 @@
                     {} (:text "\"Set a version:")
                       :initial $ :version configs
                       :placeholder "\"a version number..."
-                      :input-style $ {} (:font-family ui/font-code)
+                      :input-class css/font-code
                   modules-plugin $ use-prompt (>> states :modules)
                     {} (:text "\"Add modules:")
                       :initial $ .join-str (:modules configs) "\" "
                       :placeholder "\"module/compact.cirru etc."
-                      :input-style $ {} (:font-family ui/font-code)
+                      :input-class css/font-code
                       :multiline? true
                   init-fn-plugin $ use-prompt (>> states :init-fn)
                     {} (:text "\"Set a init-fn:")
                       :initial $ :init-fn configs
                       :placeholder "\"a path..."
-                      :input-style $ {} (:font-family ui/font-code)
+                      :input-class css/font-code
                   reload-fn-plugin $ use-prompt (>> states :reload-fn)
                     {} (:text "\"Set a reload-fn:")
                       :initial $ :reload-fn configs
                       :placeholder "\"a path..."
-                      :input-style $ {} (:font-family ui/font-code)
+                      :input-class css/font-code
                 div
                   {}
                     :class-name $ str-spaced css/expand css/column
@@ -610,15 +615,15 @@
             defn render-field (v)
               <>
                 if (blank? v) "\"-" v
-                , style-value
+                str-spaced css/font-code style-value
         |render-label $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn render-label (title)
-              <> title $ {} (:font-family ui/font-fancy)
+            defn render-label (title) (<> title css/font-fancy)
         |style-value $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-value $ {} (:cursor :pointer) (:font-family ui/font-code)
-              :color $ hsl 200 90 80
+            defstyle style-value $ {}
+              "\"&" $ {} (:cursor :pointer)
+                :color $ hsl 200 90 80
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.configs $ :require
@@ -630,6 +635,7 @@
             cirru-edn.core :as cirru-edn
             respo-alerts.core :refer $ use-prompt
             app.style :as style
+            respo.css :refer $ defstyle
     |app.comp.container $ %{} :FileEntry
       :defs $ {}
         |comp-container $ %{} :CodeEntry (:doc "|respo UI main entry")
@@ -644,7 +650,7 @@
                   picker-mode? $ some? (:picker-mode writer)
                 if (nil? store) (comp-about)
                   div
-                    {} $ :class-name (str-spaced css/global css/fullscreen css/column css-container)
+                    {} $ :class-name (str-spaced css/global css/fullscreen css/column style-container)
                     if (not picker-mode?)
                       comp-header (>> states :header) (:name router) (:logged-in? store) (:stats store)
                     div
@@ -671,10 +677,10 @@
                       ; when dev? $ comp-inspect "|Router data" states
                         merge style-inspector $ {} (:left 100)
                       comp-messages $ get-in store ([] :session :notifications)
-        |css-container $ %{} :CodeEntry (:doc |)
+        |style-container $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defstyle css-container $ {}
-              "\"$0" $ {} (:background-color :black) (:color :white)
+            defstyle style-container $ {}
+              "\"&" $ {} (:background-color :black) (:color :white)
         |style-inspector $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-inspector $ {} (:bottom 40) (:left 0) (:max-width |100%)
@@ -1032,7 +1038,7 @@
                   broadcast-plugin $ use-prompt (>> states :broadcast)
                     {} $ :text "\"Message to broadcast"
                 div
-                  {} $ :class-name css-header
+                  {} $ :class-name (str-spaced css/row-center css/font-fancy css-header)
                   div
                     {} $ :class-name css/row-center
                     render-entry |Files :files router-name $ fn (e d!)
@@ -1051,9 +1057,9 @@
                     a
                       {} (:href |https://github.com/Cirru/calcit-editor/wiki/Keyboard-Shortcuts) (:target |_blank) (:class-name css-entry)
                       <> "\"Shortcuts" style-link
-                      <> "\"↗" $ {} (:font-family ui/font-code)
+                      <> "\"↗" css/font-code
                   div
-                    {} $ :style ui/row-middle
+                    {} $ :class-name css/row-middle
                     comp-icon :radio
                       {} (:font-size 18)
                         :color $ hsl 200 80 70 0.6
@@ -1072,13 +1078,15 @@
                 :color $ hsl 0 0 100 0.6
                 :text-decoration :none
                 :vertical-align :middle
+              "\"&:hover" $ {}
+                :color $ hsl 0 0 100 0.7
+              "\"&:active" $ {} (:transform "\"scale(1.02)")
         |css-header $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-header $ {}
-              "\"$0" $ merge ui/row-center
-                {} (:height 30) (:justify-content :space-between) (:padding "|0 16px") (:font-size 15) (:line-height "\"18px") (:color :white) (:font-family "|Josefin Sans") (:font-weight 300) (:position :fixed) (:top 0) (:right 0) (:z-index 100) (:transition-duration "\"240ms") (; :opacity 0.1)
-                  :background-color $ hsl 0 0 0 0.2
-                  :border-bottom $ str "|1px solid " (hsl 0 0 100 0.2)
+              "\"$0" $ {} (:height 30) (:justify-content :space-between) (:padding "|0 16px") (:font-size 15) (:line-height "\"18px") (:color :white) (:font-weight 300) (:position :fixed) (:top 0) (:right 0) (:z-index 100) (:transition-duration "\"240ms") (; :opacity 0.1)
+                :background-color $ hsl 0 0 0 0.2
+                :border-bottom $ str "|1px solid " (hsl 0 0 100 0.2)
               "\"$0 > *" $ {} (:opacity 0.5) (:transition-duration "\"240ms")
               "\"$0:hover" $ {} (:opacity 1)
               "\"$0:hover > *" $ {} (:opacity 1)
@@ -1327,7 +1335,7 @@
                           :on-click $ fn (e d!) (d! :notify/clear nil)
                         <>
                           -> (:time msg) Dayjs $ .!format "\"mm:ss"
-                          {} (:font-size 12) (:font-family ui/font-code) (:opacity 0.7)
+                          str-spaced css/font-code style-time-short
                         =< 8 nil
                         <> (:text msg) nil
         |css-message $ %{} :CodeEntry (:doc |)
@@ -1336,11 +1344,16 @@
               "\"$0" $ {} (:position :absolute) (:left 8) (:cursor :pointer) (:font-weight 100) (:font-family |Hind) (:padding "|0 8px") (:transition-duration |200ms) (:border-radius "\"6px") (:z-index 200)
                 :background-color $ hsl 0 0 0 0.5
               "\"$0:hover" $ {} (:transform "\"scale(1.03)")
+        |style-time-short $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-time-short $ {}
+              "\"&" $ {} (:font-size 12) (:opacity 0.7)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.messages $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp list-> <> span div pre input button a
             respo.css :refer $ defstyle
             respo.comp.space :refer $ =<
@@ -1529,22 +1542,27 @@
                         str $ :changed router-data
                         {} (:font-family ui/font-fancy)
                           :color $ hsl 260 80 70
-                      span $ {} (:style style-link) (:inner-text "\"Reset")
+                      span $ {}
+                        :class-name $ str-spaced css/font-fancy style-link
+                        :inner-text "\"Reset"
                         :on-click $ fn (e d!)
                           .show confirm-reset-plugin d! $ fn () (on-reset-expr bookmark d!)
                     =< 8 nil
-                    span $ {} (:inner-text |Delete) (:style style-link)
+                    span $ {} (:inner-text |Delete)
+                      :class-name $ str-spaced css/font-fancy style-link
                       :on-click $ fn (e d!)
                         .show confirm-delete-plugin d! $ fn ()
                           if (some? bookmark)
                             d! :ir/delete-entry $ dissoc bookmark :focus
                             js/console.warn "\"No entry to delete"
                     =< 8 nil
-                    span $ {} (:inner-text |Rename) (:style style-link)
+                    span $ {} (:inner-text |Rename)
+                      :class-name $ str-spaced css/font-fancy style-link
                       :on-click $ fn (e d!)
                         .show rename-plugin d! $ fn (result) (on-rename-def result bookmark d!)
                     =< 8 nil
-                    span $ {} (:inner-text |Add) (:style style-link)
+                    span $ {} (:inner-text |Add)
+                      :class-name $ str-spaced css/font-fancy style-link
                       :on-click $ fn (e d!)
                         .show add-plugin d! $ fn (result)
                           let
@@ -1555,19 +1573,24 @@
                                 :ns $ :ns bookmark
                                 :extra text
                     =< 8 nil
-                    span $ {} (:inner-text |Draft-box) (:style style-link)
+                    span $ {} (:inner-text |Draft-box)
+                      :class-name $ str-spaced css/font-fancy style-link
                       :on-click $ on-draft-box state cursor
                     =< 8 nil
-                    span $ {} (:inner-text |Replace) (:style style-link)
+                    span $ {} (:inner-text |Replace)
+                      :class-name $ str-spaced css/font-fancy style-link
                       :on-click $ fn (e d!) (.show replace-plugin d!)
                     =< 8 nil
-                    span $ {} (:inner-text |Exporting) (:style style-link)
+                    span $ {} (:inner-text |Exporting)
+                      :class-name $ str-spaced css/font-fancy style-link
                       :on-click $ on-path-gen! bookmark
                     =< 8 nil
-                    span $ {} (:inner-text "\"Picker-mode") (:style style-link)
+                    span $ {} (:inner-text "\"Picker-mode")
+                      :class-name $ str-spaced css/font-fancy style-link
                       :on-click $ fn (e d!) (d! :writer/picker-mode nil)
+                  =< 8 nil
                   div
-                    {} $ :style ui/row
+                    {} $ :class-name css/row
                     comp-theme-menu (>> states :theme) theme
                   .render confirm-delete-plugin
                   .render confirm-reset-plugin
@@ -1694,8 +1717,9 @@
               :font-family ui/font-fancy
         |style-link $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-link $ {} (:font-family "|Josefin Sans") (:cursor :pointer) (:font-size 14)
-              :color $ hsl 200 50 80
+            defstyle style-link $ {}
+              "\"&" $ {} (:cursor :pointer) (:font-size 14)
+                :color $ hsl 200 50 80
         |style-missing $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-missing $ {} (:font-family "|Josefin Sans")
@@ -2036,7 +2060,7 @@
           :code $ quote
             defcomp comp-page-members (router-data session-id)
               div
-                {} $ :style (merge ui/flex style-members)
+                {} (:class-name css/flex) (:style style-members)
                 list-> ({})
                   -> router-data (.to-list)
                     map $ fn (entry)
@@ -2102,6 +2126,7 @@
           ns app.comp.page-members $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp <> list-> span div a
             respo.comp.space :refer $ =<
             "\"url-parse" :default url-parse
@@ -2256,11 +2281,11 @@
                       :initial $ :nickname user
                       :text "\"Pick a nickname:"
                 div
-                  {} $ :style (merge ui/flex style-profile)
+                  {} (:class-name css/flex) (:style style-profile)
                   div ({})
                     <>
                       str "|Hello! " $ :nickname user
-                      , style-greet
+                      str-spaced css/font-fancy style-greet
                     =< 4 nil
                     comp-icon :edit-2
                       {} (:font-size 14)
@@ -2283,8 +2308,9 @@
               js/window.localStorage.removeItem $ :storage-key config/site
         |style-greet $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-greet $ {} (:font-family "|Josefin Sans") (:font-size 40) (:font-weight 100)
-              :color $ hsl 0 0 100 0.8
+            defstyle style-greet $ {}
+              "\"&" $ {} (:font-size 40) (:font-weight 100)
+                :color $ hsl 0 0 100 0.8
         |style-id $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-id $ {} (:font-family "|Josefin Sans") (:font-weight 100)
@@ -2298,12 +2324,14 @@
             respo.util.format :refer $ hsl
             app.schema :as schema
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp >> <> span div button input a
             respo.comp.space :refer $ =<
             app.style :as style
             app.config :as config
             feather.core :refer $ comp-i comp-icon
             respo-alerts.core :refer $ use-prompt
+            respo.css :refer $ defstyle
     |app.comp.replace-name $ %{} :FileEntry
       :defs $ {}
         |%rename-plugin $ %{} :CodeEntry (:doc |)
@@ -2439,8 +2467,8 @@
                 div
                   {} $ :class-name css-search
                   div
-                    {} $ :style
-                      merge ui/column $ {} (:width 320) (:height "\"100%")
+                    {} (:class-name css/column)
+                      :style $ {} (:width 320) (:height "\"100%")
                     div ({})
                       input $ {} (:placeholder "|Type to search...")
                         :value $ :query state
@@ -2450,15 +2478,16 @@
                         :on-keydown $ on-keydown state def-candidates cursor
                     if (empty? def-candidates) (comp-no-results)
                     list->
-                      {} $ :style (merge ui/expand style-body)
+                      {} (:class-name css/expand) (:style style-body)
                       -> def-candidates (take 20)
                         map-indexed $ fn (idx bookmark)
                           let
                               text $ bookmark->str bookmark
                               selected? $ = idx (:selection state)
                             [] text $ div
-                              {} (:class-name |hoverable)
-                                :style $ merge style-candidate (if selected? style-highlight)
+                              {}
+                                :class-name $ str-spaced |hoverable style-candidate
+                                :style $ if selected? style-highlight
                                 :on-click $ on-select bookmark cursor
                               <> (:extra bookmark) nil
                               =< 8 nil
@@ -2468,20 +2497,20 @@
                                     :color $ hsl 0 0 40
                                   if selected? style-highlight
                   div
-                    {} $ :style
-                      merge ui/column $ {} (:width 320) (:height "\"100%")
+                    {} (:class-name css/column)
+                      :style $ {} (:width 320) (:height "\"100%")
                     =< nil 32
                     if (empty? ns-candidates) (comp-no-results)
                     list->
-                      {} $ :style (merge ui/expand style-body)
+                      {} (:class-name css/expand) (:style style-body)
                       -> ns-candidates (take 20)
                         map-indexed $ fn (idx bookmark)
                           [] (:ns bookmark)
                             let
                                 pieces $ split (:ns bookmark) "\"."
                               div
-                                {} (:class-name |hoverable)
-                                  :style $ merge ui/row-middle style-candidate
+                                {}
+                                  :class-name $ str-spaced |hoverable css/row-middle style-candidate
                                   :on-click $ on-select bookmark cursor
                                 span ({})
                                   <>
@@ -2556,9 +2585,10 @@
             def style-body $ {} (:overflow :auto) (:padding-bottom 80)
         |style-candidate $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-candidate $ {} (:padding "|0 8px")
-              :color $ hsl 0 0 100 0.6
-              :cursor :pointer
+            defstyle style-candidate $ {}
+              "\"&" $ {} (:padding "|0 8px")
+                :color $ hsl 0 0 100 0.6
+                :cursor :pointer
         |style-highlight $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-highlight $ {} (:color :white)
@@ -2567,6 +2597,7 @@
           ns app.comp.search $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp list-> <> span div input a
             respo.comp.space :refer $ =<
             respo.css :refer $ defstyle
@@ -2588,31 +2619,40 @@
                     , false
                 div
                   {}
-                    :style $ {} (:position :relative) (:width 60)
-                      :color $ hsl 0 0 80 0.4
-                      :font-family "|Josefin Sans,sans-serif"
-                      :cursor :pointer
-                      :display :inline-block
+                    :class-name $ str-spaced css/font-fancy style-theme-menu
                     :on-click $ fn (e d!)
                       d! cursor $ not state
                   <> $ or theme "|no theme"
                   if state $ list->
-                    {}
-                      :style $ {} (:position :absolute) (:bottom |100%) (:right 0) (:background-color :black)
-                        :border $ str "\"1px solid " (hsl 0 0 100 0.2)
+                    {} (:class-name style-menu)
                       :on-click $ fn (e d!)
                     -> theme-list $ map
                       fn (theme-name)
                         [] theme-name $ div
                           {}
-                            :style $ merge
-                              {}
-                                :color $ hsl 0 0 70
-                                :padding "\"0 8px"
-                              when (= theme theme-name)
-                                {} $ :color :white
+                            :style $ if (= theme theme-name)
+                              {} $ :color :white
+                            :class-name style-menu-item
                             :on-click $ fn (e d!) (d! :user/change-theme theme-name) (d! cursor false)
                           <> theme-name
+        |style-menu $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-menu $ {}
+              "\"&" $ {} (:position :absolute) (:bottom |100%) (:right 0) (:background-color :black)
+                :border $ str "\"1px solid " (hsl 0 0 100 0.2)
+        |style-menu-item $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-menu-item $ {}
+              "\"&" $ {}
+                :color $ hsl 0 0 70
+                :padding "\"0 8px"
+        |style-theme-menu $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-theme-menu $ {}
+              "\"&" $ {} (:position :relative) (:width 60)
+                :color $ hsl 0 0 80 0.4
+                :cursor :pointer
+                :display :inline-block
         |theme-list $ %{} :CodeEntry (:doc |)
           :code $ quote
             def theme-list $ [] :star-trail :beginner :curves
@@ -2621,10 +2661,12 @@
           ns app.comp.theme-menu $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp >> list-> <> span div pre input button a
             respo.comp.inspect :refer $ comp-inspect
             respo.comp.space :refer $ =<
             app.style :as style
+            respo.css :refer $ defstyle
     |app.comp.watching $ %{} :FileEntry
       :defs $ {}
         |comp-watching $ %{} :CodeEntry (:doc |)
