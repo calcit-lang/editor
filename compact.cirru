@@ -2673,7 +2673,7 @@
           :code $ quote
             defcomp comp-watching (states router-data theme)
               let
-                  expr $ :expr router-data
+                  expr $ get (:expr router-data) :code
                   focus $ :focus router-data
                   bookmark $ :bookmark router-data
                   others $ {}
@@ -2693,10 +2693,7 @@
                         div
                           {} $ :style
                             merge ui/flex $ {} (:overflow :auto)
-                          inject-style |.cirru-expr $ .to-list
-                            base-style-expr $ or theme :star-trail
-                          inject-style |.cirru-leaf $ .to-list
-                            base-style-leaf $ or theme :star-trail
+                          comp-doc (>> states :doc) (:expr router-data) bookmark
                           comp-expr
                             >> states $ bookmark-full-str bookmark
                             , expr focus ([]) others false false readonly? false (or theme :star-trail) 0
@@ -2732,6 +2729,7 @@
             app.client-util :as util
             app.style :as style
             app.comp.expr :refer $ comp-expr
+            app.comp.page-editor :refer $ comp-doc
             app.theme :refer $ base-style-leaf base-style-expr
             app.util.dom :refer $ inject-style
             app.util :refer $ bookmark-full-str
@@ -5332,11 +5330,6 @@
               fn () $ let
                   target $ js/document.querySelector |.search-input
                 if (some? target) (.!focus target)
-        |inject-style $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defn inject-style (class-name styles)
-              style $ {}
-                :innerHTML $ str class-name "| {" (style->html styles) |}
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util.dom $ :require
