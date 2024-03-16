@@ -5336,12 +5336,12 @@
           :code $ quote
             defn inject-style (class-name styles)
               style $ {}
-                :innerHTML $ str class-name "| {" (style->string styles) |}
+                :innerHTML $ str class-name "| {" (style->html styles) |}
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util.dom $ :require
             respo.core :refer $ style
-            respo.render.html :refer $ style->string
+            respo.render.html :refer $ style->html
     |app.util.env $ %{} :FileEntry
       :defs $ {}
         |check-version! $ %{} :CodeEntry (:doc |)
