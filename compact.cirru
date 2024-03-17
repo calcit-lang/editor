@@ -242,7 +242,7 @@
                   :style $ {} (:padding "\"8px 8px")
                     :color $ hsl 0 0 50
                 comp-md-block "\"Calcit Editor is a syntax tree editor of [Cirru Project](http://cirru.org). Read more at [Calcit Editor](https://github.com/calcit-lang/editor).\n" $ {}
-        |install-commands $ %{} :CodeEntry (:doc |)
+        |install-commands $ %{} :CodeEntry (:doc "|copy the commands to use")
           :code $ quote (def install-commands "\"$ npm install -g @calcit/editor\n$ ct\n")
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
@@ -2913,8 +2913,8 @@
         |dispatch! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op sid)
-              when config/dev? $ println "\"Action" (str op) sid
-              ; js/console.log "\"Database:" $ to-js-data @*writer-db
+              when config/dev? $ js/console.log "\"Action" op sid
+              js/console.log "\"Database:" @*writer-db
               let
                   d2! $ fn (op2) (dispatch! op2 sid)
                   op-id $ nanoid
@@ -2970,13 +2970,16 @@
                     {} $ :configs configs
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn main! () $ let
-                configs $ :configs initial-db
-                cli-configs $ get-cli-configs!
-              case-default (:op cli-configs)
-                do (start-server! configs) (check-version!)
-                "\"compile" $ compile-all-files! configs
-                "\"file-transform" $ transform-compact-to-calcit!
+            defn main! ()
+              if config/dev? $ load-console-formatter!
+              let
+                  configs $ :configs initial-db
+                  cli-configs $ get-cli-configs!
+                case-default (:op cli-configs)
+                  do (start-server! configs) (check-version!)
+                  "\"compile" $ compile-all-files! configs
+                  "\"file-transform" $ transform-compact-to-calcit!
+              ; task!
         |make-file-response $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn make-file-response (res)
@@ -3063,6 +3066,12 @@
                     do
                       wss-send! sid $ :: :patch changes
                       swap! *client-caches assoc sid new-store
+        |task! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn task! () (hint-fn async)
+              flipped js/setTimeout 1000 $ fn ()
+                js/console.log "\"DEPS tree" $ with-cpu-time
+                  parse-all-deps $ get-in initial-db ([] :ir :files)
         |transform-compact-to-calcit! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn transform-compact-to-calcit! () $ let
@@ -3110,6 +3119,7 @@
             cumulo-util.file :refer $ write-mildly!
             app.util.env :refer $ get-cli-configs!
             "\"nanoid" :refer $ nanoid
+            app.updater.analyze :refer $ parse-all-deps
     |app.style $ %{} :FileEntry
       :defs $ {}
         |button $ %{} :CodeEntry (:doc |)
@@ -3367,6 +3377,7 @@
                           :entries $ :entries db
                     :stats $ {}
                       :members-count $ count (:sessions db)
+                    :deps $ parse-all-deps (:files db)
                   {} (:session session) (:logged-in? false)
                     :stats $ {} (:members-count 0)
       :ns $ %{} :CodeEntry (:doc |)
@@ -3378,6 +3389,7 @@
             app.twig.page-members :refer $ twig-page-members
             app.twig.search :refer $ twig-search
             app.twig.watching :refer $ twig-watching
+            app.updater.analyze :refer $ parse-all-deps
     |app.twig.member $ %{} :FileEntry
       :defs $ {}
         |twig-member $ %{} :CodeEntry (:doc |)
@@ -3826,6 +3838,77 @@
                         warn $ str "|Does not exist: " (:ns new-bookmark) "| " (:extra new-bookmark)
                     warn $ str "|From external ns: " (:ns new-bookmark)
                   warn $ str "|Cannot locate: " def-info
+        |parse-all-deps $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn parse-all-deps (files)
+              let
+                  app-tree $ -> files .to-list
+                    mapcat $ fn (pair)
+                      let
+                          this-ns $ nth pair 0
+                          v $ nth pair 1
+                          ns-expr $ tree->cirru
+                            :code $ :ns v
+                          require-rule $ get ns-expr 2
+                          ns-rules $ if (some? require-rule) (.slice require-rule 1) nil
+                          import-rules $ if (some? ns-rules) (parse-ns-rules ns-rules) ([])
+                        let
+                            local-defs $ keys (:defs v)
+                          -> v :defs .to-list $ mapcat
+                            fn (pair)
+                              let
+                                  this-def $ nth pair 0
+                                  v $ nth pair 1
+                                  entry $ :: :def this-ns this-def
+                                ->
+                                  parse-bookmarks
+                                    tree->cirru $ :code v
+                                    , local-defs import-rules this-ns this-def
+                                  distinct
+                                  mapcat $ fn (item) ([] entry item)
+                    group-by $ fn (pair) (nth pair 1)
+                    map-kv $ fn (k v)
+                      [] k $ .to-set v
+                , app-tree
+        |parse-bookmarks $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn parse-bookmarks (tree local-defs import-rules this-ns this-def)
+              if (list? tree)
+                mapcat tree $ fn (item) (parse-bookmarks item local-defs import-rules this-ns this-def)
+                if (includes? local-defs tree)
+                  if (= this-def tree) ([])
+                    [] $ :: :reference this-ns tree
+                  apply-args ([] import-rules)
+                    fn (rules)
+                      list-match rules
+                          x0 xs
+                          let
+                              hit $ tag-match x0
+                                  :by-as ns-name alias
+                                  if
+                                    .starts-with? tree $ str alias "\"/"
+                                    :: :reference ns-name $ .slice tree
+                                      inc $ count alias
+                                    , nil
+                                (:by-refer ns-name def-names)
+                                  if (includes? def-names tree) (:: :reference ns-name tree) nil
+                            tag-match (optionally hit)
+                                :some v
+                                [] v
+                              (:none) (recur xs)
+                        () $ []
+        |parse-ns-rules $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn parse-ns-rules (rules)
+              -> rules $ mapcat
+                fn (rule)
+                  case-default (nth rule 1) ([])
+                    "\":as" $ []
+                      :: :by-as (nth rule 0) (nth rule 2)
+                    "\":refer" $ []
+                      :: :by-refer (nth rule 0)
+                        .to-set $ nth rule 2
+                    "\":default" $ []
         |peek-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn peek-def (db op-data sid op-id op-time)
