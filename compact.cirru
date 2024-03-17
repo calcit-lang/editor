@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.12)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.13)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -340,7 +340,9 @@
         |css-bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-bookmark $ {}
-              "\"$0" $ {} (:line-height |1.2em) (:padding "|4px 8px") (:cursor :pointer) (:position :relative) (:white-space :nowrap)
+              "\"$0" $ {} (:line-height |1.2em) (:padding "|4px 8px") (:cursor :pointer) (:position :relative)
+                :color $ hsl 0 0 70
+                :white-space :nowrap
         |on-pick $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-pick (bookmark idx)
@@ -1459,7 +1461,10 @@
                           {} $ :class-name css-area
                           if (some? expr-entry)
                             div ({})
-                              comp-doc (>> states :doc) expr-entry bookmark
+                              div
+                                {} $ :class-name (str-spaced css/row-parted css/gap16)
+                                comp-doc (>> states :doc) expr-entry bookmark
+                                comp-usages $ :usages router-data
                               comp-expr
                                 >> states $ bookmark-full-str bookmark
                                 , expr focus ([]) others false false readonly? picker-mode? theme 0
@@ -1597,6 +1602,26 @@
                   .render rename-plugin
                   .render add-plugin
                   .render replace-plugin
+        |comp-usages $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defcomp comp-usages (usages)
+              if (some? usages)
+                list->
+                  {} $ :class-name css/row
+                  -> usages .to-list $ map
+                    fn (usage)
+                      tag-match usage $ 
+                        :def the-ns the-def
+                        [] (str the-ns "\"/" the-def)
+                          div
+                            {}
+                              :class-name $ str-spaced css/column style-usage
+                              :on-click $ fn (e d!)
+                                d! $ :: :writer/select
+                                  {} (:kind :def) (:ns the-ns) (:extra the-def)
+                            <> the-def
+                            <> (str the-ns "\"/") style-tiny
+                <> "\"No usage" style-tiny
         |css-area $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-area $ {}
@@ -1732,6 +1757,18 @@
               :color $ hsl 0 0 100 0.4
               :padding "|0 16px"
               :font-family "|Josefin Sans"
+        |style-tiny $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-tiny $ {}
+              :& $ {} (:font-size 12) (:font-style :italic)
+                :color $ hsl 0 0 50
+                :line-height "\"1"
+        |style-usage $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-usage $ {}
+              :& $ {} (:margin-right 8) (:opacity 0.8) (:cursor :pointer)
+                :color $ hsl 0 0 80
+              :&:hover $ {} (:opacity 1)
         |style-watcher $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-watcher $ {}
@@ -2425,7 +2462,7 @@
                 do
                   js/console.warn $ str "\"Unknown" (to-lispy-string bookmark)
                   , "\""
-                :def $ :extra bookmark
+                :def $ str (:ns bookmark) "\"/" (:extra bookmark)
                 :ns $ :ns bookmark
         |comp-no-results $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2855,6 +2892,7 @@
               :saved-files $ {}
               :configs configs
               :entries $ {}
+              :usages-dict $ {}
         |notification $ %{} :CodeEntry (:doc |)
           :code $ quote
             def notification $ {} (:id nil) (:kind nil) (:text nil) (:time nil)
@@ -2914,7 +2952,7 @@
           :code $ quote
             defn dispatch! (op sid)
               when config/dev? $ js/console.log "\"Action" op sid
-              js/console.log "\"Database:" @*writer-db
+              ; js/console.log "\"Database:" @*writer-db
               let
                   d2! $ fn (op2) (dispatch! op2 sid)
                   op-id $ nanoid
@@ -2977,9 +3015,9 @@
                   cli-configs $ get-cli-configs!
                 case-default (:op cli-configs)
                   do (start-server! configs) (check-version!)
+                    dispatch! (:: :analyze/refresh-usages-dict nil) "\"system"
                   "\"compile" $ compile-all-files! configs
                   "\"file-transform" $ transform-compact-to-calcit!
-              ; task!
         |make-file-response $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn make-file-response (res)
@@ -3066,12 +3104,6 @@
                     do
                       wss-send! sid $ :: :patch changes
                       swap! *client-caches assoc sid new-store
-        |task! $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defn task! () (hint-fn async)
-              flipped js/setTimeout 1000 $ fn ()
-                js/console.log "\"DEPS tree" $ with-cpu-time
-                  parse-all-deps $ get-in initial-db ([] :ir :files)
         |transform-compact-to-calcit! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn transform-compact-to-calcit! () $ let
@@ -3363,7 +3395,7 @@
                           get-in session $ [] :writer :draft-ns
                           :sessions db
                           :id session
-                        :editor $ twig-page-editor (:files db) (:saved-files db) (:sessions db) (:users db) writer (:id session)
+                        :editor $ twig-page-editor (:files db) (:saved-files db) (:sessions db) (:users db) writer (:id session) (:usages-dict db)
                         :members $ twig-page-members (:sessions db) (:users db)
                         :search $ twig-search (:files db)
                         :watching $ let
@@ -3377,7 +3409,6 @@
                           :entries $ :entries db
                     :stats $ {}
                       :members-count $ count (:sessions db)
-                    :deps $ parse-all-deps (:files db)
                   {} (:session session) (:logged-in? false)
                     :stats $ {} (:members-count 0)
       :ns $ %{} :CodeEntry (:doc |)
@@ -3429,7 +3460,7 @@
                 {} (:imported import-names) (:defined var-names)
         |twig-page-editor $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn twig-page-editor (files old-files sessions users writer session-id)
+            defn twig-page-editor (files old-files sessions users writer session-id usages-dict)
               let
                   pointer $ :pointer writer
                   stack $ :stack writer
@@ -3498,6 +3529,9 @@
                           :def $ compare-entry
                             get (:defs file) (:extra bookmark)
                             get (:defs old-file) (:extra bookmark)
+                      :usages $ if
+                        = :def $ :kind bookmark
+                        get usages-dict $ :: :reference (:ns bookmark) (:extra bookmark)
                   , nil
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
@@ -3721,6 +3755,7 @@
                 (:analyze/goto-def op-data) (analyze/goto-def db op-data sid op-id op-time)
                 (:analyze/abstract-def op-data) (analyze/abstract-def db op-data sid op-id op-time)
                 (:analyze/peek-def op-data) (analyze/peek-def db op-data sid op-id op-time)
+                (:analyze/refresh-usages-dict op-data) (analyze/refresh-usages-dict db op-data sid op-id op-time)
                 (:watcher/file-change op-data) (watcher/file-change db op-data sid op-id op-time)
                 (:ping op-data) db
                 (:configs/update op-data) (configs/update-configs db op-data sid op-id op-time)
@@ -3838,7 +3873,7 @@
                         warn $ str "|Does not exist: " (:ns new-bookmark) "| " (:extra new-bookmark)
                     warn $ str "|From external ns: " (:ns new-bookmark)
                   warn $ str "|Cannot locate: " def-info
-        |parse-all-deps $ %{} :CodeEntry (:doc |)
+        |parse-all-deps $ %{} :CodeEntry (:doc "|main implementation of reading files and build a usages dictionary. Slow at current, need optimizations with mutable data.\n")
           :code $ quote
             defn parse-all-deps (files)
               let
@@ -3865,10 +3900,10 @@
                                     tree->cirru $ :code v
                                     , local-defs import-rules this-ns this-def
                                   distinct
-                                  mapcat $ fn (item) ([] entry item)
+                                  map $ fn (item) ([] entry item)
                     group-by $ fn (pair) (nth pair 1)
                     map-kv $ fn (k v)
-                      [] k $ .to-set v
+                      [] k $ .to-set (map v first)
                 , app-tree
         |parse-bookmarks $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3957,6 +3992,13 @@
                       warn $ str "|Does not exist: " (:ns new-bookmark) "| " (:extra new-bookmark)
                     warn $ str "|External dep:" (:ns new-bookmark)
                   warn $ str "|Cannot locate:" def-info
+        |refresh-usages-dict $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn refresh-usages-dict (db op-data sid op-id op-time)
+              let
+                  usages-dict $ with-cpu-time
+                    parse-all-deps $ get-in db ([] :ir :files)
+                assoc db :usages-dict usages-dict
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater.analyze $ :require
@@ -5544,6 +5586,7 @@
                     (and meta? (= code keycode/s))
                       do (.!preventDefault event)
                         dispatch! $ :: :effect/save-files
+                        dispatch! $ :: :analyze/refresh-usages-dict nil
                     (and meta? shift? (= code keycode/f))
                       dispatch! $ :: :router/change
                         {} $ :name :files
