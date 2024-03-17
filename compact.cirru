@@ -408,7 +408,8 @@
                     a $ {} (:inner-text |Save) (:class-name style/button)
                       :on-click $ fn (e d!) (d! :effect/save-files nil)
                     a $ {} (:inner-text |Reset) (:class-name style/button)
-                      :on-click $ fn (e d!) (d! :ir/reset-files nil) (d! :states/clear nil)
+                      :on-click $ fn (e d!) (d! :ir/reset-files nil)
+                        d! $ :: :states/clear
         |style-column $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-column $ {} (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
@@ -436,7 +437,8 @@
                 div ({}) (<> ns-text) (=< 8 nil)
                   span
                     {} $ :class-name "\"is-minor"
-                    comp-icon :corner-up-left style-reset $ fn (e d!) (d! :ir/reset-ns ns-text) (d! :states/clear nil)
+                    comp-icon :corner-up-left style-reset $ fn (e d!) (d! :ir/reset-ns ns-text)
+                      d! $ :: :states/clear
                   =< 24 nil
                   if
                     not= :same $ :ns info
@@ -468,7 +470,7 @@
                 d! :ir/reset-at $ case-default kind
                   {} (:ns ns-text) (:kind :def) (:extra kind)
                   :ns $ {} (:ns ns-text) (:kind :ns)
-                d! :states/clear nil
+                d! $ :: :states/clear
         |render-status $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-status (ns-text kind status)
@@ -1711,7 +1713,7 @@
                   :ns $ {} (:ns ns-text) (:kind :ns)
                   :def $ {} (:ns ns-text) (:kind :def)
                     :extra $ :extra bookmark
-                d! :states/clear nil
+                d! $ :: :states/clear
         |style-doc $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-doc $ {}
