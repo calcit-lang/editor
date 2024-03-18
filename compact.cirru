@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.13)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.14)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -1621,13 +1621,13 @@
                               :on-click $ fn (e d!)
                                 d! $ :: :writer/select
                                   {} (:kind :def) (:ns the-ns) (:extra the-def)
-                            <> the-def
-                            <> (str the-ns "\"/") style-tiny
-                <> "\"No usage" style-tiny
+                            <> the-def style-usage-def
+                            <> the-ns style-tiny
+                <> "\"orphin" style-placeholder
         |css-area $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-area $ {}
-              "\"$0" $ {} (:position :fixed) (:right 0) (:left 80) (:bottom 0) (:top 0) (:overflow :auto) (:padding-bottom "\"60vh") (:padding-top 120) (:flex 1) (:padding-right 8)
+              "\"$0" $ {} (:position :fixed) (:right 0) (:left 100) (:bottom 0) (:top 0) (:overflow :auto) (:padding-bottom "\"60vh") (:padding-top 120) (:flex 1) (:padding-right 8)
                 :background-color $ hsl 0 0 0 0.4
         |css-editor $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1759,11 +1759,17 @@
               :color $ hsl 0 0 100 0.4
               :padding "|0 16px"
               :font-family "|Josefin Sans"
+        |style-placeholder $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-placeholder $ {}
+              :& $ {} (:font-size 12) (:font-style :italic)
+                :color $ hsl 0 0 36
+                :line-height "\"1"
         |style-tiny $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-tiny $ {}
-              :& $ {} (:font-size 12) (:font-style :italic)
-                :color $ hsl 0 0 50
+              :& $ {} (:font-size 12)
+                :color $ hsl 0 0 36
                 :line-height "\"1"
         |style-usage $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1771,6 +1777,10 @@
               :& $ {} (:margin-right 8) (:opacity 0.8) (:cursor :pointer)
                 :color $ hsl 0 0 80
               :&:hover $ {} (:opacity 1)
+        |style-usage-def $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-usage-def $ {}
+              :& $ {} (:line-height "\"20px")
         |style-watcher $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-watcher $ {}
@@ -3999,7 +4009,7 @@
             defn refresh-usages-dict (db op-data sid op-id op-time)
               let
                   usages-dict $ with-cpu-time
-                    parse-all-deps $ get-in db ([] :ir :files)
+                    parse-all-deps $ get-in db ([] :files)
                 assoc db :usages-dict usages-dict
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
