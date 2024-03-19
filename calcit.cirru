@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:port 6001) (:reload-fn |app.server/reload!) (:version |0.8.14)
+  :configs $ {} (:init-fn |app.server/main!) (:port 6001) (:reload-fn |app.server/reload!) (:version |0.8.15)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -34888,6 +34888,10 @@
                         :data $ {}
                           |T $ %{} :Leaf (:at 1546180196666) (:by |root) (:text |dissoc)
                           |j $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |:saved-files)
+                      |w $ %{} :Expr (:at 1710870287021) (:by |S1lNv50FW)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1710870288848) (:by |S1lNv50FW) (:text |dissoc)
+                          |b $ %{} :Leaf (:at 1710870293342) (:by |S1lNv50FW) (:text |:usages-dict)
         |expr? $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1504777570689) (:by nil)
             :data $ {}
@@ -38329,7 +38333,6 @@
           :data $ {}
             |T $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |ns)
             |j $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |app.util.stack)
-  :usages-dict $ {}
   :users $ {}
     |N7iJQdd93 $ {} (:avatar nil) (:id |N7iJQdd93) (:name |) (:nickname |) (:password |d41d8cd98f00b204e9800998ecf8427e) (:theme :star-trail)
     |S1lNv50FW $ {} (:avatar nil) (:id |S1lNv50FW) (:name |chen) (:nickname |chen) (:password |d41d8cd98f00b204e9800998ecf8427e) (:theme :star-trail)
