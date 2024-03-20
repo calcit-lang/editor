@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.15)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.16)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -915,7 +915,7 @@
                         .!preventDefault event
                     (= code keycode/tab)
                       do
-                        d! (if shift? :ir/unindent :ir/indent) nil
+                        d! $ :: (if shift? :ir/unindent :ir/indent)
                         .!preventDefault event
                     (= code keycode/up)
                       do
@@ -1196,7 +1196,7 @@
                         .!preventDefault event
                     (= code keycode/tab)
                       do
-                        d! (if shift? :ir/unindent-leaf :ir/indent) nil
+                        d! $ :: (if shift? :ir/unindent-leaf :ir/indent)
                         .!preventDefault event
                     (= code keycode/up)
                       do
@@ -3744,9 +3744,9 @@
                 (:ir/expr-before op-data) (ir/expr-before db op-data sid op-id op-time)
                 (:ir/expr-after op-data) (ir/expr-after db op-data sid op-id op-time)
                 (:ir/expr-replace op-data) (ir/expr-replace db op-data sid op-id op-time)
-                (:ir/indent op-data) (ir/indent db op-data sid op-id op-time)
+                (:ir/indent) (ir/indent db sid op-id op-time)
                 (:ir/unindent) (ir/unindent db sid op-id op-time)
-                (:ir/unindent-leaf op-data) (ir/unindent-leaf db op-data sid op-id op-time)
+                (:ir/unindent-leaf) (ir/unindent-leaf db sid op-id op-time)
                 (:ir/update-leaf op-data) (ir/update-leaf db op-data sid op-id op-time)
                 (:ir/duplicate op-data) (ir/duplicate db op-data sid op-id op-time)
                 (:ir/rename op-data) (ir/rename db op-data sid op-id op-time)
@@ -4287,7 +4287,7 @@
                   , db
         |indent $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn indent (db op-data session-id op-id op-time)
+            defn indent (db session-id op-id op-time)
               let-sugar
                   writer $ get-in db ([] :sessions session-id :writer)
                   ({} stack pointer) writer
@@ -4558,7 +4558,7 @@
                             bisection/bisect next-id limit-id
         |unindent-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn unindent-leaf (db op-data session-id op-id op-time)
+            defn unindent-leaf (db session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                   bookmark $ get (:stack writer) (:pointer writer)

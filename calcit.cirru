@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:port 6001) (:reload-fn |app.server/reload!) (:version |0.8.15)
+  :configs $ {} (:init-fn |app.server/main!) (:port 6001) (:reload-fn |app.server/reload!) (:version |0.8.16)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -5964,13 +5964,15 @@
                                   |j $ %{} :Expr (:at 1504777353661) (:by nil)
                                     :data $ {}
                                       |T $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |d!)
-                                      |j $ %{} :Expr (:at 1504777353661) (:by nil)
+                                      |j $ %{} :Expr (:at 1710914084662) (:by |S1lNv50FW)
                                         :data $ {}
-                                          |T $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |if)
-                                          |j $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |shift?)
-                                          |r $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |:ir/unindent)
-                                          |v $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |:ir/indent)
-                                      |r $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |nil)
+                                          |D $ %{} :Leaf (:at 1710914085277) (:by |S1lNv50FW) (:text |::)
+                                          |T $ %{} :Expr (:at 1504777353661) (:by nil)
+                                            :data $ {}
+                                              |T $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |if)
+                                              |j $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |shift?)
+                                              |r $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |:ir/unindent)
+                                              |v $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |:ir/indent)
                                   |r $ %{} :Expr (:at 1504777353661) (:by nil)
                                     :data $ {}
                                       |T $ %{} :Leaf (:at 1625855511463) (:by |S1lNv50FW) (:text |.!preventDefault)
@@ -7921,13 +7923,15 @@
                                   |j $ %{} :Expr (:at 1504777353661) (:by nil)
                                     :data $ {}
                                       |T $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |d!)
-                                      |j $ %{} :Expr (:at 1504777353661) (:by nil)
+                                      |j $ %{} :Expr (:at 1710914096874) (:by |S1lNv50FW)
                                         :data $ {}
-                                          |T $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |if)
-                                          |j $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |shift?)
-                                          |r $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |:ir/unindent-leaf)
-                                          |v $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |:ir/indent)
-                                      |r $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |nil)
+                                          |D $ %{} :Leaf (:at 1710914097477) (:by |S1lNv50FW) (:text |::)
+                                          |T $ %{} :Expr (:at 1504777353661) (:by nil)
+                                            :data $ {}
+                                              |T $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |if)
+                                              |j $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |shift?)
+                                              |r $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |:ir/unindent-leaf)
+                                              |v $ %{} :Leaf (:at 1504777353661) (:by |root) (:text |:ir/indent)
                                   |r $ %{} :Expr (:at 1504777353661) (:by nil)
                                     :data $ {}
                                       |T $ %{} :Leaf (:at 1625855572210) (:by |S1lNv50FW) (:text |.!preventDefault)
@@ -24729,12 +24733,10 @@
                       |T $ %{} :Expr (:at 1689420389280) (:by |S1lNv50FW)
                         :data $ {}
                           |T $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |:ir/indent)
-                          |b $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |op-data)
                       |b $ %{} :Expr (:at 1689420389280) (:by |S1lNv50FW)
                         :data $ {}
                           |T $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |ir/indent)
                           |b $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |db)
-                          |h $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |op-data)
                           |l $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |sid)
                           |o $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |op-id)
                           |q $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |op-time)
@@ -24755,12 +24757,10 @@
                       |T $ %{} :Expr (:at 1689420389280) (:by |S1lNv50FW)
                         :data $ {}
                           |T $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |:ir/unindent-leaf)
-                          |b $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |op-data)
                       |b $ %{} :Expr (:at 1689420389280) (:by |S1lNv50FW)
                         :data $ {}
                           |T $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |ir/unindent-leaf)
                           |b $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |db)
-                          |h $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |op-data)
                           |l $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |sid)
                           |o $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |op-id)
                           |q $ %{} :Leaf (:at 1689420389280) (:by |S1lNv50FW) (:text |op-time)
@@ -29031,7 +29031,6 @@
               |r $ %{} :Expr (:at 1504777570689) (:by nil)
                 :data $ {}
                   |T $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |db)
-                  |j $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |op-data)
                   |r $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |session-id)
                   |v $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |op-id)
                   |x $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |op-time)
@@ -31103,7 +31102,6 @@
               |r $ %{} :Expr (:at 1504777570689) (:by nil)
                 :data $ {}
                   |T $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |db)
-                  |j $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |op-data)
                   |r $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |session-id)
                   |v $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |op-id)
                   |x $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |op-time)
