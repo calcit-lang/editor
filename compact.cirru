@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.12)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.16)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -242,7 +242,7 @@
                   :style $ {} (:padding "\"8px 8px")
                     :color $ hsl 0 0 50
                 comp-md-block "\"Calcit Editor is a syntax tree editor of [Cirru Project](http://cirru.org). Read more at [Calcit Editor](https://github.com/calcit-lang/editor).\n" $ {}
-        |install-commands $ %{} :CodeEntry (:doc |)
+        |install-commands $ %{} :CodeEntry (:doc "|copy the commands to use")
           :code $ quote (def install-commands "\"$ npm install -g @calcit/editor\n$ ct\n")
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
@@ -340,7 +340,9 @@
         |css-bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-bookmark $ {}
-              "\"$0" $ {} (:line-height |1.2em) (:padding "|4px 8px") (:cursor :pointer) (:position :relative) (:white-space :nowrap)
+              "\"$0" $ {} (:line-height |1.2em) (:padding "|4px 8px") (:cursor :pointer) (:position :relative)
+                :color $ hsl 0 0 70
+                :white-space :nowrap
         |on-pick $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-pick (bookmark idx)
@@ -406,7 +408,8 @@
                     a $ {} (:inner-text |Save) (:class-name style/button)
                       :on-click $ fn (e d!) (d! :effect/save-files nil)
                     a $ {} (:inner-text |Reset) (:class-name style/button)
-                      :on-click $ fn (e d!) (d! :ir/reset-files nil) (d! :states/clear nil)
+                      :on-click $ fn (e d!) (d! :ir/reset-files nil)
+                        d! $ :: :states/clear
         |style-column $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-column $ {} (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
@@ -434,7 +437,8 @@
                 div ({}) (<> ns-text) (=< 8 nil)
                   span
                     {} $ :class-name "\"is-minor"
-                    comp-icon :corner-up-left style-reset $ fn (e d!) (d! :ir/reset-ns ns-text) (d! :states/clear nil)
+                    comp-icon :corner-up-left style-reset $ fn (e d!) (d! :ir/reset-ns ns-text)
+                      d! $ :: :states/clear
                   =< 24 nil
                   if
                     not= :same $ :ns info
@@ -466,7 +470,7 @@
                 d! :ir/reset-at $ case-default kind
                   {} (:ns ns-text) (:kind :def) (:extra kind)
                   :ns $ {} (:ns ns-text) (:kind :ns)
-                d! :states/clear nil
+                d! $ :: :states/clear
         |render-status $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-status (ns-text kind status)
@@ -911,7 +915,7 @@
                         .!preventDefault event
                     (= code keycode/tab)
                       do
-                        d! (if shift? :ir/unindent :ir/indent) nil
+                        d! $ :: (if shift? :ir/unindent :ir/indent)
                         .!preventDefault event
                     (= code keycode/up)
                       do
@@ -1192,7 +1196,7 @@
                         .!preventDefault event
                     (= code keycode/tab)
                       do
-                        d! (if shift? :ir/unindent-leaf :ir/indent) nil
+                        d! $ :: (if shift? :ir/unindent-leaf :ir/indent)
                         .!preventDefault event
                     (= code keycode/up)
                       do
@@ -1459,7 +1463,10 @@
                           {} $ :class-name css-area
                           if (some? expr-entry)
                             div ({})
-                              comp-doc (>> states :doc) expr-entry bookmark
+                              div
+                                {} $ :class-name (str-spaced css/row-parted css/gap16)
+                                comp-doc (>> states :doc) expr-entry bookmark
+                                comp-usages $ :usages router-data
                               comp-expr
                                 >> states $ bookmark-full-str bookmark
                                 , expr focus ([]) others false false readonly? picker-mode? theme 0
@@ -1597,10 +1604,30 @@
                   .render rename-plugin
                   .render add-plugin
                   .render replace-plugin
+        |comp-usages $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defcomp comp-usages (usages)
+              if (some? usages)
+                list->
+                  {} $ :class-name css/row
+                  -> usages .to-list $ map
+                    fn (usage)
+                      tag-match usage $ 
+                        :def the-ns the-def
+                        [] (str the-ns "\"/" the-def)
+                          div
+                            {}
+                              :class-name $ str-spaced css/column style-usage
+                              :on-click $ fn (e d!)
+                                d! $ :: :writer/select
+                                  {} (:kind :def) (:ns the-ns) (:extra the-def)
+                            <> the-def style-usage-def
+                            <> the-ns style-tiny
+                <> "\"orphin" style-placeholder
         |css-area $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-area $ {}
-              "\"$0" $ {} (:position :fixed) (:right 0) (:left 80) (:bottom 0) (:top 0) (:overflow :auto) (:padding-bottom "\"60vh") (:padding-top 120) (:flex 1) (:padding-right 8)
+              "\"$0" $ {} (:position :fixed) (:right 0) (:left 100) (:bottom 0) (:top 0) (:overflow :auto) (:padding-bottom "\"60vh") (:padding-top 120) (:flex 1) (:padding-right 8)
                 :background-color $ hsl 0 0 0 0.4
         |css-editor $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1686,7 +1713,7 @@
                   :ns $ {} (:ns ns-text) (:kind :ns)
                   :def $ {} (:ns ns-text) (:kind :def)
                     :extra $ :extra bookmark
-                d! :states/clear nil
+                d! $ :: :states/clear
         |style-doc $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-doc $ {}
@@ -1732,6 +1759,28 @@
               :color $ hsl 0 0 100 0.4
               :padding "|0 16px"
               :font-family "|Josefin Sans"
+        |style-placeholder $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-placeholder $ {}
+              :& $ {} (:font-size 12) (:font-style :italic)
+                :color $ hsl 0 0 36
+                :line-height "\"1"
+        |style-tiny $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-tiny $ {}
+              :& $ {} (:font-size 12)
+                :color $ hsl 0 0 36
+                :line-height "\"1"
+        |style-usage $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-usage $ {}
+              :& $ {} (:margin-right 8) (:opacity 0.8) (:cursor :pointer)
+                :color $ hsl 0 0 80
+              :&:hover $ {} (:opacity 1)
+        |style-usage-def $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-usage-def $ {}
+              :& $ {} (:line-height "\"20px")
         |style-watcher $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-watcher $ {}
@@ -2425,7 +2474,7 @@
                 do
                   js/console.warn $ str "\"Unknown" (to-lispy-string bookmark)
                   , "\""
-                :def $ :extra bookmark
+                :def $ str (:ns bookmark) "\"/" (:extra bookmark)
                 :ns $ :ns bookmark
         |comp-no-results $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2673,7 +2722,7 @@
           :code $ quote
             defcomp comp-watching (states router-data theme)
               let
-                  expr $ :expr router-data
+                  expr $ get (:expr router-data) :code
                   focus $ :focus router-data
                   bookmark $ :bookmark router-data
                   others $ {}
@@ -2693,10 +2742,7 @@
                         div
                           {} $ :style
                             merge ui/flex $ {} (:overflow :auto)
-                          inject-style |.cirru-expr $ .to-list
-                            base-style-expr $ or theme :star-trail
-                          inject-style |.cirru-leaf $ .to-list
-                            base-style-leaf $ or theme :star-trail
+                          comp-doc (>> states :doc) (:expr router-data) bookmark
                           comp-expr
                             >> states $ bookmark-full-str bookmark
                             , expr focus ([]) others false false readonly? false (or theme :star-trail) 0
@@ -2732,6 +2778,7 @@
             app.client-util :as util
             app.style :as style
             app.comp.expr :refer $ comp-expr
+            app.comp.page-editor :refer $ comp-doc
             app.theme :refer $ base-style-leaf base-style-expr
             app.util.dom :refer $ inject-style
             app.util :refer $ bookmark-full-str
@@ -2857,6 +2904,7 @@
               :saved-files $ {}
               :configs configs
               :entries $ {}
+              :usages-dict $ {}
         |notification $ %{} :CodeEntry (:doc |)
           :code $ quote
             def notification $ {} (:id nil) (:kind nil) (:text nil) (:time nil)
@@ -2915,8 +2963,8 @@
         |dispatch! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op sid)
-              when config/dev? $ println "\"Action" (str op) sid
-              ; js/console.log "\"Database:" $ to-js-data @*writer-db
+              when config/dev? $ js/console.log "\"Action" op sid
+              ; js/console.log "\"Database:" @*writer-db
               let
                   d2! $ fn (op2) (dispatch! op2 sid)
                   op-id $ nanoid
@@ -2972,13 +3020,16 @@
                     {} $ :configs configs
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn main! () $ let
-                configs $ :configs initial-db
-                cli-configs $ get-cli-configs!
-              case-default (:op cli-configs)
-                do (start-server! configs) (check-version!)
-                "\"compile" $ compile-all-files! configs
-                "\"file-transform" $ transform-compact-to-calcit!
+            defn main! ()
+              if config/dev? $ load-console-formatter!
+              let
+                  configs $ :configs initial-db
+                  cli-configs $ get-cli-configs!
+                case-default (:op cli-configs)
+                  do (start-server! configs) (check-version!)
+                    dispatch! (:: :analyze/refresh-usages-dict nil) "\"system"
+                  "\"compile" $ compile-all-files! configs
+                  "\"file-transform" $ transform-compact-to-calcit!
         |make-file-response $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn make-file-response (res)
@@ -3112,6 +3163,7 @@
             cumulo-util.file :refer $ write-mildly!
             app.util.env :refer $ get-cli-configs!
             "\"nanoid" :refer $ nanoid
+            app.updater.analyze :refer $ parse-all-deps
     |app.style $ %{} :FileEntry
       :defs $ {}
         |button $ %{} :CodeEntry (:doc |)
@@ -3355,7 +3407,7 @@
                           get-in session $ [] :writer :draft-ns
                           :sessions db
                           :id session
-                        :editor $ twig-page-editor (:files db) (:saved-files db) (:sessions db) (:users db) writer (:id session)
+                        :editor $ twig-page-editor (:files db) (:saved-files db) (:sessions db) (:users db) writer (:id session) (:usages-dict db)
                         :members $ twig-page-members (:sessions db) (:users db)
                         :search $ twig-search (:files db)
                         :watching $ let
@@ -3380,6 +3432,7 @@
             app.twig.page-members :refer $ twig-page-members
             app.twig.search :refer $ twig-search
             app.twig.watching :refer $ twig-watching
+            app.updater.analyze :refer $ parse-all-deps
     |app.twig.member $ %{} :FileEntry
       :defs $ {}
         |twig-member $ %{} :CodeEntry (:doc |)
@@ -3419,7 +3472,7 @@
                 {} (:imported import-names) (:defined var-names)
         |twig-page-editor $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn twig-page-editor (files old-files sessions users writer session-id)
+            defn twig-page-editor (files old-files sessions users writer session-id usages-dict)
               let
                   pointer $ :pointer writer
                   stack $ :stack writer
@@ -3488,6 +3541,9 @@
                           :def $ compare-entry
                             get (:defs file) (:extra bookmark)
                             get (:defs old-file) (:extra bookmark)
+                      :usages $ if
+                        = :def $ :kind bookmark
+                        get usages-dict $ :: :reference (:ns bookmark) (:extra bookmark)
                   , nil
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
@@ -3688,9 +3744,9 @@
                 (:ir/expr-before op-data) (ir/expr-before db op-data sid op-id op-time)
                 (:ir/expr-after op-data) (ir/expr-after db op-data sid op-id op-time)
                 (:ir/expr-replace op-data) (ir/expr-replace db op-data sid op-id op-time)
-                (:ir/indent op-data) (ir/indent db op-data sid op-id op-time)
+                (:ir/indent) (ir/indent db sid op-id op-time)
                 (:ir/unindent) (ir/unindent db sid op-id op-time)
-                (:ir/unindent-leaf op-data) (ir/unindent-leaf db op-data sid op-id op-time)
+                (:ir/unindent-leaf) (ir/unindent-leaf db sid op-id op-time)
                 (:ir/update-leaf op-data) (ir/update-leaf db op-data sid op-id op-time)
                 (:ir/duplicate op-data) (ir/duplicate db op-data sid op-id op-time)
                 (:ir/rename op-data) (ir/rename db op-data sid op-id op-time)
@@ -3711,6 +3767,7 @@
                 (:analyze/goto-def op-data) (analyze/goto-def db op-data sid op-id op-time)
                 (:analyze/abstract-def op-data) (analyze/abstract-def db op-data sid op-id op-time)
                 (:analyze/peek-def op-data) (analyze/peek-def db op-data sid op-id op-time)
+                (:analyze/refresh-usages-dict op-data) (analyze/refresh-usages-dict db op-data sid op-id op-time)
                 (:watcher/file-change op-data) (watcher/file-change db op-data sid op-id op-time)
                 (:ping op-data) db
                 (:configs/update op-data) (configs/update-configs db op-data sid op-id op-time)
@@ -3828,6 +3885,77 @@
                         warn $ str "|Does not exist: " (:ns new-bookmark) "| " (:extra new-bookmark)
                     warn $ str "|From external ns: " (:ns new-bookmark)
                   warn $ str "|Cannot locate: " def-info
+        |parse-all-deps $ %{} :CodeEntry (:doc "|main implementation of reading files and build a usages dictionary. Slow at current, need optimizations with mutable data.\n")
+          :code $ quote
+            defn parse-all-deps (files)
+              let
+                  app-tree $ -> files .to-list
+                    mapcat $ fn (pair)
+                      let
+                          this-ns $ nth pair 0
+                          v $ nth pair 1
+                          ns-expr $ tree->cirru
+                            :code $ :ns v
+                          require-rule $ get ns-expr 2
+                          ns-rules $ if (some? require-rule) (.slice require-rule 1) nil
+                          import-rules $ if (some? ns-rules) (parse-ns-rules ns-rules) ([])
+                        let
+                            local-defs $ keys (:defs v)
+                          -> v :defs .to-list $ mapcat
+                            fn (pair)
+                              let
+                                  this-def $ nth pair 0
+                                  v $ nth pair 1
+                                  entry $ :: :def this-ns this-def
+                                ->
+                                  parse-bookmarks
+                                    tree->cirru $ :code v
+                                    , local-defs import-rules this-ns this-def
+                                  distinct
+                                  map $ fn (item) ([] entry item)
+                    group-by $ fn (pair) (nth pair 1)
+                    map-kv $ fn (k v)
+                      [] k $ .to-set (map v first)
+                , app-tree
+        |parse-bookmarks $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn parse-bookmarks (tree local-defs import-rules this-ns this-def)
+              if (list? tree)
+                mapcat tree $ fn (item) (parse-bookmarks item local-defs import-rules this-ns this-def)
+                if (includes? local-defs tree)
+                  if (= this-def tree) ([])
+                    [] $ :: :reference this-ns tree
+                  apply-args ([] import-rules)
+                    fn (rules)
+                      list-match rules
+                          x0 xs
+                          let
+                              hit $ tag-match x0
+                                  :by-as ns-name alias
+                                  if
+                                    .starts-with? tree $ str alias "\"/"
+                                    :: :reference ns-name $ .slice tree
+                                      inc $ count alias
+                                    , nil
+                                (:by-refer ns-name def-names)
+                                  if (includes? def-names tree) (:: :reference ns-name tree) nil
+                            tag-match (optionally hit)
+                                :some v
+                                [] v
+                              (:none) (recur xs)
+                        () $ []
+        |parse-ns-rules $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn parse-ns-rules (rules)
+              -> rules $ mapcat
+                fn (rule)
+                  case-default (nth rule 1) ([])
+                    "\":as" $ []
+                      :: :by-as (nth rule 0) (nth rule 2)
+                    "\":refer" $ []
+                      :: :by-refer (nth rule 0)
+                        .to-set $ nth rule 2
+                    "\":default" $ []
         |peek-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn peek-def (db op-data sid op-id op-time)
@@ -3876,6 +4004,13 @@
                       warn $ str "|Does not exist: " (:ns new-bookmark) "| " (:extra new-bookmark)
                     warn $ str "|External dep:" (:ns new-bookmark)
                   warn $ str "|Cannot locate:" def-info
+        |refresh-usages-dict $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn refresh-usages-dict (db op-data sid op-id op-time)
+              let
+                  usages-dict $ with-cpu-time
+                    parse-all-deps $ get-in db ([] :files)
+                assoc db :usages-dict usages-dict
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater.analyze $ :require
@@ -4152,7 +4287,7 @@
                   , db
         |indent $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn indent (db op-data session-id op-id op-time)
+            defn indent (db session-id op-id op-time)
               let-sugar
                   writer $ get-in db ([] :sessions session-id :writer)
                   ({} stack pointer) writer
@@ -4423,7 +4558,7 @@
                             bisection/bisect next-id limit-id
         |unindent-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn unindent-leaf (db op-data session-id op-id op-time)
+            defn unindent-leaf (db session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                   bookmark $ get (:stack writer) (:pointer writer)
@@ -4980,7 +5115,7 @@
         |db->string $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn db->string (db)
-              format-cirru-edn $ -> db (dissoc :sessions) (dissoc :saved-files)
+              format-cirru-edn $ -> db (dissoc :sessions) (dissoc :saved-files) (dissoc :usages-dict)
         |expr? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expr? (x) (&record:matches? schema/CirruExpr x)
@@ -5332,11 +5467,6 @@
               fn () $ let
                   target $ js/document.querySelector |.search-input
                 if (some? target) (.!focus target)
-        |inject-style $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defn inject-style (class-name styles)
-              style $ {}
-                :innerHTML $ str class-name "| {" (style->html styles) |}
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util.dom $ :require
@@ -5468,6 +5598,7 @@
                     (and meta? (= code keycode/s))
                       do (.!preventDefault event)
                         dispatch! $ :: :effect/save-files
+                        dispatch! $ :: :analyze/refresh-usages-dict nil
                     (and meta? shift? (= code keycode/f))
                       dispatch! $ :: :router/change
                         {} $ :name :files
