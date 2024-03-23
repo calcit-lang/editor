@@ -1,6 +1,6 @@
 {
   "name": "@calcit/editor",
-  "version": "0.8.16",
+  "version": "0.8.17",
   "description": "Tree Editor for Calcit Language",
   "bin": {
     "ct": "server.mjs"

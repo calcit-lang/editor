@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.16)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.17)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -3922,28 +3922,30 @@
             defn parse-bookmarks (tree local-defs import-rules this-ns this-def)
               if (list? tree)
                 mapcat tree $ fn (item) (parse-bookmarks item local-defs import-rules this-ns this-def)
-                if (includes? local-defs tree)
-                  if (= this-def tree) ([])
-                    [] $ :: :reference this-ns tree
-                  apply-args ([] import-rules)
-                    fn (rules)
-                      list-match rules
-                          x0 xs
-                          let
-                              hit $ tag-match x0
-                                  :by-as ns-name alias
-                                  if
-                                    .starts-with? tree $ str alias "\"/"
-                                    :: :reference ns-name $ .slice tree
-                                      inc $ count alias
-                                    , nil
-                                (:by-refer ns-name def-names)
-                                  if (includes? def-names tree) (:: :reference ns-name tree) nil
-                            tag-match (optionally hit)
-                                :some v
-                                [] v
-                              (:none) (recur xs)
-                        () $ []
+                let
+                    sym $ if (.!startsWith tree "\"@") (.!slice tree 1) tree
+                  if (includes? local-defs sym)
+                    if (= this-def sym) ([])
+                      [] $ :: :reference this-ns sym
+                    apply-args ([] import-rules)
+                      fn (rules)
+                        list-match rules
+                            x0 xs
+                            let
+                                hit $ tag-match x0
+                                    :by-as ns-name alias
+                                    if
+                                      .starts-with? sym $ str alias "\"/"
+                                      :: :reference ns-name $ .slice sym
+                                        inc $ count alias
+                                      , nil
+                                  (:by-refer ns-name def-names)
+                                    if (includes? def-names sym) (:: :reference ns-name sym) nil
+                              tag-match (optionally hit)
+                                  :some v
+                                  [] v
+                                (:none) (recur xs)
+                          () $ []
         |parse-ns-rules $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn parse-ns-rules (rules)
