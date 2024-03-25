@@ -8175,8 +8175,10 @@
                                           |j $ %{} :Expr (:at 1522430156533) (:by |root)
                                             :data $ {}
                                               |T $ %{} :Leaf (:at 1522430158078) (:by |root) (:text |d!)
-                                              |j $ %{} :Leaf (:at 1522430161965) (:by |root) (:text |:manual-state/draft-box)
-                                              |r $ %{} :Leaf (:at 1522430159843) (:by |root) (:text |nil)
+                                              |j $ %{} :Expr (:at 1711390670211) (:by |S1lNv50FW)
+                                                :data $ {}
+                                                  |D $ %{} :Leaf (:at 1711390670822) (:by |S1lNv50FW) (:text |::)
+                                                  |T $ %{} :Leaf (:at 1522430161965) (:by |root) (:text |:manual-state/draft-box)
                                           |r $ %{} :Expr (:at 1505675032009) (:by |root)
                                             :data $ {}
                                               |T $ %{} :Leaf (:at 1505675038836) (:by |root) (:text |js/setTimeout)

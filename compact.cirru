@@ -1224,7 +1224,8 @@
                           -> ([] "\"\"" "\"|" "\"#\"")
                             any? $ fn (x)
                               starts-with? (:text leaf) x
-                          do (d! :manual-state/draft-box nil)
+                          do
+                            d! $ :: :manual-state/draft-box
                             js/setTimeout $ fn ()
                               let
                                   el $ js/document.querySelector |.el-draft-box
