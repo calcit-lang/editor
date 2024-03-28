@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.16)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.8.17)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -1224,7 +1224,8 @@
                           -> ([] "\"\"" "\"|" "\"#\"")
                             any? $ fn (x)
                               starts-with? (:text leaf) x
-                          do (d! :manual-state/draft-box nil)
+                          do
+                            d! $ :: :manual-state/draft-box
                             js/setTimeout $ fn ()
                               let
                                   el $ js/document.querySelector |.el-draft-box
@@ -2875,10 +2876,103 @@
       :defs $ {}
         |CirruExpr $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def CirruExpr $ new-record :Expr :by :at :data
+            def CirruExpr $ new-class-record CirruExprMethods :Expr :by :at :data
+        |CirruExprMethods $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defrecord! CirruExprMethods
+              :get $ fn (self p)
+                get-in self $ [] :data p
+              :nth $ fn (self idx)
+                let
+                    d $ get self :data
+                    p $ bisection/key-nth d idx
+                  get self p
+              :append $ fn (self x)
+                update self :data $ fn (d) (bisection/assoc-append d x)
+              :prepend $ fn (self x)
+                update self :data $ fn (d) (bisection/assoc-prepend d x)
+              :replace $ fn (self p x)
+                update self :data $ fn (d) (assoc d p x)
+              :replace-nth $ fn (self idx x)
+                update self :data $ fn (d) (bisection/assoc-nth d idx x)
+              :assoc-before $ fn (self p x)
+                update self :data $ fn (d) (bisection/assoc-before d p x)
+              :assoc-before-nth $ fn (self idx x)
+                update self :data $ fn (d) (bisection/assoc-before-nth d idx x)
+              :asspc-after $ fn (self p x)
+                update self :data $ fn (d) (bisection/assoc-after d p x)
+              :asspc-after-nth $ fn (self idx x)
+                update self :data $ fn (d) (bisection/assoc-after-nth d idx x)
+              :dissoc $ fn (self p)
+                update self :data $ fn (d) (dissoc d p)
+              :dissoc-nth $ fn (self idx)
+                update self :data $ fn (d)
+                  let
+                      p $ bisection/key-nth d idx
+                    dissoc d p
+              :assoc-in $ fn (self pp x)
+                list-match pp
+                  () $ raise "\"does no expect empty path"
+                  (p0 ps)
+                    update self :data $ fn (d)
+                      if (empty? ps) (assoc d p0 x)
+                        update d p0 $ fn (child) (.assoc-in child ps x)
+              :append-in $ fn (self pp x)
+                list-match pp
+                  () $ raise "\"does no expect empty path"
+                  (p0 ps)
+                    update self :data $ fn (d)
+                      if (empty? ps) (bisection/assoc-append d x)
+                        update d p0 $ fn (child) (.append-in child ps x)
+              :find-with-base $ fn (self x pp)
+                if (.= self x) pp $ let
+                    pairs $ .to-list (:data self)
+                  apply-args (pairs)
+                    fn (ps)
+                      list-match ps
+                        () $ :: :none
+                        (p0 pss)
+                          let
+                              k $ nth p0 0
+                              child $ nth p0 1
+                            if (.= child x) (conj pp k)
+                              if (&record:matches? self child)
+                                .find-with-base child x $ conj pp k
+                                recur $ rest ps
+              := $ fn (self x)
+                if (&record:matches? self x)
+                  let
+                      size $ &record:count self
+                    if
+                      = x $ &record:count x
+                      -> (range size)
+                        every? $ fn (idx)
+                          .= (.nth self idx) (.nth self idx)
+                      , false
+                  , false
+              :dispatch $ fn (self commands)
+                list-match commands
+                  () $ raise "\"does not expect empty ops"
+                  (command more)
+                    tag-match command
+                        :update p
+                        update self :data $ fn (d)
+                          update d p $ fn (child) (.dispatch child more)
+                      (:replace v) v
+                      (:dissoc p) (.dissoc self p)
+                      (:assoc p v) (.assoc self p v)
+                      (:append v) (.append self v)
+                      (:prepend v) (.prepend self v)
         |CirruLeaf $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def CirruLeaf $ new-record :Leaf :at :by :text
+            def CirruLeaf $ new-class-record CirruLeafMethods :Leaf :at :by :text
+        |CirruLeafMethods $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defrecord! CirruLeafMethods $ :=
+              fn (self x)
+                if (&record:matches? self x)
+                  = (get self :text) (get x :text)
+                  , false
         |CodeEntry $ %{} :CodeEntry (:doc |)
           :code $ quote
             def CodeEntry $ new-record :CodeEntry :doc :code
@@ -2937,7 +3031,8 @@
           :code $ quote
             def user $ {} (:name nil) (:id nil) (:nickname nil) (:avatar nil) (:password nil) (:theme :star-trail)
       :ns $ %{} :CodeEntry (:doc |)
-        :code $ quote (ns app.schema)
+        :code $ quote
+          ns app.schema $ :require (bisection-key.core :as bisection-core) (bisection-key.util :as bisection)
     |app.server $ %{} :FileEntry
       :defs $ {}
         |*calcit-md5 $ %{} :CodeEntry (:doc |)
@@ -3922,28 +4017,30 @@
             defn parse-bookmarks (tree local-defs import-rules this-ns this-def)
               if (list? tree)
                 mapcat tree $ fn (item) (parse-bookmarks item local-defs import-rules this-ns this-def)
-                if (includes? local-defs tree)
-                  if (= this-def tree) ([])
-                    [] $ :: :reference this-ns tree
-                  apply-args ([] import-rules)
-                    fn (rules)
-                      list-match rules
-                          x0 xs
-                          let
-                              hit $ tag-match x0
-                                  :by-as ns-name alias
-                                  if
-                                    .starts-with? tree $ str alias "\"/"
-                                    :: :reference ns-name $ .slice tree
-                                      inc $ count alias
-                                    , nil
-                                (:by-refer ns-name def-names)
-                                  if (includes? def-names tree) (:: :reference ns-name tree) nil
-                            tag-match (optionally hit)
-                                :some v
-                                [] v
-                              (:none) (recur xs)
-                        () $ []
+                let
+                    sym $ if (.!startsWith tree "\"@") (.!slice tree 1) tree
+                  if (includes? local-defs sym)
+                    if (= this-def sym) ([])
+                      [] $ :: :reference this-ns sym
+                    apply-args ([] import-rules)
+                      fn (rules)
+                        list-match rules
+                            x0 xs
+                            let
+                                hit $ tag-match x0
+                                    :by-as ns-name alias
+                                    if
+                                      .starts-with? sym $ str alias "\"/"
+                                      :: :reference ns-name $ .slice sym
+                                        inc $ count alias
+                                      , nil
+                                  (:by-refer ns-name def-names)
+                                    if (includes? def-names sym) (:: :reference ns-name sym) nil
+                              tag-match (optionally hit)
+                                  :some v
+                                  [] v
+                                (:none) (recur xs)
+                          () $ []
         |parse-ns-rules $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn parse-ns-rules (rules)
