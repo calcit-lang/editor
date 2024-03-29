@@ -1835,7 +1835,7 @@
                   add-plugin $ use-prompt (>> states :add)
                     {} $ :text "\"New definition:"
                 div
-                  {} $ :class-name css-file
+                  {} $ :class-name (str-spaced css/column css-file)
                   div ({}) (<> "\"File" style/title) (=< 16 nil)
                     span $ {} (:inner-text |Draft) (:class-name style/button)
                       :on-click $ fn (e d!) (d! :writer/draft-ns selected-ns)
@@ -1867,7 +1867,9 @@
                       :on-input $ fn (e d!)
                         d! cursor $ assoc state :def-text (:value e)
                   =< nil 8
-                  list-> ({})
+                  list->
+                    {} (:class-name css/expand)
+                      :style $ {} (:padding-bottom 120)
                     -> defs-dict keys (.to-list)
                       filter $ fn (def-text)
                         .includes? def-text $ :def-text state
@@ -1935,7 +1937,9 @@
                       :on-input $ fn (e d!)
                         d! cursor $ assoc state :ns-text (:value e)
                   =< nil 8
-                  list-> ({})
+                  list->
+                    {} (:class-name css/expand)
+                      :style $ {} (:padding-bottom 120)
                     -> ns-dict (.to-list)
                       filter $ fn (pair)
                         let
@@ -2007,8 +2011,7 @@
         |css-file $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-file $ {}
-              "\"$0" $ merge ui/column
-                {} (:width 360) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
+              "\"$0" $ {} (:width 360) (:overflow :auto) (:padding-top 24)
         |render-empty $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-empty () $ div
@@ -2048,7 +2051,7 @@
         |style-list $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-list $ {}
-              "\"&" $ {} (:width 360) (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
+              "\"&" $ {} (:width 360) (:overflow :auto) (:padding-top 24)
         |style-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-ns $ {}
@@ -2515,7 +2518,7 @@
                       blank? $ :query state
                       , bookmark->str query-length
                 div
-                  {} $ :class-name css-search
+                  {} $ :class-name (str-spaced css/expand css/row css-search)
                   div
                     {} (:class-name css/column)
                       :style $ {} (:width 320) (:height "\"100%")
@@ -2570,11 +2573,18 @@
                                     {} $ :color (hsl 0 0 50)
                                   <> (last pieces)
                                     {} $ :color (hsl 0 0 80)
+                  div $ {} (:class-name css/flex)
+                  div
+                    {} (:class-name css/column-parted)
+                      :style $ {} (:padding 8)
+                    a $ {} (:href "\"https://repo.cirru.org/hovenia-editor/?port=6011") (:inner-text "\"Hovenia Editor")
+                      :style $ {}
+                        :color $ hsl 200 80 60
+                      :target "\"_blank"
         |css-search $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-search $ {}
-              "\"$0" $ merge ui/expand ui/row-middle
-                {} (:height "\"100%") (:padding "\"40px 16px 0 16px")
+              "\"$0" $ {} (:height "\"100%") (:padding "\"40px 16px 0 16px")
         |initial-state $ %{} :CodeEntry (:doc |)
           :code $ quote
             def initial-state $ {} (:query |) (:selection 0)
