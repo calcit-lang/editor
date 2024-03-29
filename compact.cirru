@@ -110,7 +110,7 @@
                 add-watch *states :changes $ fn (states prev) (render-app!)
                 add-watch *store :changes $ fn (store prev) (render-app!)
                   if
-                    = :editor $ get-in @*store ([] :router :name)
+                    = :editor $ get-in @*store ([] :router 0)
                     focus!
                 println "|Code updated."
                 tip! "\"ok~" nil
@@ -314,28 +314,26 @@
                       when (not= target-idx idx)
                         d! :writer/move-order $ {} (:from target-idx) (:to idx)
                   :on-dragover $ fn (e d!) (-> e :event .!preventDefault)
-                case-default (:kind bookmark)
-                  div
-                    {} (:class-name css-bookmark)
-                      :style $ {} (:padding "\"8px")
-                    <>
-                      str $ :kind bookmark
-                      , style-kind
-                    span $ {}
-                      :inner-text $ :ns bookmark
-                      :class-name $ str-spaced css/font-normal
-                      :style $ if selected? style-highlight
-                  :def $ div
-                    {} $ :class-name css-bookmark
-                    div ({})
-                      span $ {}
-                        :inner-text $ :extra bookmark
+                tag-match bookmark
+                    :ns the-ns focus
+                    div
+                      {} (:class-name css-bookmark)
+                        :style $ {} (:padding "\"8px")
+                      <> "\"ns" style-kind
+                      span $ {} (:inner-text "\"ns")
                         :class-name $ str-spaced css/font-normal
                         :style $ if selected? style-highlight
+                  (:def the-ns the-def focus)
                     div
-                      {} $ :class-name css/row-middle
-                      =< 4 nil
-                      <> (:ns bookmark) style-minor
+                      {} $ :class-name css-bookmark
+                      div ({})
+                        span $ {} (:inner-text the-def)
+                          :class-name $ str-spaced css/font-normal
+                          :style $ if selected? style-highlight
+                      div
+                        {} $ :class-name css/row-middle
+                        =< 4 nil
+                        <> the-ns style-minor
         |css-bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle css-bookmark $ {}
@@ -459,16 +457,14 @@
           :code $ quote
             defn on-preview (ns-text kind status)
               fn (e d!) (; println |peek ns-text kind status)
-                d! :writer/select $ case-default kind
-                  {} (:kind :def) (:ns ns-text) (:extra kind)
-                  :ns $ {} (:kind :ns) (:ns ns-text) (:extra nil)
+                d! :writer/select $ case-default kind (:: :def ns-text kind)
+                  :ns $ :: :ns ns-text
         |on-reset-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-reset-def (ns-text kind)
               fn (e d!)
-                d! :ir/reset-at $ case-default kind
-                  {} (:ns ns-text) (:kind :def) (:extra kind)
-                  :ns $ {} (:ns ns-text) (:kind :ns)
+                d! :ir/reset-at $ case-default kind (:: :def ns-text kind)
+                  :ns $ :: :ns ns-text
                 d! $ :: :states/clear
         |render-status $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -677,15 +673,16 @@
                             comp-configs (>> states :configs) (:configs d) (:entries d)
                           _ $ div ({})
                             <> $ str "\"404 page: " (to-lispy-string router)
-                        tag-match router
-                            :watcher d
-                            comp-watching (>> states :watching) d $ :theme session
-                          _ $ comp-login (>> states :login)
-                    , 
-                      when dev? $ comp-inspect |Session store style-inspector
-                      ; when dev? $ comp-inspect "|Router data" states
-                        merge style-inspector $ {} (:left 100)
-                      comp-messages $ get-in store ([] :session :notifications)
+                        if (some? router)
+                          tag-match router
+                              :watcher d
+                              comp-watching (>> states :watching) d $ :theme session
+                            _ $ comp-login (>> states :login)
+                          comp-login $ >> states :login
+                    when dev? $ comp-inspect |Session store style-inspector
+                    ; when dev? $ comp-inspect "|Router data" states
+                      merge style-inspector $ {} (:left 100)
+                    comp-messages $ get-in store ([] :session :notifications)
         |style-container $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-container $ {}
@@ -1404,7 +1401,7 @@
           :code $ quote
             defcomp comp-doc (states expr-entry bookmark)
               let
-                  ns? $ = :ns (:kind bookmark)
+                  ns? $ = :ns (nth bookmark 0)
                   doc-plugin $ use-prompt (>> states :doc)
                     {}
                       :text $ if ns? "\"Namespace doc:" "\"Function doc:"
@@ -1423,13 +1420,12 @@
                       :class-name $ str-spaced style-doc (if no-doc? style-doc-empty)
                       :on-click $ fn (e d!)
                         .show doc-plugin d! $ fn (text)
-                          if ns?
-                            d! $ :: :writer/doc-set
-                              :: :ns $ :ns bookmark
-                              , text
-                            d! $ :: :writer/doc-set
-                              :: :def (:ns bookmark) (:extra bookmark)
-                              , text
+                          d! $ :: :writer/doc-set
+                            tag-match bookmark
+                                :def the-ns the-def f
+                                :: :def the-ns the-def
+                              (:ns the-ns f) (:: :ns the-ns)
+                            , text
                     if no-doc? (<> "\"no doc")
                       comp-md-block doc $ {}
                   .render doc-plugin
@@ -1500,13 +1496,16 @@
           :code $ quote
             defcomp comp-status-bar (cursor state states router-data bookmark theme)
               let
-                  old-name $ if
-                    = :def $ :kind bookmark
-                    str (:ns bookmark) "\"/" $ :extra bookmark
-                    :ns bookmark
+                  old-name $ tag-match bookmark
+                      :def ns' def' f
+                      str ns' "\"/" def'
+                    (:ns ns' f) (str ns' )
                   confirm-delete-plugin $ use-confirm (>> states :delete)
                     {} $ :text
-                      str "\"Confirm deleting current path: " (:ns bookmark) "\"/" $ or (:extra bookmark) (:kind bookmark)
+                      str "\"Confirm deleting current path: " $ tag-match bookmark
+                          :def ns' def' f
+                          str ns' "\"/" def'
+                        (:ns ns' f) (str "\"ns: " ns')
                   confirm-reset-plugin $ use-confirm (>> states :reset)
                     {} $ :text "\"Confirm reset changes to this expr?"
                   rename-plugin $ use-prompt (>> states :rename)
@@ -1565,9 +1564,7 @@
                       :class-name $ str-spaced css/font-fancy style-link
                       :on-click $ fn (e d!)
                         .show confirm-delete-plugin d! $ fn ()
-                          if (some? bookmark)
-                            d! :ir/delete-entry $ dissoc bookmark :focus
-                            js/console.warn "\"No entry to delete"
+                          if (some? bookmark) (d! :ir/delete-entry bookmark) (js/console.warn "\"No entry to delete")
                     =< 8 nil
                     span $ {} (:inner-text |Rename)
                       :class-name $ str-spaced css/font-fancy style-link
@@ -1581,10 +1578,9 @@
                           let
                               text $ trim result
                             when-not (blank? text)
-                              d! :ir/add-def $ [] (:ns bookmark) text
-                              d! :writer/edit $ {} (:kind :def)
-                                :ns $ :ns bookmark
-                                :extra text
+                              d! :ir/add-def $ [] (nth bookmark 1) text
+                              d! $ :: :writer/edit
+                                :: :def (nth bookmark 1) text
                     =< 8 nil
                     span $ {} (:inner-text |Draft-box)
                       :class-name $ str-spaced css/font-fancy style-link
@@ -1625,8 +1621,7 @@
                             {}
                               :class-name $ str-spaced css/column style-usage
                               :on-click $ fn (e d!)
-                                d! $ :: :writer/select
-                                  {} (:kind :def) (:ns the-ns) (:extra the-def)
+                                d! $ :: :writer/select (:: :def the-ns the-def)
                             <> the-def style-usage-def
                             <> the-ns style-tiny
                 <> "\"orphin" style-placeholder
@@ -1712,14 +1707,11 @@
         |on-reset-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-reset-expr (bookmark d!)
-              let
-                  kind $ :kind bookmark
-                  ns-text $ :ns bookmark
-                d! :ir/reset-at $ case-default kind (eprintln "\"Unknown" bookmark)
-                  :ns $ {} (:ns ns-text) (:kind :ns)
-                  :def $ {} (:ns ns-text) (:kind :def)
-                    :extra $ :extra bookmark
-                d! $ :: :states/clear
+              d! :ir/reset-at $ tag-match bookmark
+                  :ns ns' f
+                  :: :ns ns'
+                (:def ns' def' f) (:: :def ns' def')
+              d! $ :: :states/clear
         |style-doc $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-doc $ {}
@@ -1852,7 +1844,7 @@
                   div ({})
                     span $ {} (:inner-text selected-ns) (:style style-link)
                       :on-click $ fn (e d!)
-                        d! :writer/edit $ {} (:kind :ns)
+                        d! $ :: :writer/edit (:: :ns selected-ns)
                     =< 16 nil
                     comp-icon :plus
                       {} (:font-size 14)
@@ -1888,10 +1880,10 @@
                             {}
                               :class-name $ str-spaced css/row-parted style-def |hoverable
                               :style $ if
-                                includes? highlights $ {} (:ns selected-ns) (:extra def-text) (:kind :def)
+                                includes? highlights $ :: :def selected-ns def-text
                                 {} $ :color :white
                               :on-click $ fn (e d!)
-                                d! :writer/edit $ {} (:kind :def) (:extra def-text)
+                                d! $ :: :writer/edit (:: :def selected-ns def-text)
                             div
                               {} $ :class-name css/row
                               <> def-text nil
@@ -2484,12 +2476,12 @@
         |bookmark->str $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn bookmark->str (bookmark)
-              case-default (:kind bookmark)
-                do
-                  js/console.warn $ str "\"Unknown" (to-lispy-string bookmark)
-                  , "\""
-                :def $ str (:ns bookmark) "\"/" (:extra bookmark)
-                :ns $ :ns bookmark
+              tag-match bookmark
+                  :def ns' def'
+                  str ns' "\"/" def'
+                (:def ns' def' f) (str ns' "\"/" def')
+                (:ns ns') ns'
+                (:ns ns'  f) ns'
         |comp-no-results $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-no-results () $ div
@@ -2509,21 +2501,21 @@
                     map trim
                   def-candidates $ -> router-data
                     filter $ fn (bookmark)
-                      and
-                        = :def $ :kind bookmark
-                        every? queries $ fn (y)
-                          .includes?
-                            or (:extra bookmark) "\""
-                            , y
+                      tag-match bookmark
+                          :def ns' def'
+                          every? queries $ fn (y)
+                            .includes? (or def' "\"") y
+                        _ false
                     .sort-by $ if
                       blank? $ :query state
                       , bookmark->str query-length
+                    w-js-log
                   ns-candidates $ -> router-data
                     filter $ fn (bookmark)
-                      and
-                        = :ns $ :kind bookmark
-                        every? queries $ fn (y)
-                          .includes? (:ns bookmark) y
+                      tag-match bookmark
+                          :ns ns'
+                          every? queries $ fn (y) (.includes? ns' y)
+                        _ false
                     .sort-by $ if
                       blank? $ :query state
                       , bookmark->str query-length
@@ -2547,18 +2539,19 @@
                           let
                               text $ bookmark->str bookmark
                               selected? $ = idx (:selection state)
-                            [] text $ div
-                              {}
-                                :class-name $ str-spaced |hoverable style-candidate
-                                :style $ if selected? style-highlight
-                                :on-click $ on-select bookmark cursor
-                              <> (:extra bookmark) nil
-                              =< 8 nil
-                              <> (:ns bookmark)
-                                merge
-                                  {} (:font-size 12)
-                                    :color $ hsl 0 0 40
-                                  if selected? style-highlight
+                            [] text $ tag-match bookmark
+                                :def ns' def'
+                                div
+                                  {}
+                                    :class-name $ str-spaced |hoverable style-candidate
+                                    :style $ if selected? style-highlight
+                                    :on-click $ on-select bookmark cursor
+                                  <> def' nil
+                                  =< 8 nil
+                                  <> ns' $ merge
+                                    {} (:font-size 12)
+                                      :color $ hsl 0 0 40
+                                    if selected? style-highlight
                   div
                     {} (:class-name css/column)
                       :style $ {} (:width 320) (:height "\"100%")
@@ -2568,9 +2561,9 @@
                       {} (:class-name css/expand) (:style style-body)
                       -> ns-candidates (take 20)
                         map-indexed $ fn (idx bookmark)
-                          [] (:ns bookmark)
+                          [] (nth bookmark 0)
                             let
-                                pieces $ split (:ns bookmark) "\"."
+                                pieces $ split (nth bookmark 1) "\"."
                               div
                                 {}
                                   :class-name $ str-spaced |hoverable css/row-middle style-candidate
@@ -2644,12 +2637,12 @@
         |query-length $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn query-length (bookmark)
-              case-default (:kind bookmark)
-                do
-                  js/console.warn $ str "\"Unknown" (to-lispy-string bookmark)
-                  , 0
-                :def $ count (:extra bookmark)
-                :ns $ count (:ns bookmark)
+              tag-match bookmark
+                  :def ns' def' f
+                  count def'
+                (:def ns' def') (count def')
+                (:ns ns' f) (count ns')
+                (:ns ns') (count ns')
         |style-body $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-body $ {} (:overflow :auto) (:padding-bottom 80)
@@ -2999,10 +2992,6 @@
         |FileEntry $ %{} :CodeEntry (:doc |)
           :code $ quote
             def FileEntry $ new-record :FileEntry :ns :defs
-        |bookmark $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            def bookmark $ {} (:kind :def) (:ns nil) (:extra nil)
-              :focus $ []
         |configs $ %{} :CodeEntry (:doc |)
           :code $ quote
             def configs $ {} (:port 6001) (:expose-port 6011) (:init-fn "\"app.main/main!") (:reload-fn "\"app.main/reload!")
@@ -3600,9 +3589,12 @@
                   bookmark $ if (empty? stack) nil (get stack pointer)
                 if (some? bookmark)
                   let
-                      ns-text $ :ns bookmark
+                      ns-text $ nth bookmark 1
                     {}
-                      :focus $ :focus bookmark
+                      :focus $ tag-match bookmark
+                          :ns n f
+                          , f
+                        (:def n d f) f
                       :others $ dissoc
                         -> sessions
                           map $ fn (entry)
@@ -3615,9 +3607,12 @@
                                 if
                                   and
                                     = :editor $ nth router 0
-                                    same-buffer? bookmark a-bookmark
+                                    = bookmark a-bookmark
                                   {}
-                                    :focus $ :focus a-bookmark
+                                    :focus $ tag-match a-bookmark
+                                        :ns n f
+                                        , f
+                                      (:def n d f) f
                                     :nickname $ get-in users
                                       [] (:user-id session) :nickname
                                     :session-id $ :id session
@@ -3642,10 +3637,11 @@
                             [] k $ twig-user
                               get users $ :user-id other-session
                         pairs-map
-                      :expr $ case-default (:kind bookmark) nil
-                        :ns $ get-in files ([] ns-text :ns)
-                        :def $ get-in files
-                          [] ns-text :defs $ :extra bookmark
+                      :expr $ tag-match bookmark
+                          :ns the-ns f
+                          get-in files $ [] the-ns :ns
+                        (:def the-ns the-def f)
+                          get-in files $ [] the-ns :defs the-def
                       :peek-def $ let
                           peek-def $ :peek-def writer
                         if (some? peek-def)
@@ -3653,18 +3649,21 @@
                           , nil
                       :picker-choices $ if
                         some? $ :picker-mode writer
-                        pick-from-ns $ get files (:ns bookmark)
+                        pick-from-ns $ get files ns-text
                       :changed $ let
                           file $ get files ns-text
                           old-file $ get old-files ns-text
-                        case-default (:kind bookmark) (do :unknown)
-                          :ns $ compare-entry (:ns file) (:ns old-file)
-                          :def $ compare-entry
-                            get (:defs file) (:extra bookmark)
-                            get (:defs old-file) (:extra bookmark)
-                      :usages $ if
-                        = :def $ :kind bookmark
-                        get usages-dict $ :: :reference (:ns bookmark) (:extra bookmark)
+                        tag-match bookmark
+                            :ns the-ns f
+                            compare-entry (:ns file) (:ns old-file)
+                          (:def the-ns the-def f)
+                            compare-entry
+                              get (:defs file) the-def
+                              get (:defs old-file) the-def
+                      :usages $ tag-match bookmark
+                          :def the-ns the-def focus
+                          get usages-dict $ :: :reference the-ns the-def
+                        _ nil
                   , nil
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
@@ -3730,9 +3729,7 @@
                       let
                           writer $ :writer session
                           stack $ :stack writer
-                        if (empty? stack) nil $ dissoc
-                          get stack $ :pointer writer
-                          , :focus
+                        if (empty? stack) nil $ get stack (:pointer writer)
                   filter $ fn (pair)
                     let[] (k session) pair $ if (= sid k) false (some? session)
                   pairs-map
@@ -3766,13 +3763,13 @@
                         [] k file
                         , entry
                     concat
-                      [] $ {} (:kind :ns) (:ns k)
+                      [] $ :: :ns k
                       -> (:defs file) (.to-list)
                         map $ fn (f-entry)
                           let-sugar
                                 [] f-k file
                                 , f-entry
-                            {} (:kind :def) (:ns k) (:extra f-k)
+                            :: :def k f-k
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.twig.search $ :require
@@ -3906,23 +3903,22 @@
                   writer $ to-writer db sid
                   files $ get db :files
                   bookmark $ to-bookmark writer
-                  ns-text $ :ns bookmark
+                  ns-text $ nth bookmark 1
                   def-text op-data
                   def-existed? $ some?
-                    get-in files $ [] (:ns bookmark) :defs def-text
+                    get-in files $ [] ns-text :defs def-text
                   user-id $ get-in db ([] :sessions sid :user-id)
-                  new-bookmark $ merge schema/bookmark
-                    {} (:ns ns-text) (:kind :def) (:extra def-text)
+                  new-bookmark $ :: :def ns-text def-text ([])
                 if def-existed?
                   -> db
                     update-in ([] :sessions sid :notifications)
                       push-warning op-id op-time $ str def-text "| already defined!"
                     update-in ([] :sessions sid :writer) (push-bookmark new-bookmark)
                   let
-                      target-path $ -> (:focus bookmark)
+                      target-path $ -> (nth bookmark 3)
                         mapcat $ fn (x) ([] :data x)
                       target-expr $ -> files
-                        get-in $ [] ns-text :defs (:extra bookmark) :code
+                        get-in $ [] ns-text :defs (nth bookmark 2) :code
                         get-in target-path
                     -> db
                       update-in ([] :files ns-text :defs)
@@ -3934,7 +3930,7 @@
                                 [] |def def-text $ tree->cirru target-expr
                                 , user-id op-time
                             assoc-in
-                              prepend target-path $ :extra bookmark
+                              prepend target-path $ nth bookmark 2
                               cirru->tree def-text user-id op-time
                       update-in ([] :sessions sid :writer) (push-bookmark new-bookmark)
         |goto-def $ %{} :CodeEntry (:doc |)
@@ -3944,67 +3940,62 @@
                   writer $ to-writer db sid
                   pkg $ get db :package
                   bookmark $ to-bookmark writer
-                  ns-text $ :ns bookmark
+                  ns-text $ nth bookmark 1
                   ns-expr $ tree->cirru
                     get-in db $ [] :files ns-text :ns :code
                   deps-info $ parse-deps (.slice ns-expr 2)
                   def-info $ parse-def (:text op-data)
                   forced? $ :forced? op-data
-                  new-bookmark $ merge schema/bookmark
-                    if
-                      and
-                        contains? deps-info $ :key def-info
-                        = (:method def-info)
-                          :method $ get deps-info (:key def-info)
-                      let
-                          rule $ get deps-info (:key def-info)
-                        if
-                          = :refer $ :method def-info
-                          {} (:kind :def)
-                            :ns $ :ns rule
-                            :extra $ :key def-info
-                          {} (:kind :def)
-                            :ns $ :ns rule
-                            :extra $ :def def-info
-                      {} (:kind :def)
-                        :ns $ :ns bookmark
-                        :extra $ :def def-info
-                  def-existed? $ some?
-                    get-in db $ [] :files (:ns new-bookmark) :defs (:extra new-bookmark)
+                  new-bookmark $ if
+                    and
+                      contains? deps-info $ :key def-info
+                      = (:method def-info)
+                        :method $ get deps-info (:key def-info)
+                    let
+                        rule $ get deps-info (:key def-info)
+                      if
+                        = :refer $ :method def-info
+                        :: :def (:ns rule) (:key def-info) ([])
+                        :: :def (:ns rule) (:def def-info) ([])
+                    :: :def (nth bookmark 1) (:def def-info) ([])
+                  new-target-defs $ get-in db
+                    [] :files (nth new-bookmark 1) :defs
                   user-id $ get-in db ([] :sessions sid :user-id)
                   warn $ fn (x)
                     -> db $ update-in ([] :sessions sid :notifications) (push-warning op-id op-time x)
-                ; println |deps deps-info def-info new-bookmark def-existed?
+                ; println |deps deps-info def-info new-bookmark
                 if (some? new-bookmark)
                   if
                     or
-                      = pkg $ :ns new-bookmark
-                      starts-with? (:ns new-bookmark) (str pkg |.)
-                    if def-existed?
-                      -> db $ update-in ([] :sessions sid :writer) (push-bookmark new-bookmark true)
-                      if forced?
-                        let
-                            new-expr $ if
-                              list? $ :args op-data
-                              [] "\"defn" (:extra new-bookmark)
-                                [] & $ :args op-data
-                              [] "\"def" (:extra new-bookmark) ([])
-                            target-ns $ :ns new-bookmark
-                            target-def $ :extra new-bookmark
-                            def-code $ cirru->tree new-expr user-id op-time
-                          -> db
-                            update-in ([] :files)
-                              fn (files)
-                                if (contains? files target-ns)
-                                  assoc-in files ([] target-ns :defs target-def)
-                                    %{} schema/CodeEntry (:doc "\"") (:code def-code)
-                                  assoc files target-ns $ {}
-                                    :ns $ cirru->tree ([] "\"ns" target-ns) user-id op-time
-                                    :defs $ {}
-                                      target-def $ %{} schema/CodeEntry (:doc "\"") (:code def-code)
-                            update-in ([] :sessions sid :writer) (push-bookmark new-bookmark)
-                        warn $ str "|Does not exist: " (:ns new-bookmark) "| " (:extra new-bookmark)
-                    warn $ str "|From external ns: " (:ns new-bookmark)
+                      = pkg $ nth new-bookmark 1
+                      starts-with? (nth new-bookmark 1) (str pkg |.)
+                    tag-match new-bookmark
+                        :def ns' def' f
+                        if (contains? new-target-defs def')
+                          -> db $ update-in ([] :sessions sid :writer) (push-bookmark new-bookmark true)
+                          if forced?
+                            let
+                                new-expr $ if
+                                  list? $ :args op-data
+                                  [] "\"defn" def' $ [] & (:args op-data)
+                                  [] "\"def" def' $ []
+                                target-ns ns'
+                                target-def def'
+                                def-code $ cirru->tree new-expr user-id op-time
+                              -> db
+                                update-in ([] :files)
+                                  fn (files)
+                                    if (contains? files target-ns)
+                                      assoc-in files ([] target-ns :defs target-def)
+                                        %{} schema/CodeEntry (:doc "\"") (:code def-code)
+                                      assoc files target-ns $ {}
+                                        :ns $ cirru->tree ([] "\"ns" target-ns) user-id op-time
+                                        :defs $ {}
+                                          target-def $ %{} schema/CodeEntry (:doc "\"") (:code def-code)
+                                update-in ([] :sessions sid :writer) (push-bookmark new-bookmark)
+                            warn $ str "|Does not exist: " new-bookmark
+                      _ $ warn (str "\"handling ns: " new-bookmark)
+                    warn $ str "|From external ns: " new-bookmark
                   warn $ str "|Cannot locate: " def-info
         |parse-all-deps $ %{} :CodeEntry (:doc "|main implementation of reading files and build a usages dictionary. Slow at current, need optimizations with mutable data.\n")
           :code $ quote
@@ -4086,46 +4077,39 @@
                   writer $ to-writer db sid
                   pkg $ get db :package
                   bookmark $ to-bookmark writer
-                  ns-text $ :ns bookmark
+                  ns-text $ nth bookmark 1
                   ns-expr $ tree->cirru
                     get-in db $ [] :files ns-text :ns :code
                   deps-info $ parse-deps (.slice ns-expr 2)
                   def-info $ parse-def op-data
-                  new-bookmark $ merge schema/bookmark
-                    if
-                      and
-                        contains? deps-info $ :key def-info
-                        = (:method def-info)
-                          :method $ get deps-info (:key def-info)
-                      let
-                          rule $ get deps-info (:key def-info)
-                        if
-                          = :refer $ :method def-info
-                          {} (:kind :def)
-                            :ns $ :ns rule
-                            :extra $ :key def-info
-                          {} (:kind :def)
-                            :ns $ :ns rule
-                            :extra $ :def def-info
-                      {} (:kind :def)
-                        :ns $ :ns bookmark
-                        :extra $ :def def-info
-                  def-existed? $ some?
-                    get-in db $ [] :files (:ns new-bookmark) :defs (:extra new-bookmark)
+                  new-bookmark $ if
+                    and
+                      contains? deps-info $ :key def-info
+                      = (:method def-info)
+                        :method $ get deps-info (:key def-info)
+                    let
+                        rule $ get deps-info (:key def-info)
+                      if
+                        = :refer $ :method def-info
+                        :: :def (:ns rule) (:key def-info)
+                        :: :def (:ns rule) (:def def-info)
+                    :: :def (nth bookmark 1) (:def def-info)
+                  target-defs $ get-in db
+                    [] :files (nth new-bookmark 1) :defs
                   user-id $ get-in db ([] :sessions sid :user-id)
                   warn $ fn (x)
                     update-in db ([] :sessions sid :notifications) (push-warning op-id op-time x)
-                ; println |deps deps-info def-info new-bookmark def-existed?
+                ; println |deps deps-info def-info new-bookmark
                 if (some? new-bookmark)
                   if
-                    starts-with? (:ns new-bookmark) (str pkg |.)
-                    if def-existed?
-                      -> db $ assoc-in ([] :sessions sid :writer :peek-def)
-                        {}
-                          :ns $ :ns new-bookmark
-                          :def $ :extra new-bookmark
-                      warn $ str "|Does not exist: " (:ns new-bookmark) "| " (:extra new-bookmark)
-                    warn $ str "|External dep:" (:ns new-bookmark)
+                    starts-with? (nth new-bookmark 1) (str pkg |.)
+                    tag-match new-bookmark $ 
+                      :def ns' def'
+                      if (contains? target-defs def')
+                        -> db $ assoc-in ([] :sessions sid :writer :peek-def)
+                          {} (:ns ns') (:def def')
+                        warn $ str "|Does not exist: " (:ns new-bookmark) "| " (:extra new-bookmark)
+                    warn $ str "|External dep:" (nth new-bookmark 1)
                   warn $ str "|Cannot locate:" def-info
         |refresh-usages-dict $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -4600,13 +4584,12 @@
                 update-in db
                   [] :files $ :ns op-data
                   fn (file)
-                    case-default (:kind op-data)
-                      raise $ str "|Malformed data: " (to-lispy-string op-data)
-                      :ns $ assoc file :ns (:ns old-file)
-                      :def $ let
-                          def-text $ :extra op-data
-                        assoc-in file ([] :defs def-text)
-                          get-in old-file $ [] :defs def-text
+                    tag-match op-data
+                        :ns ns'
+                        assoc file :ns $ :ns old-file
+                      (:def ns' def')
+                        assoc-in file ([] :defs def')
+                          get-in old-file $ [] :defs def'
         |reset-files $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reset-files (db op-data session-id op-id op-time)
@@ -4906,13 +4889,11 @@
           :code $ quote
             defn edit (db op-data session-id op-id op-time)
               let
-                  ns-text $ if
-                    some? $ :ns op-data
-                    :ns op-data
-                    do (; "\"in old behavoir there's a default ns, could be misleading. need to be compatible..")
-                      get-in db $ [] :sessions session-id :writer :selected-ns
-                  bookmark $ -> op-data (assoc :ns ns-text)
-                    assoc :focus $ []
+                  bookmark $ tag-match op-data
+                      :ns the-ns
+                      :: :ns the-ns $ []
+                    (:def the-ns the-def)
+                      :: :def the-ns the-def $ []
                 -> db
                   update-in ([] :sessions session-id :writer) (push-bookmark bookmark)
                   assoc-in ([] :sessions session-id :router) (:: :editor)
@@ -4922,12 +4903,13 @@
               let
                   writer $ to-writer db sid
                   bookmark $ to-bookmark writer
-                  ns-text $ :ns bookmark
-                if
-                  = :def $ :kind bookmark
-                  -> db $ update-in ([] :sessions sid :writer)
-                    push-bookmark $ assoc schema/bookmark :kind :ns :ns ns-text
-                  , db
+                  ns-text $ nth bookmark 1
+                tag-match bookmark
+                    :def ns' def' f
+                    , db
+                  (:ns ns' f)
+                    -> db $ update-in ([] :sessions sid :writer)
+                      push-bookmark $ :: :ns ns-text ([])
         |finish $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn finish (db sid op-id op-time)
@@ -4947,9 +4929,13 @@
             defn focus (db op-data session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
-                assoc-in db
-                  [] :sessions session-id :writer :stack (:pointer writer) :focus
-                  , op-data
+                update-in db
+                  [] :sessions session-id :writer :stack $ :pointer writer
+                  fn (b)
+                    tag-match b
+                        :def ns' def' f
+                        :: :def ns' def' op-data
+                      (:ns ns' f) (:: :ns ns' op-data)
         |go-down $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn go-down (db op-data session-id op-id op-time)
@@ -5151,7 +5137,11 @@
           :code $ quote
             defn select (db op-data session-id op-id op-time)
               let
-                  bookmark $ assoc op-data :focus ([])
+                  bookmark $ tag-match op-data
+                      :def ns' def'
+                      :: :def ns' def' $ []
+                    (:ns ns')
+                      :: :ns ns' $ []
                 -> db
                   update-in ([] :sessions session-id :writer) (push-bookmark bookmark)
                   assoc-in ([] :sessions session-id :router) (:: :editor)
@@ -5189,12 +5179,10 @@
         |bookmark-full-str $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn bookmark-full-str (bookmark)
-              case-default (:kind bookmark)
-                do
-                  js/console.warn $ str "\"Unknown" (to-lispy-string bookmark)
-                  , "\""
-                :def $ str (:ns bookmark) "\"/" (:extra bookmark)
-                :ns $ str (:ns bookmark) "\"/"
+              tag-match bookmark
+                  :def ns' def' f
+                  str ns' "\"/" def'
+                (:ns ns' f) (str ns' "\"/")
         |cirru->file $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn cirru->file (file author timestamp)
@@ -5354,13 +5342,6 @@
               fn (xs)
                 conj xs $ merge schema/notification
                   {} (:id op-id) (:kind :warning) (:text text) (:time op-time)
-        |same-buffer? $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defn same-buffer? (x y)
-              and
-                = (:kind x) (:kind y)
-                = (:ns x) (:ns y)
-                = (:extra x) (:extra y)
         |stringify-s-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn stringify-s-expr (x)
@@ -5732,11 +5713,18 @@
       :defs $ {}
         |=bookmark? $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn =bookmark? (x y)
-              and
-                = (:kind x) (:kind y)
-                = (:ns x) (:ns y)
-                = (:extra x) (:extra y)
+            defn =bookmark? (a b)
+              tag-match a
+                  :def a-ns a-def a-f
+                  tag-match b
+                      :def b-ns b-def b-f
+                      and (= a-ns b-ns) (= a-def b-def)
+                    (:ns b-ns b-f) false
+                (:ns a-ns a-f)
+                  tag-match b
+                      :def b-ns b-def b-f
+                      , false
+                    (:ns b-ns b-f) (= a-ns b-ns)
         |index-of-bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn index-of-bookmark (stack bookmark ? idx)
