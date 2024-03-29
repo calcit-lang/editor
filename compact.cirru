@@ -38,8 +38,7 @@
               when
                 some? $ get query "\"watching"
                 dispatch! $ :: :router/change
-                  {} (:name :watching)
-                    :data $ get query "\"watching"
+                  :: :watching $ get query "\"watching"
         |dispatch! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op)
@@ -92,7 +91,7 @@
               connect!
               add-watch *store :changes $ fn (store prev) (render-app!)
                 if
-                  = :editor $ get-in @*store ([] :router :name)
+                  = :editor $ get-in @*store ([] :router 0)
                   focus!
               add-watch *states :changes $ fn (states prev) (render-app!)
               js/window.addEventListener "\"keydown" $ fn (event)
@@ -656,25 +655,32 @@
                   div
                     {} $ :class-name (str-spaced css/global css/fullscreen css/column style-container)
                     if (not picker-mode?)
-                      comp-header (>> states :header) (:name router) (:logged-in? store) (:stats store)
+                      comp-header (>> states :header)
+                        if (tuple? router) (nth router 0)
+                        :logged-in? store
+                        :stats store
                     div
                       {} $ :class-name (str-spaced css/row css/expand)
                       if (:logged-in? store)
-                        case-default (:name router)
-                          div ({})
-                            <> $ str "\"404 page: " (to-lispy-string router)
-                          :profile $ comp-profile (>> states :profile) (:user store) (:id session) (:data router)
-                          :files $ comp-page-files (>> states :files) (:selected-ns writer) (:data router)
-                          :editor $ comp-page-editor (>> states :editor) (:stack writer) (:data router) (:pointer writer) picker-mode? theme
-                          :search $ comp-search (>> states :search) (:data router)
-                          :watching $ comp-watching (>> states :watching) (:data router) (:theme session)
-                          :configs $ let
-                              d $ :data router
+                        tag-match router
+                            :profile d
+                            comp-profile (>> states :profile) (:user store) (:id session) d
+                          (:files d)
+                            comp-page-files (>> states :files) (:selected-ns writer) d
+                          (:editor d)
+                            comp-page-editor (>> states :editor) (:stack writer) d (:pointer writer) picker-mode? theme
+                          (:search d)
+                            comp-search (>> states :search) d
+                          (:watching d)
+                            comp-watching (>> states :watching) d $ :theme session
+                          (:configs d)
                             comp-configs (>> states :configs) (:configs d) (:entries d)
-                        if
-                          = :watching $ :name router
-                          comp-watching (>> states :watching) (:data router) (:theme session)
-                          comp-login $ >> states :login
+                          _ $ div ({})
+                            <> $ str "\"404 page: " (to-lispy-string router)
+                        tag-match router
+                            :watcher d
+                            comp-watching (>> states :watching) d $ :theme session
+                          _ $ comp-login (>> states :login)
                     , 
                       when dev? $ comp-inspect |Session store style-inspector
                       ; when dev? $ comp-inspect "|Router data" states
@@ -1041,18 +1047,18 @@
                   broadcast-plugin $ use-prompt (>> states :broadcast)
                     {} $ :text "\"Message to broadcast"
                 div
-                  {} $ :class-name (str-spaced css/row-center css/font-fancy css-header)
+                  {} $ :class-name (str-spaced css/row-center css/font-fancy style-header)
                   div
                     {} $ :class-name css/row-center
                     render-entry |Files :files router-name $ fn (e d!)
-                      d! :router/change $ {} (:name :files)
+                      d! $ :: :router/change (:: :files)
                     render-entry |Editor :editor router-name $ fn (e d!)
-                      d! :router/change $ {} (:name :editor)
+                      d! $ :: :router/change (:: :editor)
                     render-entry |Search :search router-name $ fn (e d!)
-                      d! :router/change $ {} (:name :search)
+                      d! $ :: :router/change (:: :search)
                       focus-search!
                     render-entry |Configs :configs router-name $ fn (e d!)
-                      d! :router/change $ {} (:name :configs)
+                      d! $ :: :router/change (:: :configs)
                     a
                       {} (:href |https://github.com/Cirru/calcit-editor/wiki/Keyboard-Shortcuts) (:target |_blank) (:class-name css-entry)
                       <> "\"Shortcuts" style-link
@@ -1072,7 +1078,7 @@
                         str |Profile: $ :members-count stats
                         , |Guest
                       , :profile router-name $ fn (e d!)
-                        d! :router/change $ {} (:name :profile) (:data nil) (:router nil)
+                        d! $ :: :router/change (:: :profile)
                   .render broadcast-plugin
         |css-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1084,15 +1090,6 @@
               "\"&:hover" $ {}
                 :color $ hsl 0 0 100 0.7
               "\"&:active" $ {} (:transform "\"scale(1.02)")
-        |css-header $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-header $ {}
-              "\"$0" $ {} (:height 30) (:justify-content :space-between) (:padding "|0 16px") (:font-size 15) (:line-height "\"18px") (:color :white) (:font-weight 300) (:position :fixed) (:top 0) (:right 0) (:z-index 100) (:transition-duration "\"240ms") (; :opacity 0.1)
-                :background-color $ hsl 0 0 0 0.2
-                :border-bottom $ str "|1px solid " (hsl 0 0 100 0.2)
-              "\"$0 > *" $ {} (:opacity 0.5) (:transition-duration "\"240ms")
-              "\"$0:hover" $ {} (:opacity 1)
-              "\"$0:hover > *" $ {} (:opacity 1)
         |render-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-entry (page-name this-page router-name on-click)
@@ -1100,6 +1097,15 @@
                 {} (:class-name css-entry) (:on-click on-click)
                   :style $ if (= this-page router-name) style-highlight
                 <> page-name nil
+        |style-header $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-header $ {}
+              "\"$0" $ {} (:height 30) (:justify-content :space-between) (:padding "|0 16px") (:font-size 15) (:line-height "\"18px") (:color :white) (:font-weight 300) (:position :fixed) (:top 0) (:right 0) (:z-index 100) (:transition-duration "\"240ms") (; :opacity 0.1)
+                :background-color $ hsl 0 0 0 0.2
+                :border-bottom $ str "|1px solid " (hsl 0 0 100 0.2)
+              "\"$0 > *" $ {} (:opacity 0.5) (:transition-duration "\"240ms")
+              "\"$0:hover" $ {} (:opacity 1)
+              "\"$0:hover > *" $ {} (:opacity 1)
         |style-highlight $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-highlight $ {}
@@ -2157,7 +2163,7 @@
           :code $ quote
             defn on-watch (session-id)
               fn (e d!)
-                d! :router/change $ {} (:name :watching) (:data session-id)
+                d! :router/change $ :: :watching session-id
         |style-bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-bookmark $ {} (:font-family |Menlo,monospace) (:min-width 200) (:display :inline-block)
@@ -2620,7 +2626,7 @@
                           d! cursor $ update state :selection dec
                     (= keycode/escape code)
                       do
-                        d! :router/change $ {} (:name :editor)
+                        d! $ :: :router/change (:: :editor)
                         d! cursor $ {} (:query |) (:position 0)
                     (= keycode/down code)
                       do (.!preventDefault event)
@@ -3035,7 +3041,7 @@
         |session $ %{} :CodeEntry (:doc |)
           :code $ quote
             def session $ {} (:user-id nil) (:id nil)
-              :router $ {} (:name :files) (:data nil) (:router nil)
+              :router $ :: :files
               :notifications $ []
               :writer $ {} (:selected-ns nil) (:draft-ns nil) (:peek-def nil) (:pointer 0)
                 :stack $ []
@@ -3501,32 +3507,37 @@
                   router $ :router session
                   writer $ :writer session
                 if
-                  or logged-in? $ = :watching (:name router)
+                  or logged-in? $ = :watching
+                    if (tuple? router) (nth router 0)
                   {}
                     :session $ dissoc session :router
                     :logged-in? logged-in?
                     :user $ if logged-in?
                       twig-user $ get-in db
                         [] :users $ :user-id session
-                    :router $ assoc router :data
-                      case-default (:name router) ({})
-                        :files $ twig-page-files (:files db)
+                    :router $ tag-match router
+                        :files
+                        :: :files $ twig-page-files (:files db)
                           get-in session $ [] :writer :selected-ns
                           :saved-files db
                           get-in session $ [] :writer :draft-ns
                           :sessions db
                           :id session
-                        :editor $ twig-page-editor (:files db) (:saved-files db) (:sessions db) (:users db) writer (:id session) (:usages-dict db)
-                        :profile $ {}
+                      (:editor)
+                        :: :editor $ twig-page-editor (:files db) (:saved-files db) (:sessions db) (:users db) writer (:id session) (:usages-dict db)
+                      (:profile)
+                        :: :profile $ {}
                           :members $ twig-page-members (:sessions db) (:users db)
-                        :search $ twig-search (:files db)
-                        :watching $ let
+                      (:search)
+                        :: :search $ twig-search (:files db)
+                      (:watching his-sid)
+                        :: :watching $ let
                             sessions $ :sessions db
-                            his-sid $ :data router
                           if (contains? sessions his-sid)
                             twig-watching (get sessions his-sid) (:id session) (:files db) (:users db)
                             , nil
-                        :configs $ {}
+                      (:configs)
+                        :: :configs $ {}
                           :configs $ :configs db
                           :entries $ :entries db
                     :stats $ {}
@@ -3553,7 +3564,7 @@
                 :bookmark $ let
                     writer $ :writer session
                   get (:stack writer) (:pointer writer)
-                :page $ get-in session ([] :router :name)
+                :page $ get-in session ([] :router 0)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.twig.member $ :require
@@ -3603,7 +3614,7 @@
                               [] (first entry)
                                 if
                                   and
-                                    = :editor $ :name router
+                                    = :editor $ nth router 0
                                     same-buffer? bookmark a-bookmark
                                   {}
                                     :focus $ :focus a-bookmark
@@ -3622,8 +3633,8 @@
                                 , entry
                               router $ :router other-session
                             and
-                              = :watching $ :name router
-                              = (:data router) session-id
+                              = :watching $ nth router 0
+                              = (nth router 1) session-id
                         map $ fn (entry)
                           let-sugar
                                 [] k other-session
@@ -4904,8 +4915,7 @@
                     assoc :focus $ []
                 -> db
                   update-in ([] :sessions session-id :writer) (push-bookmark bookmark)
-                  assoc-in ([] :sessions session-id :router)
-                    {} $ :name :editor
+                  assoc-in ([] :sessions session-id :router) (:: :editor)
         |edit-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn edit-ns (db sid op-id op-time)
@@ -5144,8 +5154,7 @@
                   bookmark $ assoc op-data :focus ([])
                 -> db
                   update-in ([] :sessions session-id :writer) (push-bookmark bookmark)
-                  assoc-in ([] :sessions session-id :router)
-                    {} $ :name :editor
+                  assoc-in ([] :sessions session-id :router) (:: :editor)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater.writer $ :require
@@ -5694,8 +5703,7 @@
                   cond
                       and meta? $ or (= code keycode/p) (= code keycode/o)
                       do
-                        dispatch! $ :: :router/change
-                          {} $ :name :search
+                        dispatch! $ :: :router/change (:: :search)
                         focus-search!
                         .!preventDefault event
                     (and meta? (= code keycode/e))
@@ -5712,8 +5720,7 @@
                         dispatch! $ :: :effect/save-files
                         dispatch! $ :: :analyze/refresh-usages-dict nil
                     (and meta? shift? (= code keycode/f))
-                      dispatch! $ :: :router/change
-                        {} $ :name :files
+                      dispatch! $ :: :router/change (:: :files)
                     (and meta? (not shift?) (= code keycode/period))
                       dispatch! $ :: :writer/picker-mode
       :ns $ %{} :CodeEntry (:doc |)
