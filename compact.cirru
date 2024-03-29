@@ -663,10 +663,9 @@
                         case-default (:name router)
                           div ({})
                             <> $ str "\"404 page: " (to-lispy-string router)
-                          :profile $ comp-profile (>> states :profile) (:user store)
+                          :profile $ comp-profile (>> states :profile) (:user store) (:id session) (:data router)
                           :files $ comp-page-files (>> states :files) (:selected-ns writer) (:data router)
                           :editor $ comp-page-editor (>> states :editor) (:stack writer) (:data router) (:pointer writer) picker-mode? theme
-                          :members $ comp-page-members (:data router) (:id session)
                           :search $ comp-search (>> states :search) (:data router)
                           :watching $ comp-watching (>> states :watching) (:data router) (:theme session)
                           :configs $ let
@@ -1052,10 +1051,6 @@
                     render-entry |Search :search router-name $ fn (e d!)
                       d! :router/change $ {} (:name :search)
                       focus-search!
-                    render-entry
-                      str |Members: $ :members-count stats
-                      , :members router-name $ fn (e d!)
-                        d! :router/change $ {} (:name :members)
                     render-entry |Configs :configs router-name $ fn (e d!)
                       d! :router/change $ {} (:name :configs)
                     a
@@ -1072,8 +1067,12 @@
                         .show broadcast-plugin d! $ fn (result)
                           if (some? result) (d! :notify/broadcast result)
                     =< 12 nil
-                    render-entry (if logged-in? |Profile |Guest) :profile router-name $ fn (e d!)
-                      d! :router/change $ {} (:name :profile) (:data nil) (:router nil)
+                    render-entry
+                      if logged-in?
+                        str |Profile: $ :members-count stats
+                        , |Guest
+                      , :profile router-name $ fn (e d!)
+                        d! :router/change $ {} (:name :profile) (:data nil) (:router nil)
                   .render broadcast-plugin
         |css-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2327,34 +2326,41 @@
       :defs $ {}
         |comp-profile $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-profile (states user)
+            defcomp comp-profile (states user sid router-data)
               let
                   rename-plugin $ use-prompt (>> states :rename)
                     {}
                       :initial $ :nickname user
                       :text "\"Pick a nickname:"
                 div
-                  {} (:class-name css/flex) (:style style-profile)
-                  div ({})
-                    <>
-                      str "|Hello! " $ :nickname user
-                      str-spaced css/font-fancy style-greet
-                    =< 4 nil
-                    comp-icon :edit-2
-                      {} (:font-size 14)
-                        :color $ hsl 0 0 40
-                        :cursor :pointer
-                      fn (e d!)
-                        .show rename-plugin d! $ fn (result)
-                          d! :user/nickname $ trim result
-                    =< 8 nil
-                    <>
-                      str "|id: " $ :name user
-                      , style-id
-                  =< nil 80
-                  div ({})
-                    button $ {} (:inner-text "|Log out") (:class-name style/button) (:on-click on-log-out)
-                  .render rename-plugin
+                  {}
+                    :class-name $ str-spaced css/row css/flex
+                    :style $ {} (:padding "|24px 16px")
+                  div
+                    {} $ :class-name css/flex
+                    div ({})
+                      <>
+                        str "|Hello! " $ :nickname user
+                        str-spaced css/font-fancy style-greet
+                      =< 4 nil
+                      comp-icon :edit-2
+                        {} (:font-size 14)
+                          :color $ hsl 0 0 40
+                          :cursor :pointer
+                        fn (e d!)
+                          .show rename-plugin d! $ fn (result)
+                            d! :user/nickname $ trim result
+                      =< 8 nil
+                      <>
+                        str "|id: " $ :name user
+                        , style-id
+                    =< nil 80
+                    div ({})
+                      button $ {} (:inner-text "|Log out") (:class-name style/button) (:on-click on-log-out)
+                    .render rename-plugin
+                  div
+                    {} $ :class-name css/flex
+                    comp-page-members (:members router-data) sid
         |on-log-out $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-log-out (e dispatch!) (dispatch! :user/log-out nil)
@@ -2368,9 +2374,6 @@
           :code $ quote
             def style-id $ {} (:font-family "|Josefin Sans") (:font-weight 100)
               :color $ hsl 0 0 60
-        |style-profile $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            def style-profile $ {} (:padding "|24px 16px")
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.profile $ :require
@@ -2385,6 +2388,7 @@
             feather.core :refer $ comp-i comp-icon
             respo-alerts.core :refer $ use-prompt
             respo.css :refer $ defstyle
+            app.comp.page-members :refer $ comp-page-members
     |app.comp.replace-name $ %{} :FileEntry
       :defs $ {}
         |%rename-plugin $ %{} :CodeEntry (:doc |)
@@ -3513,7 +3517,8 @@
                           :sessions db
                           :id session
                         :editor $ twig-page-editor (:files db) (:saved-files db) (:sessions db) (:users db) writer (:id session) (:usages-dict db)
-                        :members $ twig-page-members (:sessions db) (:users db)
+                        :profile $ {}
+                          :members $ twig-page-members (:sessions db) (:users db)
                         :search $ twig-search (:files db)
                         :watching $ let
                             sessions $ :sessions db
