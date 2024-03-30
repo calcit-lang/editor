@@ -2964,7 +2964,14 @@
                 let
                     ks $ keys (:data self)
                     last-k $ last
-                      .sort $ .to-list ks
+                      .sort (.to-list ks) &compare
+                  .update self last-k f
+              :update-nth $ fn (self idx f)
+                let
+                    ks $ keys (:data self)
+                    last-k $ nth
+                      .sort (.to-list ks) &compare
+                      , idx
                   .update self last-k f
               :update $ fn (self p f)
                 update self :data $ fn (d) (update d p f)
@@ -3019,6 +3026,35 @@
                                 recur $ rest ps
               :find $ fn (self x)
                 .find-with-base self x $ []
+              :find-before-with-base $ fn (self x follow pp)
+                if (.= self x) pp $ let
+                    pairs $ .to-list (:data self)
+                  apply-args (pairs)
+                    fn (ps)
+                      list-match ps
+                        () $ :: :none
+                        (p0 pss)
+                          let
+                              k $ nth p0 0
+                              child $ nth p0 1
+                            ; js/console.log x child $ .= child x
+                            if
+                              and (.= child x)
+                                if-let
+                                  q0 $ get-in (wo-js-log pss) ([] 0 1)
+                                  and (record? q0) (&record:matches? CirruLeaf q0)
+                                    = (get q0 :text) follow
+                                  , false
+                              :: :some $ conj pp k
+                              if (&record:matches? self child)
+                                tag-match
+                                  .find-before-with-base child x follow $ conj pp k
+                                  (:some v) (:: :some v)
+                                  (:none)
+                                    recur $ rest ps
+                                recur $ rest ps
+              :find-before $ fn (self x follow)
+                .find-before-with-base self x follow $ []
               := $ fn (self x)
                 if (&record:matches? self x)
                   let
@@ -3038,7 +3074,10 @@
                         :update p
                         update self :data $ fn (d)
                           update d p $ fn (child) (.dispatch child more)
-                      (:update-last f) (.update-last self f)
+                      (:update-last)
+                        .update-last self $ fn (child) (.dispatch child more)
+                      (:update-nth idx)
+                        .update-nth self idx $ fn (child) (.dispatch child more)
                       (:replace v) v
                       (:dissoc p) (.dissoc self p)
                       (:assoc p v) (.assoc self p v)
@@ -3927,6 +3966,7 @@
                 (:writer/draft-ns op-data) (writer/draft-ns db op-data sid op-id op-time)
                 (:writer/hide-peek op-data) (writer/hide-peek db op-data sid op-id op-time)
                 (:writer/picker-mode) (writer/picker-mode db sid op-id op-time)
+                (:writer/picker-mode _nil) (writer/picker-mode db sid op-id op-time)
                 (:writer/pick-node op-data) (writer/pick-node db op-data sid op-id op-time)
                 (:writer/doc-set path docstring) (writer/doc-set db path docstring sid op-id op-time)
                 (:ir/add-ns op-data) (ir/add-ns db op-data sid op-id op-time)
@@ -4206,46 +4246,79 @@
                   writer $ :writer session
                   bookmark $ to-bookmark writer
                   user-id $ :user-id session
-                tag-match bookmark
-                    :ns ns' f
-                    do (js/console.warn "\"def import not working in ns rules") db
-                  (:def current-ns def' f)
-                    tag-match picked
-                        :def pick-ns pick-def
-                        if (= current-ns pick-ns)
-                          -> db
-                            assoc-in (.to-path bookmark) (cirru->tree pick-def user-id op-time)
-                            assoc-in ([] :sessions sid :router) (:: :editor)
-                          let
-                              ns-tree $ get-in db ([] :files current-ns :ns :code)
-                              try-ns-coord $ .find ns-tree
-                                cirru->tree pick-ns user-id $ js/Date.now
-                            tag-match try-ns-coord
-                                :some pick-ns-coord
-                                let
-                                    rule-coord $ butlast pick-ns-coord
-                                    rule $ .get-in ns-tree rule-coord
-                                    def-node $ cirru->tree pick-def user-id op-time
-                                    try-def-coord $ .find rule def-node
-                                  js/console.log rule-coord "\"---" ns-tree try-def-coord
-                                  tag-match try-def-coord
-                                      :some _c
+                  to-tree $ fn (x) (cirru->tree x user-id op-time)
+                if (some? bookmark)
+                  tag-match bookmark
+                      :ns ns' f
+                      do (js/console.warn "\"def import not working in ns rules") db
+                    (:def current-ns def' f)
+                      let
+                          ns-tree $ get-in db ([] :files current-ns :ns :code)
+                          bookmark-path $ .to-path bookmark
+                          router-path $ [] :sessions sid :router
+                          ns-path $ [] :files current-ns :ns :code
+                        tag-match picked
+                            :def pick-ns pick-def
+                            if (= current-ns pick-ns)
+                              -> db
+                                assoc-in bookmark-path $ to-tree pick-def
+                                assoc-in router-path $ :: :editor
+                              let
+                                  try-ns-coord $ w-js-log
+                                    .find-before ns-tree (to-tree pick-ns) "\":refer"
+                                tag-match try-ns-coord
+                                    :some pick-ns-coord
+                                    let
+                                        rule-coord $ butlast pick-ns-coord
+                                        rule $ .get-in ns-tree rule-coord
+                                        def-node $ cirru->tree pick-def user-id op-time
+                                        try-def-coord $ w-js-log (.find rule def-node)
+                                      js/console.log rule-coord "\"---" ns-tree try-def-coord
+                                      tag-match try-def-coord
+                                          :some _c
+                                          -> db (assoc-in bookmark-path def-node)
+                                            assoc-in router-path $ :: :editor
+                                        (:none)
+                                          -> db
+                                            update-in
+                                              concat ns-path $ mapcat rule-coord
+                                                fn (c) ([] :data c)
+                                              fn (rule-tree)
+                                                .dispatch rule-tree $ [] (:: :update-last) (:: :append def-node)
+                                            assoc-in bookmark-path $ to-tree pick-def
+                                            assoc-in router-path $ :: :editor
+                                  (:none)
+                                    -> db
+                                      update-in ns-path $ fn (ns-tree)
+                                        .dispatch ns-tree $ [] (:: :update-nth 2)
+                                          :: :append $ to-tree
+                                            [] pick-ns "\":refer" $ [] pick-def
+                                      assoc-in bookmark-path $ to-tree pick-def
+                                      assoc-in router-path $ :: :editor
+                          (:ns pick-ns)
+                            if (= current-ns pick-ns)
+                              do (js/console.log "\"already in namespace" current-ns) db
+                              let
+                                  try-ns-coord $ .find-before ns-tree (to-tree pick-ns) "\":as"
+                                tag-match try-ns-coord
+                                    :some pick-ns-coord
+                                    let
+                                        rule-coord $ butlast pick-ns-coord
+                                        rule $ .get-in ns-tree rule-coord
+                                        ns-alias $ last (.compact rule)
                                       -> db
-                                        assoc-in (.to-path bookmark) def-node
-                                        assoc-in ([] :sessions sid :router) (:: :editor)
-                                    (:none)
+                                        assoc-in bookmark-path $ to-tree (str ns-alias "\"/")
+                                        assoc-in router-path $ :: :editor
+                                  (:none)
+                                    let
+                                        ns-alias $ last (.split pick-ns "\".")
                                       -> db
-                                        update-in
-                                          concat ([] :files current-ns :ns :code)
-                                            mapcat rule-coord $ fn (c) ([] :data c)
-                                          fn (rule-tree)
-                                            .dispatch ns-tree $ [] (:: :update-last) (:: :append def-node)
-                                        assoc-in (.to-path bookmark) (cirru->tree pick-def user-id op-time)
-                                        assoc-in ([] :sessions sid :router) (:: :editor)
-                              (:none)
-                                do (js/console.log "\"import" current-ns def' ns-tree picked) db
-                      (:ns pick-ns)
-                        do (js/console.warn "\"not implmented for db yet") db
+                                        update-in ns-path $ fn (ns-tree)
+                                          .dispatch ns-tree $ [] (:: :update-nth 2)
+                                            :: :append $ to-tree ([] pick-ns "\":as" ns-alias)
+                                        assoc-in bookmark-path $ to-tree (str ns-alias "\"/")
+                                        assoc-in router-path $ :: :editor
+                  do (js/console.warn "\"no bookmark yet") db
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater.analyze $ :require
@@ -4309,11 +4382,11 @@
               let-sugar
                   writer $ get-in db ([] :sessions session-id :writer)
                   ({} stack pointer) writer
-                  bookmark $ get stack pointer
-                  focus $ :focus bookmark
+                  bookmark $ Bookmark (get stack pointer)
+                  focus $ .get-focus bookmark
                   user-id $ get-in db ([] :sessions session-id :user-id)
                   new-leaf $ %{} schema/CirruLeaf (:by user-id) (:at op-time) (:text "\"")
-                  expr-path $ bookmark->path bookmark
+                  expr-path $ .to-path bookmark
                   target-expr $ get-in db expr-path
                   new-id $ key-append (:data target-expr)
                 -> db
@@ -4322,8 +4395,10 @@
                       assoc-in expr ([] :data new-id) new-leaf
                       , expr
                   update-in
-                    [] :sessions session-id :writer :stack (:pointer writer) :focus
-                    fn (focus) (conj focus new-id)
+                    [] :sessions session-id :writer :stack $ :pointer writer
+                    fn (b)
+                      .update-focus (Bookmark b)
+                        fn (focus) (conj focus new-id)
         |call-replace-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn call-replace-expr (expr from to)
@@ -4447,29 +4522,31 @@
               let
                   writer $ to-writer db session-id
                   bookmark $ to-bookmark writer
-                  target-expr $ get-in db (bookmark->path bookmark)
-                  parent-path $ bookmark->path (update bookmark :focus butlast)
+                  target-expr $ get-in db (.to-path bookmark)
+                  parent-path $ .to-path (.update-focus bookmark butlast)
                   parent-expr $ get-in db parent-path
                   next-id $ key-after (:data parent-expr)
-                    last $ :focus bookmark
+                    last $ .get-focus bookmark
                 -> db
                   update-in parent-path $ fn (expr)
                     update expr :data $ fn (data) (assoc data next-id target-expr)
                   update-in
-                    [] :sessions session-id :writer :stack (:pointer writer) :focus
-                    fn (focus)
-                      conj (butlast focus) next-id
+                    [] :sessions session-id :writer :stack $ :pointer writer
+                    fn (b)
+                      .update-focus (Bookmark b)
+                        fn (focus)
+                          conj (butlast focus) next-id
         |expr-after $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expr-after (db op-data session-id op-id op-time)
               let
                   writer $ to-writer db session-id
                   bookmark $ to-bookmark writer
-                  parent-bookmark $ update bookmark :focus butlast
-                  data-path $ bookmark->path parent-bookmark
+                  parent-bookmark $ .update-focus bookmark butlast
+                  data-path $ .to-path parent-bookmark
                   target-expr $ get-in db data-path
                   next-id $ key-after (:data target-expr)
-                    last $ :focus bookmark
+                    last $ .get-focus bookmark
                   user-id $ get-in db ([] :sessions session-id :user-id)
                   new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text "\"")
                   new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id)
@@ -4478,20 +4555,22 @@
                   update-in data-path $ fn (expr)
                     assoc-in expr ([] :data next-id) new-expr
                   update-in
-                    [] :sessions session-id :writer :stack (:pointer writer) :focus
-                    fn (focus)
-                      -> (butlast focus) (conj next-id) (conj bisection/mid-id)
+                    [] :sessions session-id :writer :stack $ :pointer writer
+                    fn (b)
+                      .update-focus (Bookmark b)
+                        fn (focus)
+                          -> (butlast focus) (conj next-id) (conj bisection/mid-id)
         |expr-before $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expr-before (db op-data session-id op-id op-time)
               let
                   writer $ to-writer db session-id
                   bookmark $ to-bookmark writer
-                  parent-bookmark $ update bookmark :focus butlast
-                  data-path $ bookmark->path parent-bookmark
+                  parent-bookmark $ .update-focus bookmark butlast
+                  data-path $ .to-path parent-bookmark
                   target-expr $ get-in db data-path
                   next-id $ key-before (:data target-expr)
-                    last $ :focus bookmark
+                    last $ .get-focus bookmark
                   user-id $ get-in db ([] :sessions session-id :user-id)
                   new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text "\"")
                   new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id)
@@ -4500,9 +4579,11 @@
                   update-in data-path $ fn (expr)
                     assoc-in expr ([] :data next-id) new-expr
                   update-in
-                    [] :sessions session-id :writer :stack (:pointer writer) :focus
-                    fn (focus)
-                      -> (butlast focus) (conj next-id) (conj bisection/mid-id)
+                    [] :sessions session-id :writer :stack $ :pointer writer
+                    fn (b)
+                      .update-focus (Bookmark b)
+                        fn (focus)
+                          -> (butlast focus) (conj next-id) (conj bisection/mid-id)
         |expr-replace $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expr-replace (db op-data session-id op-id op-time)
@@ -4618,11 +4699,11 @@
               let-sugar
                   writer $ get-in db ([] :sessions session-id :writer)
                   ({} stack pointer) writer
-                  bookmark $ get stack pointer
-                  focus $ :focus bookmark
+                  bookmark $ Bookmark (get stack pointer)
+                  focus $ .get-focus bookmark
                   user-id $ get-in db ([] :sessions session-id :user-id)
                   new-leaf $ %{} schema/CirruLeaf (:by user-id) (:at op-time) (:text "\"")
-                  expr-path $ bookmark->path bookmark
+                  expr-path $ .to-path bookmark
                   target-expr $ get-in db expr-path
                   new-id $ key-prepend (:data target-expr)
                 -> db
@@ -4631,8 +4712,10 @@
                       assoc-in expr ([] :data new-id) new-leaf
                       , expr
                   update-in
-                    [] :sessions session-id :writer :stack (:pointer writer) :focus
-                    fn (focus) (conj focus new-id)
+                    [] :sessions session-id :writer :stack $ :pointer writer
+                    fn (b)
+                      .update-focus (Bookmark b)
+                        fn (focus) (conj focus new-id)
         |remove-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn remove-def (db op-data session-id op-id op-time)
@@ -5048,13 +5131,15 @@
               let
                   writer $ to-writer db sid
                   bookmark $ to-bookmark writer
-                  ns-text $ nth bookmark 1
-                tag-match bookmark
-                    :def ns' def' f
-                    , db
-                  (:ns ns' f)
-                    -> db $ update-in ([] :sessions sid :writer)
-                      push-bookmark $ :: :ns ns-text ([])
+                if (some? bookmark)
+                  tag-match bookmark
+                      :def ns' def' f
+                      -> db $ update-in ([] :sessions sid :writer)
+                        push-bookmark $ :: :ns ns' ([])
+                    (:ns ns' f)
+                      -> db $ update-in ([] :sessions sid :writer)
+                        push-bookmark $ :: :ns ns' ([])
+                  , db
         |finish $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn finish (db sid op-id op-time)
@@ -5120,9 +5205,10 @@
                     update-in
                       [] :sessions session-id :writer :stack $ :pointer writer
                       fn (b)
-                        .update-focus b $ fn (focus)
-                          conj (butlast focus)
-                            if (= 0 idx) last-coord $ get child-keys (dec idx)
+                        .update-focus (Bookmark b)
+                          fn (focus)
+                            conj (butlast focus)
+                              if (= 0 idx) last-coord $ get child-keys (dec idx)
         |go-right $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn go-right (db op-data session-id op-id op-time)
