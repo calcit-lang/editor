@@ -367,7 +367,7 @@
                       {} (:class-name css-bookmark)
                         :style $ {} (:padding "\"8px")
                       <> "\"ns" style-kind
-                      span $ {} (:inner-text "\"ns")
+                      span $ {} (:inner-text the-ns)
                         :class-name $ str-spaced css/font-normal
                         :style $ if selected? style-highlight
                   (:def the-ns the-def focus)
@@ -1476,6 +1476,15 @@
                     if no-doc? (<> "\"no doc")
                       comp-md-block doc $ {}
                   .render doc-plugin
+        |comp-local-link $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defcomp comp-local-link (ns-name def-name)
+              span
+                {}
+                  :class-name $ str-spaced css/link-slight css/font-code
+                  :on-click $ fn (e d!)
+                    d! $ :: :writer/edit (:: :def ns-name def-name)
+                <> def-name
         |comp-page-editor $ %{} :CodeEntry (:doc |)
           :code $ quote
             defcomp comp-page-editor (states stack router-data pointer picker-mode? theme)
@@ -1519,6 +1528,15 @@
                               comp-expr
                                 >> states $ bookmark-full-str bookmark
                                 , expr focus ([]) others false false readonly? picker-mode? theme 0
+                          if-let
+                            locals $ :preview-locals router-data
+                            list->
+                              {}
+                                :class-name $ str-spaced css/row css/gap8
+                                :style $ {} (:margin-top 32)
+                              -> locals .to-list (.sort &compare)
+                                map $ fn (def-name)
+                                  [] def-name $ comp-local-link (nth bookmark 1) def-name
                       let
                           peek-def $ :peek-def router-data
                         if (some? peek-def) (comp-peek-def peek-def)
@@ -2581,7 +2599,7 @@
                         :on-keydown $ on-keydown state def-candidates cursor
                     if (empty? def-candidates) (comp-no-results)
                     list->
-                      {} (:class-name css/expand) (:style style-body)
+                      {} $ :class-name (str-spaced css/expand style-body)
                       -> def-candidates (take 20)
                         map-indexed $ fn (idx bookmark)
                           let
@@ -2606,7 +2624,7 @@
                     =< nil 32
                     if (empty? ns-candidates) (comp-no-results)
                     list->
-                      {} (:class-name css/expand) (:style style-body)
+                      {} $ :class-name (str-spaced css/expand style-body)
                       -> ns-candidates (take 20)
                         map-indexed $ fn (idx bookmark)
                           [] (nth bookmark 1)
@@ -2624,6 +2642,11 @@
                                     {} $ :color (hsl 0 0 50)
                                   <> (last pieces)
                                     {} $ :color (hsl 0 0 80)
+                                =< 8 nil
+                                span $ {} (:inner-text "\"import") (:class-name style-use-ns)
+                                  :on-click $ fn (e d!)
+                                    d! $ :: :analyze/use-import-def bookmark
+                                    d! cursor $ {} (:query |) (:position 0)
                   div $ {} (:class-name css/flex)
                   div
                     {} (:class-name css/column-parted)
@@ -2697,7 +2720,8 @@
                 (:ns ns') (count ns')
         |style-body $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-body $ {} (:overflow :auto) (:padding-bottom 80)
+            defstyle style-body $ {}
+              "\"&" $ {} (:overflow :auto) (:padding-bottom 80)
         |style-candidate $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-candidate $ {}
@@ -2707,6 +2731,16 @@
         |style-highlight $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-highlight $ {} (:color :white)
+        |style-use-ns $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-use-ns $ {}
+              "\"&" $ {} (:opacity 0) (:color :white) (:font-size 12)
+              (str "\"." style-candidate "\":hover &")
+                {} $ :opacity 0.4
+              (str "\"." style-candidate "\" &:hover")
+                {} $ :opacity 0.8
+              (str "\"." style-candidate "\" &:active")
+                {} (:opacity 1) (:transform "\"scale(1.02)")
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.search $ :require
@@ -3692,7 +3726,7 @@
                           p0 $ first rule
                           p2 $ last rule
                         if (string? p2)
-                          [] p0 $ [] p2
+                          [] p0 $ [] (str p2 "\"/")
                           [] p0 $ filter p2
                             fn (x) (not= x "\"[]")
                     pairs-map
@@ -3764,6 +3798,10 @@
                         if (some? peek-def)
                           get-in files $ [] (:ns peek-def) :defs (:def peek-def)
                           , nil
+                      :preview-locals $ tag-match bookmark
+                          :ns ns' f
+                          keys $ get-in files ([] ns' :defs)
+                        _ nil
                       :picker-choices $ if
                         some? $ :picker-mode writer
                         pick-from-ns $ get files ns-text
@@ -4273,7 +4311,7 @@
                                         rule $ .get-in ns-tree rule-coord
                                         def-node $ cirru->tree pick-def user-id op-time
                                         try-def-coord $ w-js-log (.find rule def-node)
-                                      js/console.log rule-coord "\"---" ns-tree try-def-coord
+                                      ; js/console.log rule-coord "\"---" ns-tree try-def-coord
                                       tag-match try-def-coord
                                           :some _c
                                           -> db (assoc-in bookmark-path def-node)
@@ -4803,9 +4841,9 @@
             defn reset-at (db op-data session-id op-id op-time)
               let
                   saved-files $ :saved-files db
-                  old-file $ get saved-files (:ns op-data)
+                  old-file $ get saved-files (nth op-data 1)
                 update-in db
-                  [] :files $ :ns op-data
+                  [] :files $ nth op-data 1
                   fn (file)
                     tag-match op-data
                         :ns ns'
