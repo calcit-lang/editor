@@ -4452,19 +4452,21 @@
               let-sugar
                   writer $ get-in db ([] :sessions session-id :writer)
                   ({} stack pointer) writer
-                  bookmark $ get stack pointer
-                  data-path $ bookmark->path bookmark
+                  bookmark $ Bookmark (get stack pointer)
+                  data-path $ .to-path bookmark
                   user-id $ get-in db ([] :sessions session-id :user-id)
                   new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id)
                     :data $ {}
                 -> db
                   update-in data-path $ fn (node)
                     assoc-in new-expr ([] :data bisection/mid-id) node
-                  update-in ([] :sessions session-id :writer :stack pointer :focus)
-                    fn (focus)
-                      if (empty? focus) ([] bisection/mid-id)
-                        concat (butlast focus)
-                          [] (last focus) bisection/mid-id
+                  update-in ([] :sessions session-id :writer :stack pointer)
+                    fn (b)
+                      .update-focus (Bookmark b)
+                        fn (focus)
+                          if (empty? focus) ([] bisection/mid-id)
+                            concat (butlast focus)
+                              [] (last focus) bisection/mid-id
         |leaf-after $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn leaf-after (db op-data session-id op-id op-time)
@@ -4688,13 +4690,14 @@
             defn unindent (db session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
-                  bookmark $ get (:stack writer) (:pointer writer)
-                  parent-bookmark $ update bookmark :focus butlast
-                  last-coord $ last (:focus bookmark)
-                  parent-path $ bookmark->path parent-bookmark
+                  bookmark $ Bookmark
+                    get (:stack writer) (:pointer writer)
+                  parent-bookmark $ .update-focus bookmark butlast
+                  last-coord $ last (.get-focus bookmark)
+                  parent-path $ .to-path parent-bookmark
                 if
-                  empty? $ :focus bookmark
-                  -> db $ update-in (bookmark->path bookmark)
+                  empty? $ .get-focus bookmark
+                  -> db $ update-in (.to-path bookmark)
                     fn (expr)
                       if
                         = 1 $ count (:data expr)
@@ -4704,8 +4707,9 @@
                         , expr
                   -> db
                     update-in
-                      [] :sessions session-id :writer :stack (:pointer writer) :focus
-                      fn (focus) (butlast focus)
+                      [] :sessions session-id :writer :stack $ :pointer writer
+                      fn (b)
+                        .update-focus (Bookmark b) butlast
                     update-in parent-path $ fn (base-expr)
                       let
                           expr $ get-in base-expr ([] :data last-coord)
@@ -4730,9 +4734,10 @@
             defn unindent-leaf (db session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
-                  bookmark $ get (:stack writer) (:pointer writer)
-                  parent-bookmark $ update bookmark :focus butlast
-                  parent-path $ bookmark->path parent-bookmark
+                  bookmark $ Bookmark
+                    get (:stack writer) (:pointer writer)
+                  parent-bookmark $ .update-focus bookmark butlast
+                  parent-path $ .to-path parent-bookmark
                   parent-expr $ get-in db parent-path
                 if
                   = 1 $ count (:data parent-expr)
@@ -4743,8 +4748,9 @@
                         (:none) (raise "\"unexpected empty expr")
                         (:some k v ms) v
                     update-in
-                      [] :sessions session-id :writer :stack (:pointer writer) :focus
-                      fn (focus) (butlast focus)
+                      [] :sessions session-id :writer :stack $ :pointer writer
+                      fn (b)
+                        .update-focus (Bookmark b) butlast
                   , db
         |update-leaf $ %{} :CodeEntry (:doc |)
           :code $ quote
