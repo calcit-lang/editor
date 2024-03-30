@@ -2944,6 +2944,9 @@
             defrecord! CirruExprMethods
               :get $ fn (self p)
                 get-in self $ [] :data p
+              :get-in $ fn (self pp)
+                get-in self $ mapcat pp
+                  fn (p) ([] :data p)
               :nth $ fn (self idx)
                 let
                     d $ get self :data
@@ -2957,6 +2960,14 @@
                 update self :data $ fn (d) (assoc d p x)
               :replace-nth $ fn (self idx x)
                 update self :data $ fn (d) (bisection/assoc-nth d idx x)
+              :update-last $ fn (self f)
+                let
+                    ks $ keys (:data self)
+                    last-k $ last
+                      .sort $ .to-list ks
+                  .update self last-k f
+              :update $ fn (self p f)
+                update self :data $ fn (d) (update d p f)
               :assoc-before $ fn (self p x)
                 update self :data $ fn (d) (bisection/assoc-before d p x)
               :assoc-before-nth $ fn (self idx x)
@@ -2997,10 +3008,17 @@
                           let
                               k $ nth p0 0
                               child $ nth p0 1
-                            if (.= child x) (conj pp k)
+                            if (.= child x)
+                              :: :some $ conj pp k
                               if (&record:matches? self child)
-                                .find-with-base child x $ conj pp k
+                                tag-match
+                                  .find-with-base child x $ conj pp k
+                                  (:some v) (:: :some v)
+                                  (:none)
+                                    recur $ rest ps
                                 recur $ rest ps
+              :find $ fn (self x)
+                .find-with-base self x $ []
               := $ fn (self x)
                 if (&record:matches? self x)
                   let
@@ -3020,11 +3038,13 @@
                         :update p
                         update self :data $ fn (d)
                           update d p $ fn (child) (.dispatch child more)
+                      (:update-last f) (.update-last self f)
                       (:replace v) v
                       (:dissoc p) (.dissoc self p)
                       (:assoc p v) (.assoc self p v)
                       (:append v) (.append self v)
                       (:prepend v) (.prepend self v)
+              :compact $ fn (self) (cirru-compact self)
         |CirruLeaf $ %{} :CodeEntry (:doc |)
           :code $ quote
             def CirruLeaf $ new-class-record CirruLeafMethods :Leaf :at :by :text
@@ -3041,6 +3061,13 @@
         |FileEntry $ %{} :CodeEntry (:doc |)
           :code $ quote
             def FileEntry $ new-record :FileEntry :ns :defs
+        |cirru-compact $ %{} :CodeEntry (:doc "|a cloned version of tree->cirru to simplify dependency issues")
+          :code $ quote
+            defn cirru-compact (x)
+              if (&record:matches? CirruLeaf x) (:text x)
+                -> (:data x) (.to-list) (.sort-by first)
+                  map $ fn (entry)
+                    cirru-compact $ last entry
         |configs $ %{} :CodeEntry (:doc |)
           :code $ quote
             def configs $ {} (:port 6001) (:expose-port 6011) (:init-fn "\"app.main/main!") (:reload-fn "\"app.main/reload!")
@@ -3116,7 +3143,9 @@
         |dispatch! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op sid)
-              when config/dev? $ js/console.log "\"Action" op sid
+              when
+                and config/dev? $ not= :ping (first op)
+                js/console.log "\"Action" op sid
               ; js/console.log "\"Database:" @*writer-db
               let
                   d2! $ fn (op2) (dispatch! op2 sid)
@@ -4171,7 +4200,52 @@
                 assoc db :usages-dict usages-dict
         |use-import-def $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn use-import-def (db target sid op-id op-time) (js/console.log "\"import" db target) db
+            defn use-import-def (db picked sid op-id op-time)
+              let
+                  session $ get-in db ([] :sessions sid)
+                  writer $ :writer session
+                  bookmark $ to-bookmark writer
+                  user-id $ :user-id session
+                tag-match bookmark
+                    :ns ns' f
+                    do (js/console.warn "\"def import not working in ns rules") db
+                  (:def current-ns def' f)
+                    tag-match picked
+                        :def pick-ns pick-def
+                        if (= current-ns pick-ns)
+                          -> db
+                            assoc-in (.to-path bookmark) (cirru->tree pick-def user-id op-time)
+                            assoc-in ([] :sessions sid :router) (:: :editor)
+                          let
+                              ns-tree $ get-in db ([] :files current-ns :ns :code)
+                              try-ns-coord $ .find ns-tree
+                                cirru->tree pick-ns user-id $ js/Date.now
+                            tag-match try-ns-coord
+                                :some pick-ns-coord
+                                let
+                                    rule-coord $ butlast pick-ns-coord
+                                    rule $ .get-in ns-tree rule-coord
+                                    def-node $ cirru->tree pick-def user-id op-time
+                                    try-def-coord $ .find rule def-node
+                                  js/console.log rule-coord "\"---" ns-tree try-def-coord
+                                  tag-match try-def-coord
+                                      :some _c
+                                      -> db
+                                        assoc-in (.to-path bookmark) def-node
+                                        assoc-in ([] :sessions sid :router) (:: :editor)
+                                    (:none)
+                                      -> db
+                                        update-in
+                                          concat ([] :files current-ns :ns :code)
+                                            mapcat rule-coord $ fn (c) ([] :data c)
+                                          fn (rule-tree)
+                                            .dispatch ns-tree $ [] (:: :update-last) (:: :append def-node)
+                                        assoc-in (.to-path bookmark) (cirru->tree pick-def user-id op-time)
+                                        assoc-in ([] :sessions sid :router) (:: :editor)
+                              (:none)
+                                do (js/console.log "\"import" current-ns def' ns-tree picked) db
+                      (:ns pick-ns)
+                        do (js/console.warn "\"not implmented for db yet") db
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater.analyze $ :require
@@ -4349,13 +4423,14 @@
                     update-in data-path $ fn (expr)
                       update expr :data $ fn (children) (dissoc children deleted-key)
                     update-in
-                      w-js-log $ [] :sessions session-id :writer :stack (:pointer writer)
+                      [] :sessions session-id :writer :stack $ :pointer writer
                       fn (b)
-                        .update-focus b $ fn (focus)
-                          if (= 0 idx) (butlast focus)
-                            assoc focus
-                              dec $ count focus
-                              get child-keys $ dec idx
+                        .update-focus (Bookmark b)
+                          fn (focus)
+                            if (= 0 idx) (butlast focus)
+                              assoc focus
+                                dec $ count focus
+                                get child-keys $ dec idx
         |draft-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn draft-expr (db op-data session-id op-id op-time)
@@ -5432,7 +5507,8 @@
             defn to-bookmark (writer)
               let
                   stack $ :stack writer
-                if (empty? stack) nil $ get stack (:pointer writer)
+                if (empty? stack) nil $ Bookmark
+                  get stack $ :pointer writer
         |to-keys $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn to-keys (target-expr)
@@ -5452,6 +5528,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util $ :require (app.schema :as schema) (bisection-key.core :as bisection)
+            app.bookmark :refer $ Bookmark
     |app.util.compile $ %{} :FileEntry
       :defs $ {}
         |handle-compact-files! $ %{} :CodeEntry (:doc |)
