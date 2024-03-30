@@ -6,6 +6,48 @@
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
       :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
   :files $ {}
+    |app.bookmark $ %{} :FileEntry
+      :defs $ {}
+        |%bookmark $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defrecord! %bookmark
+              :get-focus $ fn (self)
+                tag-match self
+                    :def ns' def' f
+                    , f
+                  (:ns ns' f) f
+              :get-ns $ fn (self) (nth self 1)
+              :is-ns? $ fn (self)
+                = (nth self 0) :ns
+              :is-def? $ fn (self)
+                = (nth self 0) :def
+              :update-focus $ fn (self updater)
+                tag-match self
+                    :def ns' def' f
+                    %:: %bookmark :def ns' def' $ updater f
+                  (:ns ns' f)
+                    %:: %bookmark :ns ns' $ updater f
+              :to-path $ fn (self)
+                tag-match self
+                    :def ns' def' f
+                    concat ([] :files ns' :defs def' :code)
+                      mapcat
+                        or f $ []
+                        fn (x) ([] :data x)
+                  (:ns ns' f)
+                    concat ([] :files ns' :ns :code)
+                      mapcat
+                        or f $ []
+                        fn (x) ([] :data x)
+        |Bookmark $ %{} :CodeEntry (:doc "|constructor for definition bookmarks, write `Bookmark $ :: :def ns' def' f` to initialize")
+          :code $ quote
+            defn Bookmark (b)
+              tag-match b
+                  :def ns' def' f
+                  %:: %bookmark :def ns' def' f
+                (:ns ns' f) (%:: %bookmark :ns ns' f)
+      :ns $ %{} :CodeEntry (:doc |)
+        :code $ quote (ns app.bookmark)
     |app.client $ %{} :FileEntry
       :defs $ {}
         |*connecting? $ %{} :CodeEntry (:doc |)
@@ -2509,7 +2551,6 @@
                     .sort-by $ if
                       blank? $ :query state
                       , bookmark->str query-length
-                    w-js-log
                   ns-candidates $ -> router-data
                     filter $ fn (bookmark)
                       tag-match bookmark
@@ -2561,7 +2602,7 @@
                       {} (:class-name css/expand) (:style style-body)
                       -> ns-candidates (take 20)
                         map-indexed $ fn (idx bookmark)
-                          [] (nth bookmark 0)
+                          [] (nth bookmark 1)
                             let
                                 pieces $ split (nth bookmark 1) "\"."
                               div
@@ -2610,8 +2651,12 @@
                       let
                           target $ get candidates (:selection state)
                         if (some? target)
-                          do (d! :writer/select target)
-                            d! cursor $ {} (:query |) (:position 0)
+                          if (:shift? e)
+                            do
+                              d! $ :: :analyze/use-import-def target
+                              d! cursor $ {} (:query |) (:position 0)
+                            do (d! :writer/select target)
+                              d! cursor $ {} (:query |) (:position 0)
                     (= keycode/up code)
                       do (.!preventDefault event)
                         if
@@ -3886,6 +3931,7 @@
                 (:analyze/abstract-def op-data) (analyze/abstract-def db op-data sid op-id op-time)
                 (:analyze/peek-def op-data) (analyze/peek-def db op-data sid op-id op-time)
                 (:analyze/refresh-usages-dict op-data) (analyze/refresh-usages-dict db op-data sid op-id op-time)
+                (:analyze/use-import-def target) (analyze/use-import-def db target sid op-id op-time)
                 (:watcher/file-change op-data) (watcher/file-change db op-data sid op-id op-time)
                 (:ping op-data) db
                 (:configs/update op-data) (configs/update-configs db op-data sid op-id op-time)
@@ -4118,6 +4164,9 @@
                   usages-dict $ with-cpu-time
                     parse-all-deps $ get-in db ([] :files)
                 assoc db :usages-dict usages-dict
+        |use-import-def $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn use-import-def (db target sid op-id op-time) (js/console.log "\"import" db target) db
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.updater.analyze $ :require
@@ -4281,27 +4330,29 @@
             defn delete-node (db op-data session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
-                  bookmark $ get (:stack writer) (:pointer writer)
-                  parent-bookmark $ update bookmark :focus butlast
-                  data-path $ bookmark->path parent-bookmark
+                  bookmark $ Bookmark
+                    get (:stack writer) (:pointer writer)
+                  parent-bookmark $ .update-focus bookmark butlast
+                  data-path $ .to-path parent-bookmark
                   child-keys $ sort
                     .to-list $ keys
                       :data $ get-in db data-path
-                  deleted-key $ last (:focus bookmark)
+                  deleted-key $ last (.get-focus bookmark)
                   idx $ .index-of child-keys deleted-key
                 if
-                  empty? $ :focus bookmark
+                  empty? $ .get-focus bookmark
                   -> db $ update-in ([] :sessions session-id :notifications) (push-warning op-id op-time "\"cannot delete from root")
                   -> db
                     update-in data-path $ fn (expr)
                       update expr :data $ fn (children) (dissoc children deleted-key)
                     update-in
-                      [] :sessions session-id :writer :stack (:pointer writer) :focus
-                      fn (focus)
-                        if (= 0 idx) (butlast focus)
-                          assoc focus
-                            dec $ count focus
-                            get child-keys $ dec idx
+                      w-js-log $ [] :sessions session-id :writer :stack (:pointer writer)
+                      fn (b)
+                        .update-focus b $ fn (focus)
+                          if (= 0 idx) (butlast focus)
+                            assoc focus
+                              dec $ count focus
+                              get child-keys $ dec idx
         |draft-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn draft-expr (db op-data session-id op-id op-time)
@@ -4417,10 +4468,13 @@
               let-sugar
                   writer $ get-in db ([] :sessions session-id :writer)
                   ({} stack pointer) writer
-                  bookmark $ get stack pointer
+                  bookmark $ Bookmark (get stack pointer)
                   user-id $ get-in db ([] :sessions session-id :user-id)
-                if
-                  empty? $ :focus bookmark
+                  focus $ tag-match bookmark
+                      :def ns' def' f
+                      , f
+                    (:ns ns' f) f
+                if (empty? focus)
                   let
                       data-path $ bookmark->path bookmark
                       target-expr $ get-in db data-path
@@ -4430,23 +4484,26 @@
                     -> db
                       update-in data-path $ fn (expr)
                         assoc-in expr ([] :data next-id) new-leaf
-                      assoc-in
-                        [] :sessions session-id :writer :stack (:pointer writer) :focus
-                        [] next-id
+                      update-in
+                        [] :sessions session-id :writer :stack $ :pointer writer
+                        fn (b)
+                          .update-focus (Bookmark b)
+                            fn (f) ([] next-id)
                   let
-                      parent-bookmark $ update bookmark :focus butlast
-                      data-path $ bookmark->path parent-bookmark
+                      parent-bookmark $ .update-focus bookmark butlast
+                      data-path $ .to-path parent-bookmark
                       target-expr $ get-in db data-path
-                      next-id $ key-after (:data target-expr)
-                        last $ :focus bookmark
+                      next-id $ key-after (:data target-expr) (last focus)
                       new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text "\"")
                     -> db
                       update-in data-path $ fn (expr)
                         assoc-in expr ([] :data next-id) new-leaf
                       update-in
-                        [] :sessions session-id :writer :stack (:pointer writer) :focus
-                        fn (focus)
-                          conj (butlast focus) next-id
+                        [] :sessions session-id :writer :stack $ :pointer writer
+                        fn (b)
+                          .update-focus (Bookmark b)
+                            fn (f)
+                              conj (butlast f) next-id
         |leaf-before $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn leaf-before (db op-data session-id op-id op-time)
@@ -4710,6 +4767,7 @@
             app.util.list :refer $ dissoc-idx
             bisection-key.util :refer $ key-before key-after key-prepend key-append assoc-prepend key-nth assoc-nth val-nth get-min-key
             app.util :refer $ push-warning expr? leaf?
+            app.bookmark :refer $ Bookmark %bookmark
     |app.updater.notify $ %{} :FileEntry
       :defs $ {}
         |broadcast $ %{} :CodeEntry (:doc |)
@@ -4891,9 +4949,9 @@
               let
                   bookmark $ tag-match op-data
                       :ns the-ns
-                      :: :ns the-ns $ []
+                      %:: %bookmark :ns the-ns $ []
                     (:def the-ns the-def)
-                      :: :def the-ns the-def $ []
+                      %:: %bookmark :def the-ns the-def $ []
                 -> db
                   update-in ([] :sessions session-id :writer) (push-bookmark bookmark)
                   assoc-in ([] :sessions session-id :router) (:: :editor)
@@ -4942,70 +5000,78 @@
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                   tail? $ :tail? op-data
-                  bookmark $ get (:stack writer) (:pointer writer)
-                  target-expr $ get-in db (bookmark->path bookmark)
+                  bookmark $ Bookmark
+                    get (:stack writer) (:pointer writer)
+                  target-expr $ get-in db (.to-path bookmark)
                 if
                   = 0 $ count (:data target-expr)
                   , db $ -> db
                     update-in
-                      [] :sessions session-id :writer :stack (:pointer writer) :focus
-                      fn (focus)
-                        conj focus $ if tail?
-                          get-max-key $ :data target-expr
-                          get-min-key $ :data target-expr
+                      [] :sessions session-id :writer :stack $ :pointer writer
+                      fn (b)
+                        .update-focus b $ fn (focus)
+                          conj focus $ if tail?
+                            get-max-key $ :data target-expr
+                            get-min-key $ :data target-expr
         |go-left $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn go-left (db op-data session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
-                  bookmark $ get (:stack writer) (:pointer writer)
-                  parent-bookmark $ update bookmark :focus butlast
-                  parent-path $ bookmark->path parent-bookmark
-                  last-coord $ last (:focus bookmark)
+                  bookmark $ Bookmark
+                    get (:stack writer) (:pointer writer)
+                  parent-bookmark $ .update-focus bookmark butlast
+                  parent-path $ .to-path parent-bookmark
+                  last-coord $ last (.get-focus bookmark)
                   base-expr $ get-in db parent-path
                   child-keys $ sort
                     .to-list $ keys (:data base-expr)
                   idx $ .index-of child-keys last-coord
                 if
-                  empty? $ :focus bookmark
+                  empty? $ .get-focus bookmark
                   , db $ -> db
                     update-in
-                      [] :sessions session-id :writer :stack (:pointer writer) :focus
-                      fn (focus)
-                        conj (butlast focus)
-                          if (= 0 idx) last-coord $ get child-keys (dec idx)
+                      [] :sessions session-id :writer :stack $ :pointer writer
+                      fn (b)
+                        .update-focus b $ fn (focus)
+                          conj (butlast focus)
+                            if (= 0 idx) last-coord $ get child-keys (dec idx)
         |go-right $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn go-right (db op-data session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
-                  bookmark $ get (:stack writer) (:pointer writer)
-                  parent-bookmark $ update bookmark :focus butlast
-                  parent-path $ bookmark->path parent-bookmark
-                  last-coord $ last (:focus bookmark)
+                  bookmark $ Bookmark
+                    get (:stack writer) (:pointer writer)
+                  parent-bookmark $ .update-focus bookmark butlast
+                  parent-path $ .to-path parent-bookmark
+                  last-coord $ last (.get-focus bookmark)
                   base-expr $ get-in db parent-path
                   child-keys $ sort
                     .to-list $ keys (:data base-expr)
                   idx $ .index-of child-keys last-coord
                 if
-                  empty? $ :focus bookmark
+                  empty? $ .get-focus bookmark
                   , db $ -> db
                     update-in
-                      [] :sessions session-id :writer :stack (:pointer writer) :focus
-                      fn (focus)
-                        conj (butlast focus)
-                          if
-                            = idx $ dec (count child-keys)
-                            , last-coord $ get child-keys (inc idx)
+                      [] :sessions session-id :writer :stack $ :pointer writer
+                      fn (b)
+                        .update-focus b $ fn (focus)
+                          conj (butlast focus)
+                            if
+                              = idx $ dec (count child-keys)
+                              , last-coord $ get child-keys (inc idx)
         |go-up $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn go-up (db op-data session-id op-id op-time)
               -> db $ update-in ([] :sessions session-id :writer)
                 fn (writer)
                   update-in writer
-                    [] :stack (:pointer writer) :focus
-                    fn (focus)
-                      if (empty? focus) focus $ butlast focus
+                    [] :stack $ :pointer writer
+                    fn (b)
+                      .update-focus (Bookmark b)
+                        fn (focus)
+                          if (empty? focus) focus $ butlast focus
         |hide-peek $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn hide-peek (db op-data sid op-id op-time)
@@ -5139,9 +5205,9 @@
               let
                   bookmark $ tag-match op-data
                       :def ns' def'
-                      :: :def ns' def' $ []
+                      %:: %bookmark :def ns' def' $ []
                     (:ns ns')
-                      :: :ns ns' $ []
+                      %:: %bookmark :ns ns' $ []
                 -> db
                   update-in ([] :sessions session-id :writer) (push-bookmark bookmark)
                   assoc-in ([] :sessions session-id :router) (:: :editor)
@@ -5155,27 +5221,23 @@
             app.util :refer $ push-info
             app.util :refer $ stringify-s-expr
             bisection-key.util :refer $ get-min-key get-max-key
+            app.bookmark :refer $ %bookmark Bookmark
     |app.util $ %{} :FileEntry
       :defs $ {}
         |bookmark->path $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn bookmark->path (bookmark)
-              assert (map? bookmark) "|Bookmark should be data"
-              assert
-                contains? kinds $ :kind bookmark
-                , "|invalid bookmark type"
-              if
-                = :def $ :kind bookmark
-                concat
-                  [] :files (:ns bookmark) :defs (:extra bookmark) :code
-                  mapcat
-                    or (:focus bookmark) ([])
-                    , prepend-data
-                concat
-                  [] :files (:ns bookmark) (:kind bookmark) :code
-                  mapcat
-                    or (:focus bookmark) ([])
-                    , prepend-data
+              tag-match bookmark
+                  :def ns' def' f
+                  concat ([] :files ns' :defs def' :code)
+                    mapcat
+                      or f $ []
+                      , prepend-data
+                (:ns ns' f)
+                  concat ([] :files ns' :ns :code)
+                    mapcat
+                      or f $ []
+                      , prepend-data
         |bookmark-full-str $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn bookmark-full-str (bookmark)
