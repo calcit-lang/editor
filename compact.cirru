@@ -39,6 +39,11 @@
                       mapcat
                         or f $ []
                         fn (x) ([] :data x)
+              :preview $ fn (self)
+                tag-match self
+                    :def ns' def' f
+                    str ns' "\"/" def'
+                  (:ns ns' f) (str ns' "\"/")
         |Bookmark $ %{} :CodeEntry (:doc "|constructor for definition bookmarks, write `Bookmark $ :: :def ns' def' f` to initialize")
           :code $ quote
             defn Bookmark (b)
@@ -1718,18 +1723,17 @@
           :code $ quote
             defn on-path-gen! (bookmark)
               fn (e d!)
-                case-default (:kind bookmark)
-                  d! :notify/push-message $ [] :warn "\"No op."
-                  :def $ let
-                      code $ []
-                        [] (:ns bookmark) "\":refer" $ [] (:extra bookmark)
-                    do-copy-logics! d! (format-cirru code)
-                      str "\"Copied path of " $ :extra bookmark
-                  :ns $ let
-                      the-ns $ :ns bookmark
-                      code $ []
-                        [] the-ns "\":as" $ last (split the-ns "\".")
-                    do-copy-logics! d! (format-cirru code) (str "\"Copied path of " the-ns)
+                tag-match bookmark
+                    :def ns' def' f
+                    let
+                        code $ []
+                          [] ns' "\":refer" $ [] def'
+                      do-copy-logics! d! (format-cirru code) (str "\"Copied path of " def')
+                  (:ns the-ns f)
+                    let
+                        code $ []
+                          [] the-ns "\":as" $ last (split the-ns "\".")
+                      do-copy-logics! d! (format-cirru code) (str "\"Copied path of " the-ns)
         |on-rename-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-rename-def (new-name bookmark d!)
@@ -1738,14 +1742,14 @@
                 let-sugar
                       [] ns-text def-text
                       split new-name |/
-                  d! :ir/rename $ {}
-                    :kind $ :kind bookmark
-                    :ns $ {}
-                      :from $ :ns bookmark
-                      :to ns-text
-                    :extra $ {}
-                      :from $ :extra bookmark
-                      :to def-text
+                  d! :ir/rename $ tag-match bookmark
+                      :def ns' def' f
+                      {} (:kind :def)
+                        :ns $ {} (:from ns') (:to ns-text)
+                        :extra $ {} (:from def') (:to def-text)
+                    (:ns ns' f)
+                      {} (:kind :ns)
+                        :ns $ {} (:from ns') (:to ns-text)
         |on-reset-expr $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-reset-expr (bookmark d!)
@@ -2174,12 +2178,14 @@
                           <> (:page member) style-page
                           =< 32 nil
                           let
-                              bookmark $ :bookmark member
+                              bookmark $ Bookmark (:bookmark member)
                             if (some? bookmark)
                               <>
-                                str (:kind bookmark) "| " (:ns bookmark) "| " (:extra bookmark) "| _"
-                                  join-str (:focus bookmark) |_
-                                  , |_
+                                tag-match bookmark
+                                    :def ns' def' f
+                                    str-spaced "\"DEF" ns' def' $ join-str f |_
+                                  (:ns ns' f)
+                                    str-spaced "\"NS" ns' $ join-str (:focus bookmark) |_
                                 , style-bookmark
                           =< 32 nil
                           if (= k session-id)
@@ -2222,6 +2228,7 @@
             respo.core :refer $ defcomp <> list-> span div a
             respo.comp.space :refer $ =<
             "\"url-parse" :default url-parse
+            app.bookmark :refer $ Bookmark
     |app.comp.peek-def $ %{} :FileEntry
       :defs $ {}
         |comp-peek-def $ %{} :CodeEntry (:doc |)
@@ -2783,7 +2790,7 @@
               let
                   expr $ get (:expr router-data) :code
                   focus $ :focus router-data
-                  bookmark $ :bookmark router-data
+                  bookmark $ Bookmark (:bookmark router-data)
                   others $ {}
                   member-name $ get-in router-data ([] :member :nickname)
                   readonly? true
@@ -2803,15 +2810,11 @@
                             merge ui/flex $ {} (:overflow :auto)
                           comp-doc (>> states :doc) (:expr router-data) bookmark
                           comp-expr
-                            >> states $ bookmark-full-str bookmark
+                            >> states $ .preview bookmark
                             , expr focus ([]) others false false readonly? false (or theme :star-trail) 0
                       =< nil 16
                       div ({}) (<> "|Watching mode" style-tip) (=< 16 nil) (<> member-name nil) (=< 16 nil)
-                        <> (:kind bookmark) nil
-                        =< 16 nil
-                        <>
-                          str (:ns bookmark) |/ $ :extra bookmark
-                          , nil
+                        <> (.preview bookmark) nil
                         =< 16 nil
                         comp-theme-menu (>> states :theme) (or theme :star-trail)
         |style-container $ %{} :CodeEntry (:doc |)
@@ -2842,6 +2845,7 @@
             app.util.dom :refer $ inject-style
             app.util :refer $ bookmark-full-str
             app.comp.theme-menu :refer $ comp-theme-menu
+            app.bookmark :refer $ Bookmark
     |app.config $ %{} :FileEntry
       :defs $ {}
         |cdn? $ %{} :CodeEntry (:doc |)
@@ -3844,19 +3848,20 @@
                   :router $ :router session
                   :self? self?
                   :working? $ and working? (not self?)
-                  :focus $ :focus bookmark
+                  :focus $ .get-focus (Bookmark bookmark)
                   :expr $ if working?
                     let
-                        path $ if
-                          = :def $ :kind bookmark
-                          [] (:ns bookmark) :defs $ :extra bookmark
-                          [] (:ns bookmark) (:kind bookmark)
+                        path $ tag-match bookmark
+                            :def ns' def' f
+                            [] ns' :defs def'
+                          (:ns ns' f) ([] ns' :ns)
                       get-in files path
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.twig.watching $ :require
             app.util :refer $ to-bookmark
             app.twig.user :refer $ twig-user
+            app.bookmark :refer $ Bookmark
     |app.updater $ %{} :FileEntry
       :defs $ {}
         |updater $ %{} :CodeEntry (:doc |)
@@ -4154,7 +4159,7 @@
                       if (contains? target-defs def')
                         -> db $ assoc-in ([] :sessions sid :writer :peek-def)
                           {} (:ns ns') (:def def')
-                        warn $ str "|Does not exist: " (:ns new-bookmark) "| " (:extra new-bookmark)
+                        warn $ str "|Does not exist: " ns' "| " def'
                     warn $ str "|External dep:" (nth new-bookmark 1)
                   warn $ str "|Cannot locate:" def-info
         |refresh-usages-dict $ %{} :CodeEntry (:doc |)
@@ -4303,28 +4308,26 @@
         |delete-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn delete-entry (db op-data session-id op-id op-time) (; println |delete op-data)
-              case-default (:kind op-data)
-                do (println "\"[warning] no entry to delete") db
-                :def $ -> db
-                  update-in
-                    [] :files (:ns op-data) :defs
-                    fn (defs)
-                      dissoc defs $ :extra op-data
-                  update-in ([] :sessions session-id :writer)
-                    fn (writer)
-                      -> writer
-                        update :stack $ fn (stack)
-                          dissoc-idx stack $ :pointer writer
-                        update :pointer dec
-                :ns $ -> db
-                  update :files $ fn (files)
-                    dissoc files $ :ns op-data
-                  update-in ([] :sessions session-id :writer)
-                    fn (writer)
-                      -> writer
-                        update :stack $ fn (stack)
-                          dissoc-idx stack $ :pointer writer
-                        update :pointer dec
+              tag-match op-data
+                  :def ns' def' f
+                  -> db
+                    update-in ([] :files ns' :defs)
+                      fn (defs) (dissoc defs def')
+                    update-in ([] :sessions session-id :writer)
+                      fn (writer)
+                        -> writer
+                          update :stack $ fn (stack)
+                            dissoc-idx stack $ :pointer writer
+                          update :pointer dec
+                (:ns ns' f)
+                  -> db
+                    update :files $ fn (files) (dissoc files ns')
+                    update-in ([] :sessions session-id :writer)
+                      fn (writer)
+                        -> writer
+                          update :stack $ fn (stack)
+                            dissoc-idx stack $ :pointer writer
+                          update :pointer dec
         |delete-node $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn delete-node (db op-data session-id op-id op-time)
@@ -4588,7 +4591,8 @@
                         update :files $ fn (files)
                           -> files (dissoc old-ns)
                             assoc new-ns $ get files old-ns
-                        assoc-in ([] :sessions session-id :writer :stack idx :ns) new-ns
+                        update-in ([] :sessions session-id :writer :stack idx)
+                          fn (b) (assoc b 1 new-ns)
                         update-in ([] :files new-ns :ns :code :data next-id :text)
                           fn (x) new-ns
                   (= :def kind)
@@ -4610,7 +4614,9 @@
                                 get-in files $ [] old-ns :defs old-def
                           update-in ([] :sessions session-id :writer :stack idx)
                             fn (bookmark)
-                              -> bookmark (assoc :ns new-ns) (assoc :extra new-def)
+                              tag-match bookmark $ 
+                                :def _ns _def f
+                                %:: %bookmark :def new-ns new-def f
                           update-in ([] :files new-ns :defs new-def :code :data)
                             fn (def-data)
                               let
