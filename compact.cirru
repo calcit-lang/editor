@@ -1481,7 +1481,7 @@
             defcomp comp-local-link (ns-name def-name)
               span
                 {}
-                  :class-name $ str-spaced css/link-slight css/font-code
+                  :class-name $ str-spaced css/link-slight css/font-code style-local-link
                   :on-click $ fn (e d!)
                     d! $ :: :writer/edit (:: :def ns-name def-name)
                 <> def-name
@@ -1522,18 +1522,23 @@
                           if (some? expr-entry)
                             div ({})
                               div
-                                {} $ :class-name (str-spaced css/row-parted css/gap16)
+                                {} $ :class-name (str-spaced css/row-parted)
                                 comp-doc (>> states :doc) expr-entry bookmark
-                                comp-usages $ :usages router-data
                               comp-expr
                                 >> states $ bookmark-full-str bookmark
                                 , expr focus ([]) others false false readonly? picker-mode? theme 0
+                          div
+                            {}
+                              :class-name $ str-spaced css/row-parted
+                              :style $ {} (:margin-top 66)
+                            span $ {}
+                            comp-usages $ :usages router-data
                           if-let
                             locals $ :preview-locals router-data
                             list->
                               {}
                                 :class-name $ str-spaced css/row css/gap8
-                                :style $ {} (:margin-top 32)
+                                :style $ {} (:margin "\"32px 48px")
                               -> locals .to-list (.sort &compare)
                                 map $ fn (def-name)
                                   [] def-name $ comp-local-link (nth bookmark 1) def-name
@@ -1585,8 +1590,56 @@
                     fn (from to d!)
                       d! :ir/expr-replace $ {} (:bookmark bookmark) (:from from) (:to to)
                 div
-                  {} $ :class-name css-status-bar
-                  div ({})
+                  {} $ :class-name (str-spaced css/row css/gap8 css-status-bar)
+                  div
+                    {} $ :class-name (str-spaced css/row css/gap8)
+                    span $ {} (:inner-text |Add)
+                      :class-name $ str-spaced css/font-fancy style-link
+                      :on-click $ fn (e d!)
+                        .show add-plugin d! $ fn (result)
+                          let
+                              text $ trim result
+                            when-not (blank? text)
+                              d! :ir/add-def $ [] (nth bookmark 1) text
+                              d! $ :: :writer/edit
+                                :: :def (nth bookmark 1) text
+                    if
+                      = :same $ :changed router-data
+                      <>
+                        str $ :changed router-data
+                        {} (:font-family ui/font-fancy) (:margin "\"0 8px")
+                          :color $ hsl 260 60 70
+                      span $ {}
+                        :class-name $ str-spaced css/font-fancy style-link
+                        :inner-text "\"Reset"
+                        :on-click $ fn (e d!)
+                          .show confirm-reset-plugin d! $ fn () (on-reset-expr bookmark d!)
+                    span $ {} (:inner-text "\"Picker-mode")
+                      :class-name $ str-spaced css/font-fancy style-link
+                      :on-click $ fn (e d!) (d! :writer/picker-mode nil)
+                    span $ {} (:inner-text |Delete)
+                      :class-name $ str-spaced css/font-fancy style-link
+                      :on-click $ fn (e d!)
+                        .show confirm-delete-plugin d! $ fn ()
+                          if (some? bookmark) (d! :ir/delete-entry bookmark) (js/console.warn "\"No entry to delete")
+                    span $ {} (:inner-text |Rename)
+                      :class-name $ str-spaced css/font-fancy style-link
+                      :on-click $ fn (e d!)
+                        .show rename-plugin d! $ fn (result) (on-rename-def result bookmark d!)
+                    span $ {} (:inner-text |Replace)
+                      :class-name $ str-spaced css/font-fancy style-link
+                      :on-click $ fn (e d!) (.show replace-plugin d!)
+                    span $ {} (:inner-text |Draft-box)
+                      :class-name $ str-spaced css/font-fancy style-link
+                      :on-click $ on-draft-box state cursor
+                    span $ {} (:inner-text |Exporting)
+                      :class-name $ str-spaced css/font-fancy style-link
+                      :on-click $ on-path-gen! bookmark
+                  div
+                    {} $ :class-name css/row
+                    comp-theme-menu (>> states :theme) theme
+                  div
+                    {} $ :class-name (str-spaced css/row-middle css/gap8)
                     <>
                       str "|Writers("
                         count $ :others router-data
@@ -1598,7 +1651,6 @@
                         map $ fn (info)
                           [] (:session-id info)
                             <> (:nickname info) style-watcher
-                    =< 16 nil
                     <>
                       str "|Watchers("
                         count $ :watchers router-data
@@ -1612,60 +1664,6 @@
                                 [] sid member
                                 , entry
                             [] sid $ <> (:nickname member) style-watcher
-                    =< 16 nil
-                    if
-                      = :same $ :changed router-data
-                      <>
-                        str $ :changed router-data
-                        {} (:font-family ui/font-fancy)
-                          :color $ hsl 260 80 70
-                      span $ {}
-                        :class-name $ str-spaced css/font-fancy style-link
-                        :inner-text "\"Reset"
-                        :on-click $ fn (e d!)
-                          .show confirm-reset-plugin d! $ fn () (on-reset-expr bookmark d!)
-                    =< 8 nil
-                    span $ {} (:inner-text |Delete)
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ fn (e d!)
-                        .show confirm-delete-plugin d! $ fn ()
-                          if (some? bookmark) (d! :ir/delete-entry bookmark) (js/console.warn "\"No entry to delete")
-                    =< 8 nil
-                    span $ {} (:inner-text |Rename)
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ fn (e d!)
-                        .show rename-plugin d! $ fn (result) (on-rename-def result bookmark d!)
-                    =< 8 nil
-                    span $ {} (:inner-text |Add)
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ fn (e d!)
-                        .show add-plugin d! $ fn (result)
-                          let
-                              text $ trim result
-                            when-not (blank? text)
-                              d! :ir/add-def $ [] (nth bookmark 1) text
-                              d! $ :: :writer/edit
-                                :: :def (nth bookmark 1) text
-                    =< 8 nil
-                    span $ {} (:inner-text |Draft-box)
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ on-draft-box state cursor
-                    =< 8 nil
-                    span $ {} (:inner-text |Replace)
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ fn (e d!) (.show replace-plugin d!)
-                    =< 8 nil
-                    span $ {} (:inner-text |Exporting)
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ on-path-gen! bookmark
-                    =< 8 nil
-                    span $ {} (:inner-text "\"Picker-mode")
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ fn (e d!) (d! :writer/picker-mode nil)
-                  =< 8 nil
-                  div
-                    {} $ :class-name css/row
-                    comp-theme-menu (>> states :theme) theme
                   .render confirm-delete-plugin
                   .render confirm-reset-plugin
                   .render rename-plugin
@@ -1676,7 +1674,7 @@
             defcomp comp-usages (usages)
               if (some? usages)
                 list->
-                  {} $ :class-name css/row
+                  {} $ :class-name (str-spaced css/row style-usages)
                   -> usages .to-list $ map
                     fn (usage)
                       tag-match usage $ 
@@ -1809,6 +1807,13 @@
             defstyle style-link $ {}
               "\"&" $ {} (:cursor :pointer) (:font-size 14)
                 :color $ hsl 200 50 80
+        |style-local-link $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-local-link $ {}
+              "\"span&" $ {}
+                :color $ hsl 200 40 64
+              "\"span&:hover" $ {}
+                :color $ hsl 200 60 76
         |style-missing $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-missing $ {} (:font-family "|Josefin Sans")
@@ -1843,6 +1848,10 @@
           :code $ quote
             defstyle style-usage-def $ {}
               :& $ {} (:line-height "\"20px")
+        |style-usages $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-usages $ {}
+              "\"&" $ {} (:max-width "\"80%") (:justify-content :flex-end) (:flex-wrap :wrap) (:row-gap 12)
         |style-watcher $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-watcher $ {}
@@ -2055,11 +2064,11 @@
               let
                   highlights $ -> (:highlights router-data) (vals)
                   ns-highlights $ map highlights
-                    fn (x) (:ns x)
+                    fn (x) (nth x 1)
                 div
                   {} $ :class-name (str-spaced css/flex css/row sytle-container)
                   comp-namespace-list (>> states :ns) (:ns-dict router-data) selected-ns ns-highlights
-                  =< 32 nil
+                  =< 24 nil
                   if (some? selected-ns)
                     comp-file (>> states selected-ns) selected-ns (:defs-dict router-data) highlights $ :file-configs router-data
                     render-empty
@@ -2079,6 +2088,7 @@
               {} $ :style
                 {} (:width 280) (:font-family ui/font-fancy)
                   :color $ hsl 0 0 100 0.5
+                  :padding "\"60px 0"
               <> |Empty nil
         |style-def $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2650,10 +2660,10 @@
                   div $ {} (:class-name css/flex)
                   div
                     {} (:class-name css/column-parted)
-                      :style $ {} (:padding 8)
-                    a $ {} (:href "\"https://repo.cirru.org/hovenia-editor/?port=6011") (:inner-text "\"Hovenia Editor")
+                      :style $ {} (:padding 16)
+                    a $ {} (:href "\"https://repo.cirru.org/hovenia-editor/?port=6011") (:inner-text "\"Hovenia Editor") (:class css/link)
                       :style $ {}
-                        :color $ hsl 200 80 60
+                        :color $ hsl 200 40 50
                       :target "\"_blank"
         |css-search $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -4675,7 +4685,7 @@
                     (:ns ns' f) f
                 if (empty? focus)
                   let
-                      data-path $ bookmark->path bookmark
+                      data-path $ .to-path bookmark
                       target-expr $ get-in db data-path
                       next-id $ key-append (:data target-expr)
                       new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text "\"")
@@ -4709,20 +4719,22 @@
               let
                   writer $ to-writer db session-id
                   bookmark $ to-bookmark writer
-                  parent-bookmark $ update bookmark :focus butlast
-                  data-path $ bookmark->path parent-bookmark
+                  parent-bookmark $ .update-focus bookmark butlast
+                  data-path $ .to-path parent-bookmark
                   target-expr $ get-in db data-path
                   next-id $ key-before (:data target-expr)
-                    last $ :focus bookmark
+                    last $ .get-focus bookmark
                   user-id $ get-in db ([] :sessions session-id :user-id)
                   new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text "\"")
                 -> db
                   update-in data-path $ fn (expr)
                     assoc-in expr ([] :data next-id) new-leaf
                   update-in
-                    [] :sessions session-id :writer :stack (:pointer writer) :focus
-                    fn (focus)
-                      conj (butlast focus) next-id
+                    [] :sessions session-id :writer :stack $ :pointer writer
+                    fn (b)
+                      .update-focus (Bookmark b)
+                        fn (focus)
+                          conj (butlast focus) next-id
         |mv-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn mv-ns (db op-data session-id op-id op-time)
@@ -5219,10 +5231,11 @@
                     update-in
                       [] :sessions session-id :writer :stack $ :pointer writer
                       fn (b)
-                        .update-focus b $ fn (focus)
-                          conj focus $ if tail?
-                            get-max-key $ :data target-expr
-                            get-min-key $ :data target-expr
+                        .update-focus (Bookmark b)
+                          fn (focus)
+                            conj focus $ if tail?
+                              get-max-key $ :data target-expr
+                              get-min-key $ :data target-expr
         |go-left $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn go-left (db op-data session-id op-id op-time)
@@ -5267,11 +5280,12 @@
                     update-in
                       [] :sessions session-id :writer :stack $ :pointer writer
                       fn (b)
-                        .update-focus b $ fn (focus)
-                          conj (butlast focus)
-                            if
-                              = idx $ dec (count child-keys)
-                              , last-coord $ get child-keys (inc idx)
+                        .update-focus (Bookmark b)
+                          fn (focus)
+                            conj (butlast focus)
+                              if
+                                = idx $ dec (count child-keys)
+                                , last-coord $ get child-keys (inc idx)
         |go-up $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn go-up (db op-data session-id op-id op-time)
