@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:port 6001) (:reload-fn |app.server/reload!) (:version |0.9.0-a1)
+  :configs $ {} (:init-fn |app.server/main!) (:port 6001) (:reload-fn |app.server/reload!) (:version |0.9.0-a4)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -9459,7 +9459,7 @@
                           |v $ %{} :Expr (:at 1505672664094) (:by |root)
                             :data $ {}
                               |T $ %{} :Leaf (:at 1505672665122) (:by |root) (:text |:height)
-                              |j $ %{} :Leaf (:at 1505672666777) (:by |root) (:text ||100%)
+                              |j $ %{} :Leaf (:at 1712339757925) (:by |N7iJQdd93) (:text ||100%)
                           |x $ %{} :Expr (:at 1505672671657) (:by |root)
                             :data $ {}
                               |T $ %{} :Leaf (:at 1505672672294) (:by |root) (:text |:top)
@@ -22714,6 +22714,7 @@
                       :data $ {}
                         |j $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |handle-files!)
                         |r $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |persist!)
+                        |t $ %{} :Leaf (:at 1712339179251) (:by |S1lNv50FW) (:text |md5)
                 |yj $ %{} :Expr (:at 1504777570689) (:by nil)
                   :data $ {}
                     |j $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |app.util.env)
@@ -22745,11 +22746,6 @@
                     |j $ %{} :Leaf (:at 1512701346096) (:by nil) (:text ||fs)
                     |r $ %{} :Leaf (:at 1512701347470) (:by nil) (:text |:as)
                     |v $ %{} :Leaf (:at 1512701347843) (:by nil) (:text |fs)
-                |yyj $ %{} :Expr (:at 1512702489774) (:by nil)
-                  :data $ {}
-                    |j $ %{} :Leaf (:at 1512702492549) (:by nil) (:text ||md5)
-                    |r $ %{} :Leaf (:at 1625725803816) (:by |S1lNv50FW) (:text |:default)
-                    |v $ %{} :Leaf (:at 1512702494645) (:by nil) (:text |md5)
                 |yyr $ %{} :Expr (:at 1512708353773) (:by nil)
                   :data $ {}
                     |j $ %{} :Leaf (:at 1512708354816) (:by nil) (:text ||gaze)
@@ -35099,16 +35095,13 @@
                       :data $ {}
                         |j $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |find-first)
                         |r $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |push-warning)
-                |r $ %{} :Expr (:at 1504777570689) (:by nil)
+                |q $ %{} :Expr (:at 1712339212577) (:by |S1lNv50FW)
                   :data $ {}
-                    |j $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |clojure.string)
-                    |r $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |:as)
-                    |v $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |string)
-                |v $ %{} :Expr (:at 1513097867946) (:by |root)
-                  :data $ {}
-                    |j $ %{} :Leaf (:at 1513097908745) (:by |root) (:text ||md5)
-                    |r $ %{} :Leaf (:at 1625725819151) (:by |S1lNv50FW) (:text |:default)
-                    |v $ %{} :Leaf (:at 1513097906985) (:by |root) (:text |md5)
+                    |T $ %{} :Leaf (:at 1712339216631) (:by |S1lNv50FW) (:text |app.util.compile)
+                    |b $ %{} :Leaf (:at 1712339217315) (:by |S1lNv50FW) (:text |:refer)
+                    |h $ %{} :Expr (:at 1712339217554) (:by |S1lNv50FW)
+                      :data $ {}
+                        |T $ %{} :Leaf (:at 1712339219299) (:by |S1lNv50FW) (:text |md5)
                 |x $ %{} :Expr (:at 1517753570074) (:by |root)
                   :data $ {}
                     |j $ %{} :Leaf (:at 1517753590565) (:by |root) (:text |app.schema)
@@ -37327,6 +37320,10 @@
                                                                   |r $ %{} :Leaf (:at 1584465260043) (:by |S1lNv50FW) (:text |op-data)
                                                                   |v $ %{} :Leaf (:at 1584465262380) (:by |S1lNv50FW) (:text "|\"!")
                                                               |T $ %{} :Leaf (:at 1550077863086) (:by |S1lNv50FW) (:text "|\" saved files!")
+                      |w $ %{} :Expr (:at 1712338289250) (:by |S1lNv50FW)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1712338290694) (:by |S1lNv50FW) (:text |dissoc)
+                          |b $ %{} :Leaf (:at 1712338292700) (:by |S1lNv50FW) (:text |:ir)
         |select $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1504777570689) (:by nil)
             :data $ {}
@@ -39588,6 +39585,30 @@
                                           |T $ %{} :Leaf (:at 1625684596090) (:by |S1lNv50FW) (:text |aget)
                                           |j $ %{} :Leaf (:at 1564893055139) (:by |S1lNv50FW) (:text |e)
                                           |r $ %{} :Leaf (:at 1625684598627) (:by |S1lNv50FW) (:text "|\"message")
+        |md5 $ %{} :CodeEntry (:doc |)
+          :code $ %{} :Expr (:at 1712339130794) (:by |S1lNv50FW)
+            :data $ {}
+              |T $ %{} :Leaf (:at 1712339130794) (:by |S1lNv50FW) (:text |defn)
+              |b $ %{} :Leaf (:at 1712339130794) (:by |S1lNv50FW) (:text |md5)
+              |h $ %{} :Expr (:at 1712339130794) (:by |S1lNv50FW)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1712339159310) (:by |S1lNv50FW) (:text |s)
+              |l $ %{} :Expr (:at 1712339134164) (:by |S1lNv50FW)
+                :data $ {}
+                  |5 $ %{} :Leaf (:at 1712339623631) (:by |S1lNv50FW) (:text |->)
+                  |D $ %{} :Leaf (:at 1712339617279) (:by |S1lNv50FW) (:text |crypto)
+                  |P $ %{} :Expr (:at 1712339629446) (:by |S1lNv50FW)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1712339629135) (:by |S1lNv50FW) (:text |.!createHash)
+                      |b $ %{} :Leaf (:at 1712339632430) (:by |S1lNv50FW) (:text "|\"md5")
+                  |Y $ %{} :Expr (:at 1712339633518) (:by |S1lNv50FW)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1712339637495) (:by |S1lNv50FW) (:text |.!update)
+                      |b $ %{} :Leaf (:at 1712339637877) (:by |S1lNv50FW) (:text |s)
+                  |e $ %{} :Expr (:at 1712339638977) (:by |S1lNv50FW)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1712339643162) (:by |S1lNv50FW) (:text |.!digest)
+                      |b $ %{} :Leaf (:at 1712339644631) (:by |S1lNv50FW) (:text "|\"hex")
         |path $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1504777570689) (:by nil)
             :data $ {}
@@ -39770,11 +39791,6 @@
                     |j $ %{} :Leaf (:at 1546180061864) (:by |root) (:text "|\"child_process")
                     |r $ %{} :Leaf (:at 1512701448906) (:by nil) (:text |:as)
                     |v $ %{} :Leaf (:at 1512701449500) (:by nil) (:text |cp)
-                |yx $ %{} :Expr (:at 1512706580217) (:by nil)
-                  :data $ {}
-                    |j $ %{} :Leaf (:at 1546180063515) (:by |root) (:text "|\"md5")
-                    |r $ %{} :Leaf (:at 1625725848116) (:by |S1lNv50FW) (:text |:default)
-                    |v $ %{} :Leaf (:at 1512706586131) (:by nil) (:text |md5)
                 |yxT $ %{} :Expr (:at 1547364235003) (:by |S1lNv50FW)
                   :data $ {}
                     |j $ %{} :Leaf (:at 1547364240614) (:by |S1lNv50FW) (:text |app.config)
@@ -39785,6 +39801,11 @@
                     |j $ %{} :Leaf (:at 1596301129877) (:by |S1lNv50FW) (:text |cirru-edn.core)
                     |r $ %{} :Leaf (:at 1596301129877) (:by |S1lNv50FW) (:text |:as)
                     |v $ %{} :Leaf (:at 1596301129877) (:by |S1lNv50FW) (:text |cirru-edn)
+                |z $ %{} :Expr (:at 1712339604768) (:by |S1lNv50FW)
+                  :data $ {}
+                    |T $ %{} :Leaf (:at 1712339605287) (:by |S1lNv50FW) (:text "|\"crypto")
+                    |b $ %{} :Leaf (:at 1712339609663) (:by |S1lNv50FW) (:text |:default)
+                    |h $ %{} :Leaf (:at 1712339610313) (:by |S1lNv50FW) (:text |crypto)
     |app.util.detect $ %{} :FileEntry
       :defs $ {}
         |port-taken? $ %{} :CodeEntry (:doc |)

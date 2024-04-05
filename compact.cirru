@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.0-a1)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.0-a4)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -3412,13 +3412,12 @@
         :code $ quote
           ns app.server $ :require (app.schema :as schema)
             app.updater :refer $ updater
-            app.util.compile :refer $ handle-files! persist!
+            app.util.compile :refer $ handle-files! persist! md5
             app.util.env :refer $ pick-port! pick-http-port!
             app.util :refer $ db->string file-compact-to-calcit
             |chalk :default chalk
             |path :as path
             |fs :as fs
-            |md5 :default md5
             |gaze :default gaze
             "\"node:http" :refer $ createServer
             "\"node:fs" :refer $ readFile
@@ -5099,8 +5098,7 @@
         :code $ quote
           ns app.updater.user $ :require
             app.util :refer $ find-first push-warning
-            clojure.string :as string
-            |md5 :default md5
+            app.util.compile :refer $ md5
             app.schema :as schema
     |app.updater.watcher $ %{} :FileEntry
       :defs $ {}
@@ -5416,6 +5414,7 @@
                         [] k $ update session :notifications
                           push-info op-id op-time $ str user-name
                             if (some? op-data) (str "\" modified ns " op-data "\"!") "\" saved files!"
+                  dissoc :ir
         |select $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn select (db op-data session-id op-id op-time)
@@ -5757,6 +5756,10 @@
                     js/console.error e
                     dispatch! $ :: :notify/push-message
                       [] :error $ aget e "\"message"
+        |md5 $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn md5 (s)
+              -> crypto (.!createHash "\"md5") (.!update s) (.!digest "\"hex")
         |path $ %{} :CodeEntry (:doc |)
           :code $ quote
             def path $ js/require |path
@@ -5792,9 +5795,9 @@
             "\"path" :as path
             "\"fs" :as fs
             "\"child_process" :as cp
-            "\"md5" :default md5
             app.config :as config
             cirru-edn.core :as cirru-edn
+            "\"crypto" :default crypto
     |app.util.detect $ %{} :FileEntry
       :defs $ {}
         |port-taken? $ %{} :CodeEntry (:doc |)
