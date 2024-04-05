@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.0-a1)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.0-a2)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -78,6 +78,7 @@
                         when config/dev? $ js/console.log "\"Changes" changes
                         reset! *store $ patch-twig @*store changes
                     _ $ eprintln "\"Unknown op:" data
+                :class-mapper $ {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf)
         |detect-watching! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn detect-watching! () $ let
@@ -195,6 +196,7 @@
             app.config :as config
             "\"bottom-tip" :default tip!
             "\"./calcit.build-errors" :default build-errors
+            app.schema :as schema
     |app.client-updater $ %{} :FileEntry
       :defs $ {}
         |abstract $ %{} :CodeEntry (:doc |)
@@ -3341,6 +3343,7 @@
                   println $ .!gray chalk (str "\"client disconnected: " sid)
                   dispatch! (:: :session/disconnect) sid
                 :on-error $ fn (error) (js/console.error error)
+                :class-mapper $ {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf)
         |start-server! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn start-server! (configs)
@@ -4169,63 +4172,52 @@
           :code $ quote
             defn parse-all-deps (files)
               let
-                  app-tree $ -> files .to-list
-                    mapcat $ fn (pair)
+                  *usages $ atom ({})
+                -> files &map:to-list $ each
+                  fn (pair)
+                    let
+                        this-ns $ &list:nth pair 0
+                        v $ &list:nth pair 1
+                        ns-expr $ tree->cirru
+                          -> v (get :ns) (get :code)
+                        require-rule $ &list:nth ns-expr 2
+                        ns-rules $ if (some? require-rule) (&list:slice require-rule 1) nil
+                        import-rules $ if (some? ns-rules) (parse-ns-rules ns-rules) ([])
                       let
-                          this-ns $ nth pair 0
-                          v $ nth pair 1
-                          ns-expr $ tree->cirru
-                            :code $ :ns v
-                          require-rule $ get ns-expr 2
-                          ns-rules $ if (some? require-rule) (.slice require-rule 1) nil
-                          import-rules $ if (some? ns-rules) (parse-ns-rules ns-rules) ([])
-                        let
-                            local-defs $ keys (:defs v)
-                          -> v :defs .to-list $ mapcat
-                            fn (pair)
-                              let
-                                  this-def $ nth pair 0
-                                  v $ nth pair 1
-                                  entry $ :: :def this-ns this-def
-                                ->
-                                  parse-bookmarks
-                                    tree->cirru $ :code v
-                                    , local-defs import-rules this-ns this-def
-                                  distinct
-                                  map $ fn (item) ([] entry item)
-                    group-by $ fn (pair) (nth pair 1)
-                    map-kv $ fn (k v)
-                      [] k $ .to-set (map v first)
-                , app-tree
-        |parse-bookmarks $ %{} :CodeEntry (:doc |)
+                          local-defs $ keys (get v :defs)
+                        -> v :defs &map:to-list $ each
+                          fn (pair)
+                            let
+                                this-def $ &list:nth pair 0
+                                v $ &list:nth pair 1
+                                entry $ :: :def this-ns this-def
+                                collect! $ fn (reference)
+                                  if (&map:contains? @*usages reference)
+                                    swap! *usages update reference $ fn (coll) (&include coll entry)
+                                    swap! *usages &map:assoc reference $ #{} entry
+                              parse-bookmarks-collect!
+                                tree->cirru $ &record:get v :code
+                                , local-defs import-rules this-ns this-def collect!
+                w-js-log @*usages
+        |parse-bookmarks-collect! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn parse-bookmarks (tree local-defs import-rules this-ns this-def)
+            defn parse-bookmarks-collect! (tree local-defs import-rules this-ns this-def collect!)
               if (list? tree)
-                mapcat tree $ fn (item) (parse-bookmarks item local-defs import-rules this-ns this-def)
+                each tree $ fn (item) (parse-bookmarks-collect! item local-defs import-rules this-ns this-def collect!)
                 let
                     sym $ if (.!startsWith tree "\"@") (.!slice tree 1) tree
-                  if (includes? local-defs sym)
-                    if (= this-def sym) ([])
-                      [] $ :: :reference this-ns sym
-                    apply-args ([] import-rules)
-                      fn (rules)
-                        list-match rules
-                            x0 xs
-                            let
-                                hit $ tag-match x0
-                                    :by-as ns-name alias
-                                    if
-                                      .starts-with? sym $ str alias "\"/"
-                                      :: :reference ns-name $ .slice sym
-                                        inc $ count alias
-                                      , nil
-                                  (:by-refer ns-name def-names)
-                                    if (includes? def-names sym) (:: :reference ns-name sym) nil
-                              tag-match (optionally hit)
-                                  :some v
-                                  [] v
-                                (:none) (recur xs)
-                          () $ []
+                  if (&set:includes? local-defs sym)
+                    if (&= this-def sym) nil $ collect! (:: :reference this-ns sym)
+                    each import-rules $ fn (x0)
+                      tag-match x0
+                          :by-as ns-name alias
+                          if
+                            starts-with? sym $ str alias "\"/"
+                            collect! $ :: :reference ns-name
+                              &str:slice sym $ inc (.-length alias)
+                        (:by-refer ns-name def-names)
+                          if (&set:includes? def-names sym)
+                            collect! $ :: :reference ns-name sym
         |parse-ns-rules $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn parse-ns-rules (rules)
@@ -5659,10 +5651,10 @@
         |tree->cirru $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn tree->cirru (x)
-              if (&record:matches? schema/CirruLeaf x) (:text x)
-                -> (:data x) (.to-list) (.sort-by first)
+              if (&record:matches? schema/CirruLeaf x) (&record:get x :text)
+                -> x (&record:get :data) (&map:to-list) (&list:sort-by first)
                   map $ fn (entry)
-                    tree->cirru $ last entry
+                    tree->cirru $ &list:nth entry 1
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util $ :require (app.schema :as schema) (bisection-key.core :as bisection)
