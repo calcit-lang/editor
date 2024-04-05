@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.0-a2)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.0-a1)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -4198,7 +4198,7 @@
                               parse-bookmarks-collect!
                                 tree->cirru $ &record:get v :code
                                 , local-defs import-rules this-ns this-def collect!
-                w-js-log @*usages
+                , @*usages
         |parse-bookmarks-collect! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn parse-bookmarks-collect! (tree local-defs import-rules this-ns this-def collect!)

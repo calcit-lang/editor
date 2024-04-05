@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:port 6001) (:reload-fn |app.server/reload!) (:version |0.9.0-a2)
+  :configs $ {} (:init-fn |app.server/main!) (:port 6001) (:reload-fn |app.server/reload!) (:version |0.9.0-a1)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -28467,10 +28467,7 @@
                                                           |o $ %{} :Leaf (:at 1712318575943) (:by |S1lNv50FW) (:text |this-ns)
                                                           |q $ %{} :Leaf (:at 1712318575943) (:by |S1lNv50FW) (:text |this-def)
                                                           |s $ %{} :Leaf (:at 1712318695380) (:by |S1lNv50FW) (:text |collect!)
-                  |Z $ %{} :Expr (:at 1712318605506) (:by |S1lNv50FW)
-                    :data $ {}
-                      |T $ %{} :Leaf (:at 1712318612058) (:by |S1lNv50FW) (:text |w-js-log)
-                      |b $ %{} :Leaf (:at 1712318618625) (:by |S1lNv50FW) (:text |@*usages)
+                  |Z $ %{} :Leaf (:at 1712318618625) (:by |S1lNv50FW) (:text |@*usages)
         |parse-bookmarks-collect! $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1712318698381) (:by |S1lNv50FW)
             :data $ {}
