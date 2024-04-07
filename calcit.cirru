@@ -772,11 +772,14 @@
                 :data $ {}
               |s $ %{} :Expr (:at 1626113080431) (:by |S1lNv50FW)
                 :data $ {}
-                  |D $ %{} :Leaf (:at 1626113081362) (:by |S1lNv50FW) (:text |when)
+                  |D $ %{} :Leaf (:at 1712514479128) (:by |S1lNv50FW) (:text |if)
                   |L $ %{} :Leaf (:at 1626113099309) (:by |S1lNv50FW) (:text |config/dev?)
                   |T $ %{} :Expr (:at 1625770465792) (:by |S1lNv50FW)
                     :data $ {}
                       |T $ %{} :Leaf (:at 1625770471430) (:by |S1lNv50FW) (:text |load-console-formatter!)
+                  |b $ %{} :Expr (:at 1712514480943) (:by |S1lNv50FW)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1712514488479) (:by |S1lNv50FW) (:text |disable-list-structure-check!)
               |t $ %{} :Expr (:at 1546164572449) (:by |root)
                 :data $ {}
                   |T $ %{} :Leaf (:at 1546164572449) (:by |root) (:text |println)
@@ -1212,6 +1215,13 @@
                     |T $ %{} :Leaf (:at 1712310910748) (:by |S1lNv50FW) (:text |app.schema)
                     |b $ %{} :Leaf (:at 1712310912573) (:by |S1lNv50FW) (:text |:as)
                     |h $ %{} :Leaf (:at 1712310913324) (:by |S1lNv50FW) (:text |schema)
+                |zD $ %{} :Expr (:at 1712514491680) (:by |S1lNv50FW)
+                  :data $ {}
+                    |5 $ %{} :Leaf (:at 1712514507433) (:by |S1lNv50FW) (:text "|\"@calcit/procs")
+                    |D $ %{} :Leaf (:at 1712514498032) (:by |S1lNv50FW) (:text |:refer)
+                    |T $ %{} :Expr (:at 1712514508401) (:by |S1lNv50FW)
+                      :data $ {}
+                        |T $ %{} :Leaf (:at 1712514495590) (:by |S1lNv50FW) (:text |disable-list-structure-check!)
     |app.client-updater $ %{} :FileEntry
       :defs $ {}
         |abstract $ %{} :CodeEntry (:doc |)

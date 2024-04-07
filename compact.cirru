@@ -132,7 +132,7 @@
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn main! ()
-              when config/dev? $ load-console-formatter!
+              if config/dev? (load-console-formatter!) (disable-list-structure-check!)
               println "\"Running mode:" $ if config/dev? "\"dev" "\"release"
               ; reset! *changes-logger $ fn (global-element element changes) (println "\"Changes:" changes)
               render-app!
@@ -197,6 +197,7 @@
             "\"bottom-tip" :default tip!
             "\"./calcit.build-errors" :default build-errors
             app.schema :as schema
+            "\"@calcit/procs" :refer $ disable-list-structure-check!
     |app.client-updater $ %{} :FileEntry
       :defs $ {}
         |abstract $ %{} :CodeEntry (:doc |)
