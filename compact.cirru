@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.0-a4)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.0)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -1541,7 +1541,7 @@
                             list->
                               {}
                                 :class-name $ str-spaced css/row css/gap8
-                                :style $ {} (:margin "\"32px 48px")
+                                :style $ {} (:margin "\"32px 48px") (:flex-wrap :wrap)
                               -> locals .to-list (.sort &compare)
                                 map $ fn (def-name)
                                   [] def-name $ comp-local-link (nth bookmark 1) def-name
@@ -1813,6 +1813,7 @@
         |style-local-link $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-local-link $ {}
+              "\"&" $ {} (:white-space :nowrap) (:margin "\"0 2px" )
               "\"span&" $ {}
                 :color $ hsl 200 40 64
               "\"span&:hover" $ {}
@@ -4275,8 +4276,8 @@
           :code $ quote
             defn refresh-usages-dict (db op-data sid op-id op-time)
               let
-                  usages-dict $ with-cpu-time
-                    parse-all-deps $ get-in db ([] :files)
+                  usages-dict $ parse-all-deps
+                    get-in db $ [] :files
                 assoc db :usages-dict usages-dict
         |use-import-def $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -4304,15 +4305,14 @@
                                 assoc-in bookmark-path $ to-tree pick-def
                                 assoc-in router-path $ :: :editor
                               let
-                                  try-ns-coord $ w-js-log
-                                    .find-before ns-tree (to-tree pick-ns) "\":refer"
+                                  try-ns-coord $ .find-before ns-tree (to-tree pick-ns) "\":refer"
                                 tag-match try-ns-coord
                                     :some pick-ns-coord
                                     let
                                         rule-coord $ butlast pick-ns-coord
                                         rule $ .get-in ns-tree rule-coord
                                         def-node $ cirru->tree pick-def user-id op-time
-                                        try-def-coord $ w-js-log (.find rule def-node)
+                                        try-def-coord $ .find rule def-node
                                       ; js/console.log rule-coord "\"---" ns-tree try-def-coord
                                       tag-match try-def-coord
                                           :some _c
