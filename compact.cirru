@@ -766,6 +766,7 @@
             app.comp.about :refer $ comp-about
             app.comp.configs :refer $ comp-configs
             app.config :refer $ dev?
+            app.comp.about :as about
     |app.comp.draft-box $ %{} :FileEntry
       :defs $ {}
         |comp-draft-box $ %{} :CodeEntry (:doc |)
@@ -2610,7 +2611,11 @@
                         :class-name $ str-spaced style/input |search-input
                         :style $ {} (:width "\"100%")
                         :on-input $ on-input state cursor
-                        :on-keydown $ on-keydown state def-candidates cursor
+                        :on-keydown $ on-keydown state
+                          if
+                            = :ns $ :mode state
+                            , ns-candidates def-candidates
+                          , cursor
                     if (empty? def-candidates) (comp-no-results)
                     list->
                       {} $ :class-name (str-spaced css/expand style-body)
@@ -2618,7 +2623,9 @@
                         map-indexed $ fn (idx bookmark)
                           let
                               text $ bookmark->str bookmark
-                              selected? $ = idx (:selection state)
+                              selected? $ and
+                                = :def $ :mode (w-js-log state)
+                                = idx $ :selection state
                             [] text $ tag-match bookmark
                                 :def ns' def'
                                 div
@@ -2644,9 +2651,14 @@
                           [] (nth bookmark 1)
                             let
                                 pieces $ split (nth bookmark 1) "\"."
+                                selected? $ and
+                                  = :ns $ :mode state
+                                  = idx $ :selection state
                               div
                                 {}
                                   :class-name $ str-spaced |hoverable css/row-middle style-candidate
+                                  :style $ if selected? style-highlight
+                                    {} $ :opacity 0.7
                                   :on-click $ on-select bookmark cursor
                                 span ({})
                                   <>
@@ -2660,7 +2672,7 @@
                                 span $ {} (:inner-text "\"import") (:class-name style-use-ns)
                                   :on-click $ fn (e d!)
                                     d! $ :: :analyze/use-import-def bookmark
-                                    d! cursor $ {} (:query |) (:position 0)
+                                    d! cursor initial-state
                   div $ {} (:class-name css/flex)
                   div
                     {} (:class-name css/column-parted)
@@ -2675,14 +2687,12 @@
               "\"$0" $ {} (:height "\"100%") (:padding "\"40px 16px 0 16px")
         |initial-state $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def initial-state $ {} (:query |) (:selection 0)
+            def initial-state $ {} (:query |) (:selection 0) (:mode :def)
         |on-input $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-input (state cursor)
               fn (e d!)
-                d! cursor $ {}
-                  :query $ :value e
-                  :selection 0
+                d! cursor $ assoc initial-state :value e
         |on-keydown $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-keydown (state candidates cursor)
@@ -2696,9 +2706,14 @@
                           target $ get candidates (:selection state)
                         if (some? target)
                           if (:shift? e)
-                            do
-                              d! $ :: :analyze/use-import-def target
-                              d! cursor $ {} (:query |) (:position 0)
+                            if
+                              = :def $ :mode state
+                              do
+                                d! $ :: :analyze/use-import-def target
+                                d! cursor initial-state
+                              do
+                                d! $ :: :analyze/use-import-def target
+                                d! cursor initial-state
                             do (d! :writer/select target)
                               d! cursor $ {} (:query |) (:position 0)
                     (= keycode/up code)
@@ -2716,13 +2731,16 @@
                           < (:selection state)
                             dec $ count candidates
                           d! cursor $ update state :selection inc
+                    (and (:meta? e) (= keycode/b code))
+                      d! cursor $ update state :mode
+                        fn (mode)
+                          if (= mode :ns) :def :ns
                     true $ on-window-keydown (:event e) d!
                       {} $ :name :search
         |on-select $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-select (bookmark cursor)
-              fn (e d!) (d! :writer/select bookmark)
-                d! cursor $ {} (:position :0) (:query |)
+              fn (e d!) (d! :writer/select bookmark) (d! cursor initial-state)
         |query-length $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn query-length (bookmark)
@@ -2744,7 +2762,7 @@
                 :cursor :pointer
         |style-highlight $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-highlight $ {} (:color :white)
+            def style-highlight $ {} (:color :white) (:opacity 1)
         |style-use-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-use-ns $ {}
