@@ -2624,7 +2624,7 @@
                           let
                               text $ bookmark->str bookmark
                               selected? $ and
-                                = :def $ :mode (w-js-log state)
+                                = :def $ :mode state
                                 = idx $ :selection state
                             [] text $ tag-match bookmark
                                 :def ns' def'
@@ -2692,7 +2692,7 @@
           :code $ quote
             defn on-input (state cursor)
               fn (e d!)
-                d! cursor $ assoc initial-state :value e
+                d! cursor $ assoc state :query (:value e)
         |on-keydown $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-keydown (state candidates cursor)
