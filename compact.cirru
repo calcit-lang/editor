@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.0-a1)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.1)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -78,6 +78,7 @@
                         when config/dev? $ js/console.log "\"Changes" changes
                         reset! *store $ patch-twig @*store changes
                     _ $ eprintln "\"Unknown op:" data
+                :class-mapper $ {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf)
         |detect-watching! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn detect-watching! () $ let
@@ -131,7 +132,7 @@
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn main! ()
-              when config/dev? $ load-console-formatter!
+              if config/dev? (load-console-formatter!) (disable-list-structure-check!)
               println "\"Running mode:" $ if config/dev? "\"dev" "\"release"
               ; reset! *changes-logger $ fn (global-element element changes) (println "\"Changes:" changes)
               render-app!
@@ -195,6 +196,8 @@
             app.config :as config
             "\"bottom-tip" :default tip!
             "\"./calcit.build-errors" :default build-errors
+            app.schema :as schema
+            "\"@calcit/procs" :refer $ disable-list-structure-check!
     |app.client-updater $ %{} :FileEntry
       :defs $ {}
         |abstract $ %{} :CodeEntry (:doc |)
@@ -763,6 +766,7 @@
             app.comp.about :refer $ comp-about
             app.comp.configs :refer $ comp-configs
             app.config :refer $ dev?
+            app.comp.about :as about
     |app.comp.draft-box $ %{} :FileEntry
       :defs $ {}
         |comp-draft-box $ %{} :CodeEntry (:doc |)
@@ -1538,7 +1542,7 @@
                             list->
                               {}
                                 :class-name $ str-spaced css/row css/gap8
-                                :style $ {} (:margin "\"32px 48px")
+                                :style $ {} (:margin "\"32px 48px") (:flex-wrap :wrap)
                               -> locals .to-list (.sort &compare)
                                 map $ fn (def-name)
                                   [] def-name $ comp-local-link (nth bookmark 1) def-name
@@ -1810,6 +1814,7 @@
         |style-local-link $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-local-link $ {}
+              "\"&" $ {} (:white-space :nowrap) (:margin "\"0 2px" )
               "\"span&" $ {}
                 :color $ hsl 200 40 64
               "\"span&:hover" $ {}
@@ -2606,7 +2611,11 @@
                         :class-name $ str-spaced style/input |search-input
                         :style $ {} (:width "\"100%")
                         :on-input $ on-input state cursor
-                        :on-keydown $ on-keydown state def-candidates cursor
+                        :on-keydown $ on-keydown state
+                          if
+                            = :ns $ :mode state
+                            , ns-candidates def-candidates
+                          , cursor
                     if (empty? def-candidates) (comp-no-results)
                     list->
                       {} $ :class-name (str-spaced css/expand style-body)
@@ -2614,7 +2623,9 @@
                         map-indexed $ fn (idx bookmark)
                           let
                               text $ bookmark->str bookmark
-                              selected? $ = idx (:selection state)
+                              selected? $ and
+                                = :def $ :mode state
+                                = idx $ :selection state
                             [] text $ tag-match bookmark
                                 :def ns' def'
                                 div
@@ -2640,9 +2651,14 @@
                           [] (nth bookmark 1)
                             let
                                 pieces $ split (nth bookmark 1) "\"."
+                                selected? $ and
+                                  = :ns $ :mode state
+                                  = idx $ :selection state
                               div
                                 {}
                                   :class-name $ str-spaced |hoverable css/row-middle style-candidate
+                                  :style $ if selected? style-highlight
+                                    {} $ :opacity 0.7
                                   :on-click $ on-select bookmark cursor
                                 span ({})
                                   <>
@@ -2656,7 +2672,7 @@
                                 span $ {} (:inner-text "\"import") (:class-name style-use-ns)
                                   :on-click $ fn (e d!)
                                     d! $ :: :analyze/use-import-def bookmark
-                                    d! cursor $ {} (:query |) (:position 0)
+                                    d! cursor initial-state
                   div $ {} (:class-name css/flex)
                   div
                     {} (:class-name css/column-parted)
@@ -2671,14 +2687,12 @@
               "\"$0" $ {} (:height "\"100%") (:padding "\"40px 16px 0 16px")
         |initial-state $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def initial-state $ {} (:query |) (:selection 0)
+            def initial-state $ {} (:query |) (:selection 0) (:mode :def)
         |on-input $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-input (state cursor)
               fn (e d!)
-                d! cursor $ {}
-                  :query $ :value e
-                  :selection 0
+                d! cursor $ assoc state :query (:value e)
         |on-keydown $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-keydown (state candidates cursor)
@@ -2692,9 +2706,14 @@
                           target $ get candidates (:selection state)
                         if (some? target)
                           if (:shift? e)
-                            do
-                              d! $ :: :analyze/use-import-def target
-                              d! cursor $ {} (:query |) (:position 0)
+                            if
+                              = :def $ :mode state
+                              do
+                                d! $ :: :analyze/use-import-def target
+                                d! cursor initial-state
+                              do
+                                d! $ :: :analyze/use-import-def target
+                                d! cursor initial-state
                             do (d! :writer/select target)
                               d! cursor $ {} (:query |) (:position 0)
                     (= keycode/up code)
@@ -2712,13 +2731,16 @@
                           < (:selection state)
                             dec $ count candidates
                           d! cursor $ update state :selection inc
+                    (and (:meta? e) (= keycode/b code))
+                      d! cursor $ update state :mode
+                        fn (mode)
+                          if (= mode :ns) :def :ns
                     true $ on-window-keydown (:event e) d!
                       {} $ :name :search
         |on-select $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-select (bookmark cursor)
-              fn (e d!) (d! :writer/select bookmark)
-                d! cursor $ {} (:position :0) (:query |)
+              fn (e d!) (d! :writer/select bookmark) (d! cursor initial-state)
         |query-length $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn query-length (bookmark)
@@ -2740,7 +2762,7 @@
                 :cursor :pointer
         |style-highlight $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-highlight $ {} (:color :white)
+            def style-highlight $ {} (:color :white) (:opacity 1)
         |style-use-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-use-ns $ {}
@@ -3341,6 +3363,7 @@
                   println $ .!gray chalk (str "\"client disconnected: " sid)
                   dispatch! (:: :session/disconnect) sid
                 :on-error $ fn (error) (js/console.error error)
+                :class-mapper $ {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf)
         |start-server! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn start-server! (configs)
@@ -3409,13 +3432,12 @@
         :code $ quote
           ns app.server $ :require (app.schema :as schema)
             app.updater :refer $ updater
-            app.util.compile :refer $ handle-files! persist!
+            app.util.compile :refer $ handle-files! persist! md5
             app.util.env :refer $ pick-port! pick-http-port!
             app.util :refer $ db->string file-compact-to-calcit
             |chalk :default chalk
             |path :as path
             |fs :as fs
-            |md5 :default md5
             |gaze :default gaze
             "\"node:http" :refer $ createServer
             "\"node:fs" :refer $ readFile
@@ -4169,63 +4191,52 @@
           :code $ quote
             defn parse-all-deps (files)
               let
-                  app-tree $ -> files .to-list
-                    mapcat $ fn (pair)
+                  *usages $ atom ({})
+                -> files &map:to-list $ each
+                  fn (pair)
+                    let
+                        this-ns $ &list:nth pair 0
+                        v $ &list:nth pair 1
+                        ns-expr $ tree->cirru
+                          -> v (get :ns) (get :code)
+                        require-rule $ &list:nth ns-expr 2
+                        ns-rules $ if (some? require-rule) (&list:slice require-rule 1) nil
+                        import-rules $ if (some? ns-rules) (parse-ns-rules ns-rules) ([])
                       let
-                          this-ns $ nth pair 0
-                          v $ nth pair 1
-                          ns-expr $ tree->cirru
-                            :code $ :ns v
-                          require-rule $ get ns-expr 2
-                          ns-rules $ if (some? require-rule) (.slice require-rule 1) nil
-                          import-rules $ if (some? ns-rules) (parse-ns-rules ns-rules) ([])
-                        let
-                            local-defs $ keys (:defs v)
-                          -> v :defs .to-list $ mapcat
-                            fn (pair)
-                              let
-                                  this-def $ nth pair 0
-                                  v $ nth pair 1
-                                  entry $ :: :def this-ns this-def
-                                ->
-                                  parse-bookmarks
-                                    tree->cirru $ :code v
-                                    , local-defs import-rules this-ns this-def
-                                  distinct
-                                  map $ fn (item) ([] entry item)
-                    group-by $ fn (pair) (nth pair 1)
-                    map-kv $ fn (k v)
-                      [] k $ .to-set (map v first)
-                , app-tree
-        |parse-bookmarks $ %{} :CodeEntry (:doc |)
+                          local-defs $ keys (get v :defs)
+                        -> v :defs &map:to-list $ each
+                          fn (pair)
+                            let
+                                this-def $ &list:nth pair 0
+                                v $ &list:nth pair 1
+                                entry $ :: :def this-ns this-def
+                                collect! $ fn (reference)
+                                  if (&map:contains? @*usages reference)
+                                    swap! *usages update reference $ fn (coll) (&include coll entry)
+                                    swap! *usages &map:assoc reference $ #{} entry
+                              parse-bookmarks-collect!
+                                tree->cirru $ &record:get v :code
+                                , local-defs import-rules this-ns this-def collect!
+                , @*usages
+        |parse-bookmarks-collect! $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn parse-bookmarks (tree local-defs import-rules this-ns this-def)
+            defn parse-bookmarks-collect! (tree local-defs import-rules this-ns this-def collect!)
               if (list? tree)
-                mapcat tree $ fn (item) (parse-bookmarks item local-defs import-rules this-ns this-def)
+                each tree $ fn (item) (parse-bookmarks-collect! item local-defs import-rules this-ns this-def collect!)
                 let
                     sym $ if (.!startsWith tree "\"@") (.!slice tree 1) tree
-                  if (includes? local-defs sym)
-                    if (= this-def sym) ([])
-                      [] $ :: :reference this-ns sym
-                    apply-args ([] import-rules)
-                      fn (rules)
-                        list-match rules
-                            x0 xs
-                            let
-                                hit $ tag-match x0
-                                    :by-as ns-name alias
-                                    if
-                                      .starts-with? sym $ str alias "\"/"
-                                      :: :reference ns-name $ .slice sym
-                                        inc $ count alias
-                                      , nil
-                                  (:by-refer ns-name def-names)
-                                    if (includes? def-names sym) (:: :reference ns-name sym) nil
-                              tag-match (optionally hit)
-                                  :some v
-                                  [] v
-                                (:none) (recur xs)
-                          () $ []
+                  if (&set:includes? local-defs sym)
+                    if (&= this-def sym) nil $ collect! (:: :reference this-ns sym)
+                    each import-rules $ fn (x0)
+                      tag-match x0
+                          :by-as ns-name alias
+                          if
+                            starts-with? sym $ str alias "\"/"
+                            collect! $ :: :reference ns-name
+                              &str:slice sym $ inc (.-length alias)
+                        (:by-refer ns-name def-names)
+                          if (&set:includes? def-names sym)
+                            collect! $ :: :reference ns-name sym
         |parse-ns-rules $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn parse-ns-rules (rules)
@@ -4283,8 +4294,8 @@
           :code $ quote
             defn refresh-usages-dict (db op-data sid op-id op-time)
               let
-                  usages-dict $ with-cpu-time
-                    parse-all-deps $ get-in db ([] :files)
+                  usages-dict $ parse-all-deps
+                    get-in db $ [] :files
                 assoc db :usages-dict usages-dict
         |use-import-def $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -4312,15 +4323,14 @@
                                 assoc-in bookmark-path $ to-tree pick-def
                                 assoc-in router-path $ :: :editor
                               let
-                                  try-ns-coord $ w-js-log
-                                    .find-before ns-tree (to-tree pick-ns) "\":refer"
+                                  try-ns-coord $ .find-before ns-tree (to-tree pick-ns) "\":refer"
                                 tag-match try-ns-coord
                                     :some pick-ns-coord
                                     let
                                         rule-coord $ butlast pick-ns-coord
                                         rule $ .get-in ns-tree rule-coord
                                         def-node $ cirru->tree pick-def user-id op-time
-                                        try-def-coord $ w-js-log (.find rule def-node)
+                                        try-def-coord $ .find rule def-node
                                       ; js/console.log rule-coord "\"---" ns-tree try-def-coord
                                       tag-match try-def-coord
                                           :some _c
@@ -5107,8 +5117,7 @@
         :code $ quote
           ns app.updater.user $ :require
             app.util :refer $ find-first push-warning
-            clojure.string :as string
-            |md5 :default md5
+            app.util.compile :refer $ md5
             app.schema :as schema
     |app.updater.watcher $ %{} :FileEntry
       :defs $ {}
@@ -5424,6 +5433,7 @@
                         [] k $ update session :notifications
                           push-info op-id op-time $ str user-name
                             if (some? op-data) (str "\" modified ns " op-data "\"!") "\" saved files!"
+                  dissoc :ir
         |select $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn select (db op-data session-id op-id op-time)
@@ -5659,10 +5669,10 @@
         |tree->cirru $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn tree->cirru (x)
-              if (&record:matches? schema/CirruLeaf x) (:text x)
-                -> (:data x) (.to-list) (.sort-by first)
+              if (&record:matches? schema/CirruLeaf x) (&record:get x :text)
+                -> x (&record:get :data) (&map:to-list) (&list:sort-by first)
                   map $ fn (entry)
-                    tree->cirru $ last entry
+                    tree->cirru $ &list:nth entry 1
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util $ :require (app.schema :as schema) (bisection-key.core :as bisection)
@@ -5765,6 +5775,10 @@
                     js/console.error e
                     dispatch! $ :: :notify/push-message
                       [] :error $ aget e "\"message"
+        |md5 $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn md5 (s)
+              -> crypto (.!createHash "\"md5") (.!update s) (.!digest "\"hex")
         |path $ %{} :CodeEntry (:doc |)
           :code $ quote
             def path $ js/require |path
@@ -5800,9 +5814,9 @@
             "\"path" :as path
             "\"fs" :as fs
             "\"child_process" :as cp
-            "\"md5" :default md5
             app.config :as config
             cirru-edn.core :as cirru-edn
+            "\"crypto" :default crypto
     |app.util.detect $ %{} :FileEntry
       :defs $ {}
         |port-taken? $ %{} :CodeEntry (:doc |)
