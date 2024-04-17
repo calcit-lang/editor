@@ -2714,8 +2714,7 @@
                               do
                                 d! $ :: :analyze/use-import-def target
                                 d! cursor initial-state
-                            do (d! :writer/select target)
-                              d! cursor $ {} (:query |) (:position 0)
+                            do (d! :writer/select target) (d! cursor initial-state)
                     (= keycode/up code)
                       do (.!preventDefault event)
                         if
@@ -2724,7 +2723,7 @@
                     (= keycode/escape code)
                       do
                         d! $ :: :router/change (:: :editor)
-                        d! cursor $ {} (:query |) (:position 0)
+                        d! cursor initial-state
                     (= keycode/down code)
                       do (.!preventDefault event)
                         if
