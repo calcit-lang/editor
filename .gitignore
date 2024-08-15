@@ -13,3 +13,5 @@ js-out/
 out-page/
 
 /profile.json
+
+.DS_Store
