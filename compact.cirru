@@ -1119,20 +1119,15 @@
                           .starts-with? child-ns $ str pkg "\"."
                         _ false
                 div
-                  {} $ :class-name (str-spaced css/row style-entry)
-                  div
-                    {} $ ; :class-name
-                      if
-                        > (count this-deps) 1
-                        , css/column
-                    span $ {}
-                      :class-name $ str-spaced css/font-code! style-def
-                      :inner-text that-def
-                      :on-click $ fn (e d!)
-                        d! :writer/edit $ :: :def that-ns that-def
-                    if
-                      not= that-ns $ get (last footprints) 1
-                      <> that-ns style-ns
+                  {} $ :class-name (str-spaced css/row-middle style-entry)
+                  span $ {}
+                    :class-name $ str-spaced css/font-code! style-def
+                    :inner-text that-def
+                    :on-click $ fn (e d!)
+                      d! :writer/edit $ :: :def that-ns that-def
+                  if
+                    not= that-ns $ get (last footprints) 1
+                    <> that-ns style-ns
                   if (includes? footprints entry)
                     div ({})
                       <> "\"Recur" $ str-spaced css/font-fancy style-recur
@@ -1145,7 +1140,7 @@
                             [] (str item)
                               tag-match item
                                   :reference child-ns child-def
-                                  comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
+                                  memof1-call-by (str child-ns "\"/" child-def) comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
                                 _ $ div ({})
                                   <> $ str "\"Unknown data: " item
         |style-def $ %{} :CodeEntry (:doc |)
@@ -1166,6 +1161,11 @@
                 :border-style :solid
                 :border-width "\"1px 0 0px 1px"
                 :border-radius "\"16px"
+                :padding "\"4px 0"
+                :transition "\"300ms"
+                :transition-property "\"border-color"
+              "\"&:hover" $ {}
+                :border-color $ hsl 0 0 100 0.5
         |style-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-entry $ {}
@@ -1178,7 +1178,7 @@
         |style-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-ns $ {}
-              "\"&" $ {} (:font-size 12) (:margin-left 8)
+              "\"&" $ {} (:font-size 12) (:vertical-align :middle) (:margin-left 8)
                 :color $ hsl 0 0 50
         |style-recur $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1200,6 +1200,7 @@
             respo.comp.inspect :refer $ comp-inspect
             respo.comp.space :refer $ =<
             app.config :refer $ dev?
+            memof.once :refer $ memof1-call-by
     |app.comp.header $ %{} :FileEntry
       :defs $ {}
         |comp-header $ %{} :CodeEntry (:doc |)
