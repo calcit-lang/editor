@@ -714,7 +714,7 @@
                           (:files d)
                             comp-page-files (>> states :files) (:selected-ns writer) d
                           (:graph d)
-                            comp-deps-graph (:package d) (:configs d) (:deps-dict d)
+                            comp-deps-graph (>> states :graph) (:package d) (:configs d) (:entries d) (:deps-dict d)
                           (:editor d)
                             comp-page-editor (>> states :editor) (:stack writer) d (:pointer writer) picker-mode? theme
                           (:search d)
@@ -1093,19 +1093,46 @@
       :defs $ {}
         |comp-deps-graph $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn comp-deps-graph (pkg configs deps-dict)
+            defn comp-deps-graph (states pkg configs entries deps-dict)
               let
                   init-fn $ :init-fn configs
                   pair $ .split init-fn "\"/"
                   that-ns $ nth pair 0
                   that-def $ nth pair 1
-                  entry $ :: :def that-ns that-def
+                  cursor $ :cursor states
+                  state $ either (:data states)
+                    {}
+                      :ns $ nth pair 0
+                      :def $ nth pair 1
+                  plugin-entries $ use-modal-menu (>> states :entries-menu)
+                    {} (:title |Entries)
+                      :style $ {} (:width 300)
+                      :backdrop-style $ {}
+                      :items $ concat
+                        [] $ :: :item (:: :def that-ns that-def) init-fn
+                        -> entries vals .to-list $ map
+                          fn (conf)
+                            let
+                                pair $ .split (:init-fn conf) "\"/"
+                              :: :item
+                                :: :def (nth pair 0) (nth pair 1)
+                                :init-fn conf
+                      :on-result $ fn (result d!)
+                        tag-match (nth result 1)
+                            :def a-ns a-def
+                            d! cursor $ {} (:ns a-ns) (:def a-def)
                 div
                   {} $ :style
                     {} $ :padding-right 24
-                  ; div ({})
-                    <> $ str that-ns "\"/" that-def
-                  comp-entry-deps that-ns that-def deps-dict pkg $ []
+                  div
+                    {} $ :style
+                      {} $ :padding "\"4px 16px"
+                    span $ {}
+                      :inner-text $ str (:ns state) "\"/" (:def state)
+                      :on-click $ fn (e d!) (.show plugin-entries d!)
+                      :class-name style-def-entry
+                    .render plugin-entries
+                  comp-entry-deps (:ns state) (:def state) deps-dict pkg $ []
         |comp-entry-deps $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn comp-entry-deps (that-ns that-def deps-dict pkg footprints)
@@ -1120,13 +1147,17 @@
                         _ false
                 div
                   {} $ :class-name (str-spaced css/row-middle style-entry)
-                  span $ {}
-                    :class-name $ str-spaced css/font-code! style-def
-                    :inner-text that-def
-                    :on-click $ fn (e d!)
-                      d! :writer/edit $ :: :def that-ns that-def
                   if
-                    not= that-ns $ get (last footprints) 1
+                    not $ empty? footprints
+                    span $ {}
+                      :class-name $ str-spaced css/font-code! style-def
+                      :inner-text that-def
+                      :on-click $ fn (e d!)
+                        d! :writer/edit $ :: :def that-ns that-def
+                  if
+                    and
+                      not $ empty? footprints
+                      not= that-ns $ get (last footprints) 1
                     <> that-ns style-ns
                   if (includes? footprints entry)
                     div ({})
@@ -1147,12 +1178,19 @@
           :code $ quote
             defstyle style-def $ {}
               "\"&" $ {} (:white-space :pre)
-                :color $ hsl 0 0 80
+                :color $ hsl 0 0 100
                 :position :sticky
                 :top 0
                 :cursor :pointer
-                :opacity 0.8
+                :opacity 0.6
               "\"&:hover" $ {} (:opacity 1)
+        |style-def-entry $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-def-entry $ {}
+              "\"&" $ {} (:cursor :pointer)
+                :color $ hsl 0 0 80
+              "\"&:hover" $ {}
+                :color $ hsl 0 0 100
         |style-deps-area $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-deps-area $ {}
@@ -1201,6 +1239,7 @@
             respo.comp.space :refer $ =<
             app.config :refer $ dev?
             memof.once :refer $ memof1-call-by
+            respo-alerts.core :refer $ use-alert use-prompt use-confirm use-modal-menu
     |app.comp.header $ %{} :FileEntry
       :defs $ {}
         |comp-header $ %{} :CodeEntry (:doc |)
@@ -3817,6 +3856,7 @@
                           :package $ :package db
                           :configs $ :configs db
                           :deps-dict $ :deps-dict db
+                          :entries $ w-js-log (:entries db)
                       (:editor)
                         :: :editor $ twig-page-editor (:files db) (:saved-files db) (:sessions db) (:users db) writer (:id session) (:usages-dict db)
                       (:profile)
