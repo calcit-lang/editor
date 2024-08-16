@@ -1112,10 +1112,16 @@
               let
                   entry $ :: :def that-ns that-def
                   this-deps $ get deps-dict entry
+                  internal-deps $ -> this-deps (.to-list)
+                    filter $ fn (item)
+                      tag-match item
+                          :reference child-ns child-def
+                          .starts-with? child-ns $ str pkg "\"."
+                        _ false
                 div
                   {} $ :class-name (str-spaced css/row style-entry)
                   div
-                    {} $ :class-name
+                    {} $ ; :class-name
                       if
                         > (count this-deps) 1
                         , css/column
@@ -1128,22 +1134,20 @@
                       not= that-ns $ get (last footprints) 1
                       <> that-ns style-ns
                   if (includes? footprints entry)
-                    div ({}) (<> "\"<RECUR>")
-                    list->
-                      {} $ :class-name style-deps-area
-                      -> this-deps (.to-list)
-                        filter $ fn (item)
-                          tag-match item
-                              :reference child-ns child-def
-                              .starts-with? child-ns $ str pkg "\"."
-                            _ false
-                        map $ fn (item)
-                          [] (str item)
-                            tag-match item
-                                :reference child-ns child-def
-                                comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
-                              _ $ div ({})
-                                <> $ str "\"Unknown data: " item
+                    div ({})
+                      <> "\"Recur" $ str-spaced css/font-fancy style-recur
+                    if
+                      not $ empty? internal-deps
+                      list->
+                        {} $ :class-name style-deps-area
+                        -> internal-deps $ map
+                          fn (item)
+                            [] (str item)
+                              tag-match item
+                                  :reference child-ns child-def
+                                  comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
+                                _ $ div ({})
+                                  <> $ str "\"Unknown data: " item
         |style-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-def $ {}
@@ -1176,6 +1180,15 @@
             defstyle style-ns $ {}
               "\"&" $ {} (:font-size 12) (:margin-left 8)
                 :color $ hsl 0 0 50
+        |style-recur $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-recur $ {}
+              "\"&" $ {}
+                :color $ hsl 0 0 60
+                :border-radius "\"8px"
+                :background-color $ hsl 300 10 100 0.2
+                :margin "\"2px 8px"
+                :padding "\"0 8px"
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.graph $ :require
