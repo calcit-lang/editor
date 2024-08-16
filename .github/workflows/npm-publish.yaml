@@ -22,7 +22,7 @@ jobs:
 
       - uses: calcit-lang/setup-cr@0.0.4
         with:
-          version: "0.9.3"
+          version: "0.9.4"
 
       - run: caps --ci && yarn && yarn compile-server && yarn compile-page && yarn release-page
 

@@ -1105,7 +1105,7 @@
                     {} $ :padding-right 24
                   ; div ({})
                     <> $ str that-ns "\"/" that-def
-                  comp-entry-deps that-ns that-def deps-dict pkg $ #{}
+                  comp-entry-deps that-ns that-def deps-dict pkg $ []
         |comp-entry-deps $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn comp-entry-deps (that-ns that-def deps-dict pkg footprints)
@@ -1117,14 +1117,16 @@
                   div
                     {} $ :class-name
                       if
-                        > (count this-deps) 2
+                        > (count this-deps) 1
                         , css/column
                     span $ {}
                       :class-name $ str-spaced css/font-code! style-def
                       :inner-text that-def
                       :on-click $ fn (e d!)
                         d! :writer/edit $ :: :def that-ns that-def
-                    <> that-ns style-ns
+                    if
+                      not= that-ns $ get (last footprints) 1
+                      <> that-ns style-ns
                   if (includes? footprints entry)
                     div ({}) (<> "\"<RECUR>")
                     list->
@@ -1139,7 +1141,7 @@
                           [] (str item)
                             tag-match item
                                 :reference child-ns child-def
-                                comp-entry-deps child-ns child-def deps-dict pkg $ include footprints entry
+                                comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
                               _ $ div ({})
                                 <> $ str "\"Unknown data: " item
         |style-def $ %{} :CodeEntry (:doc |)
@@ -1150,6 +1152,8 @@
                 :position :sticky
                 :top 0
                 :cursor :pointer
+                :opacity 0.8
+              "\"&:hover" $ {} (:opacity 1)
         |style-deps-area $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-deps-area $ {}
