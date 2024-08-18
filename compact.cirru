@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.2)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.3)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -714,7 +714,7 @@
                           (:files d)
                             comp-page-files (>> states :files) (:selected-ns writer) d
                           (:graph d)
-                            comp-deps-graph (>> states :graph) (:package d) (:configs d) (:entries d) (:deps-dict d)
+                            comp-deps-graph (>> states :graph) (:package d) (:configs d) (:entries d) (:deps-dict d) (:writer d)
                           (:editor d)
                             comp-page-editor (>> states :editor) (:stack writer) d (:pointer writer) picker-mode? theme
                           (:search d)
@@ -1093,7 +1093,7 @@
       :defs $ {}
         |comp-deps-graph $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn comp-deps-graph (states pkg configs entries deps-dict)
+            defcomp comp-deps-graph (states pkg configs entries deps-dict writer)
               let
                   init-fn $ :init-fn configs
                   pair $ .split init-fn "\"/"
@@ -1123,18 +1123,23 @@
                         tag-match (nth result 1)
                             :def a-ns a-def
                             d! cursor $ {} (:ns a-ns) (:def a-def)
-                div
-                  {} $ :style
-                    {} $ :padding-right 24
+                  pointer $ get writer :pointer
+                  bookmark $ if (some? pointer)
+                    get-in writer $ [] :stack (:pointer writer)
+                    , nil
+                [] (effect-navigate bookmark)
                   div
                     {} $ :style
-                      {} $ :padding "\"4px 16px"
-                    span $ {}
-                      :inner-text $ str (:ns state) "\"/" (:def state)
-                      :on-click $ fn (e d!) (.show plugin-entries d!)
-                      :class-name style-def-entry
-                    .render plugin-entries
-                  comp-entry-deps (:ns state) (:def state) deps-dict pkg $ []
+                      {} $ :padding-right 24
+                    div
+                      {} $ :style
+                        {} $ :padding "\"4px 16px"
+                      span $ {}
+                        :inner-text $ str (:ns state) "\"/" (:def state)
+                        :on-click $ fn (e d!) (.show plugin-entries d!)
+                        :class-name style-def-entry
+                      .render plugin-entries
+                    comp-entry-deps (:ns state) (:def state) deps-dict pkg $ []
         |comp-entry-deps $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn comp-entry-deps (that-ns that-def deps-dict pkg footprints)
@@ -1153,6 +1158,7 @@
                     not $ empty? footprints
                     span $ {}
                       :class-name $ str-spaced css/font-code! style-def
+                      :id $ gen-def-id that-ns that-def
                       :inner-text that-def
                       :on-click $ fn (e d!)
                         d! :writer/edit $ :: :def that-ns that-def
@@ -1176,6 +1182,32 @@
                                   memof1-call-by (str child-ns "\"/" child-def) comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
                                 _ $ div ({})
                                   <> $ str "\"Unknown data: " item
+        |effect-navigate $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defeffect effect-navigate (bookmark) (action el at?)
+              if
+                and (= action :mount) (some? bookmark)
+                tag-match bookmark $ 
+                  :def the-ns the-def coord
+                  let
+                      id $ str "\"#" (gen-def-id the-ns the-def)
+                      target $ .!querySelector el id
+                    if (some? target)
+                      do (.!scrollIntoView target)
+                        let
+                            s $ -> target .-style
+                          -> s .-opacity $ set! "\"1"
+                          -> s .-backgroundColor $ set! (hsl 0 0 100 0.4)
+                          -> s .-padding $ set! "\"0px 8px"
+                          ; -> s .-transitionDuration $ set! "\"0ms"
+                          ; flipped js/setTimeout 100 $ fn ()
+                            -> s .-backgroundColor $ set! (hsl 0 0 100 0)
+                            -> s .-transitionDuration $ set! "\"1000ms"
+                      js/console.warn "\"found no target for:" id
+        |gen-def-id $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn gen-def-id (that-ns that-def)
+              -> (str "\"def__" that-ns "\"__" that-def) (.replace "\"." "\"_DOT_") (.replace "\"!" "\"_EXP_") (.replace "\"#" "\"_SHA_") (.replace "\"*" "\"_STA_") (.replace "\"?" "\"_QUE_")
         |style-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-def $ {}
@@ -1185,6 +1217,9 @@
                 :top 0
                 :cursor :pointer
                 :opacity 0.6
+                ; :transition-duration "\"400ms"
+                ; :transition-property "\"background-color"
+                :border-radius "\"8px"
               "\"&:hover" $ {} (:opacity 1)
         |style-def-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1218,7 +1253,7 @@
         |style-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-ns $ {}
-              "\"&" $ {} (:font-size 12) (:vertical-align :middle) (:margin-left 8)
+              "\"&" $ {} (:font-size 12) (:vertical-align :middle) (:margin-left 8) (:white-space :nowrap)
                 :color $ hsl 0 0 50
         |style-recur $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1235,7 +1270,7 @@
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
-            respo.core :refer $ defcomp >> <> div span create-element list->
+            respo.core :refer $ defcomp >> <> div span create-element list-> defeffect
             respo.css :refer $ defstyle
             respo.comp.inspect :refer $ comp-inspect
             respo.comp.space :refer $ =<
@@ -3338,7 +3373,7 @@
         |database $ %{} :CodeEntry (:doc |)
           :code $ quote
             def database $ {}
-              :sessions $ {}
+              :sessions $ do session ({})
               :users $ {}
               :package |app
               :files $ {}
@@ -3858,7 +3893,8 @@
                           :package $ :package db
                           :configs $ :configs db
                           :deps-dict $ :deps-dict db
-                          :entries $ w-js-log (:entries db)
+                          :entries $ :entries db
+                          :writer $ :writer session
                       (:editor)
                         :: :editor $ twig-page-editor (:files db) (:saved-files db) (:sessions db) (:users db) writer (:id session) (:usages-dict db)
                       (:profile)

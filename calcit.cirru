@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:port 6001) (:reload-fn |app.server/reload!) (:version |0.9.2)
+  :configs $ {} (:init-fn |app.server/main!) (:port 6001) (:reload-fn |app.server/reload!) (:version |0.9.3)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -4486,6 +4486,10 @@
                                                 :data $ {}
                                                   |T $ %{} :Leaf (:at 1723741762051) (:by |S1lNv50FW) (:text |:deps-dict)
                                                   |b $ %{} :Leaf (:at 1723741762442) (:by |S1lNv50FW) (:text |d)
+                                              |l $ %{} :Expr (:at 1723741758246) (:by |S1lNv50FW)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1723980685092) (:by |S1lNv50FW) (:text |:writer)
+                                                  |b $ %{} :Leaf (:at 1723741762442) (:by |S1lNv50FW) (:text |d)
                                       |x $ %{} :Expr (:at 1504777353661) (:by nil)
                                         :data $ {}
                                           |T $ %{} :Expr (:at 1711731976976) (:by |S1lNv50FW)
@@ -7109,7 +7113,7 @@
         |comp-deps-graph $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1723740370884) (:by |S1lNv50FW)
             :data $ {}
-              |T $ %{} :Leaf (:at 1723740370884) (:by |S1lNv50FW) (:text |defn)
+              |T $ %{} :Leaf (:at 1723980817212) (:by |S1lNv50FW) (:text |defcomp)
               |b $ %{} :Leaf (:at 1723740370884) (:by |S1lNv50FW) (:text |comp-deps-graph)
               |h $ %{} :Expr (:at 1723740370884) (:by |S1lNv50FW)
                 :data $ {}
@@ -7118,6 +7122,7 @@
                   |T $ %{} :Leaf (:at 1723740420384) (:by |S1lNv50FW) (:text |configs)
                   |X $ %{} :Leaf (:at 1723828684654) (:by |S1lNv50FW) (:text |entries)
                   |b $ %{} :Leaf (:at 1723740422635) (:by |S1lNv50FW) (:text |deps-dict)
+                  |h $ %{} :Leaf (:at 1723980667647) (:by |S1lNv50FW) (:text |writer)
               |l $ %{} :Expr (:at 1723740517912) (:by |S1lNv50FW)
                 :data $ {}
                   |D $ %{} :Leaf (:at 1723740518507) (:by |S1lNv50FW) (:text |let)
@@ -7343,98 +7348,136 @@
                                                             :data $ {}
                                                               |T $ %{} :Leaf (:at 1723829289003) (:by |S1lNv50FW) (:text |:def)
                                                               |b $ %{} :Leaf (:at 1723829289934) (:by |S1lNv50FW) (:text |a-def)
-                  |T $ %{} :Expr (:at 1723740384502) (:by |S1lNv50FW)
+                      |r $ %{} :Expr (:at 1723980725575) (:by |S1lNv50FW)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1723980726708) (:by |S1lNv50FW) (:text |pointer)
+                          |b $ %{} :Expr (:at 1723980727062) (:by |S1lNv50FW)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1723980728340) (:by |S1lNv50FW) (:text |get)
+                              |b $ %{} :Leaf (:at 1723980729230) (:by |S1lNv50FW) (:text |writer)
+                              |h $ %{} :Leaf (:at 1723980793295) (:by |S1lNv50FW) (:text |:pointer)
+                      |s $ %{} :Expr (:at 1723980693618) (:by |S1lNv50FW)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1723980695528) (:by |S1lNv50FW) (:text |bookmark)
+                          |b $ %{} :Expr (:at 1723980723186) (:by |S1lNv50FW)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1723980717225) (:by |S1lNv50FW) (:text |if)
+                              |b $ %{} :Expr (:at 1723980717476) (:by |S1lNv50FW)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1723980718131) (:by |S1lNv50FW) (:text |some?)
+                                  |b $ %{} :Leaf (:at 1723980739499) (:by |S1lNv50FW) (:text |pointer)
+                              |h $ %{} :Expr (:at 1723980696428) (:by |S1lNv50FW)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1723980701086) (:by |S1lNv50FW) (:text |get-in)
+                                  |b $ %{} :Leaf (:at 1723980704467) (:by |S1lNv50FW) (:text |writer)
+                                  |h $ %{} :Expr (:at 1723980704839) (:by |S1lNv50FW)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1723980708524) (:by |S1lNv50FW) (:text |[])
+                                      |b $ %{} :Leaf (:at 1723980711344) (:by |S1lNv50FW) (:text |:stack)
+                                      |h $ %{} :Expr (:at 1723980711666) (:by |S1lNv50FW)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1723980713240) (:by |S1lNv50FW) (:text |:pointer)
+                                          |b $ %{} :Leaf (:at 1723980714623) (:by |S1lNv50FW) (:text |writer)
+                              |l $ %{} :Leaf (:at 1723980743429) (:by |S1lNv50FW) (:text |nil)
+                  |T $ %{} :Expr (:at 1723980748877) (:by |S1lNv50FW)
                     :data $ {}
-                      |T $ %{} :Leaf (:at 1723740388554) (:by |S1lNv50FW) (:text |div)
-                      |b $ %{} :Expr (:at 1723740389547) (:by |S1lNv50FW)
+                      |D $ %{} :Leaf (:at 1723980750440) (:by |S1lNv50FW) (:text |[])
+                      |L $ %{} :Expr (:at 1723980751076) (:by |S1lNv50FW)
                         :data $ {}
-                          |T $ %{} :Leaf (:at 1723740389892) (:by |S1lNv50FW) (:text |{})
-                          |b $ %{} :Expr (:at 1723742342751) (:by |S1lNv50FW)
-                            :data $ {}
-                              |T $ %{} :Leaf (:at 1723742344661) (:by |S1lNv50FW) (:text |:style)
-                              |b $ %{} :Expr (:at 1723742344897) (:by |S1lNv50FW)
-                                :data $ {}
-                                  |T $ %{} :Leaf (:at 1723742345204) (:by |S1lNv50FW) (:text |{})
-                                  |b $ %{} :Expr (:at 1723742345445) (:by |S1lNv50FW)
-                                    :data $ {}
-                                      |T $ %{} :Leaf (:at 1723742347930) (:by |S1lNv50FW) (:text |:padding-right)
-                                      |b $ %{} :Leaf (:at 1723742355518) (:by |S1lNv50FW) (:text |24)
-                      |h $ %{} :Expr (:at 1723741155443) (:by |S1lNv50FW)
+                          |T $ %{} :Leaf (:at 1723981011883) (:by |S1lNv50FW) (:text |effect-navigate)
+                          |b $ %{} :Leaf (:at 1723980754444) (:by |S1lNv50FW) (:text |bookmark)
+                      |T $ %{} :Expr (:at 1723740384502) (:by |S1lNv50FW)
                         :data $ {}
-                          |D $ %{} :Leaf (:at 1723741159500) (:by |S1lNv50FW) (:text |div)
-                          |L $ %{} :Expr (:at 1723741160135) (:by |S1lNv50FW)
+                          |T $ %{} :Leaf (:at 1723740388554) (:by |S1lNv50FW) (:text |div)
+                          |b $ %{} :Expr (:at 1723740389547) (:by |S1lNv50FW)
                             :data $ {}
-                              |T $ %{} :Leaf (:at 1723741160429) (:by |S1lNv50FW) (:text |{})
-                              |b $ %{} :Expr (:at 1723828219220) (:by |S1lNv50FW)
+                              |T $ %{} :Leaf (:at 1723740389892) (:by |S1lNv50FW) (:text |{})
+                              |b $ %{} :Expr (:at 1723742342751) (:by |S1lNv50FW)
                                 :data $ {}
-                                  |T $ %{} :Leaf (:at 1723828221271) (:by |S1lNv50FW) (:text |:style)
-                                  |b $ %{} :Expr (:at 1723828221598) (:by |S1lNv50FW)
+                                  |T $ %{} :Leaf (:at 1723742344661) (:by |S1lNv50FW) (:text |:style)
+                                  |b $ %{} :Expr (:at 1723742344897) (:by |S1lNv50FW)
                                     :data $ {}
-                                      |T $ %{} :Leaf (:at 1723828221928) (:by |S1lNv50FW) (:text |{})
-                                      |b $ %{} :Expr (:at 1723828222171) (:by |S1lNv50FW)
+                                      |T $ %{} :Leaf (:at 1723742345204) (:by |S1lNv50FW) (:text |{})
+                                      |b $ %{} :Expr (:at 1723742345445) (:by |S1lNv50FW)
                                         :data $ {}
-                                          |T $ %{} :Leaf (:at 1723828223616) (:by |S1lNv50FW) (:text |:padding)
-                                          |b $ %{} :Leaf (:at 1723828236280) (:by |S1lNv50FW) (:text "|\"4px 16px")
-                          |T $ %{} :Expr (:at 1723740390342) (:by |S1lNv50FW)
+                                          |T $ %{} :Leaf (:at 1723742347930) (:by |S1lNv50FW) (:text |:padding-right)
+                                          |b $ %{} :Leaf (:at 1723742355518) (:by |S1lNv50FW) (:text |24)
+                          |h $ %{} :Expr (:at 1723741155443) (:by |S1lNv50FW)
                             :data $ {}
-                              |T $ %{} :Leaf (:at 1723828496869) (:by |S1lNv50FW) (:text |span)
-                              |b $ %{} :Expr (:at 1723828499058) (:by |S1lNv50FW)
+                              |D $ %{} :Leaf (:at 1723741159500) (:by |S1lNv50FW) (:text |div)
+                              |L $ %{} :Expr (:at 1723741160135) (:by |S1lNv50FW)
                                 :data $ {}
-                                  |D $ %{} :Leaf (:at 1723828499848) (:by |S1lNv50FW) (:text |{})
-                                  |T $ %{} :Expr (:at 1723828500607) (:by |S1lNv50FW)
+                                  |T $ %{} :Leaf (:at 1723741160429) (:by |S1lNv50FW) (:text |{})
+                                  |b $ %{} :Expr (:at 1723828219220) (:by |S1lNv50FW)
                                     :data $ {}
-                                      |D $ %{} :Leaf (:at 1723828502760) (:by |S1lNv50FW) (:text |:inner-text)
-                                      |T $ %{} :Expr (:at 1723740583560) (:by |S1lNv50FW)
+                                      |T $ %{} :Leaf (:at 1723828221271) (:by |S1lNv50FW) (:text |:style)
+                                      |b $ %{} :Expr (:at 1723828221598) (:by |S1lNv50FW)
                                         :data $ {}
-                                          |T $ %{} :Leaf (:at 1723740584476) (:by |S1lNv50FW) (:text |str)
-                                          |b $ %{} :Expr (:at 1723829140640) (:by |S1lNv50FW)
+                                          |T $ %{} :Leaf (:at 1723828221928) (:by |S1lNv50FW) (:text |{})
+                                          |b $ %{} :Expr (:at 1723828222171) (:by |S1lNv50FW)
                                             :data $ {}
-                                              |T $ %{} :Leaf (:at 1723829140640) (:by |S1lNv50FW) (:text |:ns)
-                                              |b $ %{} :Leaf (:at 1723829140640) (:by |S1lNv50FW) (:text |state)
-                                          |e $ %{} :Leaf (:at 1723742495483) (:by |S1lNv50FW) (:text "|\"/")
-                                          |h $ %{} :Expr (:at 1723829142789) (:by |S1lNv50FW)
-                                            :data $ {}
-                                              |T $ %{} :Leaf (:at 1723829142789) (:by |S1lNv50FW) (:text |:def)
-                                              |b $ %{} :Leaf (:at 1723829142789) (:by |S1lNv50FW) (:text |state)
-                                  |b $ %{} :Expr (:at 1723828503142) (:by |S1lNv50FW)
+                                              |T $ %{} :Leaf (:at 1723828223616) (:by |S1lNv50FW) (:text |:padding)
+                                              |b $ %{} :Leaf (:at 1723982309281) (:by |S1lNv50FW) (:text "|\"4px 16px")
+                              |T $ %{} :Expr (:at 1723740390342) (:by |S1lNv50FW)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1723828496869) (:by |S1lNv50FW) (:text |span)
+                                  |b $ %{} :Expr (:at 1723828499058) (:by |S1lNv50FW)
                                     :data $ {}
-                                      |T $ %{} :Leaf (:at 1723828505464) (:by |S1lNv50FW) (:text |:on-click)
-                                      |b $ %{} :Expr (:at 1723828506247) (:by |S1lNv50FW)
+                                      |D $ %{} :Leaf (:at 1723828499848) (:by |S1lNv50FW) (:text |{})
+                                      |T $ %{} :Expr (:at 1723828500607) (:by |S1lNv50FW)
                                         :data $ {}
-                                          |T $ %{} :Leaf (:at 1723828506491) (:by |S1lNv50FW) (:text |fn)
-                                          |b $ %{} :Expr (:at 1723828506730) (:by |S1lNv50FW)
+                                          |D $ %{} :Leaf (:at 1723828502760) (:by |S1lNv50FW) (:text |:inner-text)
+                                          |T $ %{} :Expr (:at 1723740583560) (:by |S1lNv50FW)
                                             :data $ {}
-                                              |T $ %{} :Leaf (:at 1723828506910) (:by |S1lNv50FW) (:text |e)
-                                              |b $ %{} :Leaf (:at 1723828508116) (:by |S1lNv50FW) (:text |d!)
-                                          |h $ %{} :Expr (:at 1723828508934) (:by |S1lNv50FW)
+                                              |T $ %{} :Leaf (:at 1723740584476) (:by |S1lNv50FW) (:text |str)
+                                              |b $ %{} :Expr (:at 1723829140640) (:by |S1lNv50FW)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1723829140640) (:by |S1lNv50FW) (:text |:ns)
+                                                  |b $ %{} :Leaf (:at 1723829140640) (:by |S1lNv50FW) (:text |state)
+                                              |e $ %{} :Leaf (:at 1723742495483) (:by |S1lNv50FW) (:text "|\"/")
+                                              |h $ %{} :Expr (:at 1723829142789) (:by |S1lNv50FW)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1723829142789) (:by |S1lNv50FW) (:text |:def)
+                                                  |b $ %{} :Leaf (:at 1723829142789) (:by |S1lNv50FW) (:text |state)
+                                      |b $ %{} :Expr (:at 1723828503142) (:by |S1lNv50FW)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1723828505464) (:by |S1lNv50FW) (:text |:on-click)
+                                          |b $ %{} :Expr (:at 1723828506247) (:by |S1lNv50FW)
                                             :data $ {}
-                                              |T $ %{} :Leaf (:at 1723828509714) (:by |S1lNv50FW) (:text |.show)
-                                              |b $ %{} :Leaf (:at 1723828511322) (:by |S1lNv50FW) (:text |plugin-entries)
-                                              |h $ %{} :Leaf (:at 1723828568915) (:by |S1lNv50FW) (:text |d!)
-                                  |h $ %{} :Expr (:at 1723829315875) (:by |S1lNv50FW)
-                                    :data $ {}
-                                      |T $ %{} :Leaf (:at 1723829318203) (:by |S1lNv50FW) (:text |:class-name)
-                                      |b $ %{} :Leaf (:at 1723829325401) (:by |S1lNv50FW) (:text |style-def-entry)
-                          |b $ %{} :Expr (:at 1723828389278) (:by |S1lNv50FW)
+                                              |T $ %{} :Leaf (:at 1723828506491) (:by |S1lNv50FW) (:text |fn)
+                                              |b $ %{} :Expr (:at 1723828506730) (:by |S1lNv50FW)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1723828506910) (:by |S1lNv50FW) (:text |e)
+                                                  |b $ %{} :Leaf (:at 1723828508116) (:by |S1lNv50FW) (:text |d!)
+                                              |h $ %{} :Expr (:at 1723828508934) (:by |S1lNv50FW)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1723828509714) (:by |S1lNv50FW) (:text |.show)
+                                                  |b $ %{} :Leaf (:at 1723828511322) (:by |S1lNv50FW) (:text |plugin-entries)
+                                                  |h $ %{} :Leaf (:at 1723828568915) (:by |S1lNv50FW) (:text |d!)
+                                      |h $ %{} :Expr (:at 1723829315875) (:by |S1lNv50FW)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1723829318203) (:by |S1lNv50FW) (:text |:class-name)
+                                          |b $ %{} :Leaf (:at 1723829325401) (:by |S1lNv50FW) (:text |style-def-entry)
+                              |b $ %{} :Expr (:at 1723828389278) (:by |S1lNv50FW)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1723828390996) (:by |S1lNv50FW) (:text |.render)
+                                  |b $ %{} :Leaf (:at 1723828391324) (:by |S1lNv50FW) (:text |plugin-entries)
+                          |l $ %{} :Expr (:at 1723741129619) (:by |S1lNv50FW)
                             :data $ {}
-                              |T $ %{} :Leaf (:at 1723828390996) (:by |S1lNv50FW) (:text |.render)
-                              |b $ %{} :Leaf (:at 1723828391324) (:by |S1lNv50FW) (:text |plugin-entries)
-                      |l $ %{} :Expr (:at 1723741129619) (:by |S1lNv50FW)
-                        :data $ {}
-                          |T $ %{} :Leaf (:at 1723741137209) (:by |S1lNv50FW) (:text |comp-entry-deps)
-                          |b $ %{} :Expr (:at 1723829030218) (:by |S1lNv50FW)
-                            :data $ {}
-                              |T $ %{} :Leaf (:at 1723829030716) (:by |S1lNv50FW) (:text |:ns)
-                              |b $ %{} :Leaf (:at 1723829031865) (:by |S1lNv50FW) (:text |state)
-                          |h $ %{} :Expr (:at 1723829033594) (:by |S1lNv50FW)
-                            :data $ {}
-                              |T $ %{} :Leaf (:at 1723829034315) (:by |S1lNv50FW) (:text |:def)
-                              |b $ %{} :Leaf (:at 1723829035151) (:by |S1lNv50FW) (:text |state)
-                          |l $ %{} :Leaf (:at 1723741146402) (:by |S1lNv50FW) (:text |deps-dict)
-                          |m $ %{} :Leaf (:at 1723741804015) (:by |S1lNv50FW) (:text |pkg)
-                          |o $ %{} :Expr (:at 1723741149711) (:by |S1lNv50FW)
-                            :data $ {}
-                              |T $ %{} :Leaf (:at 1723787816224) (:by |S1lNv50FW) (:text |[])
+                              |T $ %{} :Leaf (:at 1723741137209) (:by |S1lNv50FW) (:text |comp-entry-deps)
+                              |b $ %{} :Expr (:at 1723829030218) (:by |S1lNv50FW)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1723829030716) (:by |S1lNv50FW) (:text |:ns)
+                                  |b $ %{} :Leaf (:at 1723829031865) (:by |S1lNv50FW) (:text |state)
+                              |h $ %{} :Expr (:at 1723829033594) (:by |S1lNv50FW)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1723829034315) (:by |S1lNv50FW) (:text |:def)
+                                  |b $ %{} :Leaf (:at 1723829035151) (:by |S1lNv50FW) (:text |state)
+                              |l $ %{} :Leaf (:at 1723741146402) (:by |S1lNv50FW) (:text |deps-dict)
+                              |m $ %{} :Leaf (:at 1723741804015) (:by |S1lNv50FW) (:text |pkg)
+                              |o $ %{} :Expr (:at 1723741149711) (:by |S1lNv50FW)
+                                :data $ {}
+                                  |T $ %{} :Leaf (:at 1723787816224) (:by |S1lNv50FW) (:text |[])
         |comp-entry-deps $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1723741162457) (:by |S1lNv50FW)
             :data $ {}
@@ -7550,6 +7593,14 @@
                                           |T $ %{} :Leaf (:at 1723825607176) (:by |S1lNv50FW) (:text |str-spaced)
                                           |b $ %{} :Leaf (:at 1723825607176) (:by |S1lNv50FW) (:text |css/font-code!)
                                           |h $ %{} :Leaf (:at 1723825607176) (:by |S1lNv50FW) (:text |style-def)
+                                  |e $ %{} :Expr (:at 1723980942481) (:by |S1lNv50FW)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1723980943089) (:by |S1lNv50FW) (:text |:id)
+                                      |b $ %{} :Expr (:at 1723981252409) (:by |S1lNv50FW)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1723981256591) (:by |S1lNv50FW) (:text |gen-def-id)
+                                          |b $ %{} :Leaf (:at 1723981259993) (:by |S1lNv50FW) (:text |that-ns)
+                                          |h $ %{} :Leaf (:at 1723981262974) (:by |S1lNv50FW) (:text |that-def)
                                   |h $ %{} :Expr (:at 1723825607176) (:by |S1lNv50FW)
                                     :data $ {}
                                       |T $ %{} :Leaf (:at 1723825607176) (:by |S1lNv50FW) (:text |:inner-text)
@@ -7714,6 +7765,225 @@
                                                                       |T $ %{} :Leaf (:at 1723741347953) (:by |S1lNv50FW) (:text |str)
                                                                       |b $ %{} :Leaf (:at 1723741355802) (:by |S1lNv50FW) (:text "|\"Unknown data: ")
                                                                       |h $ %{} :Leaf (:at 1723741361218) (:by |S1lNv50FW) (:text |item)
+        |effect-navigate $ %{} :CodeEntry (:doc |)
+          :code $ %{} :Expr (:at 1723980757372) (:by |S1lNv50FW)
+            :data $ {}
+              |T $ %{} :Leaf (:at 1723980759218) (:by |S1lNv50FW) (:text |defeffect)
+              |b $ %{} :Leaf (:at 1723981017470) (:by |S1lNv50FW) (:text |effect-navigate)
+              |h $ %{} :Expr (:at 1723980757372) (:by |S1lNv50FW)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1723980757372) (:by |S1lNv50FW) (:text |bookmark)
+              |l $ %{} :Expr (:at 1723980760129) (:by |S1lNv50FW)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1723980761529) (:by |S1lNv50FW) (:text |action)
+                  |b $ %{} :Leaf (:at 1723980762748) (:by |S1lNv50FW) (:text |el)
+                  |h $ %{} :Leaf (:at 1723980767629) (:by |S1lNv50FW) (:text |at?)
+              |q $ %{} :Expr (:at 1723981024077) (:by |S1lNv50FW)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1723981025180) (:by |S1lNv50FW) (:text |if)
+                  |b $ %{} :Expr (:at 1723981032278) (:by |S1lNv50FW)
+                    :data $ {}
+                      |D $ %{} :Leaf (:at 1723981033601) (:by |S1lNv50FW) (:text |and)
+                      |L $ %{} :Expr (:at 1723981033844) (:by |S1lNv50FW)
+                        :data $ {}
+                          |T $ %{} :Leaf (:at 1723981033963) (:by |S1lNv50FW) (:text |=)
+                          |b $ %{} :Leaf (:at 1723981036598) (:by |S1lNv50FW) (:text |action)
+                          |h $ %{} :Leaf (:at 1723981038386) (:by |S1lNv50FW) (:text |:mount)
+                      |T $ %{} :Expr (:at 1723981029561) (:by |S1lNv50FW)
+                        :data $ {}
+                          |D $ %{} :Leaf (:at 1723981030665) (:by |S1lNv50FW) (:text |some?)
+                          |T $ %{} :Leaf (:at 1723981029050) (:by |S1lNv50FW) (:text |bookmark)
+                  |h $ %{} :Expr (:at 1723981039791) (:by |S1lNv50FW)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1723981041743) (:by |S1lNv50FW) (:text |tag-match)
+                      |b $ %{} :Leaf (:at 1723981044226) (:by |S1lNv50FW) (:text |bookmark)
+                      |h $ %{} :Expr (:at 1723981044678) (:by |S1lNv50FW)
+                        :data $ {}
+                          |T $ %{} :Expr (:at 1723981045265) (:by |S1lNv50FW)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1723981045907) (:by |S1lNv50FW) (:text |:def)
+                              |b $ %{} :Leaf (:at 1723981051543) (:by |S1lNv50FW) (:text |the-ns)
+                              |h $ %{} :Leaf (:at 1723981053511) (:by |S1lNv50FW) (:text |the-def)
+                              |l $ %{} :Leaf (:at 1723981055625) (:by |S1lNv50FW) (:text |coord)
+                          |b $ %{} :Expr (:at 1723981058777) (:by |S1lNv50FW)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1723981060335) (:by |S1lNv50FW) (:text |let)
+                              |b $ %{} :Expr (:at 1723981060711) (:by |S1lNv50FW)
+                                :data $ {}
+                                  |T $ %{} :Expr (:at 1723981060891) (:by |S1lNv50FW)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1723981061360) (:by |S1lNv50FW) (:text |id)
+                                      |b $ %{} :Expr (:at 1723981061838) (:by |S1lNv50FW)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1723981061838) (:by |S1lNv50FW) (:text |str)
+                                          |X $ %{} :Leaf (:at 1723981292530) (:by |S1lNv50FW) (:text "|\"#")
+                                          |Z $ %{} :Expr (:at 1723981274496) (:by |S1lNv50FW)
+                                            :data $ {}
+                                              |T $ %{} :Leaf (:at 1723981283393) (:by |S1lNv50FW) (:text |gen-def-id)
+                                              |X $ %{} :Leaf (:at 1723981360117) (:by |S1lNv50FW) (:text |the-ns)
+                                              |b $ %{} :Leaf (:at 1723981287292) (:by |S1lNv50FW) (:text |the-def)
+                                  |b $ %{} :Expr (:at 1723981064593) (:by |S1lNv50FW)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1723981066506) (:by |S1lNv50FW) (:text |target)
+                                      |b $ %{} :Expr (:at 1723981066798) (:by |S1lNv50FW)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1723981074425) (:by |S1lNv50FW) (:text |.!querySelector)
+                                          |b $ %{} :Leaf (:at 1723981075633) (:by |S1lNv50FW) (:text |el)
+                                          |h $ %{} :Leaf (:at 1723981079336) (:by |S1lNv50FW) (:text |id)
+                              |h $ %{} :Expr (:at 1723981489516) (:by |S1lNv50FW)
+                                :data $ {}
+                                  |D $ %{} :Leaf (:at 1723981493685) (:by |S1lNv50FW) (:text |if)
+                                  |L $ %{} :Expr (:at 1723981494295) (:by |S1lNv50FW)
+                                    :data $ {}
+                                      |D $ %{} :Leaf (:at 1723981495379) (:by |S1lNv50FW) (:text |some?)
+                                      |T $ %{} :Leaf (:at 1723981490521) (:by |S1lNv50FW) (:text |target)
+                                  |T $ %{} :Expr (:at 1723981496460) (:by |S1lNv50FW)
+                                    :data $ {}
+                                      |D $ %{} :Leaf (:at 1723981496903) (:by |S1lNv50FW) (:text |do)
+                                      |T $ %{} :Expr (:at 1723981084210) (:by |S1lNv50FW)
+                                        :data $ {}
+                                          |T $ %{} :Leaf (:at 1723981094196) (:by |S1lNv50FW) (:text |.!scrollIntoView)
+                                          |b $ %{} :Leaf (:at 1723981097301) (:by |S1lNv50FW) (:text |target)
+                                      |b $ %{} :Expr (:at 1723981802932) (:by |S1lNv50FW)
+                                        :data $ {}
+                                          |D $ %{} :Leaf (:at 1723981803997) (:by |S1lNv50FW) (:text |let)
+                                          |L $ %{} :Expr (:at 1723981804258) (:by |S1lNv50FW)
+                                            :data $ {}
+                                              |T $ %{} :Expr (:at 1723981804385) (:by |S1lNv50FW)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1723981805290) (:by |S1lNv50FW) (:text |s)
+                                                  |b $ %{} :Expr (:at 1723981807907) (:by |S1lNv50FW)
+                                                    :data $ {}
+                                                      |T $ %{} :Leaf (:at 1723981807907) (:by |S1lNv50FW) (:text |->)
+                                                      |b $ %{} :Leaf (:at 1723981807907) (:by |S1lNv50FW) (:text |target)
+                                                      |h $ %{} :Leaf (:at 1723981807907) (:by |S1lNv50FW) (:text |.-style)
+                                          |T $ %{} :Expr (:at 1723981497849) (:by |S1lNv50FW)
+                                            :data $ {}
+                                              |D $ %{} :Leaf (:at 1723981505152) (:by |S1lNv50FW) (:text |->)
+                                              |T $ %{} :Leaf (:at 1723981816885) (:by |S1lNv50FW) (:text |s)
+                                              |h $ %{} :Leaf (:at 1723981571082) (:by |S1lNv50FW) (:text |.-opacity)
+                                              |l $ %{} :Expr (:at 1723981517822) (:by |S1lNv50FW)
+                                                :data $ {}
+                                                  |D $ %{} :Leaf (:at 1723981544445) (:by |S1lNv50FW) (:text |set!)
+                                                  |T $ %{} :Leaf (:at 1723981574498) (:by |S1lNv50FW) (:text "|\"1")
+                                          |b $ %{} :Expr (:at 1723981497849) (:by |S1lNv50FW)
+                                            :data $ {}
+                                              |D $ %{} :Leaf (:at 1723981505152) (:by |S1lNv50FW) (:text |->)
+                                              |T $ %{} :Leaf (:at 1723981816885) (:by |S1lNv50FW) (:text |s)
+                                              |h $ %{} :Leaf (:at 1723981988871) (:by |S1lNv50FW) (:text |.-backgroundColor)
+                                              |l $ %{} :Expr (:at 1723981517822) (:by |S1lNv50FW)
+                                                :data $ {}
+                                                  |D $ %{} :Leaf (:at 1723981544445) (:by |S1lNv50FW) (:text |set!)
+                                                  |T $ %{} :Expr (:at 1723981996674) (:by |S1lNv50FW)
+                                                    :data $ {}
+                                                      |T $ %{} :Leaf (:at 1723982015606) (:by |S1lNv50FW) (:text |hsl)
+                                                      |b $ %{} :Leaf (:at 1723981997763) (:by |S1lNv50FW) (:text |0)
+                                                      |h $ %{} :Leaf (:at 1723981998019) (:by |S1lNv50FW) (:text |0)
+                                                      |l $ %{} :Leaf (:at 1723981998839) (:by |S1lNv50FW) (:text |100)
+                                                      |o $ %{} :Leaf (:at 1723982452231) (:by |S1lNv50FW) (:text |0.4)
+                                          |f $ %{} :Expr (:at 1723982371089) (:by |S1lNv50FW)
+                                            :data $ {}
+                                              |T $ %{} :Leaf (:at 1723982371089) (:by |S1lNv50FW) (:text |->)
+                                              |b $ %{} :Leaf (:at 1723982371089) (:by |S1lNv50FW) (:text |s)
+                                              |h $ %{} :Leaf (:at 1723982371089) (:by |S1lNv50FW) (:text |.-padding)
+                                              |l $ %{} :Expr (:at 1723982371089) (:by |S1lNv50FW)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1723982371089) (:by |S1lNv50FW) (:text |set!)
+                                                  |b $ %{} :Leaf (:at 1723982373438) (:by |S1lNv50FW) (:text "|\"0px 8px")
+                                          |g $ %{} :Expr (:at 1723982422095) (:by |S1lNv50FW)
+                                            :data $ {}
+                                              |T $ %{} :Leaf (:at 1723982422095) (:by |S1lNv50FW) (:text |;)
+                                              |b $ %{} :Leaf (:at 1723982422095) (:by |S1lNv50FW) (:text |->)
+                                              |h $ %{} :Leaf (:at 1723982422095) (:by |S1lNv50FW) (:text |s)
+                                              |l $ %{} :Leaf (:at 1723982422095) (:by |S1lNv50FW) (:text |.-transitionDuration)
+                                              |o $ %{} :Expr (:at 1723982422095) (:by |S1lNv50FW)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1723982422095) (:by |S1lNv50FW) (:text |set!)
+                                                  |b $ %{} :Leaf (:at 1723982422095) (:by |S1lNv50FW) (:text "|\"0ms")
+                                          |h $ %{} :Expr (:at 1723981825367) (:by |S1lNv50FW)
+                                            :data $ {}
+                                              |D $ %{} :Leaf (:at 1723982427837) (:by |S1lNv50FW) (:text |;)
+                                              |T $ %{} :Leaf (:at 1723981828948) (:by |S1lNv50FW) (:text |flipped)
+                                              |b $ %{} :Leaf (:at 1723981835336) (:by |S1lNv50FW) (:text |js/setTimeout)
+                                              |h $ %{} :Leaf (:at 1723981836160) (:by |S1lNv50FW) (:text |100)
+                                              |l $ %{} :Expr (:at 1723981837340) (:by |S1lNv50FW)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1723981837929) (:by |S1lNv50FW) (:text |fn)
+                                                  |b $ %{} :Expr (:at 1723981838193) (:by |S1lNv50FW)
+                                                    :data $ {}
+                                                  |h $ %{} :Expr (:at 1723981840828) (:by |S1lNv50FW)
+                                                    :data $ {}
+                                                      |T $ %{} :Leaf (:at 1723981843205) (:by |S1lNv50FW) (:text |->)
+                                                      |b $ %{} :Leaf (:at 1723981843205) (:by |S1lNv50FW) (:text |s)
+                                                      |h $ %{} :Leaf (:at 1723982005725) (:by |S1lNv50FW) (:text |.-backgroundColor)
+                                                      |l $ %{} :Expr (:at 1723981843205) (:by |S1lNv50FW)
+                                                        :data $ {}
+                                                          |T $ %{} :Leaf (:at 1723981843205) (:by |S1lNv50FW) (:text |set!)
+                                                          |b $ %{} :Expr (:at 1723982003405) (:by |S1lNv50FW)
+                                                            :data $ {}
+                                                              |T $ %{} :Leaf (:at 1723982014156) (:by |S1lNv50FW) (:text |hsl)
+                                                              |b $ %{} :Leaf (:at 1723982003405) (:by |S1lNv50FW) (:text |0)
+                                                              |h $ %{} :Leaf (:at 1723982003405) (:by |S1lNv50FW) (:text |0)
+                                                              |l $ %{} :Leaf (:at 1723982003405) (:by |S1lNv50FW) (:text |100)
+                                                              |o $ %{} :Leaf (:at 1723982120383) (:by |S1lNv50FW) (:text |0)
+                                                  |l $ %{} :Expr (:at 1723982195171) (:by |S1lNv50FW)
+                                                    :data $ {}
+                                                      |T $ %{} :Leaf (:at 1723982195171) (:by |S1lNv50FW) (:text |->)
+                                                      |b $ %{} :Leaf (:at 1723982195171) (:by |S1lNv50FW) (:text |s)
+                                                      |h $ %{} :Leaf (:at 1723982195171) (:by |S1lNv50FW) (:text |.-transitionDuration)
+                                                      |l $ %{} :Expr (:at 1723982207212) (:by |S1lNv50FW)
+                                                        :data $ {}
+                                                          |D $ %{} :Leaf (:at 1723982209639) (:by |S1lNv50FW) (:text |set!)
+                                                          |T $ %{} :Leaf (:at 1723982235713) (:by |S1lNv50FW) (:text "|\"1000ms")
+                                  |b $ %{} :Expr (:at 1723981669352) (:by |S1lNv50FW)
+                                    :data $ {}
+                                      |T $ %{} :Leaf (:at 1723981677742) (:by |S1lNv50FW) (:text |js/console.warn)
+                                      |b $ %{} :Leaf (:at 1723981692071) (:by |S1lNv50FW) (:text "|\"found no target for:")
+                                      |h $ %{} :Leaf (:at 1723981691683) (:by |S1lNv50FW) (:text |id)
+        |gen-def-id $ %{} :CodeEntry (:doc |)
+          :code $ %{} :Expr (:at 1723981264657) (:by |S1lNv50FW)
+            :data $ {}
+              |T $ %{} :Leaf (:at 1723981264657) (:by |S1lNv50FW) (:text |defn)
+              |b $ %{} :Leaf (:at 1723981264657) (:by |S1lNv50FW) (:text |gen-def-id)
+              |h $ %{} :Expr (:at 1723981264657) (:by |S1lNv50FW)
+                :data $ {}
+                  |T $ %{} :Leaf (:at 1723981264657) (:by |S1lNv50FW) (:text |that-ns)
+                  |b $ %{} :Leaf (:at 1723981264657) (:by |S1lNv50FW) (:text |that-def)
+              |l $ %{} :Expr (:at 1723981313823) (:by |S1lNv50FW)
+                :data $ {}
+                  |D $ %{} :Leaf (:at 1723981317582) (:by |S1lNv50FW) (:text |->)
+                  |T $ %{} :Expr (:at 1723981266224) (:by |S1lNv50FW)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1723981266224) (:by |S1lNv50FW) (:text |str)
+                      |b $ %{} :Leaf (:at 1723981405012) (:by |S1lNv50FW) (:text "|\"def__")
+                      |h $ %{} :Leaf (:at 1723981266224) (:by |S1lNv50FW) (:text |that-ns)
+                      |l $ %{} :Leaf (:at 1723981406937) (:by |S1lNv50FW) (:text "|\"__")
+                      |o $ %{} :Leaf (:at 1723981266224) (:by |S1lNv50FW) (:text |that-def)
+                  |b $ %{} :Expr (:at 1723981318068) (:by |S1lNv50FW)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1723981325849) (:by |S1lNv50FW) (:text |.replace)
+                      |b $ %{} :Leaf (:at 1723981328428) (:by |S1lNv50FW) (:text "|\".")
+                      |h $ %{} :Leaf (:at 1723981332567) (:by |S1lNv50FW) (:text "|\"_DOT_")
+                  |h $ %{} :Expr (:at 1723981318068) (:by |S1lNv50FW)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1723981325849) (:by |S1lNv50FW) (:text |.replace)
+                      |b $ %{} :Leaf (:at 1723981336382) (:by |S1lNv50FW) (:text "|\"!")
+                      |h $ %{} :Leaf (:at 1723981338334) (:by |S1lNv50FW) (:text "|\"_EXP_")
+                  |l $ %{} :Expr (:at 1723981318068) (:by |S1lNv50FW)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1723981325849) (:by |S1lNv50FW) (:text |.replace)
+                      |b $ %{} :Leaf (:at 1723981346334) (:by |S1lNv50FW) (:text "|\"#")
+                      |h $ %{} :Leaf (:at 1723981349820) (:by |S1lNv50FW) (:text "|\"_SHA_")
+                  |o $ %{} :Expr (:at 1723981318068) (:by |S1lNv50FW)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1723981325849) (:by |S1lNv50FW) (:text |.replace)
+                      |b $ %{} :Leaf (:at 1723981734223) (:by |S1lNv50FW) (:text "|\"*")
+                      |h $ %{} :Leaf (:at 1723981736606) (:by |S1lNv50FW) (:text "|\"_STA_")
+                  |q $ %{} :Expr (:at 1723981318068) (:by |S1lNv50FW)
+                    :data $ {}
+                      |T $ %{} :Leaf (:at 1723981325849) (:by |S1lNv50FW) (:text |.replace)
+                      |b $ %{} :Leaf (:at 1723981766888) (:by |S1lNv50FW) (:text "|\"?")
+                      |h $ %{} :Leaf (:at 1723981768989) (:by |S1lNv50FW) (:text "|\"_QUE_")
         |style-def $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1723742075888) (:by |S1lNv50FW)
             :data $ {}
@@ -7757,6 +8027,20 @@
                             :data $ {}
                               |T $ %{} :Leaf (:at 1723787994818) (:by |S1lNv50FW) (:text |:opacity)
                               |b $ %{} :Leaf (:at 1723829438978) (:by |S1lNv50FW) (:text |0.6)
+                          |t $ %{} :Expr (:at 1723982170589) (:by |S1lNv50FW)
+                            :data $ {}
+                              |D $ %{} :Leaf (:at 1723982440136) (:by |S1lNv50FW) (:text |;)
+                              |T $ %{} :Leaf (:at 1723982170589) (:by |S1lNv50FW) (:text |:transition-duration)
+                              |b $ %{} :Leaf (:at 1723982175820) (:by |S1lNv50FW) (:text "|\"400ms")
+                          |u $ %{} :Expr (:at 1723981873835) (:by |S1lNv50FW)
+                            :data $ {}
+                              |D $ %{} :Leaf (:at 1723982439491) (:by |S1lNv50FW) (:text |;)
+                              |T $ %{} :Leaf (:at 1723981878693) (:by |S1lNv50FW) (:text |:transition-property)
+                              |b $ %{} :Leaf (:at 1723982023492) (:by |S1lNv50FW) (:text "|\"background-color")
+                          |v $ %{} :Expr (:at 1723982124087) (:by |S1lNv50FW)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1723982126103) (:by |S1lNv50FW) (:text |:border-radius)
+                              |b $ %{} :Leaf (:at 1723982131088) (:by |S1lNv50FW) (:text "|\"8px")
                   |h $ %{} :Expr (:at 1723787999351) (:by |S1lNv50FW)
                     :data $ {}
                       |T $ %{} :Leaf (:at 1723788001632) (:by |S1lNv50FW) (:text "|\"&:hover")
@@ -7917,7 +8201,7 @@
                           |h $ %{} :Expr (:at 1723741557524) (:by |S1lNv50FW)
                             :data $ {}
                               |T $ %{} :Leaf (:at 1723742313078) (:by |S1lNv50FW) (:text |:padding-left)
-                              |b $ %{} :Leaf (:at 1723742314832) (:by |S1lNv50FW) (:text "|\"8px")
+                              |b $ %{} :Leaf (:at 1723982333829) (:by |S1lNv50FW) (:text "|\"8px")
                           |l $ %{} :Expr (:at 1723741557524) (:by |S1lNv50FW)
                             :data $ {}
                               |T $ %{} :Leaf (:at 1723742305663) (:by |S1lNv50FW) (:text |:margin-left)
@@ -7957,6 +8241,10 @@
                             :data $ {}
                               |T $ %{} :Leaf (:at 1723741516333) (:by |S1lNv50FW) (:text |:margin-left)
                               |b $ %{} :Leaf (:at 1723741516776) (:by |S1lNv50FW) (:text |8)
+                          |f $ %{} :Expr (:at 1723980328489) (:by |S1lNv50FW)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1723980343193) (:by |S1lNv50FW) (:text |:white-space)
+                              |b $ %{} :Leaf (:at 1723980338981) (:by |S1lNv50FW) (:text |:nowrap)
                           |h $ %{} :Expr (:at 1723741502269) (:by |S1lNv50FW)
                             :data $ {}
                               |T $ %{} :Leaf (:at 1723741505293) (:by |S1lNv50FW) (:text |:color)
@@ -8049,6 +8337,7 @@
                         |o $ %{} :Leaf (:at 1723740430266) (:by |S1lNv50FW) (:text |span)
                         |q $ %{} :Leaf (:at 1723741222983) (:by |S1lNv50FW) (:text |create-element)
                         |s $ %{} :Leaf (:at 1723741371374) (:by |S1lNv50FW) (:text |list->)
+                        |t $ %{} :Leaf (:at 1723980782584) (:by |S1lNv50FW) (:text |defeffect)
                 |q $ %{} :Expr (:at 1723740430266) (:by |S1lNv50FW)
                   :data $ {}
                     |T $ %{} :Leaf (:at 1723740430266) (:by |S1lNv50FW) (:text |respo.css)
@@ -22222,9 +22511,13 @@
                   |j $ %{} :Expr (:at 1504777570689) (:by nil)
                     :data $ {}
                       |T $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |:sessions)
-                      |j $ %{} :Expr (:at 1504777570689) (:by nil)
+                      |j $ %{} :Expr (:at 1723980497392) (:by |S1lNv50FW)
                         :data $ {}
-                          |T $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |{})
+                          |D $ %{} :Leaf (:at 1723980498692) (:by |S1lNv50FW) (:text |do)
+                          |L $ %{} :Leaf (:at 1723980499038) (:by |S1lNv50FW) (:text |session)
+                          |T $ %{} :Expr (:at 1504777570689) (:by nil)
+                            :data $ {}
+                              |T $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |{})
                   |r $ %{} :Expr (:at 1504777570689) (:by nil)
                     :data $ {}
                       |T $ %{} :Leaf (:at 1504777570689) (:by |root) (:text |:users)
@@ -25580,13 +25873,17 @@
                                               |h $ %{} :Expr (:at 1723828646562) (:by |S1lNv50FW)
                                                 :data $ {}
                                                   |T $ %{} :Leaf (:at 1723828649095) (:by |S1lNv50FW) (:text |:entries)
-                                                  |b $ %{} :Expr (:at 1723828797829) (:by |S1lNv50FW)
+                                                  |b $ %{} :Expr (:at 1723828649435) (:by |S1lNv50FW)
                                                     :data $ {}
-                                                      |D $ %{} :Leaf (:at 1723828800994) (:by |S1lNv50FW) (:text |w-js-log)
-                                                      |T $ %{} :Expr (:at 1723828649435) (:by |S1lNv50FW)
-                                                        :data $ {}
-                                                          |T $ %{} :Leaf (:at 1723828737928) (:by |S1lNv50FW) (:text |:entries)
-                                                          |b $ %{} :Leaf (:at 1723828651604) (:by |S1lNv50FW) (:text |db)
+                                                      |T $ %{} :Leaf (:at 1723828737928) (:by |S1lNv50FW) (:text |:entries)
+                                                      |b $ %{} :Leaf (:at 1723828651604) (:by |S1lNv50FW) (:text |db)
+                                              |l $ %{} :Expr (:at 1723980545458) (:by |S1lNv50FW)
+                                                :data $ {}
+                                                  |T $ %{} :Leaf (:at 1723980587500) (:by |S1lNv50FW) (:text |:writer)
+                                                  |b $ %{} :Expr (:at 1723980587989) (:by |S1lNv50FW)
+                                                    :data $ {}
+                                                      |T $ %{} :Leaf (:at 1723980588958) (:by |S1lNv50FW) (:text |:writer)
+                                                      |b $ %{} :Leaf (:at 1723980892890) (:by |S1lNv50FW) (:text |session)
                                   |v $ %{} :Expr (:at 1504777570689) (:by nil)
                                     :data $ {}
                                       |T $ %{} :Expr (:at 1711731761615) (:by |S1lNv50FW)
