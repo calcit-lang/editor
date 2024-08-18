@@ -1189,25 +1189,27 @@
                 and (= action :mount) (some? bookmark)
                 tag-match bookmark $ 
                   :def the-ns the-def coord
-                  let
-                      id $ str "\"#" (gen-def-id the-ns the-def)
-                      target $ .!querySelector el id
-                    if (some? target)
-                      do (.!scrollIntoView target)
-                        let
-                            s $ -> target .-style
-                          -> s .-opacity $ set! "\"1"
-                          -> s .-backgroundColor $ set! (hsl 0 0 100 0.4)
-                          -> s .-padding $ set! "\"0px 8px"
-                          ; -> s .-transitionDuration $ set! "\"0ms"
-                          ; flipped js/setTimeout 100 $ fn ()
-                            -> s .-backgroundColor $ set! (hsl 0 0 100 0)
-                            -> s .-transitionDuration $ set! "\"1000ms"
-                      js/console.warn "\"found no target for:" id
+                  try
+                    let
+                        id $ str "\"#" (gen-def-id the-ns the-def)
+                        target $ .!querySelector el id
+                      if (some? target)
+                        do (.!scrollIntoView target)
+                          let
+                              s $ -> target .-style
+                            -> s .-opacity $ set! "\"1"
+                            -> s .-backgroundColor $ set! (hsl 0 0 100 0.4)
+                            -> s .-padding $ set! "\"0px 8px"
+                            ; -> s .-transitionDuration $ set! "\"0ms"
+                            ; flipped js/setTimeout 100 $ fn ()
+                              -> s .-backgroundColor $ set! (hsl 0 0 100 0)
+                              -> s .-transitionDuration $ set! "\"1000ms"
+                        js/console.warn "\"found no target for:" id
+                    fn (error) (js/console.error error)
         |gen-def-id $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn gen-def-id (that-ns that-def)
-              -> (str "\"def__" that-ns "\"__" that-def) (.replace "\"." "\"_DOT_") (.replace "\"!" "\"_EXP_") (.replace "\"#" "\"_SHA_") (.replace "\"*" "\"_STA_") (.replace "\"?" "\"_QUE_")
+              -> (str "\"def__" that-ns "\"__" that-def) (.replace "\"." "\"_DOT_") (.replace "\"!" "\"_EXP_") (.replace "\"#" "\"_SHA_") (.replace "\"*" "\"_STAR_") (.replace "\"?" "\"_QUE_") (.replace "\"%" "\"_PCT_")
         |style-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-def $ {}
