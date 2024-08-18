@@ -1110,13 +1110,15 @@
                       :backdrop-style $ {}
                       :items $ concat
                         [] $ :: :item (:: :def that-ns that-def) init-fn
-                        -> entries vals .to-list $ map
-                          fn (conf)
-                            let
-                                pair $ .split (:init-fn conf) "\"/"
-                              :: :item
-                                :: :def (nth pair 0) (nth pair 1)
-                                :init-fn conf
+                        -> entries
+                          either $ {}
+                          , vals .to-list $ map
+                            fn (conf)
+                              let
+                                  pair $ .split (:init-fn conf) "\"/"
+                                :: :item
+                                  :: :def (nth pair 0) (nth pair 1)
+                                  :init-fn conf
                       :on-result $ fn (result d!)
                         tag-match (nth result 1)
                             :def a-ns a-def
