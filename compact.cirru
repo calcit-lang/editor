@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.1)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.3)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -713,6 +713,8 @@
                             comp-profile (>> states :profile) (:user store) (:id session) d
                           (:files d)
                             comp-page-files (>> states :files) (:selected-ns writer) d
+                          (:graph d)
+                            comp-deps-graph (>> states :graph) (:package d) (:configs d) (:entries d) (:deps-dict d) (:writer d)
                           (:editor d)
                             comp-page-editor (>> states :editor) (:stack writer) d (:pointer writer) picker-mode? theme
                           (:search d)
@@ -767,6 +769,7 @@
             app.comp.configs :refer $ comp-configs
             app.config :refer $ dev?
             app.comp.about :as about
+            app.comp.graph :refer $ comp-deps-graph
     |app.comp.draft-box $ %{} :FileEntry
       :defs $ {}
         |comp-draft-box $ %{} :CodeEntry (:doc |)
@@ -1086,6 +1089,196 @@
             app.style :as style
             app.comp.modal :refer $ comp-modal
             app.util :refer $ file->cirru
+    |app.comp.graph $ %{} :FileEntry
+      :defs $ {}
+        |comp-deps-graph $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defcomp comp-deps-graph (states pkg configs entries deps-dict writer)
+              let
+                  init-fn $ :init-fn configs
+                  pair $ .split init-fn "\"/"
+                  that-ns $ nth pair 0
+                  that-def $ nth pair 1
+                  cursor $ :cursor states
+                  state $ either (:data states)
+                    {}
+                      :ns $ nth pair 0
+                      :def $ nth pair 1
+                  plugin-entries $ use-modal-menu (>> states :entries-menu)
+                    {} (:title |Entries)
+                      :style $ {} (:width 300)
+                      :backdrop-style $ {}
+                      :items $ concat
+                        [] $ :: :item (:: :def that-ns that-def) init-fn
+                        -> entries
+                          either $ {}
+                          , vals .to-list $ map
+                            fn (conf)
+                              let
+                                  pair $ .split (:init-fn conf) "\"/"
+                                :: :item
+                                  :: :def (nth pair 0) (nth pair 1)
+                                  :init-fn conf
+                      :on-result $ fn (result d!)
+                        tag-match (nth result 1)
+                            :def a-ns a-def
+                            d! cursor $ {} (:ns a-ns) (:def a-def)
+                  pointer $ get writer :pointer
+                  bookmark $ if (some? pointer)
+                    get-in writer $ [] :stack (:pointer writer)
+                    , nil
+                [] (effect-navigate bookmark)
+                  div
+                    {} $ :style
+                      {} $ :padding-right 24
+                    div
+                      {} $ :style
+                        {} $ :padding "\"4px 16px"
+                      span $ {}
+                        :inner-text $ str (:ns state) "\"/" (:def state)
+                        :on-click $ fn (e d!) (.show plugin-entries d!)
+                        :class-name style-def-entry
+                      .render plugin-entries
+                    comp-entry-deps (:ns state) (:def state) deps-dict pkg $ []
+        |comp-entry-deps $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn comp-entry-deps (that-ns that-def deps-dict pkg footprints)
+              let
+                  entry $ :: :def that-ns that-def
+                  this-deps $ get deps-dict entry
+                  internal-deps $ -> this-deps (.to-list)
+                    filter $ fn (item)
+                      tag-match item
+                          :reference child-ns child-def
+                          .starts-with? child-ns $ str pkg "\"."
+                        _ false
+                div
+                  {} $ :class-name (str-spaced css/row-middle style-entry)
+                  if
+                    not $ empty? footprints
+                    span $ {}
+                      :class-name $ str-spaced css/font-code! style-def
+                      :id $ gen-def-id that-ns that-def
+                      :inner-text that-def
+                      :on-click $ fn (e d!)
+                        d! :writer/edit $ :: :def that-ns that-def
+                  if
+                    and
+                      not $ empty? footprints
+                      not= that-ns $ get (last footprints) 1
+                    <> that-ns style-ns
+                  if (includes? footprints entry)
+                    div ({})
+                      <> "\"Recur" $ str-spaced css/font-fancy style-recur
+                    if
+                      not $ empty? internal-deps
+                      list->
+                        {} $ :class-name style-deps-area
+                        -> internal-deps $ map
+                          fn (item)
+                            [] (str item)
+                              tag-match item
+                                  :reference child-ns child-def
+                                  memof1-call-by (str child-ns "\"/" child-def) comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
+                                _ $ div ({})
+                                  <> $ str "\"Unknown data: " item
+        |effect-navigate $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defeffect effect-navigate (bookmark) (action el at?)
+              if
+                and (= action :mount) (some? bookmark)
+                tag-match bookmark $ 
+                  :def the-ns the-def coord
+                  try
+                    let
+                        id $ str "\"#" (gen-def-id the-ns the-def)
+                        target $ .!querySelector el id
+                      if (some? target)
+                        do (.!scrollIntoView target)
+                          let
+                              s $ -> target .-style
+                            -> s .-opacity $ set! "\"1"
+                            -> s .-backgroundColor $ set! (hsl 0 0 100 0.4)
+                            -> s .-padding $ set! "\"0px 8px"
+                            ; -> s .-transitionDuration $ set! "\"0ms"
+                            ; flipped js/setTimeout 100 $ fn ()
+                              -> s .-backgroundColor $ set! (hsl 0 0 100 0)
+                              -> s .-transitionDuration $ set! "\"1000ms"
+                        js/console.warn "\"found no target for:" id
+                    fn (error) (js/console.error error)
+        |gen-def-id $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn gen-def-id (that-ns that-def)
+              -> (str "\"def__" that-ns "\"__" that-def) (.replace "\"." "\"_DOT_") (.replace "\"!" "\"_EXP_") (.replace "\"#" "\"_SHA_") (.replace "\"*" "\"_STAR_") (.replace "\"?" "\"_QUE_") (.replace "\"%" "\"_PCT_")
+        |style-def $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-def $ {}
+              "\"&" $ {} (:white-space :pre)
+                :color $ hsl 0 0 100
+                :position :sticky
+                :top 0
+                :cursor :pointer
+                :opacity 0.6
+                ; :transition-duration "\"400ms"
+                ; :transition-property "\"background-color"
+                :border-radius "\"8px"
+              "\"&:hover" $ {} (:opacity 1)
+        |style-def-entry $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-def-entry $ {}
+              "\"&" $ {} (:cursor :pointer)
+                :color $ hsl 0 0 80
+              "\"&:hover" $ {}
+                :color $ hsl 0 0 100
+        |style-deps-area $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-deps-area $ {}
+              "\"&" $ {} (:max-height "\"96vh") (:margin-left 8) (:overflow :auto)
+                :border-color $ hsl 0 0 100 0.3
+                :border-style :solid
+                :border-width "\"1px 0 0px 1px"
+                :border-radius "\"16px"
+                :padding "\"4px 0"
+                :transition "\"300ms"
+                :transition-property "\"border-color"
+              "\"&:hover" $ {}
+                :border-color $ hsl 0 0 100 0.5
+        |style-entry $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-entry $ {}
+              "\"&" $ {}
+                ; :border-left $ str "\"1px solid " (hsl 0 0 90 0.4)
+                :padding-left "\"8px"
+                :margin-left "\"8px"
+                :border-radius "\"8px"
+                ; :box-shadow "\"0 0 2px #888"
+        |style-ns $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-ns $ {}
+              "\"&" $ {} (:font-size 12) (:vertical-align :middle) (:margin-left 8) (:white-space :nowrap)
+                :color $ hsl 0 0 50
+        |style-recur $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-recur $ {}
+              "\"&" $ {}
+                :color $ hsl 0 0 60
+                :border-radius "\"8px"
+                :background-color $ hsl 300 10 100 0.2
+                :margin "\"2px 8px"
+                :padding "\"0 8px"
+      :ns $ %{} :CodeEntry (:doc |)
+        :code $ quote
+          ns app.comp.graph $ :require
+            respo.util.format :refer $ hsl
+            respo-ui.core :as ui
+            respo-ui.css :as css
+            respo.core :refer $ defcomp >> <> div span create-element list-> defeffect
+            respo.css :refer $ defstyle
+            respo.comp.inspect :refer $ comp-inspect
+            respo.comp.space :refer $ =<
+            app.config :refer $ dev?
+            memof.once :refer $ memof1-call-by
+            respo-alerts.core :refer $ use-alert use-prompt use-confirm use-modal-menu
     |app.comp.header $ %{} :FileEntry
       :defs $ {}
         |comp-header $ %{} :CodeEntry (:doc |)
@@ -1100,6 +1293,8 @@
                     {} $ :class-name css/row-center
                     render-entry |Files :files router-name $ fn (e d!)
                       d! $ :: :router/change (:: :files)
+                    render-entry |Graph :graph router-name $ fn (e d!)
+                      d! $ :: :router/change (:: :graph)
                     render-entry |Editor :editor router-name $ fn (e d!)
                       d! $ :: :router/change (:: :editor)
                     render-entry |Search :search router-name $ fn (e d!)
@@ -3180,7 +3375,7 @@
         |database $ %{} :CodeEntry (:doc |)
           :code $ quote
             def database $ {}
-              :sessions $ {}
+              :sessions $ do session ({})
               :users $ {}
               :package |app
               :files $ {}
@@ -3188,6 +3383,7 @@
               :configs configs
               :entries $ {}
               :usages-dict $ {}
+              :deps-dict $ {}
         |notification $ %{} :CodeEntry (:doc |)
           :code $ quote
             def notification $ {} (:id nil) (:kind nil) (:text nil) (:time nil)
@@ -3694,6 +3890,13 @@
                           get-in session $ [] :writer :draft-ns
                           :sessions db
                           :id session
+                      (:graph)
+                        :: :graph $ {}
+                          :package $ :package db
+                          :configs $ :configs db
+                          :deps-dict $ :deps-dict db
+                          :entries $ :entries db
+                          :writer $ :writer session
                       (:editor)
                         :: :editor $ twig-page-editor (:files db) (:saved-files db) (:sessions db) (:users db) writer (:id session) (:usages-dict db)
                       (:profile)
@@ -4191,6 +4394,7 @@
             defn parse-all-deps (files)
               let
                   *usages $ atom ({})
+                  *deps $ atom ({})
                 -> files &map:to-list $ each
                   fn (pair)
                     let
@@ -4209,14 +4413,17 @@
                                 this-def $ &list:nth pair 0
                                 v $ &list:nth pair 1
                                 entry $ :: :def this-ns this-def
+                                *entry-deps $ atom (#{})
                                 collect! $ fn (reference)
                                   if (&map:contains? @*usages reference)
                                     swap! *usages update reference $ fn (coll) (&include coll entry)
                                     swap! *usages &map:assoc reference $ #{} entry
+                                  swap! *entry-deps include reference
                               parse-bookmarks-collect!
                                 tree->cirru $ &record:get v :code
                                 , local-defs import-rules this-ns this-def collect!
-                , @*usages
+                              swap! *deps assoc entry @*entry-deps
+                :: :deps @*deps @*usages
         |parse-bookmarks-collect! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn parse-bookmarks-collect! (tree local-defs import-rules this-ns this-def collect!)
@@ -4292,10 +4499,10 @@
         |refresh-usages-dict $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn refresh-usages-dict (db op-data sid op-id op-time)
-              let
-                  usages-dict $ parse-all-deps
-                    get-in db $ [] :files
-                assoc db :usages-dict usages-dict
+              tag-match
+                parse-all-deps $ get-in db ([] :files)
+                (:deps deps-dict usages-dict)
+                  -> db (assoc :usages-dict usages-dict) (assoc :deps-dict deps-dict)
         |use-import-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn use-import-def (db picked sid op-id op-time)
@@ -5520,7 +5727,7 @@
         |db->string $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn db->string (db)
-              format-cirru-edn $ -> db (dissoc :sessions) (dissoc :saved-files) (dissoc :usages-dict)
+              format-cirru-edn $ -> db (dissoc :sessions) (dissoc :saved-files) (dissoc :usages-dict) (dissoc :deps-dict)
         |expr? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expr? (x) (&record:matches? schema/CirruExpr x)
