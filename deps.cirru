@@ -1,5 +1,6 @@
 
 {}
+  :calcit-version |0.9.4
   :dependencies $ {}
     |calcit-lang/lilac |main
     |calcit-lang/memof |main
