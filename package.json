@@ -24,10 +24,10 @@
     "copy-text-to-clipboard": "^3.2.0",
     "feather-icons": "^4.29.2",
     "url-parse": "^1.5.10",
-    "vite": "^5.4.2"
+    "vite": "^5.4.3"
   },
   "dependencies": {
-    "@calcit/procs": "^0.9.4",
+    "@calcit/procs": "^0.9.5",
     "chalk": "^5.3.0",
     "dayjs": "^1.11.13",
     "gaze": "^1.1.3",
