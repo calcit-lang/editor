@@ -17,9 +17,7 @@ jobs:
           node-version: 20
           cache: yarn
 
-      - uses: calcit-lang/setup-cr@0.0.7
-        with:
-          bundler: false
+      - uses: calcit-lang/setup-cr@0.0.8
 
       - run: caps --ci && yarn && yarn compile-server && yarn compile-page && yarn release-page
 
