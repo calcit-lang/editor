@@ -441,7 +441,7 @@
           :code $ quote
             defcomp comp-changed-files (states changed-files)
               div
-                {} $ :style style-column
+                {} $ :class-name style-column
                 <> |Changes style/title
                 list-> ({})
                   -> changed-files (.to-list)
@@ -449,7 +449,7 @@
                       let[] (k info) pair $ [] k (comp-changed-info info k)
                 if (empty? changed-files)
                   div
-                    {} $ :style style-nothing
+                    {} $ :class-name (str-spaced css/font-fancy style-nothing)
                     <> "|No changes"
                   div ({})
                     a $ {} (:inner-text |Save) (:class-name style/button)
@@ -459,16 +459,20 @@
                         d! $ :: :states/clear
         |style-column $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-column $ {} (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
+            defstyle style-column $ {}
+              "\"&" $ {} (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
         |style-nothing $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-nothing $ {} (:font-family "|Josefin Sans")
-              :color $ hsl 0 0 100 0.5
+            defstyle style-nothing $ {}
+              "\"&" $ {}
+                :color $ hsl 0 0 100 0.5
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.changed-files $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
+            respo.css :refer $ defstyle
             respo.core :refer $ defcomp list-> <> span div pre input button a
             respo.comp.space :refer $ =<
             app.client-util :as util
@@ -1070,8 +1074,8 @@
                         d! cursor $ :value e
                     =< nil 8
                     div
-                      {} $ :style
-                        merge ui/row $ {} (:justify-content :flex-end)
+                      {} (:class-name css/row)
+                        :style $ {} (:justify-content :flex-end)
                       button $ {} (:inner-text "\"Submit") (:class-name style/button)
                         :on-click $ fn (e d!)
                           if
@@ -1084,6 +1088,7 @@
           ns app.comp.file-replacer $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp >> <> span div pre input button a textarea
             respo.comp.inspect :refer $ comp-inspect
             respo.comp.space :refer $ =<
@@ -2187,7 +2192,7 @@
                 div
                   {} $ :class-name (str-spaced css/column style-list)
                   div
-                    {} $ :style style/title
+                    {} $ :class-name style/title
                     <> |Namespaces
                     =< 8 nil
                     comp-icon :plus
@@ -2286,8 +2291,8 @@
         |render-empty $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-empty () $ div
-              {} $ :style
-                {} (:width 280) (:font-family ui/font-fancy)
+              {} (:class-name css/font-fancy)
+                :style $ {} (:width 280)
                   :color $ hsl 0 0 100 0.5
                   :padding "\"60px 0"
               <> |Empty nil
@@ -3694,8 +3699,9 @@
               :color :black
         |title $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def title $ {} (:font-family ui/font-fancy) (:font-size 18) (:font-weight 100)
-              :color $ hsl 0 0 80
+            defstyle title $ {}
+              "\"&" $ {} (:font-family ui/font-fancy) (:font-size 18) (:font-weight 100)
+                :color $ hsl 0 0 80
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.style $ :require (respo-ui.core :as ui)

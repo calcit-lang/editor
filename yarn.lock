@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@calcit/procs@^0.9.6":
-  version "0.9.6"
-  resolved "https://registry.yarnpkg.com/@calcit/procs/-/procs-0.9.6.tgz#fc03deb657bcb365b8db8ed4e7a765149726fc45"
-  integrity sha512-zHnyI6dkhNuNBQtA22QsnbQboYCBErtHZAY2WHlMOjC4KmT5SxkFYFYbSJpzm7IZs8TBE7dx1mQfXhrUwXYexA==
+"@calcit/procs@^0.9.7":
+  version "0.9.7"
+  resolved "https://registry.yarnpkg.com/@calcit/procs/-/procs-0.9.7.tgz#07f681b49a81ae50cbd58e4b9116ede1c74fc98d"
+  integrity sha512-+xnHnXA+ghnoKBz+sw59O2qkHGCFpk6gzp9FebvZgjAf5iHE9B2EXOL7B4FkxCwpYZA/VdYjUp6s6O/alxuXvA==
   dependencies:
     "@calcit/ternary-tree" "0.0.24"
     "@cirru/parser.ts" "^0.0.6"
@@ -337,9 +337,9 @@ copy-text-to-clipboard@^3.2.0:
   integrity sha512-RnJFp1XR/LOBDckxTib5Qjr/PMfkatD0MUCQgdpqS8MdKiNUzBjAQBEN6oUy+jW7LI93BBG3DtMB2KOOKpGs2Q==
 
 core-js@^3.1.3:
-  version "3.39.0"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.39.0.tgz#57f7647f4d2d030c32a72ea23a0555b2eaa30f83"
-  integrity sha512-raM0ew0/jJUqkJ0E6e8UDtl+y/7ktFivgWvqw8dNSQeNWoSDLvQ1H/RN3aPXB9tBd4/FhyR4RDPGhsNIMsAn7g==
+  version "3.40.0"
+  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.40.0.tgz#2773f6b06877d8eda102fc42f828176437062476"
+  integrity sha512-7vsMc/Lty6AGnn7uFpYT56QesI5D2Y/UkgKounk87OP9Z2H9Z8kj6jzcSGAxFmUtDOS0ntK6lbQz+Nsa0Jj6mQ==
 
 dayjs@^1.11.13:
   version "1.11.13"
