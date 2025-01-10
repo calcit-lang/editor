@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.3)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.4)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -441,7 +441,7 @@
           :code $ quote
             defcomp comp-changed-files (states changed-files)
               div
-                {} $ :style style-column
+                {} $ :class-name style-column
                 <> |Changes style/title
                 list-> ({})
                   -> changed-files (.to-list)
@@ -449,7 +449,7 @@
                       let[] (k info) pair $ [] k (comp-changed-info info k)
                 if (empty? changed-files)
                   div
-                    {} $ :style style-nothing
+                    {} $ :class-name (str-spaced css/font-fancy style-nothing)
                     <> "|No changes"
                   div ({})
                     a $ {} (:inner-text |Save) (:class-name style/button)
@@ -459,16 +459,20 @@
                         d! $ :: :states/clear
         |style-column $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-column $ {} (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
+            defstyle style-column $ {}
+              "\"&" $ {} (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
         |style-nothing $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-nothing $ {} (:font-family "|Josefin Sans")
-              :color $ hsl 0 0 100 0.5
+            defstyle style-nothing $ {}
+              "\"&" $ {}
+                :color $ hsl 0 0 100 0.5
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.changed-files $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
+            respo.css :refer $ defstyle
             respo.core :refer $ defcomp list-> <> span div pre input button a
             respo.comp.space :refer $ =<
             app.client-util :as util
@@ -1015,7 +1019,8 @@
                                 :forced? true
                                 :args $ .slice tree 1
                               d! :notify/push-message $ [] :warn "\"Can not create a function!"
-                          do (d! :manual-state/abstract nil)
+                          do
+                            d! $ :: :manual-state/abstract
                             js/setTimeout $ fn ()
                               let
                                   el $ js/document.querySelector |.el-abstract
@@ -1069,8 +1074,8 @@
                         d! cursor $ :value e
                     =< nil 8
                     div
-                      {} $ :style
-                        merge ui/row $ {} (:justify-content :flex-end)
+                      {} (:class-name css/row)
+                        :style $ {} (:justify-content :flex-end)
                       button $ {} (:inner-text "\"Submit") (:class-name style/button)
                         :on-click $ fn (e d!)
                           if
@@ -1083,6 +1088,7 @@
           ns app.comp.file-replacer $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
+            respo-ui.css :as css
             respo.core :refer $ defcomp >> <> span div pre input button a textarea
             respo.comp.inspect :refer $ comp-inspect
             respo.comp.space :refer $ =<
@@ -2186,7 +2192,7 @@
                 div
                   {} $ :class-name (str-spaced css/column style-list)
                   div
-                    {} $ :style style/title
+                    {} $ :class-name style/title
                     <> |Namespaces
                     =< 8 nil
                     comp-icon :plus
@@ -2266,7 +2272,7 @@
                   ns-highlights $ map highlights
                     fn (x) (nth x 1)
                 div
-                  {} $ :class-name (str-spaced css/flex css/row sytle-container)
+                  {} $ :class-name (str-spaced css/flex css/row style-container)
                   comp-namespace-list (>> states :ns) (:ns-dict router-data) selected-ns ns-highlights
                   =< 24 nil
                   if (some? selected-ns)
@@ -2285,11 +2291,15 @@
         |render-empty $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-empty () $ div
-              {} $ :style
-                {} (:width 280) (:font-family ui/font-fancy)
+              {} (:class-name css/font-fancy)
+                :style $ {} (:width 280)
                   :color $ hsl 0 0 100 0.5
                   :padding "\"60px 0"
               <> |Empty nil
+        |style-container $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-container $ {}
+              "\"&" $ {} (:padding "|0px 16px")
         |style-def $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-def $ {}
@@ -2357,10 +2367,6 @@
               "\"&:hover" $ {}
                 :color $ hsl 0 50 90
                 :transform "\"scale(1.1)"
-        |sytle-container $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defstyle sytle-container $ {}
-              "\"&" $ {} (:padding "|0px 16px")
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.page-files $ :require
@@ -2396,17 +2402,16 @@
                             get-in member $ [] :user :nickname
                             , |Guest
                         [] k $ div
-                          {} (:style style-row)
-                            :on $ {}
-                              :click $ on-watch k
+                          {} (:class-name style-row)
+                            :on-click $ on-watch k
                           <>
                             str member-name $ if (= k session-id) "| (yourself)" "\""
                             , style-name
                           =< 32 nil
-                          <> (:page member) style-page
+                          <> (:page member) style-page-name
                           =< 32 nil
                           let
-                              bookmark $ Bookmark (:bookmark member)
+                              bookmark $ :bookmark member
                             if (some? bookmark)
                               <>
                                 tag-match bookmark
@@ -2441,18 +2446,23 @@
         |style-name $ %{} :CodeEntry (:doc |)
           :code $ quote
             def style-name $ {} (:min-width 160) (:display :inline-block)
-        |style-page $ %{} :CodeEntry (:doc |)
+        |style-page-name $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-page $ {} (:min-width 160) (:display :inline-block)
+            defstyle style-page-name $ {}
+              "\"&" $ {} (:min-width 160) (:display :inline-block)
         |style-row $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-row $ {} (:cursor :pointer)
+            defstyle style-row $ {}
+              "\"&" $ {} (:cursor :pointer) (:padding "\"0 8px") (:border-radius "\"4px") (:transition-duration "\"300ms")
+              "\"&:hover" $ {}
+                :background-color $ hsl 0 0 100 0.14
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.page-members $ :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
+            respo.css :refer $ defstyle
             respo.core :refer $ defcomp <> list-> span div a
             respo.comp.space :refer $ =<
             "\"url-parse" :default url-parse
@@ -2634,7 +2644,8 @@
                       button $ {} (:inner-text "|Log out") (:class-name style/button) (:on-click on-log-out)
                     .render rename-plugin
                   div
-                    {} $ :class-name css/flex
+                    {} (:class-name css/flex)
+                      :style $ {} (:flex 3)
                     comp-page-members (:members router-data) sid
         |on-log-out $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2825,15 +2836,11 @@
                                 :def ns' def'
                                 div
                                   {}
-                                    :class-name $ str-spaced |hoverable style-candidate
-                                    :style $ if selected? style-highlight
+                                    :class-name $ str-spaced |hoverable style-candidate (if selected? style-highlight)
                                     :on-click $ on-select bookmark cursor
                                   <> def' nil
                                   =< 8 nil
-                                  <> ns' $ merge
-                                    {} (:font-size 12)
-                                      :color $ hsl 0 0 40
-                                    if selected? style-highlight
+                                  <> ns' $ str-spaced style-candidate-ns (if selected? style-highlight)
                   div
                     {} (:class-name css/column)
                       :style $ {} (:width 320) (:height "\"100%")
@@ -2851,9 +2858,7 @@
                                   = idx $ :selection state
                               div
                                 {}
-                                  :class-name $ str-spaced |hoverable css/row-middle style-candidate
-                                  :style $ if selected? style-highlight
-                                    {} $ :opacity 0.7
+                                  :class-name $ str-spaced |hoverable css/row-middle style-candidate (if selected? style-highlight)
                                   :on-click $ on-select bookmark cursor
                                 span ({})
                                   <>
@@ -2861,8 +2866,7 @@
                                       .join-str (butlast pieces) "\"."
                                       , "\"."
                                     {} $ :color (hsl 0 0 50)
-                                  <> (last pieces)
-                                    {} $ :color (hsl 0 0 80)
+                                  <> (last pieces) style-last-piece
                                 =< 8 nil
                                 span $ {} (:inner-text "\"import") (:class-name style-use-ns)
                                   :on-click $ fn (e d!)
@@ -2954,9 +2958,20 @@
               "\"&" $ {} (:padding "|0 8px")
                 :color $ hsl 0 0 100 0.6
                 :cursor :pointer
+        |style-candidate-ns $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-candidate-ns $ {}
+              "\"&" $ {} (:font-size 12)
+                :color $ hsl 0 0 40
         |style-highlight $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def style-highlight $ {} (:color :white) (:opacity 1)
+            defstyle style-highlight $ {}
+              "\"&" $ {} (:color :white) (:opacity 1)
+        |style-last-piece $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-last-piece $ {}
+              "\"&" $ {}
+                :color $ hsl 0 0 80
         |style-use-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-use-ns $ {}
@@ -3684,8 +3699,9 @@
               :color :black
         |title $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def title $ {} (:font-family ui/font-fancy) (:font-size 18) (:font-weight 100)
-              :color $ hsl 0 0 80
+            defstyle title $ {}
+              "\"&" $ {} (:font-family ui/font-fancy) (:font-size 18) (:font-weight 100)
+                :color $ hsl 0 0 80
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.style $ :require (respo-ui.core :as ui)
@@ -6097,7 +6113,8 @@
                 .!then $ fn (npm-version)
                   println $ if (= version npm-version) (str "\"Running latest version " version)
                     .!yellow chalk $ str "\"Update is available tagged " npm-version "\", current one is " version
-                .!catch $ fn (e) (js/console.error "\"failed to request version:" e)
+                .!catch $ fn (e)
+                  js/console.error $ .!yellow chalk "\"Failed to request version:" (.-message e)
         |get-cli-configs! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn get-cli-configs! () $ {} (:op js/process.env.op)
