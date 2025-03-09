@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.4)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.5)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -959,6 +959,7 @@
                     event $ :original-event e
                     shift? $ .-shiftKey event
                     meta? $ or (.-metaKey event) (.-ctrlKey event)
+                    alt? $ .-altKey event
                     code $ :key-code e
                   cond
                       and meta? $ = code keycode/enter
@@ -986,6 +987,10 @@
                     (= code keycode/down)
                       do
                         d! :writer/go-down $ {} (:tail? shift?)
+                        .!preventDefault event
+                    (and meta? alt? (= code keycode/left))
+                      do
+                        d! $ :: :ir/swap-left
                         .!preventDefault event
                     (= code keycode/left)
                       do (d! :writer/go-left nil) (.!preventDefault event)
@@ -1431,6 +1436,7 @@
                     code $ :key-code e
                     shift? $ .-shiftKey event
                     meta? $ or (.-metaKey event) (.-ctrlKey event)
+                    alt? $ .-altKey event
                     selected? $ not= (-> event .-target .-selectionStart) (-> event .-target .-selectionEnd)
                     text $ if
                       > (:at state) (:at leaf)
@@ -1457,6 +1463,10 @@
                         if
                           not $ empty? coord
                           d! :writer/go-up nil
+                        .!preventDefault event
+                    (and meta? alt? (= code keycode/left))
+                      do
+                        d! $ :: :ir/swap-left
                         .!preventDefault event
                     (and (not selected?) (= code keycode/left))
                       if
@@ -4266,6 +4276,7 @@
                 (:ir/delete-node op-data) (ir/delete-node db op-data sid op-id op-time)
                 (:ir/leaf-after op-data) (ir/leaf-after db op-data sid op-id op-time)
                 (:ir/leaf-before op-data) (ir/leaf-before db op-data sid op-id op-time)
+                (:ir/swap-left) (ir/swap-left db sid op-id op-time)
                 (:ir/expr-before op-data) (ir/expr-before db op-data sid op-id op-time)
                 (:ir/expr-after op-data) (ir/expr-after db op-data sid op-id op-time)
                 (:ir/expr-replace op-data) (ir/expr-replace db op-data sid op-id op-time)
@@ -5106,6 +5117,37 @@
                   ns-text op-data
                 assoc-in db ([] :files ns-text)
                   get-in db $ [] :saved-files ns-text
+        |swap-left $ %{} :CodeEntry (:doc "|say we have `a b`, focus at `b`, `:swap-left` moves `b` to left, gets `b a`, and focus at `a` now. internally, path to `a` is maintained.")
+          :code $ quote
+            defn swap-left (db session-id op-id op-time)
+              let
+                  writer $ to-writer db session-id
+                  bookmark $ to-bookmark writer
+                  parent-bookmark $ .update-focus bookmark butlast
+                  data-path $ .to-path parent-bookmark
+                  target-expr $ get-in db data-path
+                  leading-key $ key-nth (:data target-expr) 0
+                  operating-key $ last (.get-focus bookmark)
+                if
+                  and (some? leading-key) (not= leading-key operating-key)
+                  let
+                      ks $ .sort-by
+                        .to-list $ keys (:data target-expr)
+                        , identity
+                      n $ .index-of ks operating-key
+                      left-key $ key-nth (:data target-expr) (dec n)
+                    -> db
+                      update-in (conj data-path :data)
+                        fn (expr-data)
+                          -> expr-data (dissoc operating-key)
+                            assoc-before left-key $ get expr-data operating-key
+                      update-in
+                        [] :sessions session-id :writer :stack $ :pointer writer
+                        fn (b)
+                          .update-focus (Bookmark b)
+                            fn (focus)
+                              conj (butlast focus) left-key
+                  , db
         |toggle-comment $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn toggle-comment (db op-data sid op-id op-time)
@@ -5217,7 +5259,7 @@
           ns app.updater.ir $ :require (app.schema :as schema) (bisection-key.core :as bisection)
             app.util :refer $ expr? leaf? bookmark->path to-writer to-bookmark to-keys cirru->tree cirru->file
             app.util.list :refer $ dissoc-idx
-            bisection-key.util :refer $ key-before key-after key-prepend key-append assoc-prepend key-nth assoc-nth val-nth get-min-key
+            bisection-key.util :refer $ key-before key-after key-prepend key-append assoc-prepend key-nth assoc-nth val-nth get-min-key assoc-before
             app.util :refer $ push-warning expr? leaf?
             app.bookmark :refer $ Bookmark %bookmark
     |app.updater.notify $ %{} :FileEntry
@@ -5884,7 +5926,7 @@
             defn to-keys (target-expr)
               sort $ .to-list
                 keys $ :data target-expr
-        |to-writer $ %{} :CodeEntry (:doc |)
+        |to-writer $ %{} :CodeEntry (:doc "|get writer from db, with current session")
           :code $ quote
             defn to-writer (db session-id)
               get-in db $ [] :sessions session-id :writer

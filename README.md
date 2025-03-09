@@ -43,7 +43,7 @@ You may try with my project templates:
 
 or even clone current repo for trying out.
 
-Don't forget to check out [keyboard shortcuts](https://github.com/Cirru/calcit-editor/wiki/Keyboard-Shortcuts). My old [introduction videos](https://www.youtube.com/watch?v=u5Eb_6KYGsA&t) can be found on YouTube.
+Don't forget to check out [keyboard shortcuts](https://github.com/calcit-lang/editor/wiki/Keyboard-Shortcuts). My old [introduction videos](https://www.youtube.com/watch?v=u5Eb_6KYGsA&t) can be found on YouTube.
 
 ### Options
 
