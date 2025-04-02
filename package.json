@@ -1,6 +1,6 @@
 {
   "name": "@calcit/editor",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "Structural Editor for Calcit Language",
   "bin": {
     "ct": "server.mjs"
@@ -24,15 +24,15 @@
     "copy-text-to-clipboard": "^3.2.0",
     "feather-icons": "^4.29.2",
     "url-parse": "^1.5.10",
-    "vite": "^6.0.7"
+    "vite": "^6.2.1"
   },
   "dependencies": {
-    "@calcit/procs": "^0.9.7",
+    "@calcit/procs": "^0.9.8",
     "chalk": "^5.4.1",
     "dayjs": "^1.11.13",
     "gaze": "^1.1.3",
     "latest-version": "^9.0.0",
-    "nanoid": "^5.0.9",
-    "ws": "^8.18.0"
+    "nanoid": "^5.1.3",
+    "ws": "^8.18.1"
   }
 }
