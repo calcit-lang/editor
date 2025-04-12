@@ -1,6 +1,6 @@
 
 {}
-  :calcit-version |0.9.8
+  :calcit-version |0.9.9
   :dependencies $ {}
     |calcit-lang/lilac |main
     |calcit-lang/memof |main
@@ -8,7 +8,7 @@
     |Respo/respo-ui.calcit |main
     |Respo/respo-markdown.calcit |0.4.8
     |calcit-lang/recollect |main
-    |calcit-lang/bisection-key |main
+    |calcit-lang/bisection-key |0.0.16
     |Respo/respo-message.calcit |main
     |Respo/respo-feather.calcit |main
     |Respo/alerts.calcit |0.10.2
