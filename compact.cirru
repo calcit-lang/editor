@@ -453,9 +453,11 @@
                     <> "|No changes"
                   div ({})
                     a $ {} (:inner-text |Save) (:class-name style/button)
-                      :on-click $ fn (e d!) (d! :effect/save-files nil)
+                      :on-click $ fn (e d!)
+                        d! $ :: :effect/save-files
                     a $ {} (:inner-text |Reset) (:class-name style/button)
-                      :on-click $ fn (e d!) (d! :ir/reset-files nil)
+                      :on-click $ fn (e d!)
+                        d! $ :: :ir/reset-files
                         d! $ :: :states/clear
         |style-column $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -982,7 +984,7 @@
                       do
                         if
                           not $ empty? coord
-                          d! :writer/go-up nil
+                          d! :writer/go-up
                         .!preventDefault event
                     (= code keycode/down)
                       do
@@ -993,9 +995,9 @@
                         d! $ :: :ir/swap-left
                         .!preventDefault event
                     (= code keycode/left)
-                      do (d! :writer/go-left nil) (.!preventDefault event)
+                      do (d! :writer/go-left) (.!preventDefault event)
                     (= code keycode/right)
-                      do (d! :writer/go-right nil) (.!preventDefault event)
+                      do (d! :writer/go-right) (.!preventDefault event)
                     (and meta? (= code keycode/c))
                       do-copy-logics! d!
                         format-cirru $ [] (tree->cirru expr)
@@ -1032,9 +1034,9 @@
                                 if (some? el) (.!focus el)
                         .!preventDefault event
                     (and meta? (= code keycode/slash) (not shift?))
-                      d! :ir/toggle-comment nil
+                      d! $ :: :ir/toggle-comment
                     (and picker-mode? (= code keycode/escape))
-                      d! :writer/picker-mode nil
+                      d! $ :: :writer/picker-mode
                     true $ do
                       ; println |Keydown $ :key-code e
                       on-window-keydown event d! $ {} (:name :editor)
@@ -1462,7 +1464,7 @@
                       do
                         if
                           not $ empty? coord
-                          d! :writer/go-up nil
+                          d! $ :: :writer/go-up
                         .!preventDefault event
                     (and meta? alt? (= code keycode/left))
                       do
@@ -1471,13 +1473,17 @@
                     (and (not selected?) (= code keycode/left))
                       if
                         = 0 $ -> event .-target .-selectionStart
-                        do (d! :writer/go-left nil) (.!preventDefault event)
+                        do
+                          d! $ :: :writer/go-left
+                          .!preventDefault event
                     (and meta? (= code keycode/b))
                       d! :analyze/peek-def $ :text leaf
                     (and (not selected?) (= code keycode/right))
                       if
                         = text-length $ -> event .-target .-selectionEnd
-                        do (d! :writer/go-right nil) (.!preventDefault event)
+                        do
+                          d! $ :: :writer/go-right
+                          .!preventDefault event
                     (and meta? (= code keycode/c) (= (.-selectionStart (.-target event)) (.-selectionEnd (.-target event))))
                       do-copy-logics! d! (tree->cirru leaf) "\"Copied!"
                     (and meta? shift? (= code keycode/v))
@@ -2548,7 +2554,8 @@
                   comp-icon :x
                     {} (:font-size 18) (:cursor :pointer) (:position :absolute) (:top 4) (:right 4)
                       :color $ hsl 200 80 70 0.6
-                    fn (e d!) (d! :writer/picker-mode nil)
+                    fn (e d!)
+                      d! $ :: :writer/picker-mode
                   list->
                     {} $ :class-name style-list-container
                     -> imported-names (.to-list)
@@ -2901,7 +2908,9 @@
           :code $ quote
             defn on-input (state cursor)
               fn (e d!)
-                d! cursor $ assoc state :query (:value e)
+                d! cursor $ -> state
+                  assoc :query $ :value e
+                  assoc :selection 0
         |on-keydown $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-keydown (state candidates cursor)
@@ -3534,7 +3543,7 @@
                   cli-configs $ get-cli-configs!
                 case-default (:op cli-configs)
                   do (start-server! configs) (check-version!)
-                    dispatch! (:: :analyze/refresh-usages-dict nil) "\"system"
+                    dispatch! (:: :analyze/refresh-usages-dict) "\"system"
                   "\"compile" $ compile-all-files! configs
                   "\"file-transform" $ transform-compact-to-calcit!
         |make-file-response $ %{} :CodeEntry (:doc |)
@@ -4249,10 +4258,10 @@
                 (:writer/select op-data) (writer/select db op-data sid op-id op-time)
                 (:writer/point-to op-data) (writer/point-to db op-data sid op-id op-time)
                 (:writer/focus op-data) (writer/focus db op-data sid op-id op-time)
-                (:writer/go-up op-data) (writer/go-up db op-data sid op-id op-time)
+                (:writer/go-up) (writer/go-up db sid op-id op-time)
                 (:writer/go-down op-data) (writer/go-down db op-data sid op-id op-time)
-                (:writer/go-left op-data) (writer/go-left db op-data sid op-id op-time)
-                (:writer/go-right op-data) (writer/go-right db op-data sid op-id op-time)
+                (:writer/go-left) (writer/go-left db sid op-id op-time)
+                (:writer/go-right) (writer/go-right db sid op-id op-time)
                 (:writer/remove-idx op-data) (writer/remove-idx db op-data sid op-id op-time)
                 (:writer/paste op-data) (writer/paste db op-data sid op-id op-time)
                 (:writer/save-files op-data) (writer/save-files db op-data sid op-id op-time)
@@ -4264,7 +4273,6 @@
                 (:writer/draft-ns op-data) (writer/draft-ns db op-data sid op-id op-time)
                 (:writer/hide-peek op-data) (writer/hide-peek db op-data sid op-id op-time)
                 (:writer/picker-mode) (writer/picker-mode db sid op-id op-time)
-                (:writer/picker-mode _nil) (writer/picker-mode db sid op-id op-time)
                 (:writer/pick-node op-data) (writer/pick-node db op-data sid op-id op-time)
                 (:writer/doc-set path docstring) (writer/doc-set db path docstring sid op-id op-time)
                 (:ir/add-ns op-data) (ir/add-ns db op-data sid op-id op-time)
@@ -4289,24 +4297,24 @@
                 (:ir/cp-ns op-data) (ir/cp-ns db op-data sid op-id op-time)
                 (:ir/mv-ns op-data) (ir/mv-ns db op-data sid op-id op-time)
                 (:ir/delete-entry op-data) (ir/delete-entry db op-data sid op-id op-time)
-                (:ir/reset-files op-data) (ir/reset-files db op-data sid op-id op-time)
+                (:ir/reset-files) (ir/reset-files db sid op-id op-time)
                 (:ir/reset-at op-data) (ir/reset-at db op-data sid op-id op-time)
                 (:ir/reset-ns op-data) (ir/reset-ns db op-data sid op-id op-time)
                 (:ir/draft-expr op-data) (ir/draft-expr db op-data sid op-id op-time)
                 (:ir/replace-file op-data) (ir/replace-file db op-data sid op-id op-time)
                 (:ir/file-config op-data) (ir/file-config db op-data sid op-id op-time)
                 (:ir/clone-ns op-data) (ir/clone-ns db op-data sid op-id op-time)
-                (:ir/toggle-comment op-data) (ir/toggle-comment db op-data sid op-id op-time)
+                (:ir/toggle-comment) (ir/toggle-comment db sid op-id op-time)
                 (:notify/push-message op-data) (notify/push-message db op-data sid op-id op-time)
                 (:notify/clear op-data) (notify/clear db op-data sid op-id op-time)
                 (:notify/broadcast op-data) (notify/broadcast db op-data sid op-id op-time)
                 (:analyze/goto-def op-data) (analyze/goto-def db op-data sid op-id op-time)
                 (:analyze/abstract-def op-data) (analyze/abstract-def db op-data sid op-id op-time)
                 (:analyze/peek-def op-data) (analyze/peek-def db op-data sid op-id op-time)
-                (:analyze/refresh-usages-dict op-data) (analyze/refresh-usages-dict db op-data sid op-id op-time)
+                (:analyze/refresh-usages-dict) (analyze/refresh-usages-dict db sid op-id op-time)
                 (:analyze/use-import-def target) (analyze/use-import-def db target sid op-id op-time)
                 (:watcher/file-change op-data) (watcher/file-change db op-data sid op-id op-time)
-                (:ping op-data) db
+                (:ping) db
                 (:configs/update op-data) (configs/update-configs db op-data sid op-id op-time)
                 (:configs/update-entries op-data) (configs/update-entries db op-data sid op-id op-time)
                 _ $ do (eprintln "|Unknown op:" op) db
@@ -4525,7 +4533,7 @@
                   warn $ str "|Cannot locate:" def-info
         |refresh-usages-dict $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn refresh-usages-dict (db op-data sid op-id op-time)
+            defn refresh-usages-dict (db sid op-id op-time)
               tag-match
                 parse-all-deps $ get-in db ([] :files)
                 (:deps deps-dict usages-dict)
@@ -5108,7 +5116,7 @@
                           get-in old-file $ [] :defs def'
         |reset-files $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn reset-files (db op-data session-id op-id op-time)
+            defn reset-files (db session-id op-id op-time)
               assoc db :files $ :saved-files db
         |reset-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -5150,7 +5158,7 @@
                   , db
         |toggle-comment $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn toggle-comment (db op-data sid op-id op-time)
+            defn toggle-comment (db sid op-id op-time)
               let
                   writer $ to-writer db sid
                   bookmark $ to-bookmark writer
@@ -5511,7 +5519,7 @@
                               get-min-key $ :data target-expr
         |go-left $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn go-left (db op-data session-id op-id op-time)
+            defn go-left (db session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                   bookmark $ Bookmark
@@ -5535,7 +5543,7 @@
                               if (= 0 idx) last-coord $ get child-keys (dec idx)
         |go-right $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn go-right (db op-data session-id op-id op-time)
+            defn go-right (db session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                   bookmark $ Bookmark
@@ -5561,7 +5569,7 @@
                                 , last-coord $ get child-keys (inc idx)
         |go-up $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn go-up (db op-data session-id op-id op-time)
+            defn go-up (db session-id op-id op-time)
               -> db $ update-in ([] :sessions session-id :writer)
                 fn (writer)
                   update-in writer
@@ -6267,7 +6275,7 @@
                     (and meta? (= code keycode/s))
                       do (.!preventDefault event)
                         dispatch! $ :: :effect/save-files
-                        dispatch! $ :: :analyze/refresh-usages-dict nil
+                        dispatch! $ :: :analyze/refresh-usages-dict
                     (and meta? shift? (= code keycode/f))
                       dispatch! $ :: :router/change (:: :files)
                     (and meta? (not shift?) (= code keycode/period))
