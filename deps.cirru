@@ -9,6 +9,7 @@
     |Respo/respo-markdown.calcit |0.4.8
     |calcit-lang/recollect |main
     |calcit-lang/bisection-key |0.0.16
+    |calcit-lang/gen-code |0.0.2
     |Respo/respo-message.calcit |main
     |Respo/respo-feather.calcit |main
     |Respo/alerts.calcit |0.10.2

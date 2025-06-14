@@ -4,7 +4,7 @@
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
-      :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
+      :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/ |gen-code/
   :files $ {}
     |app.bookmark $ %{} :FileEntry
       :defs $ {}
@@ -1106,6 +1106,56 @@
             app.style :as style
             app.comp.modal :refer $ comp-modal
             app.util :refer $ file->cirru
+    |app.comp.gen-code-box $ %{} :FileEntry
+      :defs $ {}
+        |comp-gen-code-box $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn comp-gen-code-box (states expr focus close-modal!)
+              let
+                  cursor $ :cursor states
+                comp-modal
+                  fn (d!) (d! cursor nil) (close-modal! d!)
+                  let
+                      path $ -> focus
+                        mapcat $ fn (x) ([] :data x)
+                      node $ get-in expr path
+                      missing? $ nil? node
+                      an-expr? $ expr? node
+                    if missing?
+                      span $ {} (:class-name |) (:inner-text "|Does not edit expression!")
+                        :on-click $ fn (e d!) (close-modal! d!)
+                      let
+                          state $ or (:data states)
+                            if an-expr?
+                              format-cirru $ [] (tree->cirru node)
+                              :text node
+                        div
+                          {} $ :class-name (str-spaced css/column style-panel)
+                          comp-gen-code (>> states :gen-code)
+                            fn () $ str |demo
+                            fn (code d!)
+                              d! :ir/draft-expr $ first (parse-cirru-list code)
+                              do (d! cursor nil) (close-modal! d!)
+        |style-panel $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-panel $ {}
+              "\"&" $ {} (:width 600)
+                :background-color $ hsl 0 0 100
+                :border-radius "\"6px"
+      :ns $ %{} :CodeEntry (:doc |)
+        :code $ quote
+          ns app.comp.gen-code-box $ :require
+            respo.util.format :refer $ hsl
+            respo-ui.core :as ui
+            respo-ui.css :as css
+            respo.core :refer $ defcomp <> >> span div textarea pre button a
+            respo.css :refer $ defstyle
+            respo.comp.space :refer $ =<
+            app.comp.modal :refer $ comp-modal
+            app.style :as style
+            app.util :refer $ tree->cirru now! expr?
+            app.keycode :as keycode
+            gen-code.core :refer $ comp-gen-code
     |app.comp.graph $ %{} :FileEntry
       :defs $ {}
         |comp-deps-graph $ %{} :CodeEntry (:doc |)
@@ -1725,6 +1775,8 @@
                     d! cursor $ assoc state :draft-box? false
                   close-abstract! $ fn (d!)
                     d! cursor $ assoc state :abstract? false
+                  close-gen-code! $ fn (d!)
+                    d! cursor $ assoc state :gen-code? false
                 div
                   {} $ :class-name css-page-editor
                   if (empty? stack)
@@ -1773,6 +1825,8 @@
                       comp-status-bar cursor state states router-data bookmark theme
                       if (:draft-box? state)
                         comp-draft-box (>> states :draft-box) expr focus close-draft-box!
+                      if (:gen-code? state)
+                        comp-gen-code-box (>> states :gen-code) expr focus close-gen-code!
                       if (:abstract? state)
                         comp-abstract (>> states :abstract) close-abstract!
                       ; comp-inspect "\"Expr" router-data style/inspector
@@ -1857,6 +1911,10 @@
                     span $ {} (:inner-text |Draft-box)
                       :class-name $ str-spaced css/font-fancy style-link
                       :on-click $ on-draft-box state cursor
+                    span $ {} (:inner-text |Gen-code)
+                      :class-name $ str-spaced css/font-fancy style-link
+                      :on-click $ fn (e d!)
+                        d! cursor $ update state :gen-code? not
                     span $ {} (:inner-text |Exporting)
                       :class-name $ str-spaced css/font-fancy style-link
                       :on-click $ on-path-gen! bookmark
@@ -1950,7 +2008,7 @@
                   .!scrollIntoViewIfNeeded target
         |initial-state $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def initial-state $ {} (:draft-box? false)
+            def initial-state $ {} (:draft-box? false) (:gen-code? false)
         |on-draft-box $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-draft-box (state cursor)
@@ -2117,6 +2175,7 @@
             app.comp.replace-name :refer $ use-replace-name-modal
             app.comp.picker-notice :refer $ comp-picker-notice
             respo-md.comp.md :refer $ comp-md-block
+            app.comp.gen-code-box :refer $ comp-gen-code-box
     |app.comp.page-files $ %{} :FileEntry
       :defs $ {}
         |comp-file $ %{} :CodeEntry (:doc |)

@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@calcit/procs": "^0.9.13",
+    "@google/genai": "^1.5.1",
     "chalk": "^5.4.1",
     "dayjs": "^1.11.13",
     "gaze": "^1.1.3",
