@@ -984,7 +984,7 @@
                       do
                         if
                           not $ empty? coord
-                          d! :writer/go-up
+                          d! $ :: :writer/go-up
                         .!preventDefault event
                     (= code keycode/down)
                       do
@@ -995,9 +995,13 @@
                         d! $ :: :ir/swap-left
                         .!preventDefault event
                     (= code keycode/left)
-                      do (d! :writer/go-left) (.!preventDefault event)
+                      do
+                        d! $ :: :writer/go-left
+                        .!preventDefault event
                     (= code keycode/right)
-                      do (d! :writer/go-right) (.!preventDefault event)
+                      do
+                        d! $ :: :writer/go-right
+                        .!preventDefault event
                     (and meta? (= code keycode/c))
                       do-copy-logics! d!
                         format-cirru $ [] (tree->cirru expr)
