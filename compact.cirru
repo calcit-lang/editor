@@ -1108,45 +1108,69 @@
             app.util :refer $ file->cirru
     |app.comp.gen-code-box $ %{} :FileEntry
       :defs $ {}
-        |comp-gen-code-box $ %{} :CodeEntry (:doc |)
+        |%gen-code-box-action $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn comp-gen-code-box (states expr focus close-modal!)
-              let
-                  cursor $ :cursor states
-                  path $ -> focus
-                    mapcat $ fn (x) ([] :data x)
-                  node $ get-in expr path
-                comp-modal
-                  fn (d!) (d! cursor nil) (close-modal! d!)
-                  let
-                      path $ -> focus
-                        mapcat $ fn (x) ([] :data x)
-                      node $ get-in expr path
-                      missing? $ nil? node
-                      an-expr? $ expr? node
-                    if missing?
-                      span $ {} (:class-name |) (:inner-text "|Does not edit expression!")
-                        :on-click $ fn (e d!) (close-modal! d!)
-                      let
-                          state $ or (:data states)
-                            if an-expr?
-                              format-cirru $ [] (tree->cirru node)
-                              :text node
-                        div
-                          {} $ :class-name (str-spaced css/column style-panel)
-                          comp-gen-code (>> states :gen-code)
-                            fn () $ format-cirru
-                              [] $ tree->cirru node
-                            fn (code d!)
-                              d! :ir/draft-expr $ first (parse-cirru-list code)
-                              d! cursor nil
-                              close-modal! d!
+            defrecord! %gen-code-box-action
+              :render $ fn (self)
+                tag-match self $ 
+                  :plugin render open reset-state
+                  render
+              :open $ fn (self d!)
+                tag-match self $ 
+                  :plugin render open reset-state
+                  open d!
+              :reset-state $ fn (self d!)
+                tag-match self $ 
+                  :plugin render open reset-state
+                  reset-state d!
         |style-panel $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-panel $ {}
               "\"&" $ {} (:width 600)
                 :background-color $ hsl 0 0 100
                 :border-radius "\"6px"
+        |use-gen-code-box $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn use-gen-code-box (states expr focus)
+              let
+                  cursor $ :cursor states
+                  state $ either (:data states)
+                    {} $ :show? false
+                  path $ -> focus
+                    mapcat $ fn (x) ([] :data x)
+                  node $ get-in expr path
+                  close-modal! $ fn (d!)
+                    d! cursor $ assoc state :show? false
+                  plugin-code-gen $ use-gen-code (>> states :gen-code)
+                    fn () $ format-cirru
+                      [] $ tree->cirru node
+                    fn (code d!)
+                      d! :ir/draft-expr $ first (parse-cirru-list code)
+                      close-modal! d!
+                %:: %gen-code-box-action :plugin
+                  fn () $ if (:show? state)
+                    comp-modal
+                      fn (d!) (.reset-state plugin-code-gen d!) (close-modal! d!)
+                      let
+                          path $ -> focus
+                            mapcat $ fn (x) ([] :data x)
+                          node $ get-in expr path
+                          missing? $ nil? node
+                          an-expr? $ expr? node
+                        if missing?
+                          span $ {} (:class-name |) (:inner-text "|Does not edit expression!")
+                            :on-click $ fn (e d!) (close-modal! d!)
+                          let
+                              state $ or (:data states)
+                                if an-expr?
+                                  format-cirru $ [] (tree->cirru node)
+                                  :text node
+                            div
+                              {} $ :class-name (str-spaced css/column style-panel)
+                              .render plugin-code-gen
+                  fn (d!)
+                    d! cursor $ assoc state :show? true
+                  fn (d!) (.reset-state plugin-code-gen d!)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.comp.gen-code-box $ :require
@@ -1160,7 +1184,7 @@
             app.style :as style
             app.util :refer $ tree->cirru now! expr?
             app.keycode :as keycode
-            gen-code.core :refer $ comp-gen-code
+            gen-code.core :refer $ use-gen-code
     |app.comp.graph $ %{} :FileEntry
       :defs $ {}
         |comp-deps-graph $ %{} :CodeEntry (:doc |)
@@ -1623,6 +1647,7 @@
             defn on-input (state cursor k)
               fn (e dispatch!)
                 dispatch! cursor $ assoc state k (:value e)
+                {} (:name |Alice) (:age 30) (:is-active true) (:occupation "|Software Engineer")
         |on-submit $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-submit (username password signup?)
@@ -1780,8 +1805,7 @@
                     d! cursor $ assoc state :draft-box? false
                   close-abstract! $ fn (d!)
                     d! cursor $ assoc state :abstract? false
-                  close-gen-code! $ fn (d!)
-                    d! cursor $ assoc state :gen-code? false
+                  plugin-gen-code-box $ use-gen-code-box (>> states :gen-code) expr focus
                 div
                   {} $ :class-name css-page-editor
                   if (empty? stack)
@@ -1827,11 +1851,10 @@
                       let
                           peek-def $ :peek-def router-data
                         if (some? peek-def) (comp-peek-def peek-def)
-                      comp-status-bar cursor state states router-data bookmark theme
+                      comp-status-bar cursor state states router-data bookmark theme $ fn (d!) (.reset plugin-gen-code-box d!) (.open plugin-gen-code-box d!)
                       if (:draft-box? state)
                         comp-draft-box (>> states :draft-box) expr focus close-draft-box!
-                      if (:gen-code? state)
-                        comp-gen-code-box (>> states :gen-code) expr focus close-gen-code!
+                      .render plugin-gen-code-box
                       if (:abstract? state)
                         comp-abstract (>> states :abstract) close-abstract!
                       ; comp-inspect "\"Expr" router-data style/inspector
@@ -1848,7 +1871,7 @@
                       [] idx $ comp-bookmark bookmark idx (= idx pointer)
         |comp-status-bar $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-status-bar (cursor state states router-data bookmark theme)
+            defcomp comp-status-bar (cursor state states router-data bookmark theme open-gen-code-box)
               let
                   old-name $ tag-match bookmark
                       :def ns' def' f
@@ -1918,8 +1941,7 @@
                       :on-click $ on-draft-box state cursor
                     span $ {} (:inner-text |Gen-code)
                       :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ fn (e d!)
-                        d! cursor $ update state :gen-code? not
+                      :on-click $ fn (e d!) (open-gen-code-box d!)
                     span $ {} (:inner-text |Exporting)
                       :class-name $ str-spaced css/font-fancy style-link
                       :on-click $ on-path-gen! bookmark
@@ -2013,7 +2035,7 @@
                   .!scrollIntoViewIfNeeded target
         |initial-state $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def initial-state $ {} (:draft-box? false) (:gen-code? false)
+            def initial-state $ {} (:draft-box? false)
         |on-draft-box $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-draft-box (state cursor)
@@ -2180,7 +2202,7 @@
             app.comp.replace-name :refer $ use-replace-name-modal
             app.comp.picker-notice :refer $ comp-picker-notice
             respo-md.comp.md :refer $ comp-md-block
-            app.comp.gen-code-box :refer $ comp-gen-code-box
+            app.comp.gen-code-box :refer $ use-gen-code-box
     |app.comp.page-files $ %{} :FileEntry
       :defs $ {}
         |comp-file $ %{} :CodeEntry (:doc |)
