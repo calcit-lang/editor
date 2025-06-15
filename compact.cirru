@@ -1591,7 +1591,7 @@
                         str |https://apis.calcit-lang.org/?q= $ js/encodeURIComponent
                           last $ split (:text leaf) "\"/"
                     (and picker-mode? (= code keycode/escape))
-                      d! :writer/picker-mode nil
+                      d! $ :: :writer/picker-mode
                     true $ do (; println "|Keydown leaf" code)
                       on-window-keydown event d! $ {} (:name :editor)
       :ns $ %{} :CodeEntry (:doc |)
