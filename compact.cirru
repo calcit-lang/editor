@@ -1851,7 +1851,7 @@
                       let
                           peek-def $ :peek-def router-data
                         if (some? peek-def) (comp-peek-def peek-def)
-                      comp-status-bar cursor state states router-data bookmark theme $ fn (d!) (.reset plugin-gen-code-box d!) (.open plugin-gen-code-box d!)
+                      comp-status-bar cursor state states router-data bookmark theme $ fn (d!) (.reset-state plugin-gen-code-box d!) (.open plugin-gen-code-box d!)
                       if (:draft-box? state)
                         comp-draft-box (>> states :draft-box) expr focus close-draft-box!
                       .render plugin-gen-code-box
