@@ -1113,6 +1113,9 @@
             defn comp-gen-code-box (states expr focus close-modal!)
               let
                   cursor $ :cursor states
+                  path $ -> focus
+                    mapcat $ fn (x) ([] :data x)
+                  node $ get-in expr path
                 comp-modal
                   fn (d!) (d! cursor nil) (close-modal! d!)
                   let
@@ -1132,10 +1135,12 @@
                         div
                           {} $ :class-name (str-spaced css/column style-panel)
                           comp-gen-code (>> states :gen-code)
-                            fn () $ str |demo
+                            fn () $ format-cirru
+                              [] $ tree->cirru node
                             fn (code d!)
                               d! :ir/draft-expr $ first (parse-cirru-list code)
-                              do (d! cursor nil) (close-modal! d!)
+                              d! cursor nil
+                              close-modal! d!
         |style-panel $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-panel $ {}
