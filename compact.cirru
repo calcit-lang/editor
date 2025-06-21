@@ -1137,6 +1137,7 @@
                   state $ either (:data states)
                     {} $ :show? false
                   path $ -> focus
+                    either $ []
                     mapcat $ fn (x) ([] :data x)
                   node $ get-in expr path
                   close-modal! $ fn (d!)
