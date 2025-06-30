@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.7)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.8)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -44,6 +44,12 @@
                     :def ns' def' f
                     str ns' "\"/" def'
                   (:ns ns' f) (str ns' "\"/")
+              :get-parent $ fn (self)
+                tag-match self
+                    :def ns' def' f
+                    if (empty? f) nil $ %:: %bookmark :def ns' def' (butlast f)
+                  (:ns ns' f)
+                    if (empty? f) nil $ %:: %bookmark :ns ns' (butlast f)
         |Bookmark $ %{} :CodeEntry (:doc "|constructor for definition bookmarks, write `Bookmark $ :: :def ns' def' f` to initialize")
           :code $ quote
             defn Bookmark (b)
@@ -1041,6 +1047,8 @@
                       d! $ :: :ir/toggle-comment
                     (and picker-mode? (= code keycode/escape))
                       d! $ :: :writer/picker-mode
+                    (and meta? alt? (= code keycode/num-4))
+                      d! $ :: :ir/fold-to-end
                     true $ do
                       ; println |Keydown $ :key-code e
                       on-window-keydown event d! $ {} (:name :editor)
@@ -1593,6 +1601,8 @@
                           last $ split (:text leaf) "\"/"
                     (and picker-mode? (= code keycode/escape))
                       d! $ :: :writer/picker-mode
+                    (and meta? alt? (= code keycode/num-4))
+                      d! $ :: :ir/fold-to-end
                     true $ do (; println "|Keydown leaf" code)
                       on-window-keydown event d! $ {} (:name :editor)
       :ns $ %{} :CodeEntry (:doc |)
@@ -3277,6 +3287,8 @@
           :code $ quote (def k 75)
         |left $ %{} :CodeEntry (:doc |)
           :code $ quote (def left 37)
+        |num-4 $ %{} :CodeEntry (:doc |)
+          :code $ quote (def num-4 52)
         |o $ %{} :CodeEntry (:doc |)
           :code $ quote (def o 79)
         |p $ %{} :CodeEntry (:doc |)
@@ -4396,6 +4408,7 @@
                 (:ir/file-config op-data) (ir/file-config db op-data sid op-id op-time)
                 (:ir/clone-ns op-data) (ir/clone-ns db op-data sid op-id op-time)
                 (:ir/toggle-comment) (ir/toggle-comment db sid op-id op-time)
+                (:ir/fold-to-end) (ir/fold-to-end db sid op-id op-time)
                 (:notify/push-message op-data) (notify/push-message db op-data sid op-id op-time)
                 (:notify/clear op-data) (notify/clear db op-data sid op-id op-time)
                 (:notify/broadcast op-data) (notify/broadcast db op-data sid op-id op-time)
@@ -4992,6 +5005,30 @@
                   update-in db ([] :files ns-text :configs)
                     fn (configs) (merge configs op-data)
                   , db
+        |fold-to-end $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn fold-to-end (db session-id op-id op-time)
+              let-sugar
+                  writer $ get-in db ([] :sessions session-id :writer)
+                  ({} stack pointer) writer
+                  bookmark $ Bookmark (get stack pointer)
+                  focus $ .get-focus bookmark
+                  parent-bookmark $ .get-parent bookmark
+                  user-id $ get-in db ([] :sessions session-id :user-id)
+                if (nil? parent-bookmark)
+                  do (eprintln "\"does not work on root element") db
+                  let
+                      data-path $ .to-path parent-bookmark
+                      end-key $ last focus
+                    update-in db data-path $ fn (parent-node)
+                      let
+                          prior-data $ -> (:data parent-node)
+                            .filter-kv $ fn (k v) (< k end-key)
+                          boxed-data $ -> (:data parent-node)
+                            .filter-kv $ fn (k v) (>= k end-key)
+                          new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id) (:data boxed-data)
+                          new-parent-data $ -> prior-data (assoc end-key new-expr)
+                        %{} schema/CirruExpr (:at op-time) (:by user-id) (:data new-parent-data)
         |indent $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn indent (db session-id op-id op-time)
@@ -5287,7 +5324,7 @@
                           , 1
                         , expr
                   -> db
-                    update-in
+                    ; update-in
                       [] :sessions session-id :writer :stack $ :pointer writer
                       fn (b)
                         .update-focus (Bookmark b) butlast
