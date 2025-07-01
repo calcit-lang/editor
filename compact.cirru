@@ -1257,36 +1257,37 @@
                           :reference child-ns child-def
                           .starts-with? child-ns $ str pkg "\"."
                         _ false
+                  root? $ empty? footprints
+                  show-ns? $ and (not root?)
+                    not= that-ns $ get (last footprints) 1
+                  has-children? $ not (empty? internal-deps)
                 div
                   {} $ :class-name (str-spaced css/row-middle style-entry)
-                  if
-                    not $ empty? footprints
-                    span $ {}
-                      :class-name $ str-spaced css/font-code! style-def
-                      :id $ gen-def-id that-ns that-def
-                      :inner-text that-def
-                      :on-click $ fn (e d!)
-                        d! :writer/edit $ :: :def that-ns that-def
-                  if
-                    and
-                      not $ empty? footprints
-                      not= that-ns $ get (last footprints) 1
-                    <> that-ns style-ns
+                  if (not root?)
+                    div
+                      {} $ :class-name
+                        str-spaced style-def-ns $ if (and show-ns? has-children?) css/column
+                      span $ {}
+                        :class-name $ str-spaced css/font-code! style-def
+                        :id $ gen-def-id that-ns that-def
+                        :inner-text that-def
+                        :on-click $ fn (e d!)
+                          d! :writer/edit $ :: :def that-ns that-def
+                      if show-ns? $ <> that-ns
+                        str-spaced style-ns $ if has-children? nil style-ns-pad
                   if (includes? footprints entry)
                     div ({})
                       <> "\"Recur" $ str-spaced css/font-fancy style-recur
-                    if
-                      not $ empty? internal-deps
-                      list->
-                        {} $ :class-name style-deps-area
-                        -> internal-deps $ map
-                          fn (item)
-                            [] (str item)
-                              tag-match item
-                                  :reference child-ns child-def
-                                  memof1-call-by (str child-ns "\"/" child-def) comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
-                                _ $ div ({})
-                                  <> $ str "\"Unknown data: " item
+                    if has-children? $ list->
+                      {} $ :class-name style-deps-area
+                      -> internal-deps $ map
+                        fn (item)
+                          [] (str item)
+                            tag-match item
+                                :reference child-ns child-def
+                                memof1-call-by (str child-ns "\"/" child-def) comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
+                              _ $ div ({})
+                                <> $ str "\"Unknown data: " item
         |effect-navigate $ %{} :CodeEntry (:doc |)
           :code $ quote
             defeffect effect-navigate (bookmark) (action el at?)
@@ -1320,14 +1321,11 @@
             defstyle style-def $ {}
               "\"&" $ {} (:white-space :pre)
                 :color $ hsl 0 0 100
-                :position :sticky
-                :top 0
                 :cursor :pointer
-                :opacity 0.6
+                :line-height "\"20px"
                 ; :transition-duration "\"400ms"
                 ; :transition-property "\"background-color"
                 :border-radius "\"8px"
-              "\"&:hover" $ {} (:opacity 1)
         |style-def-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-def-entry $ {}
@@ -1335,15 +1333,20 @@
                 :color $ hsl 0 0 80
               "\"&:hover" $ {}
                 :color $ hsl 0 0 100
+        |style-def-ns $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-def-ns $ {}
+              "\"&" $ {} (:top 0) (:position :sticky) (:opacity 0.6) (:margin-right "\"12px")
+              "\"&:hover" $ {} (:opacity 1)
         |style-deps-area $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-deps-area $ {}
-              "\"&" $ {} (:max-height "\"96vh") (:margin-left 8) (:overflow :auto)
+              "\"&" $ {} (:max-height "\"96vh") (:overflow :auto)
                 :border-color $ hsl 0 0 100 0.3
                 :border-style :solid
                 :border-width "\"1px 0 0px 1px"
                 :border-radius "\"16px"
-                :padding "\"4px 0"
+                :padding "\"4px 0px 4px 0"
                 :transition "\"300ms"
                 :transition-property "\"border-color"
               "\"&:hover" $ {}
@@ -1360,8 +1363,14 @@
         |style-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-ns $ {}
-              "\"&" $ {} (:font-size 12) (:vertical-align :middle) (:margin-left 8) (:white-space :nowrap)
+              "\"&" $ {} (:font-size 12) (:vertical-align :middle) (; :margin-left 8) (:white-space :nowrap)
                 :color $ hsl 0 0 50
+                :line-height "\"12px"
+                :margin-bottom 4
+        |style-ns-pad $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-ns-pad $ {}
+              "\"&" $ {} (:margin-left 8)
         |style-recur $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-recur $ {}
