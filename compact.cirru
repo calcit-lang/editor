@@ -102,6 +102,9 @@
               tag-match op
                   :states cursor new-state
                   reset! *states $ assoc-in @*states (conj cursor :data) new-state
+                (:states-merge cursor state0 changes)
+                  reset! *states $ :states
+                    update-states-merge (&{} :states @*states) cursor state0 changes
                 (:states/clear)
                   reset! *states $ {}
                     :states $ {}
@@ -192,6 +195,7 @@
         :code $ quote
           ns app.client $ :require
             respo.core :refer $ render! clear-cache! *changes-logger
+            respo.cursor :refer $ update-states-merge
             app.comp.container :refer $ comp-container
             app.client-util :refer $ ws-host parse-query!
             app.util.dom :refer $ focus!
@@ -1825,7 +1829,7 @@
                     d! cursor $ assoc state :draft-box? false
                   close-abstract! $ fn (d!)
                     d! cursor $ assoc state :abstract? false
-                  plugin-gen-code-box $ use-gen-code-box (>> states :gen-code) expr focus
+                  plugin-gen-code-box $ use-gen-code-box (>> states :gen-code-plugin) expr focus
                 div
                   {} $ :class-name css-page-editor
                   if (empty? stack)
