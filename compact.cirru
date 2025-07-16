@@ -1754,7 +1754,7 @@
                   :on-click $ fn (e d!) (close-modal! d!)
                 div
                   {} $ :on-click
-                    fn (e d!) (println |nothing!)
+                    fn (e d!) (; println |nothing!)
                   , inner-tree
         |style-backdrop $ %{} :CodeEntry (:doc |)
           :code $ quote
