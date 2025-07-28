@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.8)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.9)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -6002,7 +6002,13 @@
                         [] ns-text def-text
                         split clean-text |/
                     {} (:method :as) (:key ns-text) (:def def-text)
-                  {} (:method :refer) (:key clean-text) (:def clean-text)
+                  let
+                      try-dot $ clean-text.!indexOf "\"."
+                    if (&>= try-dot 0)
+                      let
+                          obj $ clean-text.slice 0 try-dot
+                        {} (:method :refer) (:key obj) (:def obj)
+                      {} (:method :refer) (:key clean-text) (:def clean-text)
         |parse-deps $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn parse-deps (require-exprs)
