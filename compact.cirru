@@ -1,10 +1,10 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.6)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.9)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
-      :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/
+      :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/ |gen-code/
   :files $ {}
     |app.bookmark $ %{} :FileEntry
       :defs $ {}
@@ -44,6 +44,12 @@
                     :def ns' def' f
                     str ns' "\"/" def'
                   (:ns ns' f) (str ns' "\"/")
+              :get-parent $ fn (self)
+                tag-match self
+                    :def ns' def' f
+                    if (empty? f) nil $ %:: %bookmark :def ns' def' (butlast f)
+                  (:ns ns' f)
+                    if (empty? f) nil $ %:: %bookmark :ns ns' (butlast f)
         |Bookmark $ %{} :CodeEntry (:doc "|constructor for definition bookmarks, write `Bookmark $ :: :def ns' def' f` to initialize")
           :code $ quote
             defn Bookmark (b)
@@ -96,6 +102,9 @@
               tag-match op
                   :states cursor new-state
                   reset! *states $ assoc-in @*states (conj cursor :data) new-state
+                (:states-merge cursor state0 changes)
+                  reset! *states $ :states
+                    update-states-merge (&{} :states @*states) cursor state0 changes
                 (:states/clear)
                   reset! *states $ {}
                     :states $ {}
@@ -186,6 +195,7 @@
         :code $ quote
           ns app.client $ :require
             respo.core :refer $ render! clear-cache! *changes-logger
+            respo.cursor :refer $ update-states-merge
             app.comp.container :refer $ comp-container
             app.client-util :refer $ ws-host parse-query!
             app.util.dom :refer $ focus!
@@ -453,9 +463,11 @@
                     <> "|No changes"
                   div ({})
                     a $ {} (:inner-text |Save) (:class-name style/button)
-                      :on-click $ fn (e d!) (d! :effect/save-files nil)
+                      :on-click $ fn (e d!)
+                        d! $ :: :effect/save-files
                     a $ {} (:inner-text |Reset) (:class-name style/button)
-                      :on-click $ fn (e d!) (d! :ir/reset-files nil)
+                      :on-click $ fn (e d!)
+                        d! $ :: :ir/reset-files
                         d! $ :: :states/clear
         |style-column $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -982,7 +994,7 @@
                       do
                         if
                           not $ empty? coord
-                          d! :writer/go-up nil
+                          d! $ :: :writer/go-up
                         .!preventDefault event
                     (= code keycode/down)
                       do
@@ -993,9 +1005,13 @@
                         d! $ :: :ir/swap-left
                         .!preventDefault event
                     (= code keycode/left)
-                      do (d! :writer/go-left nil) (.!preventDefault event)
+                      do
+                        d! $ :: :writer/go-left
+                        .!preventDefault event
                     (= code keycode/right)
-                      do (d! :writer/go-right nil) (.!preventDefault event)
+                      do
+                        d! $ :: :writer/go-right
+                        .!preventDefault event
                     (and meta? (= code keycode/c))
                       do-copy-logics! d!
                         format-cirru $ [] (tree->cirru expr)
@@ -1032,9 +1048,11 @@
                                 if (some? el) (.!focus el)
                         .!preventDefault event
                     (and meta? (= code keycode/slash) (not shift?))
-                      d! :ir/toggle-comment nil
+                      d! $ :: :ir/toggle-comment
                     (and picker-mode? (= code keycode/escape))
-                      d! :writer/picker-mode nil
+                      d! $ :: :writer/picker-mode
+                    (and meta? alt? (= code keycode/num-4))
+                      d! $ :: :ir/fold-to-end
                     true $ do
                       ; println |Keydown $ :key-code e
                       on-window-keydown event d! $ {} (:name :editor)
@@ -1100,6 +1118,86 @@
             app.style :as style
             app.comp.modal :refer $ comp-modal
             app.util :refer $ file->cirru
+    |app.comp.gen-code-box $ %{} :FileEntry
+      :defs $ {}
+        |%gen-code-box-action $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defrecord! %gen-code-box-action
+              :render $ fn (self)
+                tag-match self $ 
+                  :plugin render open reset-state
+                  render
+              :open $ fn (self d!)
+                tag-match self $ 
+                  :plugin render open reset-state
+                  open d!
+              :reset-state $ fn (self d!)
+                tag-match self $ 
+                  :plugin render open reset-state
+                  reset-state d!
+        |style-panel $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-panel $ {}
+              "\"&" $ {} (:width 600)
+                :background-color $ hsl 0 0 100
+                :border-radius "\"6px"
+        |use-gen-code-box $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn use-gen-code-box (states expr focus)
+              let
+                  cursor $ :cursor states
+                  state $ either (:data states)
+                    {} $ :show? false
+                  path $ -> focus
+                    either $ []
+                    mapcat $ fn (x) ([] :data x)
+                  node $ get-in expr path
+                  close-modal! $ fn (d!)
+                    d! cursor $ assoc state :show? false
+                  plugin-code-gen $ use-gen-code (>> states :gen-code)
+                    fn () $ format-cirru
+                      [] $ tree->cirru node
+                    fn (code d!)
+                      d! :ir/draft-expr $ first (parse-cirru-list code)
+                      close-modal! d!
+                %:: %gen-code-box-action :plugin
+                  fn () $ if (:show? state)
+                    comp-modal
+                      fn (d!) (.reset-state plugin-code-gen d!) (close-modal! d!)
+                      let
+                          path $ -> focus
+                            mapcat $ fn (x) ([] :data x)
+                          node $ get-in expr path
+                          missing? $ nil? node
+                          an-expr? $ expr? node
+                        if missing?
+                          span $ {} (:class-name |) (:inner-text "|Does not edit expression!")
+                            :on-click $ fn (e d!) (close-modal! d!)
+                          let
+                              state $ or (:data states)
+                                if an-expr?
+                                  format-cirru $ [] (tree->cirru node)
+                                  :text node
+                            div
+                              {} $ :class-name (str-spaced css/column style-panel)
+                              .render plugin-code-gen
+                  fn (d!)
+                    d! cursor $ assoc state :show? true
+                  fn (d!) (.reset-state plugin-code-gen d!)
+      :ns $ %{} :CodeEntry (:doc |)
+        :code $ quote
+          ns app.comp.gen-code-box $ :require
+            respo.util.format :refer $ hsl
+            respo-ui.core :as ui
+            respo-ui.css :as css
+            respo.core :refer $ defcomp <> >> span div textarea pre button a
+            respo.css :refer $ defstyle
+            respo.comp.space :refer $ =<
+            app.comp.modal :refer $ comp-modal
+            app.style :as style
+            app.util :refer $ tree->cirru now! expr?
+            app.keycode :as keycode
+            gen-code.core :refer $ use-gen-code
     |app.comp.graph $ %{} :FileEntry
       :defs $ {}
         |comp-deps-graph $ %{} :CodeEntry (:doc |)
@@ -1163,36 +1261,37 @@
                           :reference child-ns child-def
                           .starts-with? child-ns $ str pkg "\"."
                         _ false
+                  root? $ empty? footprints
+                  show-ns? $ and (not root?)
+                    not= that-ns $ get (last footprints) 1
+                  has-children? $ not (empty? internal-deps)
                 div
                   {} $ :class-name (str-spaced css/row-middle style-entry)
-                  if
-                    not $ empty? footprints
-                    span $ {}
-                      :class-name $ str-spaced css/font-code! style-def
-                      :id $ gen-def-id that-ns that-def
-                      :inner-text that-def
-                      :on-click $ fn (e d!)
-                        d! :writer/edit $ :: :def that-ns that-def
-                  if
-                    and
-                      not $ empty? footprints
-                      not= that-ns $ get (last footprints) 1
-                    <> that-ns style-ns
+                  if (not root?)
+                    div
+                      {} $ :class-name
+                        str-spaced style-def-ns $ if (and show-ns? has-children?) css/column
+                      span $ {}
+                        :class-name $ str-spaced css/font-code! style-def
+                        :id $ gen-def-id that-ns that-def
+                        :inner-text that-def
+                        :on-click $ fn (e d!)
+                          d! :writer/edit $ :: :def that-ns that-def
+                      if show-ns? $ <> that-ns
+                        str-spaced style-ns $ if has-children? nil style-ns-pad
                   if (includes? footprints entry)
                     div ({})
                       <> "\"Recur" $ str-spaced css/font-fancy style-recur
-                    if
-                      not $ empty? internal-deps
-                      list->
-                        {} $ :class-name style-deps-area
-                        -> internal-deps $ map
-                          fn (item)
-                            [] (str item)
-                              tag-match item
-                                  :reference child-ns child-def
-                                  memof1-call-by (str child-ns "\"/" child-def) comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
-                                _ $ div ({})
-                                  <> $ str "\"Unknown data: " item
+                    if has-children? $ list->
+                      {} $ :class-name style-deps-area
+                      -> internal-deps $ map
+                        fn (item)
+                          [] (str item)
+                            tag-match item
+                                :reference child-ns child-def
+                                memof1-call-by (str child-ns "\"/" child-def) comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
+                              _ $ div ({})
+                                <> $ str "\"Unknown data: " item
         |effect-navigate $ %{} :CodeEntry (:doc |)
           :code $ quote
             defeffect effect-navigate (bookmark) (action el at?)
@@ -1226,14 +1325,11 @@
             defstyle style-def $ {}
               "\"&" $ {} (:white-space :pre)
                 :color $ hsl 0 0 100
-                :position :sticky
-                :top 0
                 :cursor :pointer
-                :opacity 0.6
+                :line-height "\"20px"
                 ; :transition-duration "\"400ms"
                 ; :transition-property "\"background-color"
                 :border-radius "\"8px"
-              "\"&:hover" $ {} (:opacity 1)
         |style-def-entry $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-def-entry $ {}
@@ -1241,15 +1337,20 @@
                 :color $ hsl 0 0 80
               "\"&:hover" $ {}
                 :color $ hsl 0 0 100
+        |style-def-ns $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-def-ns $ {}
+              "\"&" $ {} (:top 0) (:position :sticky) (:opacity 0.6) (:margin-right "\"12px")
+              "\"&:hover" $ {} (:opacity 1)
         |style-deps-area $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-deps-area $ {}
-              "\"&" $ {} (:max-height "\"96vh") (:margin-left 8) (:overflow :auto)
+              "\"&" $ {} (:max-height "\"96vh") (:overflow :auto)
                 :border-color $ hsl 0 0 100 0.3
                 :border-style :solid
                 :border-width "\"1px 0 0px 1px"
                 :border-radius "\"16px"
-                :padding "\"4px 0"
+                :padding "\"4px 0px 4px 0"
                 :transition "\"300ms"
                 :transition-property "\"border-color"
               "\"&:hover" $ {}
@@ -1266,8 +1367,14 @@
         |style-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-ns $ {}
-              "\"&" $ {} (:font-size 12) (:vertical-align :middle) (:margin-left 8) (:white-space :nowrap)
+              "\"&" $ {} (:font-size 12) (:vertical-align :middle) (; :margin-left 8) (:white-space :nowrap)
                 :color $ hsl 0 0 50
+                :line-height "\"12px"
+                :margin-bottom 4
+        |style-ns-pad $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-ns-pad $ {}
+              "\"&" $ {} (:margin-left 8)
         |style-recur $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-recur $ {}
@@ -1462,7 +1569,7 @@
                       do
                         if
                           not $ empty? coord
-                          d! :writer/go-up nil
+                          d! $ :: :writer/go-up
                         .!preventDefault event
                     (and meta? alt? (= code keycode/left))
                       do
@@ -1471,13 +1578,17 @@
                     (and (not selected?) (= code keycode/left))
                       if
                         = 0 $ -> event .-target .-selectionStart
-                        do (d! :writer/go-left nil) (.!preventDefault event)
+                        do
+                          d! $ :: :writer/go-left
+                          .!preventDefault event
                     (and meta? (= code keycode/b))
                       d! :analyze/peek-def $ :text leaf
                     (and (not selected?) (= code keycode/right))
                       if
                         = text-length $ -> event .-target .-selectionEnd
-                        do (d! :writer/go-right nil) (.!preventDefault event)
+                        do
+                          d! $ :: :writer/go-right
+                          .!preventDefault event
                     (and meta? (= code keycode/c) (= (.-selectionStart (.-target event)) (.-selectionEnd (.-target event))))
                       do-copy-logics! d! (tree->cirru leaf) "\"Copied!"
                     (and meta? shift? (= code keycode/v))
@@ -1502,7 +1613,9 @@
                         str |https://apis.calcit-lang.org/?q= $ js/encodeURIComponent
                           last $ split (:text leaf) "\"/"
                     (and picker-mode? (= code keycode/escape))
-                      d! :writer/picker-mode nil
+                      d! $ :: :writer/picker-mode
+                    (and meta? alt? (= code keycode/num-4))
+                      d! $ :: :ir/fold-to-end
                     true $ do (; println "|Keydown leaf" code)
                       on-window-keydown event d! $ {} (:name :editor)
       :ns $ %{} :CodeEntry (:doc |)
@@ -1558,6 +1671,7 @@
             defn on-input (state cursor k)
               fn (e dispatch!)
                 dispatch! cursor $ assoc state k (:value e)
+                {} (:name |Alice) (:age 30) (:is-active true) (:occupation "|Software Engineer")
         |on-submit $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-submit (username password signup?)
@@ -1640,7 +1754,7 @@
                   :on-click $ fn (e d!) (close-modal! d!)
                 div
                   {} $ :on-click
-                    fn (e d!) (println |nothing!)
+                    fn (e d!) (; println |nothing!)
                   , inner-tree
         |style-backdrop $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1715,6 +1829,7 @@
                     d! cursor $ assoc state :draft-box? false
                   close-abstract! $ fn (d!)
                     d! cursor $ assoc state :abstract? false
+                  plugin-gen-code-box $ use-gen-code-box (>> states :gen-code-plugin) expr focus
                 div
                   {} $ :class-name css-page-editor
                   if (empty? stack)
@@ -1760,9 +1875,10 @@
                       let
                           peek-def $ :peek-def router-data
                         if (some? peek-def) (comp-peek-def peek-def)
-                      comp-status-bar cursor state states router-data bookmark theme
+                      comp-status-bar cursor state states router-data bookmark theme $ fn (d!) (.reset-state plugin-gen-code-box d!) (.open plugin-gen-code-box d!)
                       if (:draft-box? state)
                         comp-draft-box (>> states :draft-box) expr focus close-draft-box!
+                      .render plugin-gen-code-box
                       if (:abstract? state)
                         comp-abstract (>> states :abstract) close-abstract!
                       ; comp-inspect "\"Expr" router-data style/inspector
@@ -1779,7 +1895,7 @@
                       [] idx $ comp-bookmark bookmark idx (= idx pointer)
         |comp-status-bar $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defcomp comp-status-bar (cursor state states router-data bookmark theme)
+            defcomp comp-status-bar (cursor state states router-data bookmark theme open-gen-code-box)
               let
                   old-name $ tag-match bookmark
                       :def ns' def' f
@@ -1847,6 +1963,9 @@
                     span $ {} (:inner-text |Draft-box)
                       :class-name $ str-spaced css/font-fancy style-link
                       :on-click $ on-draft-box state cursor
+                    span $ {} (:inner-text |Gen-code)
+                      :class-name $ str-spaced css/font-fancy style-link
+                      :on-click $ fn (e d!) (open-gen-code-box d!)
                     span $ {} (:inner-text |Exporting)
                       :class-name $ str-spaced css/font-fancy style-link
                       :on-click $ on-path-gen! bookmark
@@ -2107,6 +2226,7 @@
             app.comp.replace-name :refer $ use-replace-name-modal
             app.comp.picker-notice :refer $ comp-picker-notice
             respo-md.comp.md :refer $ comp-md-block
+            app.comp.gen-code-box :refer $ use-gen-code-box
     |app.comp.page-files $ %{} :FileEntry
       :defs $ {}
         |comp-file $ %{} :CodeEntry (:doc |)
@@ -2548,7 +2668,8 @@
                   comp-icon :x
                     {} (:font-size 18) (:cursor :pointer) (:position :absolute) (:top 4) (:right 4)
                       :color $ hsl 200 80 70 0.6
-                    fn (e d!) (d! :writer/picker-mode nil)
+                    fn (e d!)
+                      d! $ :: :writer/picker-mode
                   list->
                     {} $ :class-name style-list-container
                     -> imported-names (.to-list)
@@ -2901,7 +3022,9 @@
           :code $ quote
             defn on-input (state cursor)
               fn (e d!)
-                d! cursor $ assoc state :query (:value e)
+                d! cursor $ -> state
+                  assoc :query $ :value e
+                  assoc :selection 0
         |on-keydown $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn on-keydown (state candidates cursor)
@@ -3177,6 +3300,8 @@
           :code $ quote (def k 75)
         |left $ %{} :CodeEntry (:doc |)
           :code $ quote (def left 37)
+        |num-4 $ %{} :CodeEntry (:doc |)
+          :code $ quote (def num-4 52)
         |o $ %{} :CodeEntry (:doc |)
           :code $ quote (def o 79)
         |p $ %{} :CodeEntry (:doc |)
@@ -3534,7 +3659,7 @@
                   cli-configs $ get-cli-configs!
                 case-default (:op cli-configs)
                   do (start-server! configs) (check-version!)
-                    dispatch! (:: :analyze/refresh-usages-dict nil) "\"system"
+                    dispatch! (:: :analyze/refresh-usages-dict) "\"system"
                   "\"compile" $ compile-all-files! configs
                   "\"file-transform" $ transform-compact-to-calcit!
         |make-file-response $ %{} :CodeEntry (:doc |)
@@ -4249,10 +4374,10 @@
                 (:writer/select op-data) (writer/select db op-data sid op-id op-time)
                 (:writer/point-to op-data) (writer/point-to db op-data sid op-id op-time)
                 (:writer/focus op-data) (writer/focus db op-data sid op-id op-time)
-                (:writer/go-up op-data) (writer/go-up db op-data sid op-id op-time)
+                (:writer/go-up) (writer/go-up db sid op-id op-time)
                 (:writer/go-down op-data) (writer/go-down db op-data sid op-id op-time)
-                (:writer/go-left op-data) (writer/go-left db op-data sid op-id op-time)
-                (:writer/go-right op-data) (writer/go-right db op-data sid op-id op-time)
+                (:writer/go-left) (writer/go-left db sid op-id op-time)
+                (:writer/go-right) (writer/go-right db sid op-id op-time)
                 (:writer/remove-idx op-data) (writer/remove-idx db op-data sid op-id op-time)
                 (:writer/paste op-data) (writer/paste db op-data sid op-id op-time)
                 (:writer/save-files op-data) (writer/save-files db op-data sid op-id op-time)
@@ -4264,7 +4389,6 @@
                 (:writer/draft-ns op-data) (writer/draft-ns db op-data sid op-id op-time)
                 (:writer/hide-peek op-data) (writer/hide-peek db op-data sid op-id op-time)
                 (:writer/picker-mode) (writer/picker-mode db sid op-id op-time)
-                (:writer/picker-mode _nil) (writer/picker-mode db sid op-id op-time)
                 (:writer/pick-node op-data) (writer/pick-node db op-data sid op-id op-time)
                 (:writer/doc-set path docstring) (writer/doc-set db path docstring sid op-id op-time)
                 (:ir/add-ns op-data) (ir/add-ns db op-data sid op-id op-time)
@@ -4289,24 +4413,25 @@
                 (:ir/cp-ns op-data) (ir/cp-ns db op-data sid op-id op-time)
                 (:ir/mv-ns op-data) (ir/mv-ns db op-data sid op-id op-time)
                 (:ir/delete-entry op-data) (ir/delete-entry db op-data sid op-id op-time)
-                (:ir/reset-files op-data) (ir/reset-files db op-data sid op-id op-time)
+                (:ir/reset-files) (ir/reset-files db sid op-id op-time)
                 (:ir/reset-at op-data) (ir/reset-at db op-data sid op-id op-time)
                 (:ir/reset-ns op-data) (ir/reset-ns db op-data sid op-id op-time)
                 (:ir/draft-expr op-data) (ir/draft-expr db op-data sid op-id op-time)
                 (:ir/replace-file op-data) (ir/replace-file db op-data sid op-id op-time)
                 (:ir/file-config op-data) (ir/file-config db op-data sid op-id op-time)
                 (:ir/clone-ns op-data) (ir/clone-ns db op-data sid op-id op-time)
-                (:ir/toggle-comment op-data) (ir/toggle-comment db op-data sid op-id op-time)
+                (:ir/toggle-comment) (ir/toggle-comment db sid op-id op-time)
+                (:ir/fold-to-end) (ir/fold-to-end db sid op-id op-time)
                 (:notify/push-message op-data) (notify/push-message db op-data sid op-id op-time)
                 (:notify/clear op-data) (notify/clear db op-data sid op-id op-time)
                 (:notify/broadcast op-data) (notify/broadcast db op-data sid op-id op-time)
                 (:analyze/goto-def op-data) (analyze/goto-def db op-data sid op-id op-time)
                 (:analyze/abstract-def op-data) (analyze/abstract-def db op-data sid op-id op-time)
                 (:analyze/peek-def op-data) (analyze/peek-def db op-data sid op-id op-time)
-                (:analyze/refresh-usages-dict op-data) (analyze/refresh-usages-dict db op-data sid op-id op-time)
+                (:analyze/refresh-usages-dict) (analyze/refresh-usages-dict db sid op-id op-time)
                 (:analyze/use-import-def target) (analyze/use-import-def db target sid op-id op-time)
                 (:watcher/file-change op-data) (watcher/file-change db op-data sid op-id op-time)
-                (:ping op-data) db
+                (:ping) db
                 (:configs/update op-data) (configs/update-configs db op-data sid op-id op-time)
                 (:configs/update-entries op-data) (configs/update-entries db op-data sid op-id op-time)
                 _ $ do (eprintln "|Unknown op:" op) db
@@ -4525,7 +4650,7 @@
                   warn $ str "|Cannot locate:" def-info
         |refresh-usages-dict $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn refresh-usages-dict (db op-data sid op-id op-time)
+            defn refresh-usages-dict (db sid op-id op-time)
               tag-match
                 parse-all-deps $ get-in db ([] :files)
                 (:deps deps-dict usages-dict)
@@ -4893,6 +5018,30 @@
                   update-in db ([] :files ns-text :configs)
                     fn (configs) (merge configs op-data)
                   , db
+        |fold-to-end $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn fold-to-end (db session-id op-id op-time)
+              let-sugar
+                  writer $ get-in db ([] :sessions session-id :writer)
+                  ({} stack pointer) writer
+                  bookmark $ Bookmark (get stack pointer)
+                  focus $ .get-focus bookmark
+                  parent-bookmark $ .get-parent bookmark
+                  user-id $ get-in db ([] :sessions session-id :user-id)
+                if (nil? parent-bookmark)
+                  do (eprintln "\"does not work on root element") db
+                  let
+                      data-path $ .to-path parent-bookmark
+                      end-key $ last focus
+                    update-in db data-path $ fn (parent-node)
+                      let
+                          prior-data $ -> (:data parent-node)
+                            .filter-kv $ fn (k v) (< k end-key)
+                          boxed-data $ -> (:data parent-node)
+                            .filter-kv $ fn (k v) (>= k end-key)
+                          new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id) (:data boxed-data)
+                          new-parent-data $ -> prior-data (assoc end-key new-expr)
+                        %{} schema/CirruExpr (:at op-time) (:by user-id) (:data new-parent-data)
         |indent $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn indent (db session-id op-id op-time)
@@ -5108,7 +5257,7 @@
                           get-in old-file $ [] :defs def'
         |reset-files $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn reset-files (db op-data session-id op-id op-time)
+            defn reset-files (db session-id op-id op-time)
               assoc db :files $ :saved-files db
         |reset-ns $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -5150,7 +5299,7 @@
                   , db
         |toggle-comment $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn toggle-comment (db op-data sid op-id op-time)
+            defn toggle-comment (db sid op-id op-time)
               let
                   writer $ to-writer db sid
                   bookmark $ to-bookmark writer
@@ -5188,7 +5337,7 @@
                           , 1
                         , expr
                   -> db
-                    update-in
+                    ; update-in
                       [] :sessions session-id :writer :stack $ :pointer writer
                       fn (b)
                         .update-focus (Bookmark b) butlast
@@ -5511,7 +5660,7 @@
                               get-min-key $ :data target-expr
         |go-left $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn go-left (db op-data session-id op-id op-time)
+            defn go-left (db session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                   bookmark $ Bookmark
@@ -5535,7 +5684,7 @@
                               if (= 0 idx) last-coord $ get child-keys (dec idx)
         |go-right $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn go-right (db op-data session-id op-id op-time)
+            defn go-right (db session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                   bookmark $ Bookmark
@@ -5561,7 +5710,7 @@
                                 , last-coord $ get child-keys (inc idx)
         |go-up $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn go-up (db op-data session-id op-id op-time)
+            defn go-up (db session-id op-id op-time)
               -> db $ update-in ([] :sessions session-id :writer)
                 fn (writer)
                   update-in writer
@@ -5853,7 +6002,13 @@
                         [] ns-text def-text
                         split clean-text |/
                     {} (:method :as) (:key ns-text) (:def def-text)
-                  {} (:method :refer) (:key clean-text) (:def clean-text)
+                  let
+                      try-dot $ clean-text.!indexOf "\"."
+                    if (&>= try-dot 0)
+                      let
+                          obj $ clean-text.slice 0 try-dot
+                        {} (:method :refer) (:key obj) (:def obj)
+                      {} (:method :refer) (:key clean-text) (:def clean-text)
         |parse-deps $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn parse-deps (require-exprs)
@@ -6267,7 +6422,7 @@
                     (and meta? (= code keycode/s))
                       do (.!preventDefault event)
                         dispatch! $ :: :effect/save-files
-                        dispatch! $ :: :analyze/refresh-usages-dict nil
+                        dispatch! $ :: :analyze/refresh-usages-dict
                     (and meta? shift? (= code keycode/f))
                       dispatch! $ :: :router/change (:: :files)
                     (and meta? (not shift?) (= code keycode/period))
