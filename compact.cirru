@@ -1,6 +1,6 @@
 
 {} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.9)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.10)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
@@ -1086,7 +1086,7 @@
               let
                   cursor $ :cursor states
                   state $ or (:data states)
-                    format-cirru-edn $ file->cirru file
+                    format-cirru-edn $ file->cirru file false
                 comp-modal
                   fn (d!) (d! :writer/draft-ns nil)
                   div
@@ -3507,6 +3507,9 @@
         |CodeEntry $ %{} :CodeEntry (:doc |)
           :code $ quote
             def CodeEntry $ new-record :CodeEntry :doc :code
+        |CodeEntryCompact $ %{} :CodeEntry (:doc "|another record for CodeEntry which only used in writing compact file")
+          :code $ quote
+            def CodeEntryCompact $ new-record :CodeEntry :doc :code :examples
         |FileEntry $ %{} :CodeEntry (:doc |)
           :code $ quote
             def FileEntry $ new-record :FileEntry :ns :defs
@@ -5938,9 +5941,22 @@
         |expr? $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn expr? (x) (&record:matches? schema/CirruExpr x)
+        |extract-examples-code $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn extract-examples-code (xs)
+              if
+                &= "\"with-examples" $ &list:nth xs 0
+                let
+                    examples $ &list:nth xs 1
+                  assert= 3 $ &list:count xs
+                  if
+                    not= "\"do" $ &list:nth examples 0
+                    eprintln "\"expect examples start with `do`:" examples
+                  :: :exp-code (rest examples) (&list:nth xs 2)
+                :: :exp-code ([]) xs
         |file->cirru $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn file->cirru (file)
+            defn file->cirru (file compact?)
               %{} schema/FileEntry
                 :ns $ -> (:ns file)
                   update :code $ fn (code)
@@ -5948,9 +5964,20 @@
                 :defs $ -> (:defs file)
                   map-kv $ fn (k xs)
                     if (some? xs)
-                      [] k $ -> xs
-                        update :code $ fn (code)
-                          :: 'quote $ tree->cirru code
+                      [] k $ let
+                          extracted $ extract-examples-code
+                            tree->cirru $ :code xs
+                        tag-match extracted $ 
+                          :exp-code examples code
+                          if compact?
+                            %{} schema/CodeEntryCompact
+                              :doc $ :doc xs
+                              :code $ :: 'quote code
+                              :examples $ map examples
+                                fn (e) (:: 'quote e)
+                            %{} schema/CodeEntry
+                              :doc $ :doc xs
+                              :code $ :: 'quote code
                       , nil
         |file-compact-to-calcit $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -6116,12 +6143,12 @@
                     :entries entries
                     :files $ -> new-files
                       map-kv $ fn (k v)
-                        [] k $ file->cirru v
+                        [] k $ file->cirru v true
                   inc-data $ hide-empty-fields
                     {} (:removed removed-names)
                       :added $ -> added-names
                         map $ fn (ns-text)
-                          [] ns-text $ file->cirru (get new-files ns-text)
+                          [] ns-text $ file->cirru (get new-files ns-text) true
                         pairs-map
                       :changed $ -> changed-names
                         map $ fn (ns-text)
@@ -6146,13 +6173,21 @@
                               :removed-defs removed-defs
                               :added-defs $ -> added-defs
                                 map $ fn (x)
-                                  [] x $ :: 'quote
-                                    tree->cirru $ get-in new-defs ([] x :code)
+                                  [] x $ let
+                                      extracted $ extract-examples-code
+                                        tree->cirru $ get-in new-defs ([] x :code)
+                                    tag-match extracted $ 
+                                      :exp-code _e code
+                                      :: 'quote code
                                 hide-empty-fields
                               :changed-defs $ -> changed-defs
                                 map $ fn (x)
-                                  [] x $ :: 'quote
-                                    tree->cirru $ get-in new-defs ([] x :code)
+                                  [] x $ let
+                                      extracted $ extract-examples-code
+                                        tree->cirru $ get-in new-defs ([] x :code)
+                                    tag-match extracted $ 
+                                      :exp-code _e code
+                                      :: 'quote code
                                 hide-empty-fields
                         pairs-map
                 fs/writeFile "\"compact.cirru" (format-cirru-edn compact-data)
@@ -6228,7 +6263,7 @@
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns app.util.compile $ :require
-            app.util :refer $ file->cirru db->string tree->cirru now! hide-empty-fields
+            app.util :refer $ file->cirru db->string tree->cirru now! hide-empty-fields extract-examples-code
             "\"chalk" :default chalk
             "\"path" :as path
             "\"fs" :as fs
