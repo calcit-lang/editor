@@ -1,6 +1,6 @@
 {
   "name": "@calcit/editor",
-  "version": "0.9.10",
+  "version": "0.9.11",
   "description": "Structural Editor for Calcit Language",
   "bin": {
     "ct": "server.mjs"
