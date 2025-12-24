@@ -14,6 +14,10 @@ jobs:
     name: Deploy
 
     runs-on: ubuntu-latest
+    # Prevent classic tokens from interfering with OIDC
+    env:
+      NODE_AUTH_TOKEN: ""
+      NPM_TOKEN: ""
 
     steps:
       - uses: actions/checkout@v4
@@ -22,11 +26,27 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org/
+          scope: '@calcit'
+          check-latest: true
           cache: yarn
 
       - uses: calcit-lang/setup-cr@0.0.8
 
+      - name: Ensure clean npm auth (OIDC)
+        run: |
+          npm config set registry https://registry.npmjs.org/
+          npm config delete //registry.npmjs.org/:_authToken || true
+          echo "node $(node -v); npm $(npm -v)"
+          npm config list
+        env:
+          NODE_AUTH_TOKEN: ""
+          NPM_TOKEN: ""
+
       - run: caps --ci && yarn && yarn compile-server && yarn compile-page && yarn release-page
 
       - name: publish
+        env:
+          NODE_AUTH_TOKEN: ""
+          NPM_TOKEN: ""
+          NPM_CONFIG_PROVENANCE: "true"
         run: npm publish --provenance --access public
