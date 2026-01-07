@@ -1,9 +1,9 @@
 
-{} (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.11)
+{} (:about "|file is generated - never edit directly; learn cr edit/tree workflows before changing") (:package |app)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.12)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
-    :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!)
+    :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!) (:version |0.0.0)
       :modules $ [] |lilac/ |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/ |gen-code/
   :files $ {}
     |app.bookmark $ %{} :FileEntry
@@ -6608,7 +6608,7 @@
                         target $ get latest-files filter-ns
                       if (some? target) (assoc old-files filter-ns target) (dissoc old-files filter-ns)
                     , latest-files
-                  compact-data $ {} (:package pkg)
+                  compact-data $ {} (:package pkg) (:about "\"file is generated - never edit directly; learn cr edit/tree workflows before changing")
                     :configs $ {}
                       :init-fn $ :init-fn configs
                       :reload-fn $ :reload-fn configs
