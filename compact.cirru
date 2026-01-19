@@ -1,6 +1,6 @@
 
 {} (:about "|file is generated - never edit directly; learn cr edit/tree workflows before changing") (:package |app)
-  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.12)
+  :configs $ {} (:init-fn |app.server/main!) (:reload-fn |app.server/reload!) (:version |0.9.13)
     :modules $ [] |lilac/ |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
   :entries $ {}
     :client $ {} (:init-fn |app.client/main!) (:reload-fn |app.client/reload!) (:version |0.0.0)
@@ -1205,15 +1205,15 @@
           :code $ quote
             defrecord! %gen-code-box-action
               :render $ fn (self)
-                tag-match self $ 
+                tag-match self $
                   :plugin render open reset-state
                   render
               :open $ fn (self d!)
-                tag-match self $ 
+                tag-match self $
                   :plugin render open reset-state
                   open d!
               :reset-state $ fn (self d!)
-                tag-match self $ 
+                tag-match self $
                   :plugin render open reset-state
                   reset-state d!
           :examples $ []
@@ -1384,7 +1384,7 @@
             defeffect effect-navigate (bookmark) (action el at?)
               if
                 and (= action :mount) (some? bookmark)
-                tag-match bookmark $ 
+                tag-match bookmark $
                   :def the-ns the-def coord
                   try
                     let
@@ -2141,7 +2141,7 @@
                   {} $ :class-name (str-spaced css/row style-usages)
                   -> usages .to-list $ map
                     fn (usage)
-                      tag-match usage $ 
+                      tag-match usage $
                         :def the-ns the-def
                         [] (str the-ns "\"/" the-def)
                           div
@@ -3010,11 +3010,11 @@
           :code $ quote
             defrecord! %rename-plugin
               :render $ fn (self)
-                tag-match self $ 
+                tag-match self $
                   :rename-plugin node cursor s
                   , node
               :show $ fn (self d!)
-                tag-match self $ 
+                tag-match self $
                   :rename-plugin node cursor state
                   do
                     d! cursor $ assoc state :old-name "\"" :new-name "\"" :show? true
@@ -3023,7 +3023,7 @@
                           el $ js/document.querySelector "\"#replace-input"
                         if (some? el) (.!select el)
               :close $ fn (self d!)
-                tag-match self $ 
+                tag-match self $
                   :rename-plugin node cursor state
                   d! cursor $ assoc state :show? false
           :examples $ []
@@ -4006,7 +4006,8 @@
         |start-server! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn start-server! (configs)
-              pick-port! (:port configs)
+              pick-port!
+                either (:port configs) (:port schema/configs)
                 fn (unoccupied-port) (run-server! dispatch! unoccupied-port)
               pick-http-port!
                 either (:expose-port configs) (:expose-port schema/configs)
@@ -5005,7 +5006,7 @@
                 if (some? new-bookmark)
                   if
                     starts-with? (nth new-bookmark 1) (str pkg |.)
-                    tag-match new-bookmark $ 
+                    tag-match new-bookmark $
                       :def ns' def'
                       if (contains? target-defs def')
                         -> db $ assoc-in ([] :sessions sid :writer :peek-def)
@@ -5612,7 +5613,7 @@
                                 get-in files $ [] old-ns :defs old-def
                           update-in ([] :sessions session-id :writer :stack idx)
                             fn (bookmark)
-                              tag-match bookmark $ 
+                              tag-match bookmark $
                                 :def _ns _def f
                                 %:: %bookmark :def new-ns new-def f
                           update-in ([] :files new-ns :defs new-def :code :data)
@@ -6419,7 +6420,7 @@
                       [] k $ let
                           extracted $ extract-examples-code
                             tree->cirru $ :code xs
-                        tag-match extracted $ 
+                        tag-match extracted $
                           :exp-code examples code
                           if
                             and compact? $ nil? (:code xs)
@@ -6650,7 +6651,7 @@
                                   [] x $ let
                                       extracted $ extract-examples-code
                                         tree->cirru $ get-in new-defs ([] x :code)
-                                    tag-match extracted $ 
+                                    tag-match extracted $
                                       :exp-code _e code
                                       :: 'quote code
                                 hide-empty-fields
@@ -6659,7 +6660,7 @@
                                   [] x $ let
                                       extracted $ extract-examples-code
                                         tree->cirru $ get-in new-defs ([] x :code)
-                                    tag-match extracted $ 
+                                    tag-match extracted $
                                       :exp-code _e code
                                       :: 'quote code
                                 hide-empty-fields
