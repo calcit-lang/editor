@@ -2,13 +2,13 @@
 # yarn lockfile v1
 
 
-"@calcit/procs@^0.10.10":
-  version "0.10.10"
-  resolved "https://registry.yarnpkg.com/@calcit/procs/-/procs-0.10.10.tgz#17e423178ce6657596393c9654e3699cc99cf7d0"
-  integrity sha512-mszXvGUzDnXZIFwJCQ6oW55lEK/QA1kup/Fxj/UiQQlQQApORRwdKtj+grb2QKhdb1i2c4YeTwUUclSonYOo9Q==
+"@calcit/procs@^0.11.5":
+  version "0.11.5"
+  resolved "https://registry.npmmirror.com/@calcit/procs/-/procs-0.11.5.tgz#d391a67d297fa76cd759c29879b6b3cd8f578537"
+  integrity sha512-d9O2Fq2h+zR43XKJiJ/7g3j2tCc8RsSU68sjKZ7PLZNI+73fSvWTA9uuZVEKXsUaREynDUfwUTcsAGYC4LLNnQ==
   dependencies:
     "@calcit/ternary-tree" "0.0.25"
-    "@cirru/parser.ts" "^0.0.7"
+    "@cirru/parser.ts" "^0.0.8"
     "@cirru/writer.ts" "^0.1.7"
 
 "@calcit/ternary-tree@0.0.25":
@@ -16,10 +16,10 @@
   resolved "https://registry.yarnpkg.com/@calcit/ternary-tree/-/ternary-tree-0.0.25.tgz#d467cbd9a7f89ff1fdb590e5d1551aefa6a03492"
   integrity sha512-BxAAq6v7dZJDYSMX5kBVQ/eSYX7czjOS1cHM25js4yD+Q2I61RxxhD7iBaGlfNJvmgPmvYJQA5nxNmN2TEXq7A==
 
-"@cirru/parser.ts@^0.0.7":
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/@cirru/parser.ts/-/parser.ts-0.0.7.tgz#855b46d685e6be421e2ad1386506b9a2858c61de"
-  integrity sha512-xi27PFJ9ZbnkjUeLkXkkFOvg5ljqexfbGSGaazndCocnaMpwOGlMIdJDeFSGjViqu/XxsvtZT3er9Qx1lF3NHA==
+"@cirru/parser.ts@^0.0.8":
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/@cirru/parser.ts/-/parser.ts-0.0.8.tgz#7b2d00c1b0fb18714ebc32ad8eef3877309983e2"
+  integrity sha512-dU5e0HdlgGPupeOOWqikn1eQ1eh1kMWjUT382ZXTiOaVXnypCrauJemmkD2QtTocl5n+4jFgddfcGNHsJOSi7g==
 
 "@cirru/writer.ts@^0.1.7":
   version "0.1.7"
