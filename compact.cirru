@@ -8,15 +8,21 @@
   :files $ {}
     |app.bookmark $ %{} :FileEntry
       :defs $ {}
-        |%bookmark0 $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defenum %bookmark0
-              :def :string :string :dynamic
-              :ns :string :dynamic
-          :examples $ []
         |%bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
             def %bookmark $ impl-traits %bookmark0 BookmarkImpl
+          :examples $ []
+        |%bookmark0 $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defenum %bookmark0 (:def :string :string :dynamic) (:ns :string :dynamic)
+          :examples $ []
+        |Bookmark $ %{} :CodeEntry (:doc "|constructor for definition bookmarks, write `Bookmark $ :: :def ns' def' f` to initialize")
+          :code $ quote
+            defn Bookmark (b)
+              tag-match b
+                  :def ns' def' f
+                  %:: %bookmark :def ns' def' f
+                (:ns ns' f) (%:: %bookmark :ns ns' f)
           :examples $ []
         |BookmarkImpl $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -63,23 +69,7 @@
           :examples $ []
         |BookmarkTrait $ %{} :CodeEntry (:doc |)
           :code $ quote
-            deftrait BookmarkTrait
-              :get-focus :fn
-              :get-ns :fn
-              :is-ns? :fn
-              :is-def? :fn
-              :update-focus :fn
-              :to-path :fn
-              :preview :fn
-              :get-parent :fn
-          :examples $ []
-        |Bookmark $ %{} :CodeEntry (:doc "|constructor for definition bookmarks, write `Bookmark $ :: :def ns' def' f` to initialize")
-          :code $ quote
-            defn Bookmark (b)
-              tag-match b
-                  :def ns' def' f
-                  %:: %bookmark :def ns' def' f
-                (:ns ns' f) (%:: %bookmark :ns ns' f)
+            deftrait BookmarkTrait (:get-focus :fn) (:get-ns :fn) (:is-ns? :fn) (:is-def? :fn) (:update-focus :fn) (:to-path :fn) (:preview :fn) (:get-parent :fn)
           :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.bookmark)
@@ -1229,14 +1219,13 @@
         :examples $ []
     |app.comp.gen-code-box $ %{} :FileEntry
       :defs $ {}
-        |%gen-code-box-action0 $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defenum %gen-code-box-action0
-              :plugin :fn :fn :fn
-          :examples $ []
         |%gen-code-box-action $ %{} :CodeEntry (:doc |)
           :code $ quote
             def %gen-code-box-action $ impl-traits %gen-code-box-action0 GenCodeBoxActionImpl
+          :examples $ []
+        |%gen-code-box-action0 $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defenum %gen-code-box-action0 $ :plugin :fn :fn :fn
           :examples $ []
         |GenCodeBoxActionImpl $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -1256,10 +1245,7 @@
           :examples $ []
         |GenCodeBoxActionTrait $ %{} :CodeEntry (:doc |)
           :code $ quote
-            deftrait GenCodeBoxActionTrait
-              :render :fn
-              :open :fn
-              :reset-state :fn
+            deftrait GenCodeBoxActionTrait (:render :fn) (:open :fn) (:reset-state :fn)
           :examples $ []
         |style-panel $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3054,14 +3040,13 @@
         :examples $ []
     |app.comp.replace-name $ %{} :FileEntry
       :defs $ {}
-        |%rename-plugin0 $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            defenum %rename-plugin0
-              :rename-plugin :dynamic :dynamic :dynamic
-          :examples $ []
         |%rename-plugin $ %{} :CodeEntry (:doc |)
           :code $ quote
             def %rename-plugin $ impl-traits %rename-plugin0 RenamePluginImpl
+          :examples $ []
+        |%rename-plugin0 $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defenum %rename-plugin0 $ :rename-plugin :dynamic :dynamic :dynamic
           :examples $ []
         |RenamePluginImpl $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3086,10 +3071,7 @@
           :examples $ []
         |RenamePluginTrait $ %{} :CodeEntry (:doc |)
           :code $ quote
-            deftrait RenamePluginTrait
-              :render :fn
-              :show :fn
-              :close :fn
+            deftrait RenamePluginTrait (:render :fn) (:show :fn) (:close :fn)
           :examples $ []
         |use-replace-name-modal $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3781,8 +3763,7 @@
                                 if-let
                                   q0 $ get-in (wo-js-log pss) ([] 0 1)
                                   and (record? q0)
-                                    and
-                                      = :Leaf $ &record:get-name q0
+                                    and $ = :Leaf (&record:get-name q0)
                                     = (get q0 :text) follow
                                   , false
                               :: :some $ conj pp k
@@ -3843,15 +3824,15 @@
           :examples $ []
         |CodeEntry $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def CodeEntry $ new-record :CodeEntry :doc :code :examples
+            def CodeEntry $ defstruct :CodeEntry (:doc :dynamic) (:code :dynamic) (:examples :dynamic)
           :examples $ []
         |CodeEntryCompact $ %{} :CodeEntry (:doc "|another record for CodeEntry which only used in writing compact file")
           :code $ quote
-            def CodeEntryCompact $ new-record :CodeEntry :doc :code :examples
+            def CodeEntryCompact $ defstruct :CodeEntry (:doc :dynamic) (:code :dynamic) (:examples :dynamic)
           :examples $ []
         |FileEntry $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def FileEntry $ new-record :FileEntry :ns :defs
+            def FileEntry $ defstruct :FileEntry (:ns :dynamic) (:defs :dynamic)
           :examples $ []
         |cirru-compact $ %{} :CodeEntry (:doc "|a cloned version of tree->cirru to simplify dependency issues")
           :code $ quote
