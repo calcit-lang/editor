@@ -10,7 +10,23 @@
       :defs $ {}
         |%bookmark $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defrecord! %bookmark
+            def %bookmark $ impl-traits %bookmark0 BookmarkImpl
+          :examples $ []
+        |%bookmark0 $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defenum %bookmark0 (:def :string :string :dynamic) (:ns :string :dynamic)
+          :examples $ []
+        |Bookmark $ %{} :CodeEntry (:doc "|constructor for definition bookmarks, write `Bookmark $ :: :def ns' def' f` to initialize")
+          :code $ quote
+            defn Bookmark (b)
+              tag-match b
+                  :def ns' def' f
+                  %:: %bookmark :def ns' def' f
+                (:ns ns' f) (%:: %bookmark :ns ns' f)
+          :examples $ []
+        |BookmarkImpl $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defimpl BookmarkImpl BookmarkTrait
               :get-focus $ fn (self)
                 tag-match self
                     :def ns' def' f
@@ -51,13 +67,9 @@
                   (:ns ns' f)
                     if (empty? f) nil $ %:: %bookmark :ns ns' (butlast f)
           :examples $ []
-        |Bookmark $ %{} :CodeEntry (:doc "|constructor for definition bookmarks, write `Bookmark $ :: :def ns' def' f` to initialize")
+        |BookmarkTrait $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn Bookmark (b)
-              tag-match b
-                  :def ns' def' f
-                  %:: %bookmark :def ns' def' f
-                (:ns ns' f) (%:: %bookmark :ns ns' f)
+            deftrait BookmarkTrait (:get-focus :fn) (:get-ns :fn) (:is-ns? :fn) (:is-def? :fn) (:update-focus :fn) (:to-path :fn) (:preview :fn) (:get-parent :fn)
           :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns app.bookmark)
@@ -274,11 +286,15 @@
           :examples $ []
         |expr? $ %{} :CodeEntry (:doc "|a function to detect expression,\nan expression is represented with a record with `CirruExpr`\n")
           :code $ quote
-            defn expr? (x) (&record:matches? schema/CirruExpr x)
+            defn expr? (x)
+              and (record? x)
+                = :Expr $ &record:get-name x
           :examples $ []
         |leaf? $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn leaf? (x) (&record:matches? schema/CirruLeaf x)
+            defn leaf? (x)
+              and (record? x)
+                = schema/CirruLeaf $ &record:struct x
           :examples $ []
         |parse-query! $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -995,9 +1011,11 @@
               let
                   focused? $ = focus coord
                   focus-in? $ coord-contains? focus coord
-                  first-id $ get-min-key (:data expr)
-                  last-id $ get-max-key (:data expr)
                   sorted-children $ -> (:data expr) (.to-list) (.sort-by first)
+                  first-id $ if (empty? sorted-children) nil
+                    first $ first sorted-children
+                  last-id $ if (empty? sorted-children) nil
+                    first $ last sorted-children
                 list->
                   {} (:tab-index 0)
                     :class-name $ str-spaced "\"comp-expr" style-expr (base-style-expr theme) (if focused? |cirru-focused |)
@@ -1033,7 +1051,7 @@
                       if (nil? cursor-key) (js/console.warn "|[Editor] missing cursor key" k child)
                       recur
                         conj result $ [] k
-                          if (&record:matches? child CirruLeaf)
+                          if (leaf? child)
                             comp-leaf (>> states cursor-key) child focus child-coord (includes? partial-others child-coord) (= first-id k) readonly? picker-mode? theme
                             comp-expr (>> states cursor-key) child focus child-coord partial-others (= last-id k) mode readonly? picker-mode? theme $ inc depth
                         rest children
@@ -1203,7 +1221,15 @@
       :defs $ {}
         |%gen-code-box-action $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defrecord! %gen-code-box-action
+            def %gen-code-box-action $ impl-traits %gen-code-box-action0 GenCodeBoxActionImpl
+          :examples $ []
+        |%gen-code-box-action0 $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defenum %gen-code-box-action0 $ :plugin :fn :fn :fn
+          :examples $ []
+        |GenCodeBoxActionImpl $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defimpl GenCodeBoxActionImpl GenCodeBoxActionTrait
               :render $ fn (self)
                 tag-match self $
                   :plugin render open reset-state
@@ -1216,6 +1242,10 @@
                 tag-match self $
                   :plugin render open reset-state
                   reset-state d!
+          :examples $ []
+        |GenCodeBoxActionTrait $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            deftrait GenCodeBoxActionTrait (:render :fn) (:open :fn) (:reset-state :fn)
           :examples $ []
         |style-panel $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -2843,7 +2873,11 @@
                     span $ {} (:inner-text x) (:class-name css-name-code)
                       :on-click $ fn (e d!) (d! :writer/pick-node x)
                   hint $ if (record? target-node)
-                    if (&record:matches? target-node schema/CirruLeaf) (:text target-node) nil
+                    if
+                      and (record? target-node)
+                        = :Leaf $ &record:get-name target-node
+                      :text target-node
+                      , nil
                     , nil
                   hint-func $ fn (x)
                     if (blank? hint) true $ .includes? x hint
@@ -3008,7 +3042,15 @@
       :defs $ {}
         |%rename-plugin $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defrecord! %rename-plugin
+            def %rename-plugin $ impl-traits %rename-plugin0 RenamePluginImpl
+          :examples $ []
+        |%rename-plugin0 $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defenum %rename-plugin0 $ :rename-plugin :dynamic :dynamic :dynamic
+          :examples $ []
+        |RenamePluginImpl $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defimpl RenamePluginImpl RenamePluginTrait
               :render $ fn (self)
                 tag-match self $
                   :rename-plugin node cursor s
@@ -3026,6 +3068,10 @@
                 tag-match self $
                   :rename-plugin node cursor state
                   d! cursor $ assoc state :show? false
+          :examples $ []
+        |RenamePluginTrait $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            deftrait RenamePluginTrait (:render :fn) (:show :fn) (:close :fn)
           :examples $ []
         |use-replace-name-modal $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -3609,11 +3655,13 @@
       :defs $ {}
         |CirruExpr $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def CirruExpr $ new-class-record CirruExprMethods :Expr :by :at :data
+            def CirruExpr $ impl-traits
+              defstruct :Expr (:by :dynamic) (:at :dynamic) (:data :dynamic)
+              , CirruExprMethods
           :examples $ []
         |CirruExprMethods $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defrecord! CirruExprMethods
+            defimpl CirruExprMethods :CirruExprTrait
               :get $ fn (self p)
                 get-in self $ [] :data p
               :get-in $ fn (self pp)
@@ -3714,7 +3762,8 @@
                               and (.= child x)
                                 if-let
                                   q0 $ get-in (wo-js-log pss) ([] 0 1)
-                                  and (record? q0) (&record:matches? CirruLeaf q0)
+                                  and (record? q0)
+                                    and $ = :Leaf (&record:get-name q0)
                                     = (get q0 :text) follow
                                   , false
                               :: :some $ conj pp k
@@ -3756,35 +3805,42 @@
                       (:append v) (.append self v)
                       (:prepend v) (.prepend self v)
               :compact $ fn (self) (cirru-compact self)
+              :cirru-kind $ fn (_self) :expr
           :examples $ []
         |CirruLeaf $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def CirruLeaf $ new-class-record CirruLeafMethods :Leaf :at :by :text
+            def CirruLeaf $ impl-traits
+              defstruct :Leaf (:at :dynamic) (:by :dynamic) (:text :string)
+              , CirruLeafMethods
           :examples $ []
         |CirruLeafMethods $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defrecord! CirruLeafMethods $ :=
-              fn (self x)
+            defimpl CirruLeafMethods :CirruLeafTrait
+              := $ fn (self x)
                 if (&record:matches? self x)
                   = (get self :text) (get x :text)
                   , false
+              :cirru-kind $ fn (_self) :leaf
           :examples $ []
         |CodeEntry $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def CodeEntry $ new-record :CodeEntry :doc :code :examples
+            def CodeEntry $ defstruct :CodeEntry (:doc :dynamic) (:code :dynamic) (:examples :dynamic)
           :examples $ []
         |CodeEntryCompact $ %{} :CodeEntry (:doc "|another record for CodeEntry which only used in writing compact file")
           :code $ quote
-            def CodeEntryCompact $ new-record :CodeEntry :doc :code :examples
+            def CodeEntryCompact $ defstruct :CodeEntry (:doc :dynamic) (:code :dynamic) (:examples :dynamic)
           :examples $ []
         |FileEntry $ %{} :CodeEntry (:doc |)
           :code $ quote
-            def FileEntry $ new-record :FileEntry :ns :defs
+            def FileEntry $ defstruct :FileEntry (:ns :dynamic) (:defs :dynamic)
           :examples $ []
         |cirru-compact $ %{} :CodeEntry (:doc "|a cloned version of tree->cirru to simplify dependency issues")
           :code $ quote
             defn cirru-compact (x)
-              if (&record:matches? CirruLeaf x) (:text x)
+              if
+                and (record? x)
+                  = :Leaf $ &record:get-name x
+                :text x
                 -> (:data x) (.to-list) (.sort-by first)
                   map $ fn (entry)
                     cirru-compact $ last entry
@@ -6391,7 +6447,9 @@
           :examples $ []
         |expr? $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn expr? (x) (&record:matches? schema/CirruExpr x)
+            defn expr? (x)
+              and (record? x)
+                = :Expr $ &record:get-name x
           :examples $ []
         |extract-examples-code $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -6476,7 +6534,9 @@
           :examples $ []
         |leaf? $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defn leaf? (x) (&record:matches? schema/CirruLeaf x)
+            defn leaf? (x)
+              and (record? x)
+                = schema/CirruLeaf $ &record:struct x
           :examples $ []
         |now! $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -6588,7 +6648,7 @@
         |tree->cirru $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn tree->cirru (x)
-              if (&record:matches? schema/CirruLeaf x) (&record:get x :text)
+              if (leaf? x) (&record:get x :text)
                 -> x (&record:get :data) (&map:to-list) (&list:sort-by first)
                   map $ fn (entry)
                     tree->cirru $ &list:nth entry 1

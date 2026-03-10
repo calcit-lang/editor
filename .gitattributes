@@ -3,3 +3,4 @@ calcit.cirru -diff linguist-generated
 yarn.lock -diff linguist-generated
 Agents.md -diff linguist-generated
 llms/*.md -diff linguist-generated
+.pnp.* -diff linguist-generated
