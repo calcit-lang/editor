@@ -410,6 +410,7 @@
                             do (d! :analyze/abstract-def state) (d! cursor nil) (close-modal! d!)
                         (= (:keycode e) keycode/escape)
                           close-modal! d!
+                        true nil
                   =< nil 8
                   button $ {} (:class-name style/button) (:inner-text |Submit)
                     :on-click $ fn (e d!)
@@ -965,6 +966,7 @@
                                         :at $ now!
                                     d! cursor nil
                                     close-modal! d!
+                                true nil
                           =< nil 8
                           div
                             {} $ :class-name (str-spaced css/row style-toolbar)
@@ -7436,6 +7438,7 @@
                       dispatch! $ :: :router/change (:: :files)
                     (and meta? (not shift?) (= code keycode/period))
                       dispatch! $ :: :writer/picker-mode
+                    true nil
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
