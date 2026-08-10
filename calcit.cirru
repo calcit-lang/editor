@@ -4228,7 +4228,10 @@
                   |compile $ compile-all-files! configs
                   |file-transform $ transform-compact-to-calcit!
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ []
+              :features $ #{} :js-ffi
         |make-file-response $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn make-file-response (res)
@@ -7151,7 +7154,10 @@
                     dispatch! $ :: :notify/push-message
                       [] :error $ aget e |message
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic 'Dynamic 'Dynamic
+              :features $ #{} :js-ffi
         |md5 $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn md5 (s)
@@ -7295,7 +7301,10 @@
                 .catch $ fn (e)
                   js/console.error $ .!yellow chalk "|Failed to request version:" (.-message e)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ []
+              :features $ #{} :js-ffi
         |get-cli-configs! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn get-cli-configs! () $ {} (:op js/process.env.op)
