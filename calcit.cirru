@@ -5606,7 +5606,7 @@
                       fn (writer)
                         -> writer
                           update :stack $ fn (stack)
-                            dissoc-idx stack $ :pointer writer
+                            dissoc-idx stack $ :pointer (option:unwrap-or writer {})
                           update :pointer dec
                 (:ns ns' f)
                   -> db
@@ -5615,7 +5615,7 @@
                       fn (writer)
                         -> writer
                           update :stack $ fn (stack)
-                            dissoc-idx stack $ :pointer writer
+                            dissoc-idx stack $ :pointer (option:unwrap-or writer {})
                           update :pointer dec
           :examples $ []
           :schema $ :: 'Dynamic
@@ -5658,8 +5658,9 @@
                   bookmark $ get (:stack writer) (:pointer writer)
                   data-path $ bookmark->path bookmark
                   user-id $ get-in db ([] :sessions session-id :user-id)
+                  data $ if (option:some? op-data) (.unwrap op-data) op-data
                 -> db $ update-in data-path
-                  fn (expr) (cirru->tree op-data user-id op-time)
+                  fn (expr) (cirru->tree data user-id op-time)
           :examples $ []
           :schema $ :: 'Dynamic
         |duplicate $ %{} 'CodeEntry (:doc |)
@@ -5776,10 +5777,10 @@
                     update-in db data-path $ fn (parent-node)
                       let
                           prior-data $ ->
-                            .unwrap $ :data parent-node
+                            .unwrap $ :data (option:unwrap-or parent-node {})
                             .filter-kv $ fn (k v) (< k end-key)
                           boxed-data $ ->
-                            .unwrap $ :data parent-node
+                            .unwrap $ :data (option:unwrap-or parent-node {})
                             .filter-kv $ fn (k v) (>= k end-key)
                           new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id) (:data boxed-data)
                           new-parent-data $ -> prior-data (assoc end-key new-expr)
@@ -6119,9 +6120,12 @@
                         .update-focus (Bookmark b) butlast
                     update-in parent-path $ fn (base-expr)
                       let
-                          expr $ get-in base-expr ([] :data last-coord)
+                          expr $ get-in
+                            get-in (option:unwrap-or base-expr {}) ([] :data last-coord)
+                            [] :data last-coord
                           child-keys $ sort
-                            .to-list $ keys (:data base-expr)
+                            .to-list $ keys
+                              :data $ option:unwrap-or base-expr {}
                           children $ -> (:data expr) (.to-list) (.sort-by first) (map last)
                           idx $ option:unwrap-or (.index-of child-keys last-coord) 0
                           limit-id $ if
@@ -6635,14 +6639,15 @@
                   writer $ get-in db ([] :sessions sid :writer)
                   bookmark $ :picker-mode writer
                   data-path $ bookmark->path bookmark
+                  data $ if (option:some? op-data) (.unwrap op-data) op-data
                 -> db
-                  assoc-in data-path $ cirru->tree op-data user-id op-time
+                  assoc-in data-path $ cirru->tree data user-id op-time
                   update-in ([] :sessions sid :writer)
                     fn (writer) (assoc writer :picker-mode nil)
                   update-in ([] :sessions sid :notifications)
                     push-info op-id op-time $ str "|picked "
-                      if (string? op-data) op-data $ let
-                          code $ stringify-s-expr op-data
+                      if (string? data) data $ let
+                          code $ stringify-s-expr data
                         if
                           > (count code) 40
                           str (.slice code 0 40) |...
