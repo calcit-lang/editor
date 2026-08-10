@@ -5190,7 +5190,7 @@
                     or
                       = pkg $ nth new-bookmark 1
                       starts-with?
-                        unsafe-coerce (nth new-bookmark 1) :string
+                        unsafe-coerce (nth new-bookmark 1) 'String
                         str pkg |.
                     tag-match new-bookmark
                       (:def ns' def' f)
@@ -5278,12 +5278,12 @@
                         (:by-as ns-name alias)
                           if
                             starts-with?
-                              unsafe-coerce (option:unwrap-or sym |) :string
+                              unsafe-coerce (option:unwrap-or sym |) 'String
                               str alias |/
                             collect! $ :: :reference ns-name
                               &str:slice
-                                unsafe-coerce (option:unwrap-or sym |) :string
-                                inc $ unsafe-coerce (.-length alias) :number
+                                unsafe-coerce (option:unwrap-or sym |) 'String
+                                inc $ unsafe-coerce (.-length alias) 'Number
                         (:by-refer ns-name def-names)
                           if
                             &set:includes? def-names $ option:unwrap-or sym |
@@ -5337,7 +5337,7 @@
                 if (some? new-bookmark)
                   if
                     starts-with?
-                      unsafe-coerce (nth new-bookmark 1) :string
+                      unsafe-coerce (nth new-bookmark 1) 'String
                       str pkg |.
                     tag-match new-bookmark $
                       :def ns' def'
@@ -5821,9 +5821,10 @@
                   ({} stack pointer) writer
                   bookmark $ Bookmark (get stack pointer)
                   user-id $ get-in db ([] :sessions session-id :user-id)
-                  focus $ tag-match bookmark
-                    (:def ns' def' f) f
-                    (:ns ns' f) f
+                  focus $ if
+                    = :def $ &enum:nth bookmark 0
+                    &enum:nth bookmark 3
+                    &enum:nth bookmark 2
                 if (empty? focus)
                   let
                       data-path $ .to-path bookmark
@@ -5979,9 +5980,10 @@
                                 get-in files $ [] old-ns :defs old-def
                           update-in ([] :sessions session-id :writer :stack idx)
                             fn (bookmark)
-                              tag-match bookmark $
-                                :def _ns _def f
-                                %:: %bookmark :def new-ns new-def f
+                              if
+                                = :def $ &enum:nth bookmark 0
+                                :: :def new-ns new-def $ &enum:nth bookmark 3
+                                , bookmark
                           update-in ([] :files new-ns :defs new-def :code :data)
                             fn (def-data)
                               let
@@ -6017,12 +6019,12 @@
                 update-in db
                   [] :files $ nth op-data 1
                   fn (file)
-                    tag-match op-data
-                      (:ns ns')
-                        assoc file :ns $ :ns old-file
-                      (:def ns' def')
-                        assoc-in file ([] :defs def')
-                          get-in old-file $ [] :defs def'
+                    if
+                      = :ns $ &enum:nth op-data 0
+                      assoc file :ns $ :ns old-file
+                      assoc-in file
+                        [] :defs $ &enum:nth op-data 2
+                        get-in old-file $ [] :defs (&enum:nth op-data 2)
           :examples $ []
           :schema $ :: 'Dynamic
         |reset-files $ %{} 'CodeEntry (:doc |)
@@ -6155,14 +6157,15 @@
                   parent-bookmark $ .update-focus bookmark butlast
                   parent-path $ .to-path parent-bookmark
                   parent-expr $ get-in db parent-path
+                  parent-data $ option:unwrap-or (get parent-expr :data) {}
                 if
-                  = 1 $ count (:data parent-expr)
+                  = 1 $ count parent-data
                   -> db
                     update-in parent-path $ fn (expr)
-                      tag-match
-                        option:unwrap-or (get expr :data) {}
-                        (:none) (raise "|unexpected empty expr")
-                        (:some k v ms) v
+                      option:unwrap-or
+                        first $ vals
+                          option:unwrap-or (get expr :data) {}
+                        , expr
                     update-in
                       [] :sessions session-id :writer :stack $ :pointer writer
                       fn (b)
@@ -6394,11 +6397,14 @@
         |doc-set $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn doc-set (db path docstring sid op-id op-time)
-              tag-match path
-                (:ns ns-text)
-                  assoc-in db ([] :files ns-text :ns :doc) docstring
-                (:def ns-text def-text)
-                  assoc-in db ([] :files ns-text :defs def-text :doc) docstring
+              if
+                = :ns $ &enum:nth path 0
+                assoc-in db
+                  [] :files (&enum:nth path 1) :ns :doc
+                  , docstring
+                assoc-in db
+                  [] :files (&enum:nth path 1) :defs (&enum:nth path 2) :doc
+                  , docstring
           :examples $ []
           :schema $ :: 'Dynamic
         |draft-ns $ %{} 'CodeEntry (:doc |)
@@ -6412,11 +6418,10 @@
           :code $ quote
             defn edit (db op-data session-id op-id op-time)
               let
-                  bookmark $ tag-match op-data
-                    (:ns the-ns)
-                      %:: %bookmark :ns the-ns $ []
-                    (:def the-ns the-def)
-                      %:: %bookmark :def the-ns the-def $ []
+                  bookmark $ if
+                    = :ns $ &enum:nth op-data 0
+                    %:: %bookmark :ns (&enum:nth op-data 1) ([])
+                    %:: %bookmark :def (&enum:nth op-data 1) (&enum:nth op-data 2) ([])
                 -> db
                   update-in ([] :sessions session-id :writer) (push-bookmark bookmark)
                   assoc-in ([] :sessions session-id :router) (:: :editor)
@@ -6428,14 +6433,11 @@
               let
                   writer $ to-writer db sid
                   bookmark $ to-bookmark writer
-                if (some? bookmark)
-                  tag-match bookmark
-                    (:def ns' def' f)
-                      -> db $ update-in ([] :sessions sid :writer)
-                        push-bookmark $ :: :ns ns' ([])
-                    (:ns ns' f)
-                      -> db $ update-in ([] :sessions sid :writer)
-                        push-bookmark $ :: :ns ns' ([])
+                if (not= bookmark nil)
+                  let
+                      ns' $ &enum:nth bookmark 1
+                    -> db $ update-in ([] :sessions sid :writer)
+                      push-bookmark $ :: :ns ns' ([])
                   , db
           :examples $ []
           :schema $ :: 'Dynamic
@@ -6463,9 +6465,10 @@
                 update-in db
                   [] :sessions session-id :writer :stack $ :pointer writer
                   fn (b)
-                    tag-match b
-                      (:def ns' def' f) (:: :def ns' def' op-data)
-                      (:ns ns' f) (:: :ns ns' op-data)
+                    if
+                      = :def $ &enum:nth b 0
+                      :: :def (&enum:nth b 1) (&enum:nth b 2) op-data
+                      :: :ns (&enum:nth b 1) op-data
           :examples $ []
           :schema $ :: 'Dynamic
         |go-down $ %{} 'CodeEntry (:doc |)
@@ -6714,11 +6717,10 @@
           :code $ quote
             defn select (db op-data session-id op-id op-time)
               let
-                  bookmark $ tag-match op-data
-                    (:def ns' def')
-                      %:: %bookmark :def ns' def' $ []
-                    (:ns ns')
-                      %:: %bookmark :ns ns' $ []
+                  bookmark $ if
+                    = :def $ &enum:nth op-data 0
+                    %:: %bookmark :def (&enum:nth op-data 1) (&enum:nth op-data 2) ([])
+                    %:: %bookmark :ns (&enum:nth op-data 1) ([])
                 -> db
                   update-in ([] :sessions session-id :writer) (push-bookmark bookmark)
                   assoc-in ([] :sessions session-id :router) (:: :editor)
