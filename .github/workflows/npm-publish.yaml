@@ -22,11 +22,16 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org/
-          cache: yarn
 
-      - uses: calcit-lang/setup-cr@0.0.8
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.12.0 --activate
+          yarn --version
 
-      - run: caps --ci && yarn && yarn compile-server && yarn compile-page && yarn release-page
+      - uses: calcit-lang/setup-cr@0.0.9
+
+      - run: caps --ci && yarn install --immutable && yarn compile-server && yarn compile-page && yarn release-page
 
       - name: publish
         run: npm publish --provenance --access public
