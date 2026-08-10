@@ -6423,7 +6423,7 @@
               -> db $ update-in ([] :sessions sid :writer)
                 fn (writer)
                   let
-                      pointer $ :pointer writer
+                      pointer $ option:unwrap-or (get writer :pointer) 0
                     -> writer
                       update :stack $ fn (stack)
                         if
@@ -6474,7 +6474,9 @@
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                   bookmark $ Bookmark
-                    get (:stack writer) (:pointer writer)
+                    get
+                      option:unwrap-or (get writer :stack) []
+                      option:unwrap-or (get writer :pointer) 0
                   parent-bookmark $ .update-focus bookmark butlast
                   parent-path $ .to-path parent-bookmark
                   last-coord $ last (.get-focus bookmark)
@@ -6500,7 +6502,9 @@
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                   bookmark $ Bookmark
-                    get (:stack writer) (:pointer writer)
+                    get
+                      option:unwrap-or (get writer :stack) []
+                      option:unwrap-or (get writer :pointer) 0
                   parent-bookmark $ .update-focus bookmark butlast
                   parent-path $ .to-path parent-bookmark
                   last-coord $ last (.get-focus bookmark)
@@ -6528,7 +6532,7 @@
               -> db $ update-in ([] :sessions session-id :writer)
                 fn (writer)
                   update-in writer
-                    [] :stack $ :pointer writer
+                    [] :stack $ option:unwrap-or (get writer :pointer) 0
                     fn (b)
                       .update-focus (Bookmark b)
                         fn (focus)
@@ -6547,10 +6551,10 @@
               -> db $ update-in ([] :sessions sid :writer)
                 fn (writer)
                   let
-                      pointer $ :pointer writer
+                      pointer $ option:unwrap-or (get writer :pointer) 0
                     assoc writer :pointer $ if
                       >= pointer $ dec
-                        count $ :stack writer
+                        option:unwrap-or (get writer :stack) []
                       , pointer (inc pointer)
           :examples $ []
           :schema $ :: 'Dynamic
@@ -6591,7 +6595,7 @@
               -> db $ update-in ([] :sessions sid :writer)
                 fn (writer)
                   let
-                      pointer $ :pointer writer
+                      pointer $ option:unwrap-or (get writer :pointer) 0
                     assoc writer :pointer $ if (> pointer 0) (dec pointer) 0
           :examples $ []
           :schema $ :: 'Dynamic
