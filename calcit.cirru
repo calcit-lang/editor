@@ -4157,7 +4157,7 @@
               let
                   d2! $ fn (op2) (dispatch! op2 sid)
                   op-id $ nanoid
-                  op-time $ .!now js/Date
+                  op-time $ js/Date.now
                 tag-match op
                   (:effect/save-files)
                     handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true nil
@@ -4203,11 +4203,11 @@
                   println $ .!yellow chalk "|Using default schema."
                 if found?
                   let
-                      started-at $ unsafe-coerce (.!now js/Date) 'Number
+                      started-at $ unsafe-coerce (js/Date.now) 'Number
                       data $ parse-cirru-edn (fs/readFileSync storage-file |utf8)
                         {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf) (:CodeEntry schema/CodeEntry)
                       cost $ -
-                        unsafe-coerce (.!now js/Date) 'Number
+                        unsafe-coerce (js/Date.now) 'Number
                         , started-at
                     println $ .!gray chalk (str "|Took " cost "|ms to load.")
                     , data
@@ -4303,7 +4303,7 @@
                   println "|Not writing empty project."
                   do
                     let
-                        started-time $ .!now js/Date
+                        started-time $ js/Date.now
                       persist! storage-file (db->string @*writer-db) started-time
                     println (str &newline "|Saved calcit.cirru")
                       str $ if (some? code) (str "|with " code)
@@ -5186,7 +5186,9 @@
                   if
                     or
                       = pkg $ nth new-bookmark 1
-                      starts-with? (nth new-bookmark 1) (str pkg |.)
+                      starts-with?
+                        unsafe-coerce (nth new-bookmark 1) :string
+                        str pkg |.
                     tag-match new-bookmark
                       (:def ns' def' f)
                         if (contains? new-target-defs def')
@@ -5263,18 +5265,26 @@
                 each tree $ fn (item) (parse-bookmarks-collect! item local-defs import-rules this-ns this-def collect!)
                 let
                     sym $ if (.!startsWith tree |@) (.!slice tree 1) tree
-                  if (&set:includes? local-defs sym)
-                    if (&= this-def sym) nil $ collect! (:: :reference this-ns sym)
+                  if
+                    &set:includes? local-defs $ option:unwrap-or sym |
+                    if
+                      not $ &= this-def (option:unwrap-or sym |)
+                      collect! $ :: :reference this-ns (option:unwrap-or sym |)
                     each import-rules $ fn (x0)
                       tag-match x0
                         (:by-as ns-name alias)
                           if
-                            starts-with? sym $ str alias |/
+                            starts-with?
+                              unsafe-coerce (option:unwrap-or sym |) :string
+                              str alias |/
                             collect! $ :: :reference ns-name
-                              &str:slice sym $ inc (.-length alias)
+                              &str:slice
+                                unsafe-coerce (option:unwrap-or sym |) :string
+                                inc $ unsafe-coerce (.-length alias) :number
                         (:by-refer ns-name def-names)
-                          if (&set:includes? def-names sym)
-                            collect! $ :: :reference ns-name sym
+                          if
+                            &set:includes? def-names $ option:unwrap-or sym |
+                            collect! $ :: :reference ns-name (option:unwrap-or sym |)
           :examples $ []
           :schema $ :: 'Dynamic
         |parse-ns-rules $ %{} 'CodeEntry (:doc |)
@@ -5323,7 +5333,9 @@
                 ; println |deps deps-info def-info new-bookmark
                 if (some? new-bookmark)
                   if
-                    starts-with? (nth new-bookmark 1) (str pkg |.)
+                    starts-with?
+                      unsafe-coerce (nth new-bookmark 1) :string
+                      str pkg |.
                     tag-match new-bookmark $
                       :def ns' def'
                       if (contains? target-defs def')
@@ -5620,7 +5632,7 @@
                     .to-list $ keys
                       :data $ get-in db data-path
                   deleted-key $ last (.get-focus bookmark)
-                  idx $ .index-of child-keys deleted-key
+                  idx $ option:unwrap-or (.index-of child-keys deleted-key) 0
                 if
                   empty? $ .get-focus bookmark
                   -> db $ update-in ([] :sessions session-id :notifications) (push-warning op-id op-time "|cannot delete from root")
@@ -5970,12 +5982,12 @@
                             fn (def-data)
                               let
                                   try-1 $ :text
-                                    .unwrap $ val-nth def-data 1
+                                    val-nth (option:unwrap-or def-data {}) 1
                                 if
                                   and (string? try-1)
                                     = |^ $ first try-1
-                                  assoc-nth def-data 2 $ cirru->tree new-def user-id op-time
-                                  assoc-nth def-data 1 $ cirru->tree new-def user-id op-time
+                                  assoc-nth (option:unwrap-or def-data {}) 2 $ cirru->tree new-def user-id op-time
+                                  assoc-nth (option:unwrap-or def-data {}) 1 $ cirru->tree new-def user-id op-time
                         -> db $ update-in ([] :sessions session-id :notifications)
                           push-warning op-id op-time $ str "|no namespace: " new-ns
                   true $ do (println "|Unexpected kind:" kind) db
@@ -6095,9 +6107,9 @@
                   -> db $ update-in (.to-path bookmark)
                     fn (expr)
                       if
-                        = 1 $ count (:data expr)
+                        = 1 $ option:unwrap-or (get expr :data) {}
                         nth
-                          &map:destruct $ :data expr
+                          option:unwrap-or (get expr :data) {}
                           , 1
                         , expr
                   -> db
@@ -6111,7 +6123,7 @@
                           child-keys $ sort
                             .to-list $ keys (:data base-expr)
                           children $ -> (:data expr) (.to-list) (.sort-by first) (map last)
-                          idx $ .index-of child-keys last-coord
+                          idx $ option:unwrap-or (.index-of child-keys last-coord) 0
                           limit-id $ if
                             = idx $ dec (count child-keys)
                             , bisection/max-id
@@ -6141,7 +6153,7 @@
                   -> db
                     update-in parent-path $ fn (expr)
                       tag-match
-                        destruct-map $ :data expr
+                        option:unwrap-or (get expr :data) {}
                         (:none) (raise "|unexpected empty expr")
                         (:some k v ms) v
                     update-in
@@ -6165,7 +6177,9 @@
                       and
                         some? $ :at op-data
                         some? $ :text op-data
-                        > (:at op-data) (:at leaf)
+                        >
+                          option:unwrap-or (get op-data :at) 0
+                          option:unwrap-or (get leaf :at) 0
                       %{} schema/CirruLeaf
                         :text $ :text op-data
                         :at $ :at op-data
@@ -6204,12 +6218,13 @@
         |push-message $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn push-message (db op-data sid op-id op-time)
-              let-sugar
-                    [] kind text
-                    , op-data
+              let
+                  kind $ option:unwrap-or (nth op-data 0) nil
+                  text $ option:unwrap-or (nth op-data 1) nil
                 update-in db ([] :sessions sid :notifications)
                   fn (xs)
-                    conj xs $ {} (:id op-id) (:kind kind) (:text text) (:time op-time)
+                    conj (option:unwrap-or xs [])
+                      {} (:id op-id) (:kind kind) (:text text) (:time op-time)
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
@@ -6483,7 +6498,7 @@
                   base-expr $ get-in db parent-path
                   child-keys $ sort
                     .to-list $ keys (:data base-expr)
-                  idx $ .index-of child-keys last-coord
+                  idx $ option:unwrap-or (.index-of child-keys last-coord) 0
                 if
                   empty? $ .get-focus bookmark
                   , db $ -> db
@@ -6511,7 +6526,7 @@
                   base-expr $ get-in db parent-path
                   child-keys $ sort
                     .to-list $ keys (:data base-expr)
-                  idx $ .index-of child-keys last-coord
+                  idx $ option:unwrap-or (.index-of child-keys last-coord) 0
                 if
                   empty? $ .get-focus bookmark
                   , db $ -> db
@@ -6640,7 +6655,7 @@
               update-in db ([] :sessions session-id :writer)
                 fn (writer)
                   if
-                    some? $ :picker-mode writer
+                    option:some? $ get writer :picker-mode
                     dissoc writer :picker-mode
                     assoc writer :picker-mode $ to-bookmark writer
           :examples $ []
@@ -6899,14 +6914,14 @@
           :code $ quote
             defn parse-def (text)
               let
-                  clean-text $ -> text (.!replace |@ |)
+                  clean-text $ -> text (.replace |@ |)
                 if (.includes? clean-text |/)
                   let-sugar
                         [] ns-text def-text
                         split clean-text |/
                     {} (:method :as) (:key ns-text) (:def def-text)
                   let
-                      try-dot $ clean-text.!indexOf |.
+                      try-dot $ option:unwrap-or (.index-of clean-text |.) -1
                     if (&>= try-dot 0)
                       let
                           obj $ clean-text.slice 0 try-dot
@@ -7120,7 +7135,8 @@
                   if save-ir? $ js/setTimeout
                     fn () $ let
                         db-content $ db->string db
-                        started-time $ .!now js/Date
+                        started-time $
+                          now!
                       reset! *calcit-md5 $ md5 db-content
                       persist-async! (:storage-file config/site) db-content started-time
                 fn (e)
@@ -7134,7 +7150,7 @@
         |md5 $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn md5 (s)
-              -> crypto (.!createHash |md5) (.!update s) (.!digest |hex)
+              -> crypto (.!createHash |md5) (.update s) (.digest |hex)
           :examples $ []
           :schema $ :: 'Dynamic
         |path $ %{} 'CodeEntry (:doc |)
@@ -7147,7 +7163,9 @@
             defn persist! (storage-path db-str started-time) (fs/writeFileSync storage-path db-str)
               println $ .!gray chalk
                 str "|took "
-                  - (.!now js/Date) started-time
+                  -
+                      now!
+                    , started-time
                   , "|ms to wrote calcit.cirru"
           :examples $ []
           :schema $ :: 'Dynamic
@@ -7159,7 +7177,9 @@
                   js/console.log $ .!red chalk "|Failed to write storage!" err
                   println $ .!gray chalk
                     str "|took "
-                      - (.!now js/Date) started-time
+                      -
+                          now!
+                        , started-time
                       , "|ms to wrote calcit.cirru"
           :examples $ []
           :schema $ :: 'Dynamic
@@ -7190,17 +7210,17 @@
             defn port-taken? (port next-fn)
               let
                   tester $ net/createServer
-                -> tester
-                  .!once |error $ fn (err)
+                -> (unsafe-coerce tester JsObject)
+                  .once |error $ fn (err)
                     if
                       not= (.-code err) |EADDRINUSE
                       next-fn err false
                       next-fn nil true
-                  .!once |listening $ fn ()
-                    -> tester
-                      .!once |close $ fn () (next-fn nil false)
-                      .!close
-                  .!listen port |0.0.0.0
+                  .once |listening $ fn ()
+                    -> (unsafe-coerce tester JsObject)
+                      .once |close $ fn () (next-fn nil false)
+                      .close
+                  .listen port |0.0.0.0
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
@@ -7261,13 +7281,13 @@
                 __dirname $ path/dirname (url/fileURLToPath js/import.meta.url)
                 pkg $ js/JSON.parse
                   fs/readFileSync $ path/join __dirname |../package.json
-                version $ .-version pkg
-                pkg-name $ .-name pkg
+                version $ aget (unsafe-coerce pkg JsObject) |version|
+                pkg-name $ aget (unsafe-coerce pkg JsObject) |name|
               -> (latest-version pkg-name)
                 .!then $ fn (npm-version)
                   println $ if (= version npm-version) (str "|Running latest version " version)
                     .!yellow chalk $ str "|Update is available tagged " npm-version "|, current one is " version
-                .!catch $ fn (e)
+                .catch $ fn (e)
                   js/console.error $ .!yellow chalk "|Failed to request version:" (.-message e)
           :examples $ []
           :schema $ :: 'Dynamic
