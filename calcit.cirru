@@ -5756,7 +5756,8 @@
                                   = selected-ns $ option:unwrap-or
                                     get-in ns-expr $ [] :data name-field :text
                                     , nil
-                                assoc-in expr ([] :data name-field :text) new-ns
+                                update expr :data $ fn (data)
+                                  assoc-in data ([] name-field :text) new-ns
                         assoc files new-ns new-file
                     assoc-in ([] :sessions sid :writer :selected-ns) new-ns
           :examples $ []
@@ -5991,7 +5992,8 @@
                     :data $ {}
                 -> db
                   update-in data-path $ fn (node)
-                    assoc-in new-expr ([] :data bisection/mid-id) (option:unwrap-or node {})
+                    update new-expr :data $ fn (data)
+                      assoc data bisection/mid-id $ option:unwrap-or node {}
                   update-in ([] :sessions session-id :writer :stack pointer)
                     fn (b)
                       .update-focus (Bookmark b)
@@ -6141,7 +6143,9 @@
                   kind $ option:unwrap-or (get op-data :kind) nil
                   ns-info $ option:unwrap-or (get op-data :ns) nil
                   extra-info $ option:unwrap-or (get op-data :extra) nil
-                  idx $ get-in db ([] :sessions session-id :writer :pointer)
+                  idx $ option:unwrap-or
+                    get-in db $ [] :sessions session-id :writer :pointer
+                    , 0
                   user-id $ get-in db ([] :sessions session-id :user-id)
                 cond
                     = :ns kind
@@ -6162,8 +6166,10 @@
                         update-in ([] :sessions session-id :writer :stack idx)
                           fn (b)
                             assoc (option:unwrap-or b {}) 1 new-ns
-                        update-in ([] :files new-ns :ns :code :data next-id :text)
-                          fn (x) new-ns
+                        update-in ([] :files new-ns :ns :code)
+                          fn (code-entry)
+                            update (option:unwrap-or code-entry {}) :data $ fn (data)
+                              assoc-in data ([] next-id :text) new-ns
                   (= :def kind)
                     let
                         old-ns $ option:unwrap-or (get ns-info :from) nil
@@ -6198,8 +6204,13 @@
                           update-in ([] :files new-ns :defs new-def :code :data)
                             fn (def-data)
                               let
-                                  try-1 $ :text
-                                    val-nth (option:unwrap-or def-data {}) 1
+                                  try-1 $ option:unwrap-or
+                                    get
+                                      option:unwrap-or
+                                        val-nth (option:unwrap-or def-data {}) 1
+                                        , {}
+                                      , :text
+                                    , nil
                                 if
                                   and (string? try-1)
                                     = |^ $ option:unwrap-or (first try-1) |
@@ -6286,8 +6297,8 @@
                           option:unwrap-or (get target-expr :data) nil
                           dec n
                     -> db
-                      update-in (conj data-path :data)
-                        fn (expr-data)
+                      update-in data-path $ fn (expr)
+                        update (assert-type expr 'app.schema/CirruExpr) :data $ fn (expr-data)
                           -> (assert-type expr-data :map) (dissoc operating-key)
                             assoc-before left-key $ option:unwrap-or (get expr-data operating-key) nil
                       update-in
