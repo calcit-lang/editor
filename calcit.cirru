@@ -3739,13 +3739,13 @@
               (exists? js/process) (= |true js/process.env.cdn)
               :else false
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Bool
         |dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def dev? $ = |dev
               option:unwrap-or (get-env |mode) |release
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Bool
         |site $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def site $ {} (:port nil) (:title "|Calcit Editor") (:icon |https://cdn.tiye.me/logo/cirru.png) (:theme |#eeeeff) (:storage-key |calcit-storage) (:storage-file |calcit.cirru)
@@ -3759,103 +3759,103 @@
         |b $ %{} 'CodeEntry (:doc |)
           :code $ quote (def b 66)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |backspace $ %{} 'CodeEntry (:doc |)
           :code $ quote (def backspace 8)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |c $ %{} 'CodeEntry (:doc |)
           :code $ quote (def c 67)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |d $ %{} 'CodeEntry (:doc |)
           :code $ quote (def d 68)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |down $ %{} 'CodeEntry (:doc |)
           :code $ quote (def down 40)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |e $ %{} 'CodeEntry (:doc |)
           :code $ quote (def e 69)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |enter $ %{} 'CodeEntry (:doc |)
           :code $ quote (def enter 13)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |escape $ %{} 'CodeEntry (:doc |)
           :code $ quote (def escape 27)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |f $ %{} 'CodeEntry (:doc |)
           :code $ quote (def f 70)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |i $ %{} 'CodeEntry (:doc |)
           :code $ quote (def i 73)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |j $ %{} 'CodeEntry (:doc |)
           :code $ quote (def j 74)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |k $ %{} 'CodeEntry (:doc |)
           :code $ quote (def k 75)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |left $ %{} 'CodeEntry (:doc |)
           :code $ quote (def left 37)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |num-4 $ %{} 'CodeEntry (:doc |)
           :code $ quote (def num-4 52)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |o $ %{} 'CodeEntry (:doc |)
           :code $ quote (def o 79)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |p $ %{} 'CodeEntry (:doc |)
           :code $ quote (def p 80)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |period $ %{} 'CodeEntry (:doc |)
           :code $ quote (def period 190)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |right $ %{} 'CodeEntry (:doc |)
           :code $ quote (def right 39)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |s $ %{} 'CodeEntry (:doc |)
           :code $ quote (def s 83)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |slash $ %{} 'CodeEntry (:doc |)
           :code $ quote (def slash 191)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |space $ %{} 'CodeEntry (:doc |)
           :code $ quote (def space 32)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |tab $ %{} 'CodeEntry (:doc |)
           :code $ quote (def tab 9)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |up $ %{} 'CodeEntry (:doc |)
           :code $ quote (def up 38)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |v $ %{} 'CodeEntry (:doc |)
           :code $ quote (def v 86)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         |x $ %{} 'CodeEntry (:doc |)
           :code $ quote (def x 88)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns app.keycode)
     |app.polyfill $ %{} 'FileEntry
@@ -6963,7 +6963,8 @@
               :args $ [] 'Dynamic
         |now! $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defn now! () $ js/Date.now
+            defn now! () $
+              unsafe-coerce js/Date.now 'Number
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Number)
@@ -7216,7 +7217,9 @@
             defn md5 (s)
               -> crypto (.!createHash |md5) (.update s) (.digest |hex)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'String)
+              :args $ [] 'String
         |path $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def path $ js/require |path
@@ -7452,7 +7455,11 @@
                 true $ concat (take xs idx)
                   drop xs $ inc idx
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {}
+              :args $ [] (:: 'List 'T) 'Number
+              :generics $ [] 'T
+              :return $ :: 'List 'T
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns app.util.list)
     |app.util.shortcuts $ %{} 'FileEntry
