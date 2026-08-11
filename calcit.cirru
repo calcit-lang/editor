@@ -6622,7 +6622,7 @@
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                 update-in db
-                  [] :sessions session-id :writer :stack $ :pointer writer
+                  [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                   fn (b)
                     if
                       = :def $ &enum:nth b 0
@@ -6635,21 +6635,25 @@
             defn go-down (db op-data session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
-                  tail? $ :tail? op-data
+                  tail? $ option:unwrap-or (get op-data :tail?) false
                   bookmark $ Bookmark
-                    get (:stack writer) (:pointer writer)
+                    get
+                      option:unwrap-or (get writer :stack) nil
+                      option:unwrap-or (get writer :pointer) 0
                   target-expr $ get-in db (.to-path bookmark)
                 if
-                  = 0 $ count (:data target-expr)
+                  = 0 $ count
+                    option:unwrap-or (get target-expr :data) nil
                   , db $ -> db
                     update-in
-                      [] :sessions session-id :writer :stack $ :pointer writer
+                      [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                       fn (b)
                         .update-focus (Bookmark b)
                           fn (focus)
                             conj focus $ if tail?
-                              .unwrap $ get-max-key (:data target-expr)
-                              get-min-key $ :data target-expr
+                              .unwrap $ get-max-key
+                                option:unwrap-or (get target-expr :data) nil
+                              get-min-key $ option:unwrap-or (get target-expr :data) nil
           :examples $ []
           :schema $ :: 'Dynamic
         |go-left $ %{} 'CodeEntry (:doc |)
@@ -6666,13 +6670,14 @@
                   last-coord $ last (.get-focus bookmark)
                   base-expr $ get-in db parent-path
                   child-keys $ sort
-                    .to-list $ keys (:data base-expr)
+                    .to-list $ keys
+                      option:unwrap-or (get base-expr :data) nil
                   idx $ option:unwrap-or (.index-of child-keys last-coord) 0
                 if
                   empty? $ .get-focus bookmark
                   , db $ -> db
                     update-in
-                      [] :sessions session-id :writer :stack $ :pointer writer
+                      [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                       fn (b)
                         .update-focus (Bookmark b)
                           fn (focus)
@@ -6694,13 +6699,14 @@
                   last-coord $ last (.get-focus bookmark)
                   base-expr $ get-in db parent-path
                   child-keys $ sort
-                    .to-list $ keys (:data base-expr)
+                    .to-list $ keys
+                      option:unwrap-or (get base-expr :data) nil
                   idx $ option:unwrap-or (.index-of child-keys last-coord) 0
                 if
                   empty? $ .get-focus bookmark
                   , db $ -> db
                     update-in
-                      [] :sessions session-id :writer :stack $ :pointer writer
+                      [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                       fn (b)
                         .update-focus (Bookmark b)
                           fn (focus)
@@ -6748,9 +6754,9 @@
               -> db $ update-in ([] :sessions sid :writer)
                 fn (writer)
                   let
-                      from-idx $ :from op-data
-                      to-idx $ :to op-data
-                    -> writer
+                      from-idx $ option:unwrap-or (get op-data :from) 0
+                      to-idx $ option:unwrap-or (get op-data :to) 0
+                    -> (option:unwrap-or writer {})
                       update :pointer $ fn (pointer)
                         cond
                             = pointer from-idx
