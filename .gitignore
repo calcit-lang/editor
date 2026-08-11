@@ -18,3 +18,5 @@ out-page/
 .DS_Store
 
 .yarn/
+
+.calcit

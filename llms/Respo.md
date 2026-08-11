@@ -15,11 +15,11 @@
 
 The Respo project is a virtual DOM library written in Calcit-js, containing:
 
-- **Main codebase**: `compact.cirru` (2314 lines) - serialized source code
-- **Compiled source**: `calcit.cirru` (13806 lines) - full AST representation
+- **Main codebase**: `calcit.cirru` - serialized source code
 - **Namespaces**: 33 total namespaces organized by functionality
 - **Version**: 0.16.21
-- **Dependencies**: memof (memoization), lilac (UI utilities), calcit-test (testing)
+- **Memoization**: use the `respo.memo` / `respo.core` memoization APIs
+- **Testing**: use Calcit's built-in `cr test` and type system
 
 ### Core Namespace Organization
 
@@ -727,7 +727,7 @@ cr query ns namespace-name  # Check imports
 
 ### ⚠️ Critical Rules
 
-1. **NEVER directly edit `calcit.cirru` or `compact.cirru`** with text editors
+1. **NEVER directly edit `calcit.cirru`** with text editors
 
    - Use `cr edit` commands instead
    - These are serialized AST structures, not human-readable code

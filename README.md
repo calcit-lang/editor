@@ -62,9 +62,8 @@ http://editor.calcit-lang.org/?host=localhost&port=6001
 - `port`, defaults to `6001`
 - `host`, defaults to `localhost`, connects via WebSocket
 
-Code is emitted in `compact.cirru` by pressing `Command s`. Two extra files will be emitted:
+Code is emitted in `calcit.cirru` by pressing `Command s`. One extra file will be emitted:
 
-- `compact.cirru` contains a compact version of data tree of the program.
 - `.compact-inc.cirru` contains diff information from latest modification of per definition.
 
 It would be used in [calcit-runner](https://github.com/calcit-lang/calcit_runner.rs).
@@ -76,14 +75,6 @@ There are also several options in `:configs` field in `calcit.cirru`:
 - `port`, defaults to `6001`
 
 Editor UI is decoupled with WebSocket server, so it's okay to connect remote server from multiple pages with all expressions synced in real-time.
-
-##### `file-transform` operation
-
-Special mode `file-transform` added for transforming `compact.cirru` back to `calcit.cirru`.
-
-```bash
-op=file-transform ct
-```
 
 ### Workflow
 

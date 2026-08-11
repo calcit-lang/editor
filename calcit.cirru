@@ -2,10 +2,10 @@
 {} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |app) (:version |0.9.13)
   :entries $ {}
     :client $ {} (:description |) (:init-fn 'app.client/main!) (:mode :native) (:reload-fn 'app.client/reload!)
-      :modules $ [] |memof/ |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/ |gen-code/
+      :modules $ [] |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/ |gen-code/
       :type-slots $ {}
     :default $ {} (:description |) (:init-fn 'app.server/main!) (:mode :native) (:reload-fn 'app.server/reload!)
-      :modules $ [] |memof/ |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
+      :modules $ [] |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
       :type-slots $ {}
   :files $ {}
     |app.bookmark $ %{} 'FileEntry
@@ -120,9 +120,9 @@
             defn detect-watching! () $ let
                 query $ parse-query!
               when
-                some? $ get query |watching
+                option:some? $ get query |watching
                 dispatch! $ :: :router/change
-                  :: :watching $ get query |watching
+                  :: :watching $ option:unwrap-or (get query |watching) |
           :examples $ []
           :schema $ :: 'Dynamic
         |dispatch! $ %{} 'CodeEntry (:doc |)
@@ -135,8 +135,11 @@
                 (:states cursor new-state)
                   reset! *states $ assoc-in @*states (conj cursor :data) new-state
                 (:states-merge cursor state0 changes)
-                  reset! *states $ :states
-                    update-states-merge (&{} :states @*states) cursor state0 changes
+                  reset! *states $ option:unwrap-or
+                    get
+                      update-states-merge (&{} :states @*states) cursor state0 changes
+                      , :states
+                    , {}
                 (:states/clear)
                   reset! *states $ {}
                     :states $ {}
@@ -184,11 +187,13 @@
               connect!
               add-watch *store :changes $ fn (store prev) (render-app!)
                 if
-                  = :editor $ get-in @*store ([] :router 0)
+                  = :editor $ option:unwrap-or
+                    get-in @*store $ [] :router 0
+                    , nil
                   focus!
               add-watch *states :changes $ fn (states prev) (render-app!)
               js/window.addEventListener |keydown $ fn (event)
-                on-window-keydown event dispatch! $ :router @*store
+                on-window-keydown event dispatch! $ option:unwrap-or (get @*store :router) {}
               js/window.addEventListener |focus $ fn (event) (retry-connect!)
               js/window.addEventListener |visibilitychange $ fn (event)
                 when (= |visible js/document.visibilityState) (retry-connect!)
@@ -210,7 +215,9 @@
                 add-watch *states :changes $ fn (states prev) (render-app!)
                 add-watch *store :changes $ fn (store prev) (render-app!)
                   if
-                    = :editor $ get-in @*store ([] :router 0)
+                    = :editor $ option:unwrap-or
+                      get-in @*store $ [] :router 0
+                      , nil
                     focus!
                 println "|Code updated."
                 tip! |ok~ nil
@@ -237,8 +244,9 @@
         |simulate-login! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn simulate-login! () $ let
-                raw $ js/window.localStorage.getItem (:storage-key config/site)
-              if (some? raw)
+                raw $ js/window.localStorage.getItem
+                  option:unwrap-or (get config/site :storage-key) |
+              if (js-present? raw)
                 do $ dispatch!
                   :: :user/log-in $ parse-cirru-edn (unsafe-coerce raw 'String)
                 do $ println "|Found no storage."
@@ -307,7 +315,7 @@
             defn expr-many-items? (x size)
               if (expr? x)
                 let
-                    d $ :data x
+                    d $ &struct:get x :data
                   or
                     > (count d) size
                     any? (vals d) expr?
@@ -345,15 +353,18 @@
         |ws-host $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def ws-host $ if
-              and (exists? js/location)
+              and (js-present? js/location)
                 not $ blank?
-                  .-search $ unsafe-coerce js/location JsObject
+                  unsafe-coerce
+                    .-search $ unsafe-coerce js/location JsObject
+                    , String
               let
                   query $ parse-query!
                 println "|Loading from url" query
                 str |ws://
-                  or (get query |host) |localhost
-                  , |: $ or (get query |port) (:port schema/configs)
+                  option:unwrap-or (get query |host) |localhost
+                  , |: $ option:unwrap-or (get query |port)
+                    option:unwrap-or (get schema/configs :port) 6001
               , |ws://localhost:6001
           :examples $ []
           :schema $ :: 'String
@@ -456,19 +467,30 @@
           :code $ quote
             defcomp comp-bookmark (bookmark idx selected?)
               div
-                {}
-                  :class-name $ str |stack-bookmark (if selected? "| selected-bookmark" |)
-                  :draggable true
-                  :on-click $ on-pick bookmark idx
-                  :on-dragstart $ fn (e d!)
-                    -> e :event .-dataTransfer $ .!setData |id idx
-                  :on-drop $ fn (e d!)
-                    let
-                        target-idx $ js/parseInt
-                          -> e :event .-dataTransfer $ .!getData |id
-                      when (not= target-idx idx)
-                        d! :writer/move-order $ {} (:from target-idx) (:to idx)
-                  :on-dragover $ fn (e d!) (-> e :event .!preventDefault)
+                unsafe-coerce
+                  {}
+                    :class-name $ str |stack-bookmark (if selected? "| selected-bookmark" |)
+                    :draggable true
+                    :on-click $ on-pick bookmark idx
+                    :on-dragstart $ fn (e d!)
+                      .!setData
+                        unsafe-coerce
+                          .-dataTransfer $ option:unwrap-or (get e :event) ({})
+                          , JsObject
+                        , |id idx
+                    :on-drop $ fn (e d!)
+                      let
+                          target-idx $ js/parseInt
+                            .!getData
+                              unsafe-coerce
+                                .-dataTransfer $ option:unwrap-or (get e :event) ({})
+                                , JsObject
+                              , |id
+                        when (not= target-idx idx)
+                          d! :writer/move-order $ {} (:from target-idx) (:to idx)
+                    :on-dragover $ fn (e d!)
+                      .!preventDefault $ option:unwrap-or (get e :event) ({})
+                  , respo.schema/DomProps
                 tag-match bookmark
                   (:ns the-ns focus)
                     div
@@ -504,7 +526,7 @@
             defn on-pick (bookmark idx)
               fn (e d!)
                 let
-                    event $ :original-event e
+                    event $ option:unwrap-or (get e :original-event) ({})
                     shift? $ .-shiftKey event
                     alt? $ .-altKey event
                     meta? $ .-metaKey event
@@ -619,14 +641,16 @@
                       d! $ :: :states/clear
                   =< 24 nil
                   if
-                    not= :same $ :ns info
-                    render-status ns-text :ns $ :ns info
+                    not= :same $ option:unwrap-or (get info :ns) |
+                    render-status ns-text :ns $ option:unwrap-or (get info :ns) |
                 div
                   {} (:class-name css/row-parted)
                     :style $ {} (:align-items :flex-end)
                   list->
                     {} $ :style style-defs
-                    -> (:defs info) (.to-list)
+                    ->
+                      option:unwrap-or (get info :defs) {}
+                      .to-list
                       map $ fn (entry)
                         let-sugar
                               [] def-text status
@@ -726,7 +750,7 @@
                       :initial $ .join-str
                         option:unwrap-or (get configs :modules) []
                         , "| "
-                      :placeholder "|module/compact.cirru etc."
+                      :placeholder "|module/calcit.cirru etc."
                       :input-class css/font-code
                       :multiline? true
                   init-fn-plugin $ use-prompt (>> states :init-fn)
@@ -895,9 +919,9 @@
                               option:unwrap-or (get d :writer) {}
                           (:editor d)
                             comp-page-editor (>> states :editor)
-                              :stack $ option:unwrap-or (get writer :stack) []
+                              option:unwrap-or (&struct:get writer :stack) []
                               , d
-                                :pointer $ option:unwrap-or (get writer :pointer) 0
+                                option:unwrap-or (&struct:get writer :pointer) 0
                                 , picker-mode? theme
                           (:search d)
                             comp-search (>> states :search) d
@@ -1112,11 +1136,11 @@
               let
                   focused? $ = focus coord
                   focus-in? $ coord-contains? focus coord
-                  sorted-children $ -> (:data expr) (.to-list) (.sort-by first)
+                  sorted-children $ -> (&struct:get expr :data) (.to-list) (.sort-by first)
                   first-id $ if (empty? sorted-children) nil
-                    first $ first sorted-children
+                    first $ option:unwrap-or (first sorted-children) []
                   last-id $ if (empty? sorted-children) nil
-                    first $ last sorted-children
+                    first $ option:unwrap-or (last sorted-children) []
                 list->
                   {} (:tab-index 0)
                     :class-name $ str-spaced |comp-expr style-expr (base-style-expr theme) (if focused? |cirru-focused |)
@@ -1125,14 +1149,18 @@
                       {} $ :click
                         fn (e d!)
                           if picker-mode? $ do
-                            .!preventDefault $ :event e
+                            .!preventDefault $ unsafe-coerce
+                              option:unwrap-or (get e :event) {}
+                              , JsObject
                             d! :writer/pick-node $ tree->cirru expr
                       {}
                         :keydown $ on-keydown coord expr picker-mode?
                         :click $ fn (e d!)
                           if picker-mode?
                             do
-                              .!preventDefault $ :event e
+                              .!preventDefault $ unsafe-coerce
+                                option:unwrap-or (get e :event) {}
+                                , JsObject
                               d! :writer/pick-node $ tree->cirru expr
                             d! :writer/focus coord
                   loop
@@ -1149,7 +1177,6 @@
                         mode $ if (leaf? child) :inline
                           if (expr-many-items? child 6) :block $ case-default prev-mode :block (:inline :inline-block)
                             :inline-block $ if (expr-many-items? child 2) :block :inline-block
-                      if (nil? cursor-key) (js/console.warn "|[Editor] missing cursor key" k child)
                       recur
                         conj result $ [] k
                           if (leaf? child)
@@ -1164,11 +1191,15 @@
             defn on-keydown (coord expr picker-mode?)
               fn (e d!)
                 let
-                    event $ :original-event e
-                    shift? $ .-shiftKey event
-                    meta? $ or (.-metaKey event) (.-ctrlKey event)
-                    alt? $ .-altKey event
-                    code $ :key-code e
+                    event $ unsafe-coerce
+                      option:unwrap-or (get e :original-event) {}
+                      , JsObject
+                    shift? $ unsafe-coerce (.-shiftKey event) Bool
+                    meta? $ or
+                      unsafe-coerce (.-metaKey event) Bool
+                      unsafe-coerce (.-ctrlKey event) Bool
+                    alt? $ unsafe-coerce (.-altKey event) Bool
+                    code $ option:unwrap-or (get e :key-code) nil
                   cond
                       and meta? $ = code keycode/enter
                       d! (if shift? :ir/append-leaf :ir/prepend-leaf) nil
@@ -1230,9 +1261,9 @@
                             do $ if
                               and
                                 >= (count tree) 1
-                                string? $ first tree
+                                string? $ option:unwrap-or (first tree) |
                               d! :analyze/goto-def $ {}
-                                :text $ first tree
+                                :text $ option:unwrap-or (first tree) |
                                 :forced? true
                                 :args $ .slice tree 1
                               d! :notify/push-message $ [] :warn "|Can not create a function!"
@@ -1241,7 +1272,8 @@
                             js/setTimeout $ fn ()
                               let
                                   el $ js/document.querySelector |.el-abstract
-                                if (some? el) (.!focus el)
+                                if (js-present? el)
+                                  .!focus $ unsafe-coerce el JsObject
                         .!preventDefault event
                     (and meta? (= code keycode/slash) (not shift?))
                       d! $ :: :ir/toggle-comment
@@ -1253,7 +1285,10 @@
                       ; println |Keydown $ :key-code e
                       on-window-keydown event d! $ {} (:name :editor)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Dynamic 'Dynamic 'Dynamic
+              :features $ #{} :js-ffi
         |style-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstyle style-expr $ {}
@@ -1370,8 +1405,9 @@
           :code $ quote
             defn use-gen-code-box (states expr focus)
               let
-                  cursor $ :cursor states
-                  state $ either (:data states)
+                  cursor $ option:unwrap-or (get states :cursor) []
+                  state $ either
+                    option:unwrap-or (get states :data) nil
                     {} $ :show? false
                   path $ -> focus
                     either $ []
@@ -1386,7 +1422,8 @@
                       d! :ir/draft-expr $ first (parse-cirru-list code)
                       close-modal! d!
                 %:: %gen-code-box-action :plugin
-                  fn () $ if (:show? state)
+                  fn () $ if
+                    option:unwrap-or (get state :show?) false
                     comp-modal
                       fn (d!) (.reset-state plugin-code-gen d!) (close-modal! d!)
                       let
@@ -1399,10 +1436,11 @@
                           span $ {} (:class-name |) (:inner-text "|Does not edit expression!")
                             :on-click $ fn (e d!) (close-modal! d!)
                           let
-                              state $ or (:data states)
+                              state $ or
+                                option:unwrap-or (get states :data) nil
                                 if an-expr?
                                   format-cirru $ [] (tree->cirru node)
-                                  :text node
+                                  option:unwrap-or (get node :text) |
                             div
                               {} $ :class-name (str-spaced css/column style-panel)
                               .render plugin-code-gen
@@ -1502,7 +1540,11 @@
                         _ false
                   root? $ empty? footprints
                   show-ns? $ and (not root?)
-                    not= that-ns $ get (last footprints) 1
+                    not= that-ns $ option:unwrap-or
+                      get
+                        option:unwrap-or (last footprints) []
+                        , 1
+                      , |
                   has-children? $ not (empty? internal-deps)
                 div
                   {} $ :class-name (str-spaced css/row-middle style-entry)
@@ -1528,7 +1570,7 @@
                           [] (str item)
                             tag-match item
                               (:reference child-ns child-def)
-                                memof1-call-by (str child-ns |/ child-def) comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
+                                memo-comp-by (str child-ns |/ child-def) comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
                               _ $ div ({})
                                 <> $ str "|Unknown data: " item
           :examples $ []
@@ -1657,12 +1699,11 @@
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
-            respo.core :refer $ defcomp >> <> div span create-element list-> defeffect
+            respo.core :refer $ defcomp >> <> div span create-element list-> defeffect memo-comp-by
             respo.css :refer $ defstyle
             respo.comp.inspect :refer $ comp-inspect
             respo.comp.space :refer $ =<
             app.config :refer $ dev?
-            memof.once :refer $ memof1-call-by
             respo-alerts.core :refer $ use-alert use-prompt use-confirm use-modal-menu
     |app.comp.header $ %{} 'FileEntry
       :defs $ {}
@@ -1703,7 +1744,7 @@
                     =< 12 nil
                     render-entry
                       if logged-in?
-                        str |Profile: $ :members-count stats
+                        str |Profile: $ option:unwrap-or (get stats :members-count) 0
                         , |Guest
                       , :profile router-name $ fn (e d!)
                         d! $ :: :router/change (:: :profile)
@@ -1771,13 +1812,17 @@
           :code $ quote
             defcomp comp-leaf (states leaf focus coord by-other? first? readonly? picker-mode? theme)
               let
-                  cursor $ :cursor states
-                  state $ or (:data states) initial-state
+                  cursor $ option:unwrap-or (get states :cursor) []
+                  state $ or
+                    option:unwrap-or (get states :data) nil
+                    , initial-state
                   text $ or
                     if
-                      > (:at state) (:at leaf)
-                      :text state
-                      :text leaf
+                      >
+                        option:unwrap-or (get state :at) 0
+                        option:unwrap-or (get leaf :at) 0
+                      option:unwrap-or (get state :text) |
+                      option:unwrap-or (get leaf :text) |
                     , |
                   focused? $ = focus coord
                 textarea $ {} (:value text) (:spellcheck false)
@@ -1804,11 +1849,14 @@
               fn (e d!)
                 if picker-mode?
                   do
-                    .!preventDefault $ :event e
+                    .!preventDefault $ option:unwrap-or (get e :event) {}
                     d! :writer/pick-node $ tree->cirru leaf
                   d! :writer/focus coord
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Dynamic 'Dynamic 'Dynamic
+              :features $ #{} :js-ffi
         |on-input $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn on-input (state coord cursor)
@@ -1816,10 +1864,10 @@
                 let
                     now $ util/now!
                   d! :ir/update-leaf $ {}
-                    :text $ :value e
+                    :text $ option:unwrap-or (get e :value) |
                     :at now
                   d! cursor $ assoc
-                    assoc state :text $ :value e
+                    assoc state :text $ option:unwrap-or (get e :value) |
                     , :at now
           :examples $ []
           :schema $ :: 'Dynamic
@@ -1828,12 +1876,18 @@
             defn on-keydown (state leaf coord picker-mode?)
               fn (e d!)
                 let
-                    event $ option:unwrap-or (get e :original-event) {}
+                    event $ unsafe-coerce
+                      option:unwrap-or (get e :original-event) {}
+                      , JsObject
                     code $ option:unwrap-or (get e :key-code) nil
-                    shift? $ .-shiftKey event
-                    meta? $ or (.-metaKey event) (.-ctrlKey event)
-                    alt? $ .-altKey event
-                    selected? $ not= (-> event .-target .-selectionStart) (-> event .-target .-selectionEnd)
+                    shift? $ unsafe-coerce (.-shiftKey event) Bool
+                    meta? $ or
+                      unsafe-coerce (.-metaKey event) Bool
+                      unsafe-coerce (.-ctrlKey event) Bool
+                    alt? $ unsafe-coerce (.-altKey event) Bool
+                    selected? $ not=
+                      .-selectionStart $ unsafe-coerce (.-target event) JsObject
+                      .-selectionEnd $ unsafe-coerce (.-target event) JsObject
                     text $ if
                       >
                         option:unwrap-or (get state :at) 0
@@ -1868,7 +1922,8 @@
                         .!preventDefault event
                     (and (not selected?) (= code keycode/left))
                       if
-                        = 0 $ -> event .-target .-selectionStart
+                        = 0 $ .-selectionStart
+                          unsafe-coerce (.-target event) JsObject
                         do
                           d! $ :: :writer/go-left
                           .!preventDefault event
@@ -1876,11 +1931,12 @@
                       d! :analyze/peek-def $ option:unwrap-or (get leaf :text) |
                     (and (not selected?) (= code keycode/right))
                       if
-                        = text-length $ -> event .-target .-selectionEnd
+                        = text-length $ .-selectionEnd
+                          unsafe-coerce (.-target event) JsObject
                         do
                           d! $ :: :writer/go-right
                           .!preventDefault event
-                    (and meta? (= code keycode/c) (= (.-selectionStart (.-target event)) (.-selectionEnd (.-target event))))
+                    (and meta? (= code keycode/c) (= (.-selectionStart (unsafe-coerce (.-target event) JsObject)) (.-selectionEnd (unsafe-coerce (.-target event) JsObject))))
                       do-copy-logics! d! (tree->cirru leaf) |Copied!
                     (and meta? shift? (= code keycode/v))
                       do (on-paste! d!) (.!preventDefault event)
@@ -1914,7 +1970,10 @@
                     true $ do (; println "|Keydown leaf" code)
                       on-window-keydown event d! $ {} (:name :editor)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
+              :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns app.comp.leaf $ :require
@@ -2115,16 +2174,17 @@
           :code $ quote
             defcomp comp-doc (states expr-entry bookmark)
               let
-                  ns? $ = :ns (nth bookmark 0)
+                  ns? $ = :ns
+                    option:unwrap-or (nth bookmark 0) nil
                   doc-plugin $ use-prompt (>> states :doc)
                     {}
                       :text $ if ns? "|Namespace doc:" "|Function doc:"
-                      :initial $ :doc expr-entry
+                      :initial $ option:unwrap-or (get expr-entry :doc) |
                       :placeholder "|...some docs..."
                       :input-style $ {} (:height 600) (:resize :vertical) (:font-family ui/font-code) (:font-size 13)
                       :class-name css/font-code!
                       :multiline? true
-                  doc $ :doc expr-entry
+                  doc $ option:unwrap-or (get expr-entry :doc) |
                   no-doc? $ blank? doc
                 div
                   {} $ :style
@@ -2210,7 +2270,7 @@
                             span $ {}
                             comp-usages $ option:unwrap-or (get router-data :usages) nil
                           if-let
-                            locals $ option:unwrap-or (get router-data :preview-locals) nil
+                            locals $ get router-data :preview-locals
                             list->
                               {}
                                 :class-name $ str-spaced css/row css/gap8
@@ -2429,9 +2489,10 @@
           :code $ quote
             defeffect effect-focus-bookmark (pointer) (action el at?)
               if (= action :update)
-                if-let
-                  target $ .!querySelector el |.selected-bookmark
-                  .!scrollIntoViewIfNeeded target
+                let
+                    target $ .!querySelector el |.selected-bookmark
+                  if (js-present? target)
+                    .!scrollIntoViewIfNeeded $ unsafe-coerce target JsObject
           :examples $ []
           :schema $ :: 'Dynamic
         |initial-state $ %{} 'CodeEntry (:doc |)
@@ -3032,7 +3093,10 @@
                                   :color $ hsl 240 80 80
                               <> "|Watching url" nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Dynamic 'Dynamic
+              :features $ #{} :js-ffi
         |on-watch $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn on-watch (session-id)
@@ -3086,8 +3150,8 @@
           :code $ quote
             defcomp comp-peek-def (expr-entry)
               let
-                  doc $ :doc expr-entry
-                  simple-expr $ :code expr-entry
+                  doc $ option:unwrap-or (get expr-entry :doc) |
+                  simple-expr $ option:unwrap-or (get expr-entry :code) nil
                 div
                   {} $ :class-name (str-spaced css/row style-peek-def)
                   <>
@@ -3141,8 +3205,8 @@
           :code $ quote
             defcomp comp-picker-notice (choices target-node)
               let
-                  imported-names $ :imported choices
-                  defined-names $ :defined choices
+                  imported-names $ option:unwrap-or (get choices :imported) {}
+                  defined-names $ option:unwrap-or (get choices :defined) {}
                   render-code $ fn (x)
                     span $ {} (:inner-text x) (:class-name css-name-code)
                       :on-click $ fn (e d!) (d! :writer/pick-node x)
@@ -3150,7 +3214,7 @@
                     if
                       and (struct? target-node)
                         = :Leaf $ &struct:get-name target-node
-                      :text target-node
+                      &struct:get target-node :text
                       , nil
                     , nil
                   hint-func $ fn (x)
@@ -3169,18 +3233,22 @@
                     {} $ :class-name style-list-container
                     -> imported-names (.to-list)
                       filter $ fn (pair)
-                        .any? (nth pair 1) hint-func
+                        .any?
+                          option:unwrap-or (nth pair 1) []
+                          , hint-func
                       sort $ fn (a b)
                         let
                             a1 $ &compare
-                              count $ nth a 1
-                              count $ nth b 1
+                              count $ option:unwrap-or (nth a 1) []
+                              count $ option:unwrap-or (nth b 1) []
                           if (= 0 a1)
-                            &compare (first a) (first b)
+                            &compare
+                              option:unwrap-or (first a) |
+                              option:unwrap-or (first b) |
                             , a1
                       map $ fn (xs)
                         let
-                            ns $ first xs
+                            ns $ option:unwrap-or (first xs) |
                           [] ns $ list->
                             {} (:title ns) (:class-name style-list-container)
                             -> (nth xs 1)
@@ -3349,7 +3417,8 @@
                     js/setTimeout $ fn ()
                       let
                           el $ js/document.querySelector |#replace-input
-                        if (some? el) (.!select el)
+                        if (js-present? el)
+                          .!select $ unsafe-coerce el JsObject
               .close $ fn (self d!)
                 tag-match self $
                   :rename-plugin node cursor state
@@ -3630,7 +3699,8 @@
                           d! cursor $ update state :selection inc
                     (and (option:unwrap-or (get e :meta?) false) (= keycode/b code))
                       d! cursor $ update state :mode
-                        fn (mode) if (= mode :ns) :def :ns
+                        fn (mode)
+                          if (= mode :ns) :def :ns
                     true $ on-window-keydown
                       option:unwrap-or (get e :event) {}
                       , d!
@@ -3719,11 +3789,8 @@
           :code $ quote
             defcomp comp-theme-menu (states theme)
               let
-                  cursor $ :cursor states
-                  state $ if
-                    some? $ :data states
-                    :data states
-                    , false
+                  cursor $ option:unwrap-or (get states :cursor) []
+                  state $ option:unwrap-or (get states :data) false
                 div
                   {}
                     :class-name $ str-spaced css/font-fancy style-theme-menu
@@ -3790,27 +3857,38 @@
           :code $ quote
             defcomp comp-watching (states router-data theme)
               let
-                  expr $ get (:expr router-data) :code
-                  focus $ :focus router-data
-                  bookmark $ Bookmark (:bookmark router-data)
+                  expr $ option:unwrap-or
+                    get
+                      option:unwrap-or (get router-data :expr) nil
+                      , :code
+                    , nil
+                  focus $ option:unwrap-or (get router-data :focus) nil
+                  bookmark $ Bookmark
+                    option:unwrap-or (get router-data :bookmark) nil
                   others $ {}
-                  member-name $ get-in router-data ([] :member :nickname)
+                  member-name $ option:unwrap-or
+                    get-in router-data $ [] :member :nickname
+                    , |
                   readonly? true
                 if (nil? router-data)
                   div
                     {} $ :style style-container
                     <> "|Session is missing!" nil
-                  if (:self? router-data)
+                  if
+                    option:unwrap-or (get router-data :self?) false
                     div
                       {} $ :style style-container
                       <> "|Watching at yourself :)" style-title
                     div
                       {} $ :style (merge ui/column style-container)
-                      when (:working? router-data)
+                      when
+                        option:unwrap-or (get router-data :working?) false
                         div
                           {} $ :style
                             merge ui/flex $ {} (:overflow :auto)
-                          comp-doc (>> states :doc) (:expr router-data) bookmark
+                          comp-doc (>> states :doc)
+                            option:unwrap-or (get router-data :expr) nil
+                            , bookmark
                           comp-expr
                             >> states $ .preview bookmark
                             , expr focus ([]) others false false readonly? false (or theme :star-trail) 0
@@ -3990,8 +4068,12 @@
         |ctx $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def ctx $ if
-              and (exists? js/document) (exists? js/window)
-              .!getContext (.!createElement js/document |canvas) |2d
+              and (js-present? js/document) (js-present? js/window)
+              .!getContext
+                unsafe-coerce
+                  .!createElement (unsafe-coerce js/document JsObject) |canvas
+                  , JsObject
+                , |2d
               , nil
           :examples $ []
           :schema $ :: 'Dynamic
@@ -4001,10 +4083,15 @@
               if (some? ctx)
                 do
                   set! (.-font ctx) (str font-size "|px " font-family)
-                  .-width $ .!measureText ctx content
+                  .-width $ unsafe-coerce
+                    .!measureText (unsafe-coerce ctx JsObject) content
+                    , JsObject
                 , nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Dynamic 'Dynamic 'Dynamic
+              :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns app.polyfill)
     |app.schema $ %{} 'FileEntry
@@ -4361,7 +4448,8 @@
             defn expose-files! (port)
               let
                   server $ createServer
-                    fn (req res) (hint-fn async)
+                    fn (req res)
+                      hint-fn $ {} (:async true)
                       ; js/console.log (.-url req) (.-headers req)
                       .!setHeader res |Access-Control-Allow-Origin |*
                       .!setHeader res |Access-Control-Allow-Headers |*
@@ -4373,8 +4461,8 @@
                           |/ $ .!end res "|echo from Calcit Editor"
                           |/favicon.ico $ do (.!writeHead res 404) (.!end res |)
                           |/load-error $ readFile |./.calcit-error.cirru |utf8 (make-file-response res)
-                          |/load-compact $ readFile |./compact.cirru |utf8 (make-file-response res)
-                          |/compact-data $ readFile |./compact.cirru |utf8 (make-file-response res)
+                          |/load-calcit $ readFile |./calcit.cirru |utf8 (make-file-response res)
+                          |/calcit-data $ readFile |./calcit.cirru |utf8 (make-file-response res)
                 .!listen server port $ fn ()
                   let
                       link $ .!blue chalk (str |http://localhost: port)
@@ -4416,7 +4504,6 @@
                   do (start-server! configs) (check-version!)
                     dispatch! (:: :analyze/refresh-usages-dict) |system
                   |compile $ compile-all-files! configs
-                  |file-transform $ transform-compact-to-calcit!
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Dynamic)
@@ -4531,27 +4618,6 @@
                       swap! *client-caches assoc sid new-store
           :examples $ []
           :schema $ :: 'Dynamic
-        |transform-compact-to-calcit! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn transform-compact-to-calcit! () $ let
-                source $ parse-cirru-edn (fs/readFileSync |compact.cirru |utf8)
-                next-files $ map-kv
-                  option:unwrap-or (get source :files) nil
-                  fn (ns file)
-                    [] ns $ file-compact-to-calcit file
-                target $ {}
-                  :configs $ assoc
-                    option:unwrap-or (get source :configs) nil
-                    , :port 6001
-                  :entries $ option:unwrap-or (get source :entries) nil
-                  :package $ option:unwrap-or (get source :package) nil
-                  :files next-files
-                  :users $ {}
-              ; fs/writeFileSync |calcit-draft.cirru $ format-cirru-edn target
-              println "|TODO need update"
-              println "|transformed compact.cirru into calcit-draft.cirru"
-          :examples $ []
-          :schema $ :: 'Dynamic
         |watch-file! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn watch-file! () $ if (fs/existsSync storage-file)
@@ -4568,7 +4634,7 @@
             app.updater :refer $ updater
             app.util.compile :refer $ handle-files! persist! md5
             app.util.env :refer $ pick-port! pick-http-port!
-            app.util :refer $ db->string file-compact-to-calcit
+            app.util :refer $ db->string
             |chalk :default chalk
             |path :as path
             |fs :as fs
@@ -4742,7 +4808,7 @@
       :defs $ {}
         |base-style-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defn base-style-expr () style-expr
+            defn base-style-expr () css-expr
           :examples $ []
           :schema $ :: 'Dynamic
         |base-style-leaf $ %{} 'CodeEntry (:doc |)
@@ -4783,7 +4849,11 @@
               let
                   has-blank? $ or (= text |) (.includes? text "| ")
                   best-width $ + 8
-                    text-width* text (:font-size style-leaf) (:font-family style-leaf)
+                    text-width* text
+                      (option:unwrap-or (get style-leaf :font-size) 14)
+                        , style-leaf
+                      (option:unwrap-or (get style-leaf :font-family) ui/font-code)
+                        , style-leaf
                   max-width 240
                 merge
                   {} $ :width
@@ -4810,7 +4880,10 @@
                   if has-blank? style-space
                   if (or focused? by-other?) style-highlight
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
+              :features $ #{} :js-ffi
         |style-big $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def style-big $ {}
@@ -7284,20 +7357,6 @@
           :schema $ :: 'Fn
             {} (:return 'app.schema/FileEntry)
               :args $ [] 'app.schema/FileEntry 'Bool
-        |file-compact-to-calcit $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn file-compact-to-calcit (file)
-              let
-                  now $ js/Date.now
-                -> file
-                  update :ns $ fn (pair)
-                    cirru->tree (nth pair 1) |u0 now
-                  update :defs $ fn (defs)
-                    -> defs $ map-kv
-                      fn (k v)
-                        [] k $ cirru->tree (nth v 1) |u0 now
-          :examples $ []
-          :schema $ :: 'Dynamic
         |file-tree->cirru $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn file-tree->cirru (file)
@@ -7482,16 +7541,16 @@
             app.bookmark :refer $ Bookmark
     |app.util.compile $ %{} 'FileEntry
       :defs $ {}
-        |handle-compact-files! $ %{} 'CodeEntry (:doc |)
+        |handle-calcit-files! $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defn handle-compact-files! (pkg old-files latest-files added-names removed-names changed-names configs entries filter-ns)
+            defn handle-calcit-files! (pkg old-files latest-files added-names removed-names changed-names configs entries filter-ns)
               let
                   new-files $ if (some? filter-ns)
                     let
                         target $ get latest-files filter-ns
                       if (some? target) (assoc old-files filter-ns target) (dissoc old-files filter-ns)
                     , latest-files
-                  compact-data $ {} (:package pkg) (:about "|file is generated - never edit directly; learn cr edit/tree workflows before changing")
+                  calcit-data $ {} (:package pkg) (:about "|file is generated - never edit directly; learn cr edit/tree workflows before changing")
                     :configs $ {}
                       :init-fn $ option:unwrap-or (get configs :init-fn) nil
                       :reload-fn $ option:unwrap-or (get configs :reload-fn) nil
@@ -7561,7 +7620,7 @@
                                       :: 'quote code
                                 hide-empty-fields
                         pairs-map
-                fs/writeFile |compact.cirru (format-cirru-edn compact-data)
+                fs/writeFile |calcit.cirru (format-cirru-edn calcit-data)
                   fn (err)
                     if (some? err) (js/console.log "|Failed to write!" err)
                 fs/writeFile |.compact-inc.cirru (format-cirru-edn inc-data)
@@ -7588,7 +7647,7 @@
                       filter $ fn (ns-text)
                         not= (get new-files ns-text) (get old-files ns-text)
                       filter-by-ns
-                  handle-compact-files! (get db :package) old-files new-files added-names removed-names changed-names
+                  handle-calcit-files! (get db :package) old-files new-files added-names removed-names changed-names
                     option:unwrap-or (get db :configs) nil
                     option:unwrap-or (get db :entries) nil
                     , filter-ns
@@ -7868,24 +7927,35 @@
         |on-paste! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn on-paste! (d!)
-              -> js/navigator .-clipboard (.!readText)
-                .!then $ fn (text) (println "|read from text...")
-                  let
-                      cirru-code $ parse-cirru-list text
-                    if (cirru-form? cirru-code)
-                      d! :writer/paste $ first cirru-code
-                      d! :notify/push-message $ [] :error "|Not valid code"
-                .!catch $ fn (error) (js/console.error "|Not able to read from paste:" error)
+              let
+                  clipboard $ unsafe-coerce
+                    .-clipboard $ unsafe-coerce js/navigator JsObject
+                    , JsObject
+                  promise $ unsafe-coerce (.!readText clipboard) JsObject
+                  result $ unsafe-coerce
+                    .!then promise $ fn (text) (println "|read from text...")
+                      let
+                          cirru-code $ parse-cirru-list text
+                        if (cirru-form? cirru-code)
+                          d! :writer/paste $ first cirru-code
+                          d! :notify/push-message $ [] :error "|Not valid code"
+                    , JsObject
+                .!catch result $ fn (error) (js/console.error "|Not able to read from paste:" error)
                   d! :notify/push-message $ [] :error "|Failed to paste!"
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Dynamic
+              :features $ #{} :js-ffi
         |on-window-keydown $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn on-window-keydown (event dispatch! router)
               if (some? router)
                 let
-                    meta? $ or (.-metaKey event) (.-ctrlKey event)
-                    shift? $ .-shiftKey event
+                    meta? $ or
+                      unsafe-coerce (.-metaKey event) Bool
+                      unsafe-coerce (.-ctrlKey event) Bool
+                    shift? $ unsafe-coerce (.-shiftKey event) Bool
                     code $ .-keyCode event
                   cond
                       and meta? $ or (= code keycode/p) (= code keycode/o)
@@ -7912,7 +7982,10 @@
                       dispatch! $ :: :writer/picker-mode
                     true nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Dynamic 'Dynamic 'Dynamic
+              :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns app.util.shortcuts $ :require (app.keycode :as keycode)

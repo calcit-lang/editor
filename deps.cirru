@@ -1,5 +1,5 @@
 
-{} (:calcit-version |0.13.10)
+{} (:calcit-version |0.13.11)
   :dependencies $ {} (|Cumulo/cumulo-util.calcit |0.0.11)
     |Respo/alerts.calcit |0.10.16
     |Respo/respo-feather.calcit |0.4.3
@@ -9,6 +9,5 @@
     |Respo/respo.calcit |0.16.67
     |calcit-lang/bisection-key |0.0.20
     |calcit-lang/gen-code |0.0.6
-    |calcit-lang/memof |0.0.26
     |calcit-lang/recollect |0.0.29
     |mvc-works/ws-edn.calcit |0.0.16

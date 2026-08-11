@@ -339,10 +339,10 @@ cr -1 js
 
 ```cirru
 ns app.twig.analytics $ :require
-  memof.alias :refer $ defn-memoized
+  respo.core :refer $ memo-value-by
 
-; ✅ Memoize expensive calculations called in render loop
-defn-memoized compute-user-stats (user-data timestamp)
+; ✅ Memoize expensive derived values inside render-with!
+memo-value-by :user-stats compute-user-stats user-data timestamp
   ; Heavy computation...
   ...
 ```
