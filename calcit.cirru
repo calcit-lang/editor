@@ -4852,8 +4852,11 @@
                   var-names $ keys
                     option:unwrap-or (get ns-info :defs) nil
                   rules $ ->
-                    tree->cirru $ :code
-                      option:unwrap-or (get ns-info :ns) nil
+                    tree->cirru $ option:unwrap-or
+                      get
+                        option:unwrap-or (get ns-info :ns) {}
+                        , :code
+                      , nil
                     nth 2
                     rest
                     either $ []
@@ -5786,7 +5789,9 @@
                       fn (writer)
                         -> (option:unwrap-or writer {})
                           update :stack $ fn (stack)
-                            dissoc-idx stack $ :pointer (option:unwrap-or writer {})
+                            dissoc-idx stack $ option:unwrap-or
+                              get (option:unwrap-or writer {}) :pointer
+                              , 0
                           update :pointer dec
                 (:ns ns' f)
                   -> db
@@ -5795,7 +5800,9 @@
                       fn (writer)
                         -> (option:unwrap-or writer {})
                           update :stack $ fn (stack)
-                            dissoc-idx stack $ :pointer (option:unwrap-or writer {})
+                            dissoc-idx stack $ option:unwrap-or
+                              get (option:unwrap-or writer {}) :pointer
+                              , 0
                           update :pointer dec
           :examples $ []
           :schema $ :: 'Dynamic
@@ -5969,10 +5976,10 @@
                     update-in db data-path $ fn (parent-node)
                       let
                           prior-data $ ->
-                            .unwrap $ :data (option:unwrap-or parent-node {})
+                            .unwrap $ get (option:unwrap-or parent-node {}) :data
                             .filter-kv $ fn (k v) (< k end-key)
                           boxed-data $ ->
-                            .unwrap $ :data (option:unwrap-or parent-node {})
+                            .unwrap $ get (option:unwrap-or parent-node {}) :data
                             .filter-kv $ fn (k v) (>= k end-key)
                           new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id) (:data boxed-data)
                           new-parent-data $ -> prior-data (assoc end-key new-expr)
@@ -6371,7 +6378,9 @@
                             [] :data last-coord
                           child-keys $ sort
                             .to-list $ keys
-                              :data $ option:unwrap-or base-expr {}
+                              option:unwrap-or
+                                get (option:unwrap-or base-expr {}) :data
+                                , {}
                           children $ ->
                             option:unwrap-or
                               get (assert-type expr 'app.schema/CirruExpr) :data
@@ -7400,7 +7409,11 @@
                                   option:unwrap-or (get new-file :ns) nil
                                 , nil
                                   :: 'quote $ tree->cirru
-                                    :code $ option:unwrap-or (get new-file :ns) nil
+                                    option:unwrap-or
+                                      get
+                                        option:unwrap-or (get new-file :ns) {}
+                                        , :code
+                                      , nil
                               :removed-defs removed-defs
                               :added-defs $ -> added-defs
                                 map $ fn (x)
