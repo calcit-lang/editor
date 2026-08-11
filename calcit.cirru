@@ -5448,16 +5448,29 @@
                   def-info $ parse-def op-data
                   new-bookmark $ if
                     and
-                      contains? deps-info $ :key def-info
-                      = (:method def-info)
-                        :method $ get deps-info (:key def-info)
+                      contains? deps-info $ option:unwrap-or (get def-info :key) nil
+                      =
+                        option:unwrap-or (get def-info :method) nil
+                        option:unwrap-or
+                          get
+                            option:unwrap-or
+                              get deps-info $ option:unwrap-or (get def-info :key) nil
+                              , {}
+                            , :method
+                          , nil
                     let
-                        rule $ get deps-info (:key def-info)
+                        rule $ get deps-info
+                          option:unwrap-or (get def-info :key) nil
                       if
-                        = :refer $ :method def-info
-                        :: :def (:ns rule) (:key def-info)
-                        :: :def (:ns rule) (:def def-info)
-                    :: :def (nth bookmark 1) (:def def-info)
+                        = :refer $ option:unwrap-or (get def-info :method) nil
+                        :: :def
+                          option:unwrap-or (get rule :ns) nil
+                          option:unwrap-or (get def-info :key) nil
+                        :: :def
+                          option:unwrap-or (get rule :ns) nil
+                          option:unwrap-or (get def-info :def) nil
+                    :: :def (nth bookmark 1)
+                      option:unwrap-or (get def-info :def) nil
                   target-defs $ get-in db
                     [] :files (nth new-bookmark 1) :defs
                   user-id $ get-in db ([] :sessions sid :user-id)
