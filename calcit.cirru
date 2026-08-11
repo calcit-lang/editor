@@ -3882,7 +3882,7 @@
         |CirruExpr $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def CirruExpr $ impl-traits
-              defstruct :Expr (:by 'Dynamic) (:at 'Dynamic) (:data 'Dynamic)
+              defstruct :Expr (:by 'String) (:at 'Number) (:data 'Dynamic)
               , CirruExprMethods
           :examples $ []
           :schema $ :: 'Dynamic
@@ -3896,7 +3896,7 @@
                   fn (p) ([] :data p)
               .nth $ fn (self idx)
                 let
-                    d $ get self :data
+                    d $ :data self
                     p $ .unwrap (bisection/key-nth d idx)
                   get self p
               .append $ fn (self x)
@@ -3992,7 +3992,7 @@
                                   q0 $ get-in (wo-js-log pss) ([] 0 1)
                                   and (struct? q0)
                                     and $ = :Leaf (&struct:get-name q0)
-                                    = (get q0 :text) follow
+                                    = (:text q0) follow
                                   , false
                               :: :some $ conj pp k
                               if (&struct:matches? self child)
@@ -4039,7 +4039,7 @@
         |CirruLeaf $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def CirruLeaf $ impl-traits
-              defstruct :Leaf (:at 'Dynamic) (:by 'Dynamic) (:text 'String)
+              defstruct :Leaf (:at 'Number) (:by 'String) (:text 'String)
               , CirruLeafMethods
           :examples $ []
           :schema $ :: 'Dynamic
@@ -4055,17 +4055,17 @@
           :schema $ :: 'Dynamic
         |CodeEntry $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            def CodeEntry $ defstruct :CodeEntry (:doc 'Dynamic) (:code 'Dynamic) (:examples 'Dynamic)
+            def CodeEntry $ defstruct :CodeEntry (:doc 'String) (:code 'Dynamic) (:examples :list)
           :examples $ []
           :schema $ :: 'Dynamic
         |CodeEntryCompact $ %{} 'CodeEntry (:doc "|another record for CodeEntry which only used in writing compact file")
           :code $ quote
-            def CodeEntryCompact $ defstruct :CodeEntry (:doc 'Dynamic) (:code 'Dynamic) (:examples 'Dynamic)
+            def CodeEntryCompact $ defstruct :CodeEntry (:doc 'String) (:code 'Dynamic) (:examples :list)
           :examples $ []
           :schema $ :: 'Dynamic
         |FileEntry $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            def FileEntry $ defstruct :FileEntry (:ns 'Dynamic) (:defs 'Dynamic)
+            def FileEntry $ defstruct :FileEntry (:ns 'String) (:defs :map)
           :examples $ []
           :schema $ :: 'Dynamic
         |cirru-compact $ %{} 'CodeEntry (:doc "|a cloned version of tree->cirru to simplify dependency issues")
