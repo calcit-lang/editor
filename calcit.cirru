@@ -6923,7 +6923,9 @@
               let
                   user-id $ get-in db ([] :sessions sid :user-id)
                   writer $ get-in db ([] :sessions sid :writer)
-                  bookmark $ :picker-mode (option:unwrap-or writer {})
+                  bookmark $ option:unwrap-or
+                    get (option:unwrap-or writer {}) :picker-mode
+                    , nil
                   data-path $ bookmark->path bookmark
                   data $ if (option:some? op-data) (.unwrap op-data) op-data
                 -> db
