@@ -7368,12 +7368,16 @@
                     :entries entries
                     :files $ -> new-files
                       map-kv $ fn (k v)
-                        [] k $ file->cirru v true
+                        [] k $ file->cirru (assert-type v 'app.schema/FileEntry) true
                   inc-data $ hide-empty-fields
                     {} (:removed removed-names)
                       :added $ -> added-names
                         map $ fn (ns-text)
-                          [] ns-text $ file->cirru (get new-files ns-text) true
+                          [] ns-text $ file->cirru
+                            assert-type
+                              option:unwrap-or (get new-files ns-text) {}
+                              , 'app.schema/FileEntry
+                            , true
                         pairs-map
                       :changed $ -> changed-names
                         map $ fn (ns-text)
