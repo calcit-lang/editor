@@ -5813,7 +5813,9 @@
             defn draft-expr (db op-data session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
-                  bookmark $ get (:stack writer) (:pointer writer)
+                  bookmark $ get
+                    option:unwrap-or (get writer :stack) nil
+                    option:unwrap-or (get writer :pointer) 0
                   data-path $ bookmark->path bookmark
                   user-id $ get-in db ([] :sessions session-id :user-id)
                   data $ if (option:some? op-data) (.unwrap op-data) op-data
@@ -5916,7 +5918,8 @@
                   ns-text $ get-in db ([] :sessions sid :writer :selected-ns)
                 if (some? ns-text)
                   update-in db ([] :files ns-text :configs)
-                    fn (configs) (merge configs op-data)
+                    fn (configs)
+                      merge (option:unwrap-or configs {}) op-data
                   , db
           :examples $ []
           :schema $ :: 'Dynamic
@@ -6195,23 +6198,27 @@
           :code $ quote
             defn reset-at (db op-data session-id op-id op-time)
               let
-                  saved-files $ :saved-files db
-                  old-file $ get saved-files (nth op-data 1)
+                  saved-files $ option:unwrap-or (get db :saved-files) {}
+                  old-file $ option:unwrap-or
+                    get saved-files $ option:unwrap-or (nth op-data 1) nil
+                    , {}
                 update-in db
                   [] :files $ nth op-data 1
                   fn (file)
                     if
                       = :ns $ &enum:nth op-data 0
-                      assoc file :ns $ :ns old-file
-                      assoc-in file
+                      assoc (option:unwrap-or file {}) :ns $ option:unwrap-or (get old-file :ns) nil
+                      assoc-in (option:unwrap-or file {})
                         [] :defs $ &enum:nth op-data 2
-                        get-in old-file $ [] :defs (&enum:nth op-data 2)
+                        option:unwrap-or
+                          get-in old-file $ [] :defs (&enum:nth op-data 2)
+                          , nil
           :examples $ []
           :schema $ :: 'Dynamic
         |reset-files $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn reset-files (db session-id op-id op-time)
-              assoc db :files $ :saved-files db
+              assoc db :files $ option:unwrap-or (get db :saved-files) {}
           :examples $ []
           :schema $ :: 'Dynamic
         |reset-ns $ %{} 'CodeEntry (:doc |)
