@@ -6606,9 +6606,11 @@
             defn collapse (db op-data session-id op-id op-time)
               -> db $ update-in ([] :sessions session-id :writer)
                 fn (writer)
-                  -> writer
-                    update :stack $ fn (stack) (.slice stack op-data)
-                    assoc :pointer 0
+                  let
+                      writer $ option:unwrap-or writer {}
+                    -> writer
+                      update :stack $ fn (stack) (.slice stack op-data)
+                      assoc :pointer 0
           :examples $ []
           :schema $ :: 'Dynamic
         |doc-set $ %{} 'CodeEntry (:doc |)
@@ -6628,7 +6630,8 @@
           :code $ quote
             defn draft-ns (db op-data sid op-id op-time)
               -> db $ update-in ([] :sessions sid :writer)
-                fn (writer) (assoc writer :draft-ns op-data)
+                fn (writer)
+                  assoc (option:unwrap-or writer {}) :draft-ns op-data
           :examples $ []
           :schema $ :: 'Dynamic
         |edit $ %{} 'CodeEntry (:doc |)
@@ -6664,8 +6667,10 @@
               -> db $ update-in ([] :sessions sid :writer)
                 fn (writer)
                   let
-                      pointer $ option:unwrap-or (get writer :pointer) 0
-                    -> writer
+                      pointer $ option:unwrap-or
+                        get (option:unwrap-or writer {}) :pointer
+                        , 0
+                    -> (option:unwrap-or writer {})
                       update :stack $ fn (stack)
                         if
                           > (count stack) pointer
@@ -6779,8 +6784,10 @@
             defn go-up (db session-id op-id op-time)
               -> db $ update-in ([] :sessions session-id :writer)
                 fn (writer)
-                  update-in writer
-                    [] :stack $ option:unwrap-or (get writer :pointer) 0
+                  update-in (option:unwrap-or writer {})
+                    [] :stack $ option:unwrap-or
+                      get (option:unwrap-or writer {}) :pointer
+                      , 0
                     fn (b)
                       .update-focus (Bookmark b)
                         fn (focus)
@@ -6799,10 +6806,14 @@
               -> db $ update-in ([] :sessions sid :writer)
                 fn (writer)
                   let
-                      pointer $ option:unwrap-or (get writer :pointer) 0
-                    assoc writer :pointer $ if
+                      pointer $ option:unwrap-or
+                        get (option:unwrap-or writer {}) :pointer
+                        , 0
+                    assoc (option:unwrap-or writer {}) :pointer $ if
                       >= pointer $ dec
-                        option:unwrap-or (get writer :stack) []
+                        option:unwrap-or
+                          get (option:unwrap-or writer {}) :stack
+                          , []
                       , pointer (inc pointer)
           :examples $ []
           :schema $ :: 'Dynamic
@@ -6843,8 +6854,10 @@
               -> db $ update-in ([] :sessions sid :writer)
                 fn (writer)
                   let
-                      pointer $ option:unwrap-or (get writer :pointer) 0
-                    assoc writer :pointer $ if (> pointer 0) (dec pointer) 0
+                      pointer $ option:unwrap-or
+                        get (option:unwrap-or writer {}) :pointer
+                        , 0
+                    assoc (option:unwrap-or writer {}) :pointer $ if (> pointer 0) (dec pointer) 0
           :examples $ []
           :schema $ :: 'Dynamic
         |paste $ %{} 'CodeEntry (:doc |)
@@ -6866,13 +6879,14 @@
               let
                   user-id $ get-in db ([] :sessions sid :user-id)
                   writer $ get-in db ([] :sessions sid :writer)
-                  bookmark $ :picker-mode writer
+                  bookmark $ :picker-mode (option:unwrap-or writer {})
                   data-path $ bookmark->path bookmark
                   data $ if (option:some? op-data) (.unwrap op-data) op-data
                 -> db
                   assoc-in data-path $ cirru->tree data user-id op-time
                   update-in ([] :sessions sid :writer)
-                    fn (writer) (assoc writer :picker-mode nil)
+                    fn (writer)
+                      assoc (option:unwrap-or writer {}) :picker-mode nil
                   update-in ([] :sessions sid :notifications)
                     push-info op-id op-time $ str "|picked "
                       if (string? data) data $ let
@@ -6889,9 +6903,9 @@
               update-in db ([] :sessions session-id :writer)
                 fn (writer)
                   if
-                    option:some? $ get writer :picker-mode
-                    dissoc writer :picker-mode
-                    assoc writer :picker-mode $ to-bookmark writer
+                    option:some? $ get (option:unwrap-or writer {}) :picker-mode
+                    dissoc (option:unwrap-or writer {}) :picker-mode
+                    assoc (option:unwrap-or writer {}) :picker-mode $ to-bookmark (option:unwrap-or writer {})
           :examples $ []
           :schema $ :: 'Dynamic
         |point-to $ %{} 'CodeEntry (:doc |)
@@ -6905,7 +6919,7 @@
             defn remove-idx (db op-data session-id op-id op-time)
               -> db $ update-in ([] :sessions session-id :writer)
                 fn (writer)
-                  -> writer
+                  -> (option:unwrap-or writer {})
                     update :stack $ fn (stack) (dissoc-idx stack op-data)
                     update :pointer $ fn (pointer)
                       if
@@ -7072,20 +7086,21 @@
                     if (some? xs)
                       [] k $ let
                           extracted $ extract-examples-code
-                            tree->cirru $ :code xs
+                            option:unwrap-or (get xs :code) nil
                         tag-match extracted $
                           :exp-code examples code
                           if
-                            and compact? $ nil? (:code xs)
+                            and compact? $ nil?
+                              option:unwrap-or (get xs :code) nil
                             %{} schema/CodeEntryCompact
-                              :doc $ :doc xs
+                              option:unwrap-or (get xs :doc) nil
                               :code $ :: 'quote code
                               :examples $ map examples
                                 fn (e) (:: 'quote e)
                             %{} schema/CodeEntry
-                              :doc $ :doc xs
+                              option:unwrap-or (get xs :doc) nil
                               :code $ :: 'quote code
-                              :examples $ either (:examples xs) ([])
+                              :examples $ option:unwrap-or (get xs :examples) []
                       , nil
           :examples $ []
           :schema $ :: 'Fn
@@ -7254,9 +7269,9 @@
           :code $ quote
             defn to-bookmark (writer)
               let
-                  stack $ :stack writer
+                  stack $ option:unwrap-or (get writer :stack) []
                 if (empty? stack) nil $ Bookmark
-                  get stack $ :pointer writer
+                  get stack $ option:unwrap-or (get writer :pointer) 0
           :examples $ []
           :schema $ :: 'Dynamic
         |to-keys $ %{} 'CodeEntry (:doc |)
@@ -7320,8 +7335,8 @@
                           [] ns-text $ let
                               old-file $ get old-files ns-text
                               new-file $ get new-files ns-text
-                              old-defs $ :defs old-file
-                              new-defs $ :defs new-file
+                              old-defs $ option:unwrap-or (get old-file :defs) {}
+                              new-defs $ option:unwrap-or (get new-file :defs) {}
                               old-def-names $ keys old-defs
                               new-def-names $ keys new-defs
                               added-defs $ difference new-def-names old-def-names
@@ -7331,10 +7346,12 @@
                                   not= (get old-defs x) (get new-defs x)
                             hide-empty-fields $ {}
                               :ns $ if
-                                = (:ns old-file) (:ns new-file)
+                                =
+                                  option:unwrap-or (get old-file :ns) nil
+                                  option:unwrap-or (get new-file :ns) nil
                                 , nil
                                   :: 'quote $ tree->cirru
-                                    :code $ :ns new-file
+                                    :code $ option:unwrap-or (get new-file :ns) nil
                               :removed-defs removed-defs
                               :added-defs $ -> added-defs
                                 map $ fn (x)
