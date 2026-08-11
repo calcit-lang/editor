@@ -1498,10 +1498,13 @@
                     let
                         id $ str |# (gen-def-id the-ns the-def)
                         target $ .!querySelector el id
-                      if (some? target)
-                        do (.!scrollIntoView target)
+                      if (js-present? target)
+                        do
+                          .!scrollIntoView $ unsafe-coerce target JsObject
                           let
-                              s $ -> target .-style
+                              s $ unsafe-coerce
+                                .-style $ unsafe-coerce target JsObject
+                                , JsObject
                             -> s .-opacity $ set! |1
                             -> s .-backgroundColor $ set! (hsl 0 0 100 0.4)
                             -> s .-padding $ set! "|0px 8px"
@@ -1512,7 +1515,10 @@
                         js/console.warn "|found no target for:" id
                     fn (error) (js/console.error error)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Dynamic
+              :features $ #{} :js-ffi
         |gen-def-id $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn gen-def-id (that-ns that-def)
