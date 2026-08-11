@@ -7214,8 +7214,7 @@
               :args $ [] 'Dynamic
         |now! $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defn now! () $
-              unsafe-coerce js/Date.now 'Number
+            defn now! () $ unsafe-coerce (js/Date.now) 'Number
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Number)
