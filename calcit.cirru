@@ -4326,16 +4326,20 @@
           :code $ quote
             defn start-server! (configs)
               pick-port!
-                either (:port configs) (:port schema/configs)
+                either
+                  option:unwrap-or (get configs :port) nil
+                  option:unwrap-or (get schema/configs :port) nil
                 fn (unoccupied-port) (run-server! dispatch! unoccupied-port)
               pick-http-port!
-                either (:expose-port configs) (:expose-port schema/configs)
+                either
+                  option:unwrap-or (get configs :expose-port) nil
+                  option:unwrap-or (get schema/configs :expose-port) nil
                 fn (unoccupied-port) (expose-files! unoccupied-port)
               render-loop!
               watch-file!
               js/process.on |SIGINT $ fn (code & args)
                 if
-                  empty? $ get @*writer-db :files
+                  empty? $ option:unwrap-or (get @*writer-db :files) nil
                   println "|Not writing empty project."
                   do
                     let
@@ -4374,13 +4378,16 @@
           :code $ quote
             defn transform-compact-to-calcit! () $ let
                 source $ parse-cirru-edn (fs/readFileSync |compact.cirru |utf8)
-                next-files $ map-kv (:files source)
+                next-files $ map-kv
+                  option:unwrap-or (get source :files) nil
                   fn (ns file)
                     [] ns $ file-compact-to-calcit file
                 target $ {}
-                  :configs $ assoc (:configs source) :port 6001
-                  :entries $ :entries source
-                  :package $ :package source
+                  :configs $ assoc
+                    option:unwrap-or (get source :configs) nil
+                    , :port 6001
+                  :entries $ option:unwrap-or (get source :entries) nil
+                  :package $ option:unwrap-or (get source :package) nil
                   :files next-files
                   :users $ {}
               ; fs/writeFileSync |calcit-draft.cirru $ format-cirru-edn target
@@ -4708,9 +4715,10 @@
           :code $ quote
             defn twig-container (db session)
               let
-                  logged-in? $ some? (:user-id session)
-                  router $ :router session
-                  writer $ :writer session
+                  logged-in? $ some?
+                    option:unwrap-or (get session :user-id) nil
+                  router $ option:unwrap-or (get session :router) nil
+                  writer $ option:unwrap-or (get session :writer) nil
                 if
                   or logged-in? $ = :watching
                     if (enum? router) (nth router 0)
@@ -4719,41 +4727,56 @@
                     :logged-in? logged-in?
                     :user $ if logged-in?
                       twig-user $ get-in db
-                        [] :users $ :user-id session
+                        [] :users $ option:unwrap-or (get session :user-id) nil
                     :router $ tag-match router
                       (:files)
-                        :: :files $ twig-page-files (:files db)
+                        :: :files $ twig-page-files
+                          option:unwrap-or (get db :files) nil
                           get-in session $ [] :writer :selected-ns
-                          :saved-files db
+                          option:unwrap-or (get db :saved-files) nil
                           get-in session $ [] :writer :draft-ns
-                          :sessions db
-                          :id session
+                          option:unwrap-or (get db :sessions) nil
+                          option:unwrap-or (get session :id) nil
                       (:graph)
                         :: :graph $ {}
-                          :package $ :package db
-                          :configs $ :configs db
-                          :deps-dict $ :deps-dict db
-                          :entries $ :entries db
-                          :writer $ :writer session
+                          :package $ option:unwrap-or (get db :package) nil
+                          :configs $ option:unwrap-or (get db :configs) nil
+                          :deps-dict $ option:unwrap-or (get db :deps-dict) nil
+                          :entries $ option:unwrap-or (get db :entries) nil
+                          :writer $ option:unwrap-or (get session :writer) nil
                       (:editor)
-                        :: :editor $ twig-page-editor (:files db) (:saved-files db) (:sessions db) (:users db) writer (:id session) (:usages-dict db)
+                        :: :editor $ twig-page-editor
+                          option:unwrap-or (get db :files) nil
+                          option:unwrap-or (get db :saved-files) nil
+                          option:unwrap-or (get db :sessions) nil
+                          option:unwrap-or (get db :users) nil
+                          , writer
+                            option:unwrap-or (get session :id) nil
+                            option:unwrap-or (get db :usages-dict) nil
                       (:profile)
                         :: :profile $ {}
-                          :members $ twig-page-members (:sessions db) (:users db)
+                          :members $ twig-page-members
+                            option:unwrap-or (get db :sessions) nil
+                            option:unwrap-or (get db :users) nil
                       (:search)
-                        :: :search $ twig-search (:files db)
+                        :: :search $ twig-search
+                          option:unwrap-or (get db :files) nil
                       (:watching his-sid)
                         :: :watching $ let
-                            sessions $ :sessions db
+                            sessions $ option:unwrap-or (get db :sessions) nil
                           if (contains? sessions his-sid)
-                            twig-watching (get sessions his-sid) (:id session) (:files db) (:users db)
+                            twig-watching (get sessions his-sid)
+                              option:unwrap-or (get session :id) nil
+                              option:unwrap-or (get db :files) nil
+                              option:unwrap-or (get db :users) nil
                             , nil
                       (:configs)
                         :: :configs $ {}
-                          :configs $ :configs db
-                          :entries $ :entries db
+                          :configs $ option:unwrap-or (get db :configs) nil
+                          :entries $ option:unwrap-or (get db :entries) nil
                     :stats $ {}
-                      :members-count $ count (:sessions db)
+                      :members-count $ count
+                        option:unwrap-or (get db :sessions) nil
                   {} (:session session) (:logged-in? false)
                     :stats $ {} (:members-count 0)
           :examples $ []
@@ -4774,10 +4797,12 @@
           :code $ quote
             defn twig-member (session user)
               {} (:user user)
-                :nickname $ :nickname session
+                :nickname $ option:unwrap-or (get session :nickname) nil
                 :bookmark $ let
-                    writer $ :writer session
-                  get (:stack writer) (:pointer writer)
+                    writer $ option:unwrap-or (get session :writer) nil
+                  get
+                    option:unwrap-or (get writer :stack) nil
+                    option:unwrap-or (get writer :pointer) 0
                 :page $ get-in session ([] :router 0)
           :examples $ []
           :schema $ :: 'Dynamic
@@ -4790,9 +4815,11 @@
           :code $ quote
             defn pick-from-ns (ns-info)
               let
-                  var-names $ keys (:defs ns-info)
+                  var-names $ keys
+                    option:unwrap-or (get ns-info :defs) nil
                   rules $ ->
-                    tree->cirru $ :code (:ns ns-info)
+                    tree->cirru $ :code
+                      option:unwrap-or (get ns-info :ns) nil
                     nth 2
                     rest
                     either $ []
@@ -4813,8 +4840,8 @@
           :code $ quote
             defn twig-page-editor (files old-files sessions users writer session-id usages-dict)
               let
-                  pointer $ :pointer writer
-                  stack $ :stack writer
+                  pointer $ option:unwrap-or (get writer :pointer) 0
+                  stack $ option:unwrap-or (get writer :stack) nil
                   bookmark $ if (empty? stack) nil (get stack pointer)
                 if (some? bookmark)
                   let
@@ -4828,9 +4855,11 @@
                           map $ fn (entry)
                             let
                                 session $ last entry
-                                writer $ :writer session
-                                router $ :router session
-                                a-bookmark $ get (:stack writer) (:pointer writer)
+                                writer $ option:unwrap-or (get session :writer) nil
+                                router $ option:unwrap-or (get session :router) nil
+                                a-bookmark $ get
+                                  option:unwrap-or (get writer :stack) nil
+                                  option:unwrap-or (get writer :pointer) 0
                               [] (first entry)
                                 if
                                   and
@@ -4841,8 +4870,10 @@
                                       (:ns n f) f
                                       (:def n d f) f
                                     :nickname $ get-in users
-                                      [] (:user-id session) :nickname
-                                    :session-id $ :id session
+                                      []
+                                        option:unwrap-or (get session :user-id) nil
+                                        , :nickname
+                                    :session-id $ option:unwrap-or (get session :id) nil
                                   , nil
                           filter $ fn (pair)
                             some? $ last pair
@@ -4853,7 +4884,7 @@
                           let-sugar
                                 [] k other-session
                                 , entry
-                              router $ :router other-session
+                              router $ option:unwrap-or (get other-session :router) nil
                             and
                               = :watching $ nth router 0
                               = (nth router 1) session-id
@@ -4862,7 +4893,7 @@
                                 [] k other-session
                                 , entry
                             [] k $ twig-user
-                              get users $ :user-id other-session
+                              get users $ option:unwrap-or (get other-session :user-id) nil
                         pairs-map
                       :expr $ tag-match bookmark
                         (:ns the-ns f)
@@ -4870,27 +4901,36 @@
                         (:def the-ns the-def f)
                           get-in files $ [] the-ns :defs the-def
                       :peek-def $ let
-                          peek-def $ :peek-def writer
+                          peek-def $ option:unwrap-or (get writer :peek-def) nil
                         if (some? peek-def)
-                          get-in files $ [] (:ns peek-def) :defs (:def peek-def)
+                          get-in files $ []
+                            option:unwrap-or (get peek-def :ns) nil
+                            , :defs
+                              option:unwrap-or (get peek-def :def) nil
                           , nil
                       :preview-locals $ tag-match bookmark
                         (:ns ns' f)
                           keys $ get-in files ([] ns' :defs)
                         _ nil
                       :picker-choices $ if
-                        some? $ :picker-mode writer
+                        some? $ option:unwrap-or (get writer :picker-mode) nil
                         pick-from-ns $ get files ns-text
                       :changed $ let
                           file $ get files ns-text
                           old-file $ get old-files ns-text
                         tag-match bookmark
                           (:ns the-ns f)
-                            compare-entry (:ns file) (:ns old-file)
+                            compare-entry
+                              option:unwrap-or (get file :ns) nil
+                              option:unwrap-or (get old-file :ns) nil
                           (:def the-ns the-def f)
                             compare-entry
-                              get (:defs file) the-def
-                              get (:defs old-file) the-def
+                              get
+                                option:unwrap-or (get file :defs) nil
+                                , the-def
+                              get
+                                option:unwrap-or (get old-file :defs) nil
+                                , the-def
                       :usages $ tag-match bookmark
                         (:def the-ns the-def focus)
                           get usages-dict $ :: :reference the-ns the-def
@@ -4986,7 +5026,7 @@
               -> sessions $ map-kv
                 fn (k session)
                   [] k $ twig-member session
-                    get users $ :user-id session
+                    get users $ option:unwrap-or (get session :user-id) nil
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
@@ -5005,7 +5045,9 @@
                         , entry
                     concat
                       [] $ :: :ns k
-                      -> (:defs file) (.to-list)
+                      ->
+                        option:unwrap-or (get file :defs) nil
+                        .to-list
                         map $ fn (f-entry)
                           let-sugar
                                 [] f-k file
@@ -5033,15 +5075,16 @@
           :code $ quote
             defn twig-watching (session my-sid files users)
               let
-                  writer $ :writer session
+                  writer $ option:unwrap-or (get session :writer) nil
                   bookmark $ to-bookmark writer
-                  self? $ = my-sid (:id session)
+                  self? $ = my-sid
+                    option:unwrap-or (get session :id) nil
                   working? $ some? bookmark
                 {}
                   :member $ twig-user
-                    get users $ :user-id session
+                    get users $ option:unwrap-or (get session :user-id) nil
                   :bookmark bookmark
-                  :router $ :router session
+                  :router $ option:unwrap-or (get session :router) nil
                   :self? self?
                   :working? $ and working? (not self?)
                   :focus $ .get-focus (Bookmark bookmark)
@@ -7111,10 +7154,10 @@
                     , latest-files
                   compact-data $ {} (:package pkg) (:about "|file is generated - never edit directly; learn cr edit/tree workflows before changing")
                     :configs $ {}
-                      :init-fn $ :init-fn configs
-                      :reload-fn $ :reload-fn configs
-                      :modules $ :modules configs
-                      :version $ :version configs
+                      :init-fn $ option:unwrap-or (get configs :init-fn) nil
+                      :reload-fn $ option:unwrap-or (get configs :reload-fn) nil
+                      :modules $ option:unwrap-or (get configs :modules) nil
+                      :version $ option:unwrap-or (get configs :version) nil
                     :entries entries
                     :files $ -> new-files
                       map-kv $ fn (k v)
@@ -7192,7 +7235,10 @@
                       filter $ fn (ns-text)
                         not= (get new-files ns-text) (get old-files ns-text)
                       filter-by-ns
-                  handle-compact-files! (get db :package) old-files new-files added-names removed-names changed-names (:configs db) (:entries db) filter-ns
+                  handle-compact-files! (get db :package) old-files new-files added-names removed-names changed-names
+                    option:unwrap-or (get db :configs) nil
+                    option:unwrap-or (get db :entries) nil
+                    , filter-ns
                   dispatch! $ :: :writer/save-files filter-ns
                   if save-ir? $ js/setTimeout
                     fn () $ let
@@ -7200,7 +7246,9 @@
                         started-time $
                           now!
                       reset! *calcit-md5 $ md5 db-content
-                      persist-async! (:storage-file config/site) db-content started-time
+                      persist-async!
+                        option:unwrap-or (get config/site :storage-file) |calcit.cirru
+                        , db-content started-time
                 fn (e)
                   do
                     eprintln $ .!red chalk e
