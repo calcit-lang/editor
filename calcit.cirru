@@ -37,9 +37,13 @@
                   (:ns ns' f) f
               .get-ns $ fn (self) (nth self 1)
               .is-ns? $ fn (self)
-                = (nth self 0) :ns
+                tag-match self
+                  (:def _ns _def _f) false
+                  (:ns _ns _f) true
               .is-def? $ fn (self)
-                = (nth self 0) :def
+                tag-match self
+                  (:def _ns _def _f) true
+                  (:ns _ns _f) false
               .update-focus $ fn (self updater)
                 tag-match self
                   (:def ns' def' f)
@@ -4893,7 +4897,7 @@
                               [] (first entry)
                                 if
                                   and
-                                    = :editor $ nth router 0
+                                    = :editor $ option:unwrap-or (nth router 0) nil
                                     = bookmark a-bookmark
                                   {}
                                     :focus $ tag-match a-bookmark
@@ -4906,7 +4910,7 @@
                                     :session-id $ option:unwrap-or (get session :id) nil
                                   , nil
                           filter $ fn (pair)
-                            some? $ last pair
+                            option:some? $ last pair
                           pairs-map
                         , session-id
                       :watchers $ -> sessions
@@ -4916,8 +4920,10 @@
                                 , entry
                               router $ option:unwrap-or (get other-session :router) nil
                             and
-                              = :watching $ nth router 0
-                              = (nth router 1) session-id
+                              = :watching $ option:unwrap-or (nth router 0) nil
+                              =
+                                option:unwrap-or (nth router 1) nil
+                                , session-id
                         map $ fn (entry)
                           let-sugar
                                 [] k other-session
@@ -7048,7 +7054,7 @@
               cond
                   enum? xs
                   if
-                    = 'quote $ nth xs 0
+                    = 'quote $ option:unwrap-or (nth xs 0) nil
                     cirru->tree (nth xs 1) author timestamp
                     do (eprintln "|unknown tuple from cirru:" xs)
                       cirru->tree (nth xs 1) author timestamp
@@ -7384,7 +7390,9 @@
                                 map $ fn (x)
                                   [] x $ let
                                       extracted $ extract-examples-code
-                                        tree->cirru $ get-in new-defs ([] x :code)
+                                        tree->cirru $ option:unwrap-or
+                                          get-in new-defs $ [] x :code
+                                          , nil
                                     tag-match extracted $
                                       :exp-code _e code
                                       :: 'quote code
@@ -7393,7 +7401,9 @@
                                 map $ fn (x)
                                   [] x $ let
                                       extracted $ extract-examples-code
-                                        tree->cirru $ get-in new-defs ([] x :code)
+                                        tree->cirru $ option:unwrap-or
+                                          get-in new-defs $ [] x :code
+                                          , nil
                                     tag-match extracted $
                                       :exp-code _e code
                                       :: 'quote code
