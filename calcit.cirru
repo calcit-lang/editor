@@ -1954,7 +1954,7 @@
             defcomp comp-messages (messages)
               list-> ({})
                 -> messages
-                  drop $ max 0
+                  drop $ &max 0
                     - (count messages) 3
                   map-indexed $ fn (idx msg)
                     [] (:id msg)
@@ -1968,7 +1968,9 @@
                               :info $ hsl 240 80 80
                           :on-click $ fn (e d!) (d! :notify/clear nil)
                         <>
-                          -> (:time msg) Dayjs $ .!format |mm:ss
+                          unsafe-coerce
+                            -> (:time msg) Dayjs $ .!format |mm:ss
+                            , 'String
                           str-spaced css/font-code style-time-short
                         =< 8 nil
                         <> (:text msg) nil
