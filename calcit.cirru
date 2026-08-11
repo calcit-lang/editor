@@ -233,7 +233,7 @@
                 raw $ js/window.localStorage.getItem (:storage-key config/site)
               if (some? raw)
                 do $ dispatch!
-                  :: :user/log-in $ parse-cirru-edn raw
+                  :: :user/log-in $ parse-cirru-edn (unsafe-coerce raw 'String)
                 do $ println "|Found no storage."
           :examples $ []
           :schema $ :: 'Dynamic
@@ -739,7 +739,9 @@
                           .show modules-plugin d! $ fn (text)
                             d! :configs/update $ {}
                               :modules $ filter-not
-                                split (trim text) "| "
+                                split
+                                  trim $ unsafe-coerce text 'String
+                                  , "| "
                                 , blank?
                       render-field $ -> (:modules configs) (or |) (join-str "| ")
                   div ({}) (render-label |init-fn:) (=< 8 nil)
@@ -788,7 +790,8 @@
                   button $ {} (:class-name style/button) (:inner-text |Edit)
                     :on-click $ fn (e d!)
                       .show code-plugin d! $ fn (text)
-                        d! :configs/update-entries $ [] :reset (parse-cirru-edn text)
+                        d! :configs/update-entries $ [] :reset
+                          parse-cirru-edn $ unsafe-coerce text 'String
                   .render code-plugin
           :examples $ []
           :schema $ :: 'Dynamic
@@ -2181,7 +2184,7 @@
                       :on-click $ fn (e d!)
                         .show add-plugin d! $ fn (result)
                           let
-                              text $ trim result
+                              text $ trim (unsafe-coerce result 'String)
                             when-not (blank? text)
                               d! :ir/add-def $ [] (nth bookmark 1) text
                               d! $ :: :writer/edit
