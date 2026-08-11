@@ -5743,8 +5743,11 @@
           :code $ quote
             defn cp-ns (db op-data session-id op-id op-time)
               update db :files $ fn (files)
-                -> files $ assoc (:to op-data)
-                  get files $ :from op-data
+                -> files $ assoc
+                  option:unwrap-or (get op-data :to) nil
+                  option:unwrap-or
+                    get files $ option:unwrap-or (get op-data :from) nil
+                    , nil
           :examples $ []
           :schema $ :: 'Dynamic
         |delete-entry $ %{} 'CodeEntry (:doc |)
@@ -6045,9 +6048,12 @@
             defn mv-ns (db op-data session-id op-id op-time)
               update db :files $ fn (files)
                 -> files
-                  dissoc $ :from op-data
-                  assoc (:to op-data)
-                    get files $ :from op-data
+                  dissoc $ option:unwrap-or (get op-data :from) nil
+                  assoc
+                    option:unwrap-or (get op-data :to) nil
+                    option:unwrap-or
+                      get files $ option:unwrap-or (get op-data :from) nil
+                      , nil
           :examples $ []
           :schema $ :: 'Dynamic
         |prepend-leaf $ %{} 'CodeEntry (:doc |)
