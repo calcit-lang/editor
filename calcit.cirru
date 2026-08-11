@@ -5231,7 +5231,7 @@
                   bookmark $ to-bookmark writer
                   ns-text $ nth bookmark 1
                   def-text op-data
-                  def-existed? $ some?
+                  def-existed? $ option:some?
                     get-in files $ [] ns-text :defs def-text
                   user-id $ get-in db ([] :sessions sid :user-id)
                   new-bookmark $ :: :def ns-text def-text ([])
@@ -5250,7 +5250,7 @@
                       update-in ([] :files ns-text :defs)
                         fn (defs)
                           ; println target-path (prepend target-path def-text) (tree->cirru target-expr) (keys defs)
-                          -> defs
+                          -> (option:unwrap-or defs {})
                             assoc def-text $ %{} schema/CodeEntry (:doc |)
                               :code $ cirru->tree
                                 [] |def def-text $ tree->cirru target-expr
@@ -5471,9 +5471,9 @@
             defn use-import-def (db picked sid op-id op-time)
               let
                   session $ get-in db ([] :sessions sid)
-                  writer $ :writer session
+                  writer $ option:unwrap-or (get session :writer) {}
                   bookmark $ to-bookmark writer
-                  user-id $ :user-id session
+                  user-id $ option:unwrap-or (get session :user-id) nil
                   to-tree $ fn (x) (cirru->tree x user-id op-time)
                 if (some? bookmark)
                   tag-match bookmark
