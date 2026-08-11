@@ -4191,7 +4191,7 @@
         |*writer-db $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defatom *writer-db $ -> initial-db
-              assoc :saved-files $ get initial-db :files
+              assoc :saved-files $ option:unwrap-or (get initial-db :files) {}
               assoc :sessions $ {}
           :examples $ []
           :schema $ :: 'Dynamic
@@ -4218,9 +4218,13 @@
                   op-time $ js/Date.now
                 tag-match op
                   (:effect/save-files)
-                    handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true nil
+                    handle-files! @*writer-db *calcit-md5
+                      option:unwrap-or (get initial-db :configs) {}
+                      , d2! true nil
                   (:effect/save-ns ns)
-                    handle-files! @*writer-db *calcit-md5 (:configs initial-db) d2! true ns
+                    handle-files! @*writer-db *calcit-md5
+                      option:unwrap-or (get initial-db :configs) {}
+                      , d2! true ns
                   (:ping) nil
                   _ $ reset! *writer-db (updater @*writer-db op sid op-id op-time)
           :examples $ []
@@ -4278,9 +4282,10 @@
             defn main! ()
               if config/dev? $ load-console-formatter!
               let
-                  configs $ :configs initial-db
+                  configs $ option:unwrap-or (get initial-db :configs) {}
                   cli-configs $ get-cli-configs!
-                case-default (:op cli-configs)
+                case-default
+                  option:unwrap-or (get cli-configs :op) nil
                   do (start-server! configs) (check-version!)
                     dispatch! (:: :analyze/refresh-usages-dict) |system
                   |compile $ compile-all-files! configs
@@ -5366,28 +5371,35 @@
                         this-ns $ &list:nth pair 0
                         v $ &list:nth pair 1
                         ns-expr $ tree->cirru
-                          -> v (get :ns) (get :code)
+                          option:unwrap-or
+                            get
+                              option:unwrap-or (get v :ns) {}
+                              , :code
+                            , nil
                         require-rule $ &list:nth ns-expr 2
                         ns-rules $ if (some? require-rule) (&list:slice require-rule 1) nil
                         import-rules $ if (some? ns-rules) (parse-ns-rules ns-rules) ([])
                       let
-                          local-defs $ keys (get v :defs)
-                        -> v :defs &map:to-list $ each
-                          fn (pair)
-                            let
-                                this-def $ &list:nth pair 0
-                                v $ &list:nth pair 1
-                                entry $ :: :def this-ns this-def
-                                *entry-deps $ atom (#{})
-                                collect! $ fn (reference)
-                                  if (&map:contains? @*usages reference)
-                                    swap! *usages update reference $ fn (coll) (&include coll entry)
-                                    swap! *usages &map:assoc reference $ #{} entry
-                                  swap! *entry-deps include reference
-                              parse-bookmarks-collect!
-                                tree->cirru $ &struct:get v :code
-                                , local-defs import-rules this-ns this-def collect!
-                              swap! *deps assoc entry @*entry-deps
+                          local-defs $ keys
+                            option:unwrap-or (get v :defs) {}
+                        ->
+                          option:unwrap-or (get v :defs) {}
+                          , &map:to-list $ each
+                            fn (pair)
+                              let
+                                  this-def $ &list:nth pair 0
+                                  v $ &list:nth pair 1
+                                  entry $ :: :def this-ns this-def
+                                  *entry-deps $ atom (#{})
+                                  collect! $ fn (reference)
+                                    if (&map:contains? @*usages reference)
+                                      swap! *usages update reference $ fn (coll) (&include coll entry)
+                                      swap! *usages &map:assoc reference $ #{} entry
+                                    swap! *entry-deps include reference
+                                parse-bookmarks-collect!
+                                  tree->cirru $ &struct:get v :code
+                                  , local-defs import-rules this-ns this-def collect!
+                                swap! *deps assoc entry @*entry-deps
                 :: :deps @*deps @*usages
           :examples $ []
           :schema $ :: 'Dynamic
@@ -5710,7 +5722,7 @@
             defn clone-ns (db op-data sid op-id op-time)
               let
                   writer $ get-in db ([] :sessions sid :writer)
-                  selected-ns $ :selected-ns writer
+                  selected-ns $ option:unwrap-or (get writer :selected-ns) nil
                   files $ get db :files
                   warn $ fn (x)
                     update-in db ([] :sessions sid :notifications) (push-warning op-id op-time x)
@@ -5726,14 +5738,18 @@
                     update :files $ fn (files)
                       let
                           the-file $ get files selected-ns
-                          ns-expr $ :ns the-file
+                          ns-expr $ option:unwrap-or (get the-file :ns) nil
                           new-file $ update the-file :ns
                             fn (expr)
                               let
                                   name-field $ .unwrap
-                                    key-nth (:data ns-expr) 1
+                                    key-nth
+                                      option:unwrap-or (get ns-expr :data) {}
+                                      , 1
                                 assert (str "|old namespace to change:" selected-ns "| " ns-expr)
-                                  = selected-ns $ get-in ns-expr ([] :data name-field :text)
+                                  = selected-ns $ option:unwrap-or
+                                    get-in ns-expr $ [] :data name-field :text
+                                    , nil
                                 assoc-in expr ([] :data name-field :text) new-ns
                         assoc files new-ns new-file
                     assoc-in ([] :sessions sid :writer :selected-ns) new-ns
@@ -5757,10 +5773,11 @@
                 (:def ns' def' f)
                   -> db
                     update-in ([] :files ns' :defs)
-                      fn (defs) (dissoc defs def')
+                      fn (defs)
+                        dissoc (option:unwrap-or defs {}) def'
                     update-in ([] :sessions session-id :writer)
                       fn (writer)
-                        -> writer
+                        -> (option:unwrap-or writer {})
                           update :stack $ fn (stack)
                             dissoc-idx stack $ :pointer (option:unwrap-or writer {})
                           update :pointer dec
@@ -5769,7 +5786,7 @@
                     update :files $ fn (files) (dissoc files ns')
                     update-in ([] :sessions session-id :writer)
                       fn (writer)
-                        -> writer
+                        -> (option:unwrap-or writer {})
                           update :stack $ fn (stack)
                             dissoc-idx stack $ :pointer (option:unwrap-or writer {})
                           update :pointer dec
@@ -5788,7 +5805,9 @@
                   data-path $ .to-path parent-bookmark
                   child-keys $ sort
                     .to-list $ keys
-                      :data $ get-in db data-path
+                      option:unwrap-or
+                        get-in db $ conj data-path :data
+                        , {}
                   deleted-key $ last (.get-focus bookmark)
                   idx $ option:unwrap-or (.index-of child-keys deleted-key) 0
                 if
@@ -5805,7 +5824,9 @@
                             if (= 0 idx) (butlast focus)
                               assoc focus
                                 dec $ count focus
-                                get child-keys $ dec idx
+                                option:unwrap-or
+                                  get child-keys $ dec idx
+                                  , nil
           :examples $ []
           :schema $ :: 'Dynamic
         |draft-expr $ %{} 'CodeEntry (:doc |)
@@ -5964,7 +5985,7 @@
                     :data $ {}
                 -> db
                   update-in data-path $ fn (node)
-                    assoc-in new-expr ([] :data bisection/mid-id) node
+                    assoc-in new-expr ([] :data bisection/mid-id) (option:unwrap-or node {})
                   update-in ([] :sessions session-id :writer :stack pointer)
                     fn (b)
                       .update-focus (Bookmark b)
@@ -6227,7 +6248,9 @@
               let
                   ns-text op-data
                 assoc-in db ([] :files ns-text)
-                  get-in db $ [] :saved-files ns-text
+                  option:unwrap-or
+                    get-in db $ [] :saved-files ns-text
+                    , {}
           :examples $ []
           :schema $ :: 'Dynamic
         |swap-left $ %{} 'CodeEntry (:doc "|say we have `a b`, focus at `b`, `:swap-left` moves `b` to left, gets `b a`, and focus at `a` now. internally, path to `a` is maintained.")
@@ -6280,12 +6303,14 @@
                   user-id $ get-in db ([] :sessions sid :user-id)
                 update-in db data-path $ fn (node)
                   if (expr? node)
-                    update node :data $ fn (data)
+                    update (option:unwrap-or node {}) :data $ fn (data)
                       let
                           k0 $ get-min-key data
                         if
                           and (some? k0)
-                            = |; $ get-in data ([] k0 :text)
+                            = |; $ option:unwrap-or
+                              get-in data $ [] k0 :text
+                              , nil
                           dissoc data k0
                           assoc-prepend data $ cirru->tree |; user-id op-time
                     do (println "|Toggle comment at wrong place," node) node
@@ -6575,19 +6600,21 @@
               let
                   new-files $ get op-data :files
                 if
-                  = (get db :files) (:saved-files db)
+                  =
+                    option:unwrap-or (get db :files) {}
+                    option:unwrap-or (get db :saved-files) {}
                   -> db (assoc :saved-files new-files) (assoc :files new-files)
                   update db :saved-files $ fn (old-files)
                     -> new-files $ map-kv
                       fn (ns-text file)
                         let-sugar
                             old-file $ get old-files ns-text
-                            old-defs $ :defs old-file
+                            old-defs $ option:unwrap-or (get old-file :defs) {}
                           [] ns-text $ if (= file old-file) old-file
                             -> file
                               update :ns $ fn (expr)
                                 let
-                                    old-expr $ :ns old-file
+                                    old-expr $ option:unwrap-or (get old-file :ns) nil
                                   if (= expr old-expr) old-expr expr
                               update :defs $ fn (defs)
                                 -> defs $ map-kv
@@ -7199,7 +7226,7 @@
               if-let
                 require-rules $ -> require-exprs
                   find $ fn (xs)
-                    = |:require $ first xs
+                    = |:require $ option:unwrap-or (first xs) nil
                 loop
                     result $ {}
                     xs $ rest require-rules
@@ -7209,7 +7236,7 @@
                     recur
                       merge result $ parse-require
                         if
-                          = |[] $ first rule
+                          = |[] $ option:unwrap-or (first rule) nil
                           rest rule
                           , rule
                       rest xs
