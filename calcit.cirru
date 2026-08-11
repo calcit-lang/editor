@@ -4988,13 +4988,19 @@
                       file $ get files ns-text
                       saved-file $ get saved-files ns-text
                     [] ns-text $ {}
-                      :ns $ compare-entry (:ns file) (:ns saved-file)
+                      :ns $ compare-entry
+                        option:unwrap-or (get file :ns) nil
+                        option:unwrap-or (get saved-file :ns) nil
                       :defs $ let
                           all-defs $ union
-                            keys $ or (:defs file) ({})
-                            keys $ or (:defs saved-file) ({})
-                          defs $ :defs file
-                          saved-defs $ :defs saved-file
+                            keys $ or
+                              option:unwrap-or (get file :defs) {}
+                              {}
+                            keys $ or
+                              option:unwrap-or (get saved-file :defs) {}
+                              {}
+                          defs $ option:unwrap-or (get file :defs) {}
+                          saved-defs $ option:unwrap-or (get saved-file :defs) {}
                         -> all-defs
                           filter $ fn (def-text)
                             not= (get defs def-text) (get saved-defs def-text)
@@ -5004,8 +5010,8 @@
                 filter $ fn (pair)
                   let[] (k info) pair $ not
                     and
-                      = :same $ :ns info
-                      empty? $ :defs info
+                      = :same $ option:unwrap-or (get info :ns) nil
+                      empty? $ option:unwrap-or (get info :defs) {}
                 pairs-map
           :examples $ []
           :schema $ :: 'Dynamic
@@ -5021,7 +5027,7 @@
                     get-in files $ [] selected-ns :defs
                     or $ {}
                     map-kv $ fn (k v)
-                      [] k $ :doc v
+                      [] k $ option:unwrap-or (get v :doc) nil
                   {}
                 :changed-files $ render-changed-files files saved-files
                 :peeking-file $ if (some? draft-ns) (get files draft-ns) nil
@@ -5029,9 +5035,10 @@
                   map $ fn (pair)
                     let[] (k session) pair $ [] k
                       let
-                          writer $ :writer session
-                          stack $ :stack writer
-                        if (empty? stack) nil $ get stack (:pointer writer)
+                          writer $ option:unwrap-or (get session :writer) {}
+                          stack $ option:unwrap-or (get writer :stack) []
+                        if (empty? stack) nil $ get stack
+                          option:unwrap-or (get writer :pointer) 0
                   filter $ fn (pair)
                     let[] (k session) pair $ if (= sid k) false (some? session)
                   pairs-map
