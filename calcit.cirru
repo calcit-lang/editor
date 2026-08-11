@@ -1289,15 +1289,15 @@
         |GenCodeBoxActionImpl $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defimpl GenCodeBoxActionImpl GenCodeBoxActionTrait
-              :render $ fn (self)
+              .render $ fn (self)
                 tag-match self $
                   :plugin render open reset-state
                   render
-              :open $ fn (self d!)
+              .open $ fn (self d!)
                 tag-match self $
                   :plugin render open reset-state
                   open d!
-              :reset-state $ fn (self d!)
+              .reset-state $ fn (self d!)
                 tag-match self $
                   :plugin render open reset-state
                   reset-state d!
@@ -1940,7 +1940,7 @@
             defcomp comp-messages (messages)
               list-> ({})
                 -> messages
-                  drop $ js/Math.max 0
+                  drop $ max 0
                     - (count messages) 3
                   map-indexed $ fn (idx msg)
                     [] (:id msg)
@@ -3202,20 +3202,21 @@
         |RenamePluginImpl $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defimpl RenamePluginImpl RenamePluginTrait
-              :render $ fn (self)
+              .render $ fn (self)
                 tag-match self $
                   :rename-plugin node cursor s
                   , node
-              :show $ fn (self d!)
+              .show $ fn (self d!)
                 tag-match self $
                   :rename-plugin node cursor state
                   do
-                    d! cursor $ assoc state :old-name | :new-name | :show? true
+                    d! cursor $ merge state
+                      {} (:old-name |) (:new-name |) (:show? true)
                     js/setTimeout $ fn ()
                       let
                           el $ js/document.querySelector |#replace-input
                         if (some? el) (.!select el)
-              :close $ fn (self d!)
+              .close $ fn (self d!)
                 tag-match self $
                   :rename-plugin node cursor state
                   d! cursor $ assoc state :show? false
@@ -3272,7 +3273,7 @@
                           =< nil 8
                           div
                             {} $ :style ui/row-parted
-                            span nil
+                            span $ {}
                             button $ {} (:style ui/button) (:inner-text |Replace)
                               :on-click $ fn (e d!) (on-submit d!)
                     :show? state
