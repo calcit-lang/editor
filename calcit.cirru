@@ -294,7 +294,10 @@
                   recur (rest xs) (rest ys)
                   , false
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Bool)
+              :args $ [] (:: 'List 'T) (:: 'List 'T)
+              :generics $ [] 'T
         |expr-many-items? $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn expr-many-items? (x size)
@@ -349,7 +352,7 @@
                   , |: $ or (get query |port) (:port schema/configs)
               , |ws://localhost:6001
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns app.client-util $ :require ([] app.config :as config) ([] |url-parse :default url-parse) (app.schema :as schema)
@@ -385,7 +388,7 @@
         |install-commands $ %{} 'CodeEntry (:doc "|copy the commands to use")
           :code $ quote (def install-commands "|$ npm install -g @calcit/editor\n$ ct\n")
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns app.comp.about $ :require
@@ -6790,7 +6793,9 @@
                 (:def ns' def' f) (str ns' |/ def')
                 (:ns ns' f) (str ns' |/)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'String)
+              :args $ [] 'app.bookmark/%bookmark0
         |cirru->file $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn cirru->file (file author timestamp)
@@ -6847,7 +6852,9 @@
               and (struct? x)
                 = :Expr $ &struct:get-name x
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Bool)
+              :args $ [] 'Dynamic
         |extract-examples-code $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn extract-examples-code (xs)
@@ -6923,7 +6930,14 @@
             defn find-first (f xs)
               find xs $ fn (x) (f x)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {}
+              :args $ []
+                :: 'Fn $ {} (:return 'Bool)
+                  :args $ [] 'T
+                :: 'List 'T
+              :generics $ [] 'T
+              :return $ :: 'Option 'T
         |hide-empty-fields $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn hide-empty-fields (x)
@@ -6944,12 +6958,16 @@
               and (struct? x)
                 = schema/CirruLeaf $ &struct:definition x
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Bool)
+              :args $ [] 'Dynamic
         |now! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn now! () $ js/Date.now
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Number)
+              :args $ []
         |parse-def $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn parse-def (text)
@@ -7056,7 +7074,10 @@
               sort $ .to-list
                 keys $ :data target-expr
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {}
+              :args $ [] 'app.schema/CirruExpr
+              :return $ :: 'List 'Number
         |to-writer $ %{} 'CodeEntry (:doc "|get writer from db, with current session")
           :code $ quote
             defn to-writer (db session-id)
@@ -7505,7 +7526,9 @@
                     (:def b-ns b-def b-f) false
                     (:ns b-ns b-f) (= a-ns b-ns)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Bool)
+              :args $ [] 'app.bookmark/%bookmark0 'app.bookmark/%bookmark0
         |index-of-bookmark $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn index-of-bookmark (stack bookmark ? idx)

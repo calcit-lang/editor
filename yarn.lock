@@ -28,14 +28,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@calcit/procs@npm:^0.13.8":
-  version: 0.13.8
-  resolution: "@calcit/procs@npm:0.13.8"
+"@calcit/procs@npm:^0.13.10":
+  version: 0.13.10
+  resolution: "@calcit/procs@npm:0.13.10"
   dependencies:
     "@calcit/ternary-tree": "npm:0.0.26"
     "@cirru/parser.ts": "npm:^0.0.9"
     "@cirru/writer.ts": "npm:^0.1.9"
-  checksum: 10c0/4f627c01f03e9a58639b1bea2c732d6297cefaff56e2be7c0b9cce13d810f79e1b068e4e5da87bd24459abd74e181b0db667ea6fa888cc71584359c06348fc48
+  checksum: 10c0/6352452f00f7a73e071ea0fa944431174cd6da49b2f63ba501c4046ee029dae4b1b0f06a9ef6e59c86492ba2d558af6d51780a2ab50a89ae301772184cad7ea7
   languageName: node
   linkType: hard
 
