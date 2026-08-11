@@ -7254,18 +7254,30 @@
         |copy-silently! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn copy-silently! (x)
-              -> js/navigator .-clipboard (.!writeText x)
-                .!then $ fn (e) (println |Copied.)
-                .!catch $ fn (error) (js/console.error "|Failed to copy:" error)
+              let
+                  clipboard $ unsafe-coerce
+                    .-clipboard $ unsafe-coerce js/navigator JsObject
+                    , JsObject
+                  promise $ unsafe-coerce (.!writeText clipboard x) JsObject
+                  result $ unsafe-coerce
+                    .!then promise $ fn (e) (println |Copied.)
+                    , JsObject
+                .!catch result $ fn (error) (js/console.error "|Failed to copy:" error)
           :examples $ []
           :schema $ :: 'Dynamic
         |do-copy-logics! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn do-copy-logics! (d! x message)
-              -> js/navigator .-clipboard (.!writeText x)
-                .!then $ fn (? v)
-                  d! :notify/push-message $ [] :info message
-                .!catch $ fn (error) (js/console.error "|Failed to copy:" error)
+              let
+                  clipboard $ unsafe-coerce
+                    .-clipboard $ unsafe-coerce js/navigator JsObject
+                    , JsObject
+                  promise $ unsafe-coerce (.!writeText clipboard x) JsObject
+                  result $ unsafe-coerce
+                    .!then promise $ fn (? v)
+                      d! :notify/push-message $ [] :info message
+                    , JsObject
+                .!catch result $ fn (error) (js/console.error "|Failed to copy:" error)
                   d! :notify/push-message $ [] :error (str "|Failed to copy! " error)
           :examples $ []
           :schema $ :: 'Dynamic
@@ -7274,12 +7286,14 @@
             defn focus! () $ js/requestAnimationFrame
               fn (timestamp)
                 let
-                    current-focused $ .-activeElement js/document
+                    current-focused $ unsafe-coerce
+                      .-activeElement $ unsafe-coerce js/document JsObject
+                      , JsObject
                     cirru-focused $ js/document.querySelector |.cirru-focused
-                  if (some? cirru-focused)
+                  if (js-present? cirru-focused)
                     if
                       not $ identical? current-focused cirru-focused
-                      .!focus cirru-focused
+                      .!focus $ unsafe-coerce cirru-focused JsObject
                     println "|[Editor] .cirru-focused not found" cirru-focused
           :examples $ []
           :schema $ :: 'Dynamic
@@ -7288,7 +7302,8 @@
             defn focus-search! () $ flipped js/setTimeout 200
               fn () $ let
                   target $ js/document.querySelector |.search-input
-                if (some? target) (.!focus target)
+                if (js-present? target)
+                  .!focus $ unsafe-coerce target JsObject
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
