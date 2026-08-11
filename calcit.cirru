@@ -5598,14 +5598,15 @@
                   new-leaf $ %{} schema/CirruLeaf (:by user-id) (:at op-time) (:text |)
                   expr-path $ .to-path bookmark
                   target-expr $ get-in db expr-path
-                  new-id $ key-append (:data target-expr)
+                  new-id $ key-append
+                    option:unwrap-or (get target-expr :data) nil
                 -> db
                   update-in expr-path $ fn (expr)
                     if (expr? expr)
-                      assoc-in expr ([] :data new-id) new-leaf
+                      update (assert-type expr 'app.schema/CirruExpr) :data $ fn (d) (assoc d new-id new-leaf)
                       , expr
                   update-in
-                    [] :sessions session-id :writer :stack $ :pointer writer
+                    [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                     fn (b)
                       .update-focus (Bookmark b)
                         fn (focus) (conj focus new-id)
@@ -5704,7 +5705,9 @@
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                   bookmark $ Bookmark
-                    get (:stack writer) (:pointer writer)
+                    get
+                      option:unwrap-or (get writer :stack) nil
+                      option:unwrap-or (get writer :pointer) 0
                   parent-bookmark $ .update-focus bookmark butlast
                   data-path $ .to-path parent-bookmark
                   child-keys $ sort
@@ -5717,9 +5720,9 @@
                   -> db $ update-in ([] :sessions session-id :notifications) (push-warning op-id op-time "|cannot delete from root")
                   -> db
                     update-in data-path $ fn (expr)
-                      update expr :data $ fn (children) (dissoc children deleted-key)
+                      update (assert-type expr 'app.schema/CirruExpr) :data $ fn (children) (dissoc children deleted-key)
                     update-in
-                      [] :sessions session-id :writer :stack $ :pointer writer
+                      [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                       fn (b)
                         .update-focus (Bookmark b)
                           fn (focus)
@@ -5979,14 +5982,15 @@
                   new-leaf $ %{} schema/CirruLeaf (:by user-id) (:at op-time) (:text |)
                   expr-path $ .to-path bookmark
                   target-expr $ get-in db expr-path
-                  new-id $ key-prepend (:data target-expr)
+                  new-id $ key-prepend
+                    option:unwrap-or (get target-expr :data) nil
                 -> db
                   update-in expr-path $ fn (expr)
                     if (expr? expr)
-                      assoc-in expr ([] :data new-id) new-leaf
+                      update (assert-type expr 'app.schema/CirruExpr) :data $ fn (d) (assoc d new-id new-leaf)
                       , expr
                   update-in
-                    [] :sessions session-id :writer :stack $ :pointer writer
+                    [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                     fn (b)
                       .update-focus (Bookmark b)
                         fn (focus) (conj focus new-id)
