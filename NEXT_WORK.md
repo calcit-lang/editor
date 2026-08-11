@@ -25,7 +25,7 @@
 ## 3. 当前 editor 本地剩余项
 
 1. 当前没有已确认的 editor、gen-code 或 reel 入口预处理 warning；三者的有效依赖配置均已移除 `lilac/memof`，项目测试统一使用内置 `cr test`。
-2. gen-code 的 `check-types` 已可完成；当前剩余 7 个定义、11 个 unresolved dynamic 命中，仅位于插件/AI/reel 全局状态、动态组件参数和 map value 等边界，后续可继续逐项补充 nominal schema。
+2. gen-code 的 `check-types` 已可完成；当前剩余 4 个定义、5 个 unresolved dynamic 命中，仅位于 reel/组件参数和异构 map value 边界；插件、AI、状态操作等已改为 `JsObject`、`GenCodeState`、`GenCodeOp` 等明确类型。
 3. 外部依赖正式发布前仍需确认 `calcit.cirru`、`package.json` 和 lockfile 是否同步；本批已同步实际使用的 calcit/cache 快照。
 
 ## 4. 每批修改的验证方式
