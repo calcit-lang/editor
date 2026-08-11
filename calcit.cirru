@@ -412,21 +412,23 @@
           :code $ quote
             defcomp comp-abstract (states close-modal!)
               comp-modal close-modal! $ let
-                  cursor $ :cursor states
-                  state $ or (:data states) |style-
+                  cursor $ option:unwrap-or (get states :cursor) nil
+                  state $ or
+                    option:unwrap-or (get states :data) |
+                    , |style-
                 div ({})
                   input $ {}
                     :class-name $ str-spaced style/input |el-abstract
                     :value state
                     :on-input $ fn (e d!)
-                      d! cursor $ :value e
+                      d! cursor $ option:unwrap-or (get e :value) nil
                     :on-keydown $ fn (e d!)
                       cond
-                          = keycode/enter $ :key-code e
+                          = keycode/enter $ option:unwrap-or (get e :key-code) nil
                           if
                             not $ blank? state
                             do (d! :analyze/abstract-def state) (d! cursor nil) (close-modal! d!)
-                        (= (:keycode e) keycode/escape)
+                        (= (option:unwrap-or (get e :keycode) nil) keycode/escape)
                           close-modal! d!
                         true nil
                   =< nil 8
@@ -716,23 +718,25 @@
               let
                   version-plugin $ use-prompt (>> states :version)
                     {} (:text "|Set a version:")
-                      :initial $ :version configs
+                      :initial $ option:unwrap-or (get configs :version) nil
                       :placeholder "|a version number..."
                       :input-class css/font-code
                   modules-plugin $ use-prompt (>> states :modules)
                     {} (:text "|Add modules:")
-                      :initial $ .join-str (:modules configs) "| "
+                      :initial $ .join-str
+                        option:unwrap-or (get configs :modules) []
+                        , "| "
                       :placeholder "|module/compact.cirru etc."
                       :input-class css/font-code
                       :multiline? true
                   init-fn-plugin $ use-prompt (>> states :init-fn)
                     {} (:text "|Set a init-fn:")
-                      :initial $ :init-fn configs
+                      :initial $ option:unwrap-or (get configs :init-fn) nil
                       :placeholder "|a path..."
                       :input-class css/font-code
                   reload-fn-plugin $ use-prompt (>> states :reload-fn)
                     {} (:text "|Set a reload-fn:")
-                      :initial $ :reload-fn configs
+                      :initial $ option:unwrap-or (get configs :reload-fn) nil
                       :placeholder "|a path..."
                       :input-class css/font-code
                 div
@@ -746,7 +750,7 @@
                         fn (e d!)
                           .show version-plugin d! $ fn (text)
                             d! :configs/update $ {} (:version text)
-                      render-field $ :version configs
+                      render-field $ option:unwrap-or (get configs :version) nil
                   div
                     {} $ :class-name css/row
                     render-label |Modules:
@@ -761,21 +765,24 @@
                                   trim $ unsafe-coerce text 'String
                                   , "| "
                                 , blank?
-                      render-field $ -> (:modules configs) (or |) (join-str "| ")
+                      render-field $ ->
+                        option:unwrap-or (get configs :modules) []
+                        or |
+                        join-str "| "
                   div ({}) (render-label |init-fn:) (=< 8 nil)
                     span
                       {} $ :on-click
                         fn (e d!)
                           .show init-fn-plugin d! $ fn (text)
                             d! :configs/update $ {} (:init-fn text)
-                      render-field $ :init-fn configs
+                      render-field $ option:unwrap-or (get configs :init-fn) nil
                   div ({}) (render-label |reload-fn:) (=< 8 nil)
                     span
                       {} $ :on-click
                         fn (e d!)
                           .show reload-fn-plugin d! $ fn (text)
                             d! :configs/update $ {} (:reload-fn text)
-                      render-field $ :reload-fn configs
+                      render-field $ option:unwrap-or (get configs :reload-fn) nil
                   pre
                     {} $ :style
                       merge $ {} (:max-width |100%) (:overflow :auto)
@@ -851,44 +858,61 @@
           :code $ quote
             defcomp comp-container (states store)
               let
-                  state $ :data states
-                  session $ :session store
-                  writer $ :writer session
-                  router $ :router store
+                  state $ option:unwrap-or (get states :data) {}
+                  session $ option:unwrap-or (get store :session) {}
+                  writer $ option:unwrap-or (get session :writer) {}
+                  router $ option:unwrap-or (get store :router) nil
                   theme $ get-in store ([] :user :theme)
-                  picker-mode? $ some? (:picker-mode writer)
+                  picker-mode? $ option:some? (get writer :picker-mode)
                 if (nil? store) (comp-about)
                   div
                     {} $ :class-name (str-spaced css/global css/fullscreen css/column style-container)
                     if (not picker-mode?)
                       comp-header (>> states :header)
                         if (enum? router) (nth router 0)
-                        :logged-in? store
-                        :stats store
+                        option:unwrap-or (get store :logged-in?) false
+                        option:unwrap-or (get store :stats) {}
                     div
                       {} $ :class-name (str-spaced css/row css/expand)
-                      if (:logged-in? store)
+                      if
+                        option:unwrap-or (get store :logged-in?) false
                         tag-match router
                           (:profile d)
-                            comp-profile (>> states :profile) (:user store) (:id session) d
+                            comp-profile (>> states :profile)
+                              option:unwrap-or (get store :user) {}
+                              option:unwrap-or (get session :id) nil
+                              , d
                           (:files d)
-                            comp-page-files (>> states :files) (:selected-ns writer) d
+                            comp-page-files (>> states :files)
+                              option:unwrap-or (get writer :selected-ns) nil
+                              , d
                           (:graph d)
-                            comp-deps-graph (>> states :graph) (:package d) (:configs d) (:entries d) (:deps-dict d) (:writer d)
+                            comp-deps-graph (>> states :graph)
+                              option:unwrap-or (get d :package) nil
+                              option:unwrap-or (get d :configs) {}
+                              option:unwrap-or (get d :entries) {}
+                              option:unwrap-or (get d :deps-dict) {}
+                              option:unwrap-or (get d :writer) {}
                           (:editor d)
-                            comp-page-editor (>> states :editor) (:stack writer) d (:pointer writer) picker-mode? theme
+                            comp-page-editor (>> states :editor)
+                              :stack $ option:unwrap-or (get writer :stack) []
+                              , d
+                                :pointer $ option:unwrap-or (get writer :pointer) 0
+                                , picker-mode? theme
                           (:search d)
                             comp-search (>> states :search) d
                           (:watching d)
-                            comp-watching (>> states :watching) d $ :theme session
+                            comp-watching (>> states :watching) d $ option:unwrap-or (get session :theme) :star-trail
                           (:configs d)
-                            comp-configs (>> states :configs) (:configs d) (:entries d)
+                            comp-configs (>> states :configs)
+                              option:unwrap-or (get d :configs) {}
+                              option:unwrap-or (get d :entries) {}
                           _ $ div ({})
                             <> $ str "|404 page: " (to-lispy-string router)
                         if (some? router)
                           tag-match router
                             (:watcher d)
-                              comp-watching (>> states :watching) d $ :theme session
+                              comp-watching (>> states :watching) d $ option:unwrap-or (get session :theme) :star-trail
                             _ $ comp-login (>> states :login)
                           comp-login $ >> states :login
                     when dev? $ comp-inspect |Session store style-inspector
@@ -942,7 +966,7 @@
           :code $ quote
             defcomp comp-draft-box (states expr focus close-modal!)
               let
-                  cursor $ :cursor states
+                  cursor $ option:unwrap-or (get states :cursor) nil
                 comp-modal
                   fn (d!) (d! cursor nil) (close-modal! d!)
                   let
@@ -955,10 +979,11 @@
                       span $ {} (:class-name css-wrong) (:inner-text "|Does not edit expression!")
                         :on-click $ fn (e d!) (close-modal! d!)
                       let
-                          state $ or (:data states)
+                          state $ or
+                            option:unwrap-or (get states :data) |
                             if an-expr?
                               format-cirru $ [] (tree->cirru node)
-                              :text node
+                              option:unwrap-or (get node :text) |
                         div
                           {} $ :class-name css/column
                           div
@@ -967,20 +992,20 @@
                               textarea $ {} (:spellcheck false) (:class-name css-text)
                                 :value $ if an-expr?
                                   format-cirru $ tree->cirru node
-                                  :text node
+                                  option:unwrap-or (get node :text) |
                           =< nil 8
                           textarea $ {}
                             :class-name $ str-spaced |el-draft-box css-draft-area
                             :value state
                             :on-input $ fn (e d!)
-                              d! cursor $ :value e
+                              d! cursor $ option:unwrap-or (get e :value) nil
                             :on-keydown $ fn (e d!)
                               cond
-                                  = keycode/escape $ :keycode e
+                                  = keycode/escape $ option:unwrap-or (get e :keycode) nil
                                   close-modal! d!
-                                (and (= keycode/s (:keycode e)) (.-metaKey (:event e)))
+                                (and (= keycode/s (option:unwrap-or (get e :keycode) nil)) (.-metaKey (option:unwrap-or (get e :event) {})))
                                   do
-                                    .!preventDefault $ :event e
+                                    .!preventDefault $ option:unwrap-or (get e :event) {}
                                     if expr?
                                       d! :ir/draft-expr $ parse-cirru-edn state
                                       d! :ir/update-leaf $ {} (:text state)
@@ -1259,17 +1284,21 @@
           :code $ quote
             defcomp comp-file-replacer (states file)
               let
-                  cursor $ :cursor states
-                  state $ or (:data states)
+                  cursor $ option:unwrap-or (get states :cursor) []
+                  state $ or
+                    option:unwrap-or (get states :data)
+                      format-cirru-edn $ file->cirru file false
                     format-cirru-edn $ file->cirru file false
                 comp-modal
                   fn (d!) (d! :writer/draft-ns nil)
                   div
                     {} $ :style ui/column
-                    textarea $ {} (:value state) (:class-name style/input)
+                    textarea $ {}
+                      :value $ option:unwrap-or (get state :value) |
+                      :class-name style/input
                       :style $ {} (:width 800) (:height 400) (:white-space :pre) (:line-height |20px)
                       :on-input $ fn (e d!)
-                        d! cursor $ :value e
+                        d! cursor $ option:unwrap-or (get e :value) nil
                     =< nil 8
                     div
                       {} (:class-name css/row)
@@ -1402,12 +1431,13 @@
           :code $ quote
             defcomp comp-deps-graph (states pkg configs entries deps-dict writer)
               let
-                  init-fn $ :init-fn configs
+                  init-fn $ option:unwrap-or (get configs :init-fn) |
                   pair $ .split init-fn |/
                   that-ns $ nth pair 0
                   that-def $ nth pair 1
-                  cursor $ :cursor states
-                  state $ either (:data states)
+                  cursor $ option:unwrap-or (get states :cursor) nil
+                  state $ either
+                    option:unwrap-or (get states :data) {}
                     {}
                       :ns $ nth pair 0
                       :def $ nth pair 1
@@ -1422,17 +1452,20 @@
                           , vals .to-list $ map
                             fn (conf)
                               let
-                                  pair $ .split (:init-fn conf) |/
+                                  pair $ .split
+                                    option:unwrap-or (get conf :init-fn) |
+                                    , |/
                                 :: :item
                                   :: :def (nth pair 0) (nth pair 1)
-                                  :init-fn conf
+                                  option:unwrap-or (get conf :init-fn) |
                       :on-result $ fn (result d!)
                         tag-match (nth result 1)
                           (:def a-ns a-def)
                             d! cursor $ {} (:ns a-ns) (:def a-def)
                   pointer $ get writer :pointer
                   bookmark $ if (some? pointer)
-                    get-in writer $ [] :stack (:pointer writer)
+                    get-in writer $ [] :stack
+                      option:unwrap-or (get writer :pointer) nil
                     , nil
                 [] (effect-navigate bookmark)
                   div
@@ -1442,11 +1475,17 @@
                       {} $ :style
                         {} $ :padding "|4px 16px"
                       span $ {}
-                        :inner-text $ str (:ns state) |/ (:def state)
+                        :inner-text $ str
+                          option:unwrap-or (get state :ns) |
+                          , |/
+                            option:unwrap-or (get state :def) |
                         :on-click $ fn (e d!) (.show plugin-entries d!)
                         :class-name style-def-entry
                       .render plugin-entries
-                    comp-entry-deps (:ns state) (:def state) deps-dict pkg $ []
+                    comp-entry-deps
+                      option:unwrap-or (get state :ns) |
+                      option:unwrap-or (get state :def) |
+                      , deps-dict pkg $ []
           :examples $ []
           :schema $ :: 'Dynamic
         |comp-entry-deps $ %{} 'CodeEntry (:doc |)
@@ -1789,16 +1828,18 @@
             defn on-keydown (state leaf coord picker-mode?)
               fn (e d!)
                 let
-                    event $ :original-event e
-                    code $ :key-code e
+                    event $ option:unwrap-or (get e :original-event) {}
+                    code $ option:unwrap-or (get e :key-code) nil
                     shift? $ .-shiftKey event
                     meta? $ or (.-metaKey event) (.-ctrlKey event)
                     alt? $ .-altKey event
                     selected? $ not= (-> event .-target .-selectionStart) (-> event .-target .-selectionEnd)
                     text $ if
-                      > (:at state) (:at leaf)
-                      :text state
-                      :text leaf
+                      >
+                        option:unwrap-or (get state :at) 0
+                        option:unwrap-or (get leaf :at) 0
+                      option:unwrap-or (get state :text) |
+                      option:unwrap-or (get leaf :text) |
                     text-length $ count text
                   cond
                       = code keycode/backspace
@@ -1832,7 +1873,7 @@
                           d! $ :: :writer/go-left
                           .!preventDefault event
                     (and meta? (= code keycode/b))
-                      d! :analyze/peek-def $ :text leaf
+                      d! :analyze/peek-def $ option:unwrap-or (get leaf :text) |
                     (and (not selected?) (= code keycode/right))
                       if
                         = text-length $ -> event .-target .-selectionEnd
@@ -1848,20 +1889,24 @@
                         if
                           -> ([] "|\"" || "|#\"")
                             any? $ fn (x)
-                              starts-with? (:text leaf) x
+                              starts-with?
+                                option:unwrap-or (get leaf :text) |
+                                , x
                           do
                             d! $ :: :manual-state/draft-box
                             js/setTimeout $ fn ()
                               let
                                   el $ js/document.querySelector |.el-draft-box
-                                if (some? el) (.!focus el)
+                                if (js-present? el) (.!focus el)
                           d! :analyze/goto-def $ {}
-                            :text $ :text leaf
+                            :text $ option:unwrap-or (get leaf :text) |
                             :forced? shift?
                     (and meta? (= code keycode/slash) (not shift?))
                       do $ js/window.open
                         str |https://apis.calcit-lang.org/?q= $ js/encodeURIComponent
-                          last $ split (:text leaf) |/
+                          last $ split
+                            option:unwrap-or (get leaf :text) |
+                            , |/
                     (and picker-mode? (= code keycode/escape))
                       d! $ :: :writer/picker-mode
                     (and meta? alt? (= code keycode/num-4))
@@ -1890,31 +1935,39 @@
           :code $ quote
             defcomp comp-login (states)
               let
-                  cursor $ :cursor states
-                  state $ or (:data states) initial-state
+                  cursor $ option:unwrap-or (get states :cursor) []
+                  state $ or
+                    option:unwrap-or (get states :data) initial-state
+                    , initial-state
                 div
                   {} (:class-name css/column) (:style style-login)
                   div
                     {} $ :class-name css/column
                     div ({})
                       input $ {} (:placeholder |Username)
-                        :value $ :username state
+                        :value $ option:unwrap-or (get state :username) |
                         :class-name style/input
                         :on-input $ on-input state cursor :username
                     =< nil 8
                     div ({})
                       input $ {} (:placeholder |Password)
-                        :value $ :password state
+                        :value $ option:unwrap-or (get state :password) |
                         :class-name style/input
                         :on-input $ on-input state cursor :password
                   =< nil 8
                   div
                     {} $ :style style-control
                     button $ {} (:inner-text "|Sign up") (:class-name style/button)
-                      :on-click $ on-submit (:username state) (:password state) true
+                      :on-click $ on-submit
+                        option:unwrap-or (get state :username) |
+                        option:unwrap-or (get state :password) |
+                        , true
                     =< 8 nil
                     button $ {} (:inner-text "|Log in") (:class-name style/button)
-                      :on-click $ on-submit (:username state) (:password state) false
+                      :on-click $ on-submit
+                        option:unwrap-or (get state :username) |
+                        option:unwrap-or (get state :password) |
+                        , false
           :examples $ []
           :schema $ :: 'Dynamic
         |initial-state $ %{} 'CodeEntry (:doc |)
@@ -1926,7 +1979,8 @@
           :code $ quote
             defn on-input (state cursor k)
               fn (e dispatch!)
-                dispatch! cursor $ assoc state k (:value e)
+                dispatch! cursor $ assoc state k
+                  option:unwrap-or (get e :value) nil
                 {} (:name |Alice) (:age 30) (:is-active true) (:occupation "|Software Engineer")
           :examples $ []
           :schema $ :: 'Dynamic
@@ -1935,7 +1989,8 @@
             defn on-submit (username password signup?)
               fn (e dispatch!)
                 dispatch! (if signup? :user/sign-up :user/log-in) ([] username password)
-                js/window.localStorage.setItem (:storage-key config/site)
+                js/window.localStorage.setItem
+                  option:unwrap-or (get config/site :storage-key) nil
                   format-cirru-edn $ [] username password
           :examples $ []
           :schema $ :: 'Dynamic
@@ -1970,23 +2025,30 @@
                   drop $ &max 0
                     - (count messages) 3
                   map-indexed $ fn (idx msg)
-                    [] (:id msg)
+                    []
+                      option:unwrap-or (get msg :id) nil
                       div
                         {} (:class-name css-message)
                           :style $ {}
                             :bottom $ + 8 (* idx 28)
-                            :color $ case-default (:kind msg) (hsl 120 80 80)
+                            :color $ case-default
+                              option:unwrap-or (get msg :kind) :info
+                              hsl 120 80 80
                               :error $ hsl 0 80 80
                               :warning $ hsl 60 80 80
                               :info $ hsl 240 80 80
                           :on-click $ fn (e d!) (d! :notify/clear nil)
                         <>
                           unsafe-coerce
-                            -> (:time msg) Dayjs $ .!format |mm:ss
+                            ->
+                              option:unwrap-or (get msg :time) nil
+                              , Dayjs $ .!format |mm:ss
                             , 'String
                           str-spaced css/font-code style-time-short
                         =< 8 nil
-                        <> (:text msg) nil
+                        <>
+                          option:unwrap-or (get msg :text) |
+                          , nil
           :examples $ []
           :schema $ :: 'Dynamic
         |css-message $ %{} 'CodeEntry (:doc |)
@@ -2097,12 +2159,14 @@
           :code $ quote
             defcomp comp-page-editor (states stack router-data pointer picker-mode? theme)
               let
-                  cursor $ :cursor states
-                  state $ or (:data states) initial-state
-                  bookmark $ get stack pointer
-                  expr-entry $ :expr router-data
-                  expr $ :code expr-entry
-                  focus $ :focus router-data
+                  cursor $ option:unwrap-or (get states :cursor) []
+                  state $ or
+                    option:unwrap-or (get states :data) initial-state
+                    , initial-state
+                  bookmark $ option:unwrap-or (get stack pointer) nil
+                  expr-entry $ option:unwrap-or (get router-data :expr) nil
+                  expr $ option:unwrap-or (get expr-entry :code) nil
+                  focus $ option:unwrap-or (get router-data :focus) nil
                   readonly? false
                   close-draft-box! $ fn (d!)
                     d! cursor $ assoc state :draft-box? false
@@ -2124,8 +2188,11 @@
                     div
                       {} $ :class-name css-editor
                       let
-                          others $ -> (:others router-data) (vals)
-                            map $ fn (x) (:focus x)
+                          others $ ->
+                            option:unwrap-or (get router-data :others) []
+                            vals
+                            map $ fn (x)
+                              option:unwrap-or (get x :focus) nil
                         div
                           {} $ :class-name css-area
                           if (some? expr-entry)
@@ -2141,9 +2208,9 @@
                               :class-name $ str-spaced css/row-parted
                               :style $ {} (:margin-top 66)
                             span $ {}
-                            comp-usages $ :usages router-data
+                            comp-usages $ option:unwrap-or (get router-data :usages) nil
                           if-let
-                            locals $ :preview-locals router-data
+                            locals $ option:unwrap-or (get router-data :preview-locals) nil
                             list->
                               {}
                                 :class-name $ str-spaced css/row css/gap8
@@ -2152,16 +2219,19 @@
                                 map $ fn (def-name)
                                   [] def-name $ comp-local-link (nth bookmark 1) def-name
                       let
-                          peek-def $ :peek-def router-data
+                          peek-def $ option:unwrap-or (get router-data :peek-def) nil
                         if (some? peek-def) (comp-peek-def peek-def)
                       comp-status-bar cursor state states router-data bookmark theme $ fn (d!) (.reset-state plugin-gen-code-box d!) (.open plugin-gen-code-box d!)
-                      if (:draft-box? state)
+                      if
+                        option:unwrap-or (get state :draft-box?) false
                         comp-draft-box (>> states :draft-box) expr focus close-draft-box!
                       .render plugin-gen-code-box
-                      if (:abstract? state)
+                      if
+                        option:unwrap-or (get state :abstract?) false
                         comp-abstract (>> states :abstract) close-abstract!
                       ; comp-inspect |Expr router-data style/inspector
-                  if picker-mode? $ comp-picker-notice (:picker-choices router-data)
+                  if picker-mode? $ comp-picker-notice
+                    option:unwrap-or (get router-data :picker-choices) []
                     get-in expr $ mapcat focus prepend-data
           :examples $ []
           :schema $ :: 'Dynamic
@@ -2216,9 +2286,9 @@
                               d! $ :: :writer/edit
                                 :: :def (nth bookmark 1) text
                     if
-                      = :same $ :changed router-data
+                      = :same $ option:unwrap-or (get router-data :changed) nil
                       <>
-                        str $ :changed router-data
+                        str $ option:unwrap-or (get router-data :changed) nil
                         {} (:font-family ui/font-fancy) (:margin "|0 8px")
                           :color $ hsl 260 60 70
                       span $ {}
@@ -2257,28 +2327,38 @@
                     {} $ :class-name (str-spaced css/row-middle css/gap8)
                     <>
                       str "|Writers("
-                        count $ :others router-data
+                        count $ option:unwrap-or (get router-data :others) []
                         , "|)"
                       , style-hint
                     list->
                       {} $ :style style-watchers
-                      -> (:others router-data) (vals) (.to-list)
+                      ->
+                        option:unwrap-or (get router-data :others) {}
+                        vals
+                        .to-list
                         map $ fn (info)
-                          [] (:session-id info)
-                            <> (:nickname info) style-watcher
+                          []
+                            option:unwrap-or (get info :session-id) nil
+                            <>
+                              option:unwrap-or (get info :nickname) nil
+                              , style-watcher
                     <>
                       str "|Watchers("
-                        count $ :watchers router-data
+                        count $ option:unwrap-or (get router-data :watchers) {}
                         , "|)"
                       , style-hint
                     list->
                       {} $ :style style-watchers
-                      -> (:watchers router-data) (.to-list)
+                      ->
+                        option:unwrap-or (get router-data :watchers) {}
+                        .to-list
                         map $ fn (entry)
                           let-sugar
                                 [] sid member
                                 , entry
-                            [] sid $ <> (:nickname member) style-watcher
+                            [] sid $ <>
+                              option:unwrap-or (get member :nickname) nil
+                              , style-watcher
                   .render confirm-delete-plugin
                   .render confirm-reset-plugin
                   .render rename-plugin
@@ -2570,8 +2650,9 @@
           :code $ quote
             defcomp comp-file (states selected-ns defs-dict highlights configs)
               let
-                  cursor $ :cursor states
-                  state $ or (:data states)
+                  cursor $ option:unwrap-or (get states :cursor) []
+                  state $ or
+                    option:unwrap-or (get states :data) {}
                     {} $ :def-text |
                   duplicate-plugin $ use-prompt (>> states :duplicate)
                     {} (:initial selected-ns) (:text "|a namespace:")
@@ -2604,7 +2685,7 @@
                               d! :ir/add-def $ [] selected-ns text
                   ; div ({})
                     input $ {}
-                      :value $ :def-text state
+                      :value $ option:unwrap-or (get state :def-text) |
                       :placeholder |filter...
                       :style style-input
                       :on-input $ fn (e d!)
@@ -2615,7 +2696,7 @@
                       :style $ {} (:padding-bottom 120)
                     -> defs-dict keys (.to-list)
                       filter $ fn (def-text)
-                        .includes? def-text $ :def-text state
+                        .includes? def-text $ option:unwrap-or (get state :def-text) |
                       sort &compare
                       map $ fn (def-text)
                         [] def-text $ let
@@ -2641,7 +2722,12 @@
                             span
                               {}
                                 :class-name $ str-spaced |is-minor style-remove
-                                :on-click $ fn (e d!) (-> e :event .!preventDefault)
+                                :on-click $ fn (e d!)
+                                  option:unwrap-or
+                                    get
+                                      option:unwrap-or (get e :event) {}
+                                      , :event
+                                    , nil
                                   .show confirm-remove-plugin d! $ fn () (d! :ir/remove-def def-text)
                               comp-i :x 12 $ hsl 0 0 80 0.5
                             .render confirm-remove-plugin
@@ -2653,8 +2739,9 @@
           :code $ quote
             defcomp comp-namespace-list (states ns-dict selected-ns ns-highlights)
               let
-                  cursor $ :cursor states
-                  state $ or (:data states)
+                  cursor $ option:unwrap-or (get states :cursor) nil
+                  state $ or
+                    option:unwrap-or (get states :data) {}
                     {} $ :ns-text |
                   plugin-add-ns $ use-prompt (>> states :add-ns)
                     {} $ :title "|New namespace:"
@@ -2693,9 +2780,11 @@
                             join-str
                               rest $ split ns-text |.
                               , |.
-                            :ns-text state
+                            option:unwrap-or (get state :ns-text) |
                       sort $ fn (a b)
-                        &compare (first a) (first b)
+                        &compare
+                          option:unwrap-or (first a) |
+                          option:unwrap-or (first b) |
                       map $ fn (pair)
                         let
                             ns-text $ nth pair 0
@@ -2731,7 +2820,8 @@
                   span
                     {}
                       :class-name $ str-spaced |is-minor style-remove
-                      :on-click $ fn (e d!) (-> e :event .!preventDefault)
+                      :on-click $ fn (e d!)
+                        .!preventDefault $ option:unwrap-or (get e :event) {}
                         .show plugin-rm-ns d! $ fn () (d! :ir/remove-ns ns-text)
                     comp-i :x 12 $ hsl 0 0 80 0.6
                   .render plugin-rm-ns
@@ -2741,22 +2831,30 @@
           :code $ quote
             defcomp comp-page-files (states selected-ns router-data)
               let
-                  highlights $ -> (:highlights router-data) (vals)
+                  highlights $ ->
+                    option:unwrap-or (get router-data :highlights) {}
+                    vals
                   ns-highlights $ map highlights
                     fn (x) (nth x 1)
                 div
                   {} $ :class-name (str-spaced css/flex css/row style-container)
-                  comp-namespace-list (>> states :ns) (:ns-dict router-data) selected-ns ns-highlights
+                  comp-namespace-list (>> states :ns)
+                    option:unwrap-or (get router-data :ns-dict) {}
+                    , selected-ns ns-highlights
                   =< 24 nil
                   if (some? selected-ns)
-                    comp-file (>> states selected-ns) selected-ns (:defs-dict router-data) highlights $ :file-configs router-data
+                    comp-file (>> states selected-ns) selected-ns
+                      option:unwrap-or (get router-data :defs-dict) {}
+                      , highlights $ option:unwrap-or (get router-data :file-configs) {}
                     render-empty
                   =< 32 nil
-                  comp-changed-files (>> states :files) (:changed-files router-data)
+                  comp-changed-files (>> states :files)
+                    option:unwrap-or (get router-data :changed-files) {}
                   ; comp-inspect selected-ns router-data style-inspect
                   if
-                    some? $ :peeking-file router-data
-                    comp-file-replacer (>> states :replacer) (:peeking-file router-data)
+                    option:some? $ get router-data :peeking-file
+                    comp-file-replacer (>> states :replacer)
+                      option:unwrap-or (get router-data :peeking-file) nil
           :examples $ []
           :schema $ :: 'Dynamic
         |css-file $ %{} 'CodeEntry (:doc |)
@@ -2895,7 +2993,7 @@
                             [] k member
                             , entry
                           member-name $ if
-                            some? $ :user member
+                            option:some? $ get member :user
                             get-in member $ [] :user :nickname
                             , |Guest
                         [] k $ div
@@ -2905,17 +3003,21 @@
                             str member-name $ if (= k session-id) "| (yourself)" |
                             , style-name
                           =< 32 nil
-                          <> (:page member) style-page-name
+                          <>
+                            option:unwrap-or (get member :page) nil
+                            , style-page-name
                           =< 32 nil
                           let
-                              bookmark $ :bookmark member
+                              bookmark $ option:unwrap-or (get member :bookmark) nil
                             if (some? bookmark)
                               <>
                                 tag-match bookmark
                                   (:def ns' def' f)
                                     str-spaced |DEF ns' def' $ join-str f |_
                                   (:ns ns' f)
-                                    str-spaced |NS ns' $ join-str (:focus bookmark) |_
+                                    str-spaced |NS ns' $ join-str
+                                      option:unwrap-or (get bookmark :focus) []
+                                      , |_
                                 , style-bookmark
                           =< 32 nil
                           if (= k session-id)
@@ -3149,7 +3251,7 @@
               let
                   rename-plugin $ use-prompt (>> states :rename)
                     {}
-                      :initial $ :nickname user
+                      :initial $ option:unwrap-or (get user :nickname) |
                       :text "|Pick a nickname:"
                 div
                   {}
@@ -3159,7 +3261,7 @@
                     {} $ :class-name css/flex
                     div ({})
                       <>
-                        str "|Hello! " $ :nickname user
+                        str "|Hello! " $ option:unwrap-or (get user :nickname) |
                         str-spaced css/font-fancy style-greet
                       =< 4 nil
                       comp-icon :edit-2
@@ -3171,7 +3273,7 @@
                             d! :user/nickname $ trim result
                       =< 8 nil
                       <>
-                        str "|id: " $ :name user
+                        str "|id: " $ option:unwrap-or (get user :name) |
                         , style-id
                     =< nil 80
                     div ({})
@@ -3180,13 +3282,15 @@
                   div
                     {} (:class-name css/flex)
                       :style $ {} (:flex 3)
-                    comp-page-members (:members router-data) sid
+                    comp-page-members
+                      option:unwrap-or (get router-data :members) {}
+                      , sid
           :examples $ []
           :schema $ :: 'Dynamic
         |on-log-out $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn on-log-out (e dispatch!) (dispatch! :user/log-out nil)
-              js/window.localStorage.removeItem $ :storage-key config/site
+              js/window.localStorage.removeItem $ option:unwrap-or (get config/site :storage-key) nil
           :examples $ []
           :schema $ :: 'Dynamic
         |style-greet $ %{} 'CodeEntry (:doc |)
@@ -3261,15 +3365,22 @@
           :code $ quote
             defn use-replace-name-modal (states on-replace)
               let
-                  cursor $ :cursor states
-                  state $ or (:data states)
+                  cursor $ option:unwrap-or (get states :cursor) nil
+                  state $ or
+                    option:unwrap-or (get states :data) {}
                     {} (:old-name |) (:new-name |) (:show? false)
                   on-submit $ fn (d!) (; "|special trick to use spaces to remove a leaf")
                     when
                       and
-                        not $ blank? (:old-name state)
-                        not $ = (:new-name state) |
-                      on-replace (:old-name state) (:new-name state) d!
+                        not $ blank?
+                          option:unwrap-or (get state :old-name) |
+                        not $ =
+                          option:unwrap-or (get state :new-name) |
+                          , |
+                      on-replace
+                        option:unwrap-or (get state :old-name) |
+                        option:unwrap-or (get state :new-name) |
+                        , d!
                       d! cursor $ assoc state :show? false
                   node $ comp-modal
                     {} (:title "|Replace variable")
@@ -3283,22 +3394,24 @@
                             input $ {} (:placeholder |from...)
                               :style $ merge ui/input
                                 {} $ :font-family ui/font-code
-                              :value $ :old-name state
+                              :value $ option:unwrap-or (get state :old-name) |
                               :autofocus true
                               :id |replace-input
                               :on-input $ fn (e d!)
-                                d! cursor $ assoc state :old-name (:value e)
+                                d! cursor $ assoc state :old-name
+                                  option:unwrap-or (get e :value) nil
                           =< nil 8
                           div ({})
                             input $ {} (:placeholder |to...)
                               :style $ merge ui/input
                                 {} $ :font-family ui/font-code
                               :on-input $ fn (e d!)
-                                d! cursor $ assoc state :new-name (:value e)
-                              :value $ :new-name state
+                                d! cursor $ assoc state :new-name
+                                  option:unwrap-or (get e :value) nil
+                              :value $ option:unwrap-or (get state :new-name) |
                               :on-keydown $ fn (e d!)
                                 if
-                                  = 13 $ :key-code e
+                                  = 13 $ option:unwrap-or (get e :key-code) nil
                                   on-submit d!
                           =< nil 8
                           div
@@ -3306,7 +3419,7 @@
                             span $ {}
                             button $ {} (:style ui/button) (:inner-text |Replace)
                               :on-click $ fn (e d!) (on-submit d!)
-                    :show? state
+                    option:unwrap-or (get state :show?) false
                     fn (d!)
                       d! cursor $ assoc state :show? false
                 %:: %rename-plugin :rename-plugin node cursor state
@@ -3347,10 +3460,14 @@
           :code $ quote
             defcomp comp-search (states router-data)
               let
-                  cursor $ :cursor states
-                  state $ or (:data states) initial-state
+                  cursor $ option:unwrap-or (get states :cursor) nil
+                  state $ or
+                    option:unwrap-or (get states :data) initial-state
+                    , initial-state
                   queries $ ->
-                    split (:query state) "| "
+                    split
+                      option:unwrap-or (get state :query) |
+                      , "| "
                     map $ fn (x) (trim x)
                   def-candidates $ -> router-data
                     filter $ fn (bookmark)
@@ -3360,7 +3477,7 @@
                             .includes? (or def' |) y
                         _ false
                     .sort-by $ if
-                      blank? $ :query state
+                      blank? $ option:unwrap-or (get state :query) |
                       , bookmark->str query-length
                   ns-candidates $ -> router-data
                     filter $ fn (bookmark)
@@ -3369,7 +3486,7 @@
                           every? queries $ fn (y) (.includes? ns' y)
                         _ false
                     .sort-by $ if
-                      blank? $ :query state
+                      blank? $ option:unwrap-or (get state :query) |
                       , bookmark->str query-length
                 div
                   {} $ :class-name (str-spaced css/expand css/row css-search)
@@ -3378,13 +3495,13 @@
                       :style $ {} (:width 320) (:height |100%)
                     div ({})
                       input $ {} (:placeholder "|Type to search...")
-                        :value $ :query state
+                        :value $ option:unwrap-or (get state :query) |
                         :class-name $ str-spaced style/input |search-input
                         :style $ {} (:width |100%)
                         :on-input $ on-input state cursor
                         :on-keydown $ on-keydown state
                           if
-                            = :ns $ :mode state
+                            = :ns $ option:unwrap-or (get state :mode) :def
                             , ns-candidates def-candidates
                           , cursor
                     if (empty? def-candidates) (comp-no-results)
@@ -3395,8 +3512,8 @@
                           let
                               text $ bookmark->str bookmark
                               selected? $ and
-                                = :def $ :mode state
-                                = idx $ :selection state
+                                = :def $ option:unwrap-or (get state :mode) :def
+                                = idx $ option:unwrap-or (get state :selection) 0
                             [] text $ tag-match bookmark
                               (:def ns' def')
                                 div
@@ -3419,8 +3536,8 @@
                             let
                                 pieces $ split (nth bookmark 1) |.
                                 selected? $ and
-                                  = :ns $ :mode state
-                                  = idx $ :selection state
+                                  = :ns $ option:unwrap-or (get state :mode) :def
+                                  = idx $ option:unwrap-or (get state :selection) 0
                               div
                                 {}
                                   :class-name $ str-spaced |hoverable css/row-middle style-candidate (if selected? style-highlight)
@@ -3465,7 +3582,7 @@
             defn on-input (state cursor)
               fn (e d!)
                 d! cursor $ -> state
-                  assoc :query $ :value e
+                  assoc :query $ option:unwrap-or (get e :value) nil
                   assoc :selection 0
           :examples $ []
           :schema $ :: 'Dynamic
@@ -3474,16 +3591,18 @@
             defn on-keydown (state candidates cursor)
               fn (e d!)
                 let
-                    code $ :key-code e
-                    event $ :original-event e
+                    code $ option:unwrap-or (get e :key-code) nil
+                    event $ option:unwrap-or (get e :original-event) {}
                   cond
                       = keycode/enter code
                       let
-                          target $ get candidates (:selection state)
+                          target $ get candidates
+                            option:unwrap-or (get state :selection) 0
                         if (some? target)
-                          if (:shift? e)
+                          if
+                            option:unwrap-or (get e :shift?) false
                             if
-                              = :def $ :mode state
+                              = :def $ option:unwrap-or (get state :mode) :def
                               do
                                 d! $ :: :analyze/use-import-def target
                                 d! cursor initial-state
@@ -3494,7 +3613,9 @@
                     (= keycode/up code)
                       do (.!preventDefault event)
                         if
-                          > (:selection state) 0
+                          >
+                            option:unwrap-or (get state :selection) 0
+                            , 0
                           d! cursor $ update state :selection dec
                     (= keycode/escape code)
                       do
@@ -3503,15 +3624,17 @@
                     (= keycode/down code)
                       do (.!preventDefault event)
                         if
-                          < (:selection state)
+                          <
+                            option:unwrap-or (get state :selection) 0
                             dec $ count candidates
                           d! cursor $ update state :selection inc
-                    (and (:meta? e) (= keycode/b code))
+                    (and (option:unwrap-or (get e :meta?) false) (= keycode/b code))
                       d! cursor $ update state :mode
-                        fn (mode)
-                          if (= mode :ns) :def :ns
-                    true $ on-window-keydown (:event e) d!
-                      {} $ :name :search
+                        fn (mode) if (= mode :ns) :def :ns
+                    true $ on-window-keydown
+                      option:unwrap-or (get e :event) {}
+                      , d!
+                        {} $ :name :search
           :examples $ []
           :schema $ :: 'Dynamic
         |on-select $ %{} 'CodeEntry (:doc |)
