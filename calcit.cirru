@@ -307,15 +307,15 @@
         |expr? $ %{} 'CodeEntry (:doc "|a function to detect expression,\nan expression is represented with a record with `CirruExpr`\n")
           :code $ quote
             defn expr? (x)
-              and (record? x)
-                = :Expr $ &record:get-name x
+              and (struct? x)
+                = :Expr $ &struct:get-name x
           :examples $ []
           :schema $ :: 'Dynamic
         |leaf? $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn leaf? (x)
-              and (record? x)
-                = schema/CirruLeaf $ &record:struct x
+              and (struct? x)
+                = schema/CirruLeaf $ &struct:definition x
           :examples $ []
           :schema $ :: 'Dynamic
         |parse-query! $ %{} 'CodeEntry (:doc |)
@@ -841,7 +841,7 @@
                     {} $ :class-name (str-spaced css/global css/fullscreen css/column style-container)
                     if (not picker-mode?)
                       comp-header (>> states :header)
-                        if (tuple? router) (nth router 0)
+                        if (enum? router) (nth router 0)
                         :logged-in? store
                         :stats store
                     div
@@ -1752,7 +1752,9 @@
                   d! :ir/update-leaf $ {}
                     :text $ :value e
                     :at now
-                  d! cursor $ assoc state :text (:value e) :at now
+                  d! cursor $ assoc
+                    assoc state :text $ :value e
+                    , :at now
           :examples $ []
           :schema $ :: 'Dynamic
         |on-keydown $ %{} 'CodeEntry (:doc |)
@@ -2693,7 +2695,7 @@
                           , |.
                         {} $ :color
                           if has-highlight? (hsl 0 0 76) (hsl 0 0 50)
-                      <> $ last pieces
+                      <> $ option:unwrap-or (last pieces) |
                       =< 8 nil
                       <> ns-doc style-ns-doc
                   span
@@ -3012,10 +3014,10 @@
                   render-code $ fn (x)
                     span $ {} (:inner-text x) (:class-name css-name-code)
                       :on-click $ fn (e d!) (d! :writer/pick-node x)
-                  hint $ if (record? target-node)
+                  hint $ if (struct? target-node)
                     if
-                      and (record? target-node)
-                        = :Leaf $ &record:get-name target-node
+                      and (struct? target-node)
+                        = :Leaf $ &struct:get-name target-node
                       :text target-node
                       , nil
                     , nil
@@ -3318,7 +3320,7 @@
                   state $ or (:data states) initial-state
                   queries $ ->
                     split (:query state) "| "
-                    map trim
+                    map $ fn (x) (trim x)
                   def-candidates $ -> router-data
                     filter $ fn (bookmark)
                       tag-match bookmark
@@ -3398,7 +3400,9 @@
                                       .join-str (butlast pieces) |.
                                       , |.
                                     {} $ :color (hsl 0 0 50)
-                                  <> (last pieces) style-last-piece
+                                  <>
+                                    option:unwrap-or (last pieces) |
+                                    , style-last-piece
                                 =< 8 nil
                                 span $ {} (:inner-text |import) (:class-name style-use-ns)
                                   :on-click $ fn (e d!)
@@ -3408,7 +3412,7 @@
                   div
                     {} (:class-name css/column-parted)
                       :style $ {} (:padding 16)
-                    a $ {} (:href |https://repo.cirru.org/hovenia-editor/?port=6011) (:inner-text "|Hovenia Editor") (:class css/link)
+                    a $ {} (:href |https://repo.cirru.org/hovenia-editor/?port=6011) (:inner-text "|Hovenia Editor") (:class-name css/link)
                       :style $ {}
                         :color $ hsl 200 40 50
                       :target |_blank
