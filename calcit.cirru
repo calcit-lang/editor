@@ -3899,7 +3899,9 @@
                   fn (p) ([] :data p)
               .nth $ fn (self idx)
                 let
-                    d $ :data self
+                    d $ option:unwrap-or
+                      get (assert-type self 'app.schema/CirruExpr) :data
+                      , {}
                     p $ .unwrap (bisection/key-nth d idx)
                   get self p
               .append $ fn (self x)
@@ -3912,13 +3914,19 @@
                 update self :data $ fn (d) (bisection/assoc-nth d idx x)
               .update-last $ fn (self f)
                 let
-                    ks $ keys (:data self)
+                    ks $ keys
+                      option:unwrap-or
+                        get (assert-type self 'app.schema/CirruExpr) :data
+                        , {}
                     last-k $ last
                       .sort (.to-list ks) &compare
                   .update self last-k f
               .update-nth $ fn (self idx f)
                 let
-                    ks $ keys (:data self)
+                    ks $ keys
+                      option:unwrap-or
+                        get (assert-type self 'app.schema/CirruExpr) :data
+                        , {}
                     last-k $ nth
                       .sort (.to-list ks) &compare
                       , idx
@@ -3957,7 +3965,10 @@
                         update d p0 $ fn (child) (.append-in child ps x)
               .find-with-base $ fn (self x pp)
                 if (.= self x) pp $ let
-                    pairs $ .to-list (:data self)
+                    pairs $ .to-list
+                      option:unwrap-or
+                        get (assert-type self 'app.schema/CirruExpr) :data
+                        , {}
                   apply-args (pairs)
                     fn (ps)
                       list-match ps
@@ -3979,7 +3990,10 @@
                 .find-with-base self x $ []
               .find-before-with-base $ fn (self x follow pp)
                 if (.= self x) pp $ let
-                    pairs $ .to-list (:data self)
+                    pairs $ .to-list
+                      option:unwrap-or
+                        get (assert-type self 'app.schema/CirruExpr) :data
+                        , {}
                   apply-args (pairs)
                     fn (ps)
                       list-match ps
@@ -3995,7 +4009,11 @@
                                   q0 $ get-in (wo-js-log pss) ([] 0 1)
                                   and (struct? q0)
                                     and $ = :Leaf (&struct:get-name q0)
-                                    = (:text q0) follow
+                                    =
+                                      option:unwrap-or
+                                        get (assert-type q0 'app.schema/CirruLeaf) :text
+                                        , nil
+                                      , follow
                                   , false
                               :: :some $ conj pp k
                               if (&struct:matches? self child)
@@ -4077,8 +4095,15 @@
               if
                 and (struct? x)
                   = :Leaf $ &struct:get-name x
-                :text x
-                -> (:data x) (.to-list) (.sort-by first)
+                option:unwrap-or
+                  get (assert-type x 'app.schema/CirruLeaf) :text
+                  , nil
+                ->
+                  option:unwrap-or
+                    get (assert-type x 'app.schema/CirruExpr) :data
+                    , {}
+                  .to-list
+                  .sort-by first
                   map $ fn (entry)
                     cirru-compact $ last entry
           :examples $ []
