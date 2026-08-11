@@ -5622,12 +5622,18 @@
                       let[] (k v) pair $ [] k (call-replace-expr v from to)
                     filter-not $ fn (pair)
                       let[] (k v) pair $ and (leaf? v)
-                        blank? $ :text v
+                        blank? $ option:unwrap-or
+                          get (assert-type v 'app.schema/CirruLeaf) :text
+                          , nil
                     pairs-map
                 cond
-                    = (:text expr) from
+                    =
+                      option:unwrap-or
+                        get (assert-type expr 'app.schema/CirruLeaf) :text
+                        , nil
+                      , from
                     assoc expr :text to
-                  (= (:text expr) (str |@ from))
+                  (= (option:unwrap-or (get (assert-type expr 'app.schema/CirruLeaf) :text) nil) (str |@ from))
                     assoc expr :text $ str |@ to
                   true expr
           :examples $ []
@@ -5754,13 +5760,14 @@
                   target-expr $ get-in db (.to-path bookmark)
                   parent-path $ .to-path (.update-focus bookmark butlast)
                   parent-expr $ get-in db parent-path
-                  next-id $ key-after (:data parent-expr)
+                  next-id $ key-after
+                    option:unwrap-or (get parent-expr :data) nil
                     last $ .get-focus bookmark
                 -> db
                   update-in parent-path $ fn (expr)
-                    update expr :data $ fn (data) (assoc data next-id target-expr)
+                    update (assert-type expr 'app.schema/CirruExpr) :data $ fn (data) (assoc data next-id target-expr)
                   update-in
-                    [] :sessions session-id :writer :stack $ :pointer writer
+                    [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                     fn (b)
                       .update-focus (Bookmark b)
                         fn (focus)
@@ -5776,7 +5783,8 @@
                   parent-bookmark $ .update-focus bookmark butlast
                   data-path $ .to-path parent-bookmark
                   target-expr $ get-in db data-path
-                  next-id $ key-after (:data target-expr)
+                  next-id $ key-after
+                    option:unwrap-or (get target-expr :data) nil
                     last $ .get-focus bookmark
                   user-id $ get-in db ([] :sessions session-id :user-id)
                   new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
@@ -5784,9 +5792,9 @@
                     :data $ {} (bisection/mid-id new-leaf)
                 -> db
                   update-in data-path $ fn (expr)
-                    assoc-in expr ([] :data next-id) new-expr
+                    update (assert-type expr 'app.schema/CirruExpr) :data $ fn (d) (assoc d next-id new-expr)
                   update-in
-                    [] :sessions session-id :writer :stack $ :pointer writer
+                    [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                     fn (b)
                       .update-focus (Bookmark b)
                         fn (focus)
@@ -5802,7 +5810,8 @@
                   parent-bookmark $ .update-focus bookmark butlast
                   data-path $ .to-path parent-bookmark
                   target-expr $ get-in db data-path
-                  next-id $ key-before (:data target-expr)
+                  next-id $ key-before
+                    option:unwrap-or (get target-expr :data) nil
                     last $ .get-focus bookmark
                   user-id $ get-in db ([] :sessions session-id :user-id)
                   new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
@@ -5810,9 +5819,9 @@
                     :data $ {} (bisection/mid-id new-leaf)
                 -> db
                   update-in data-path $ fn (expr)
-                    assoc-in expr ([] :data next-id) new-expr
+                    update (assert-type expr 'app.schema/CirruExpr) :data $ fn (d) (assoc d next-id new-expr)
                   update-in
-                    [] :sessions session-id :writer :stack $ :pointer writer
+                    [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                     fn (b)
                       .update-focus (Bookmark b)
                         fn (focus)
@@ -5823,9 +5832,9 @@
           :code $ quote
             defn expr-replace (db op-data session-id op-id op-time)
               let
-                  from $ :from op-data
-                  to $ :to op-data
-                  bookmark $ :bookmark op-data
+                  from $ option:unwrap-or (get op-data :from) nil
+                  to $ option:unwrap-or (get op-data :to) nil
+                  bookmark $ option:unwrap-or (get op-data :bookmark) nil
                   data-path $ bookmark->path bookmark
                 update-in db data-path $ fn (expr) (call-replace-expr expr from to)
           :examples $ []
@@ -5908,14 +5917,15 @@
                   let
                       data-path $ .to-path bookmark
                       target-expr $ get-in db data-path
-                      next-id $ key-append (:data target-expr)
+                      next-id $ key-append
+                        option:unwrap-or (get target-expr :data) nil
                       new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
                     ; "|append new leaf at tail, this case is special"
                     -> db
                       update-in data-path $ fn (expr)
-                        assoc-in expr ([] :data next-id) new-leaf
+                        update (assert-type expr 'app.schema/CirruExpr) :data $ fn (d) (assoc d next-id new-leaf)
                       update-in
-                        [] :sessions session-id :writer :stack $ :pointer writer
+                        [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                         fn (b)
                           .update-focus (Bookmark b)
                             fn (f) ([] next-id)
@@ -5923,13 +5933,15 @@
                       parent-bookmark $ .update-focus bookmark butlast
                       data-path $ .to-path parent-bookmark
                       target-expr $ get-in db data-path
-                      next-id $ key-after (:data target-expr) (last focus)
+                      next-id $ key-after
+                        option:unwrap-or (get target-expr :data) nil
+                        last focus
                       new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
                     -> db
                       update-in data-path $ fn (expr)
-                        assoc-in expr ([] :data next-id) new-leaf
+                        update (assert-type expr 'app.schema/CirruExpr) :data $ fn (d) (assoc d next-id new-leaf)
                       update-in
-                        [] :sessions session-id :writer :stack $ :pointer writer
+                        [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                         fn (b)
                           .update-focus (Bookmark b)
                             fn (f)
@@ -5945,15 +5957,16 @@
                   parent-bookmark $ .update-focus bookmark butlast
                   data-path $ .to-path parent-bookmark
                   target-expr $ get-in db data-path
-                  next-id $ key-before (:data target-expr)
+                  next-id $ key-before
+                    option:unwrap-or (get target-expr :data) nil
                     last $ .get-focus bookmark
                   user-id $ get-in db ([] :sessions session-id :user-id)
                   new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
                 -> db
                   update-in data-path $ fn (expr)
-                    assoc-in expr ([] :data next-id) new-leaf
+                    update (assert-type expr 'app.schema/CirruExpr) :data $ fn (d) (assoc d next-id new-leaf)
                   update-in
-                    [] :sessions session-id :writer :stack $ :pointer writer
+                    [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                     fn (b)
                       .update-focus (Bookmark b)
                         fn (focus)
@@ -6002,7 +6015,8 @@
               let
                   selected-ns $ get-in db ([] :sessions session-id :writer :selected-ns)
                 update-in db ([] :files selected-ns :defs)
-                  fn (defs) (dissoc defs op-data)
+                  fn (defs)
+                    dissoc (option:unwrap-or defs {}) op-data
           :examples $ []
           :schema $ :: 'Dynamic
         |remove-ns $ %{} 'CodeEntry (:doc |)
@@ -6012,52 +6026,66 @@
                 update :files $ fn (files) (dissoc files op-data)
                 update-in ([] :sessions session-id :writer :selected-ns)
                   fn (x)
-                    if (= x op-data) nil x
+                    if
+                      = (option:unwrap-or x nil) op-data
+                      , nil x
           :examples $ []
           :schema $ :: 'Dynamic
         |rename $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn rename (db op-data session-id op-id op-time)
               let
-                  kind $ :kind op-data
-                  ns-info $ :ns op-data
-                  extra-info $ :extra op-data
+                  kind $ option:unwrap-or (get op-data :kind) nil
+                  ns-info $ option:unwrap-or (get op-data :ns) nil
+                  extra-info $ option:unwrap-or (get op-data :extra) nil
                   idx $ get-in db ([] :sessions session-id :writer :pointer)
                   user-id $ get-in db ([] :sessions session-id :user-id)
                 cond
                     = :ns kind
                     let
-                        old-ns $ :from ns-info
-                        new-ns $ :to ns-info
+                        old-ns $ option:unwrap-or (get ns-info :from) nil
+                        new-ns $ option:unwrap-or (get ns-info :to) nil
                         expr $ get-in db ([] :files old-ns :ns :code)
                         next-id $ .unwrap
-                          key-nth (:data expr) 1
+                          key-nth
+                            option:unwrap-or
+                              get (assert-type expr 'app.schema/CirruExpr) :data
+                              , nil
+                            , 1
                       -> db
                         update :files $ fn (files)
                           -> files (dissoc old-ns)
-                            assoc new-ns $ get files old-ns
+                            assoc new-ns $ option:unwrap-or (get files old-ns) nil
                         update-in ([] :sessions session-id :writer :stack idx)
-                          fn (b) (assoc b 1 new-ns)
+                          fn (b)
+                            assoc (option:unwrap-or b {}) 1 new-ns
                         update-in ([] :files new-ns :ns :code :data next-id :text)
                           fn (x) new-ns
                   (= :def kind)
                     let
-                        old-ns $ :from ns-info
-                        new-ns $ :to ns-info
-                        old-def $ :from extra-info
-                        new-def $ :to extra-info
+                        old-ns $ option:unwrap-or (get ns-info :from) nil
+                        new-ns $ option:unwrap-or (get ns-info :to) nil
+                        old-def $ option:unwrap-or (get extra-info :from) nil
+                        new-def $ option:unwrap-or (get extra-info :to) nil
                         expr $ get-in db ([] :files old-ns :defs old-def :code)
                         next-id $ .unwrap
-                          key-nth (:data expr) 1
+                          key-nth
+                            option:unwrap-or
+                              get (assert-type expr 'app.schema/CirruExpr) :data
+                              , nil
+                            , 1
                         files $ get db :files
                       if (contains? files new-ns)
                         -> db
                           update :files $ fn (files)
                             -> files
                               update-in ([] old-ns :defs)
-                                fn (file) (dissoc file old-def)
+                                fn (file)
+                                  dissoc (option:unwrap-or file {}) old-def
                               assoc-in ([] new-ns :defs new-def)
-                                get-in files $ [] old-ns :defs old-def
+                                option:unwrap-or
+                                  get-in files $ [] old-ns :defs old-def
+                                  , nil
                           update-in ([] :sessions session-id :writer :stack idx)
                             fn (bookmark)
                               if
@@ -6071,7 +6099,7 @@
                                     val-nth (option:unwrap-or def-data {}) 1
                                 if
                                   and (string? try-1)
-                                    = |^ $ first try-1
+                                    = |^ $ option:unwrap-or (first try-1) |
                                   assoc-nth (option:unwrap-or def-data {}) 2 $ cirru->tree new-def user-id op-time
                                   assoc-nth (option:unwrap-or def-data {}) 1 $ cirru->tree new-def user-id op-time
                         -> db $ update-in ([] :sessions session-id :notifications)
@@ -6131,25 +6159,30 @@
                   parent-bookmark $ .update-focus bookmark butlast
                   data-path $ .to-path parent-bookmark
                   target-expr $ get-in db data-path
-                  leading-key $ key-nth (:data target-expr) 0
+                  leading-key $ key-nth
+                    option:unwrap-or (get target-expr :data) nil
+                    , 0
                   operating-key $ last (.get-focus bookmark)
                 if
                   and (.some? leading-key)
                     not= (.unwrap leading-key) operating-key
                   let
                       ks $ .sort-by
-                        .to-list $ keys (:data target-expr)
+                        .to-list $ keys
+                          option:unwrap-or (get target-expr :data) nil
                         , identity
                       n $ .index-of ks operating-key
                       left-key $ .unwrap
-                        key-nth (:data target-expr) (dec n)
+                        key-nth
+                          option:unwrap-or (get target-expr :data) nil
+                          dec n
                     -> db
                       update-in (conj data-path :data)
                         fn (expr-data)
-                          -> expr-data (dissoc operating-key)
-                            assoc-before left-key $ get expr-data operating-key
+                          -> (assert-type expr-data :map) (dissoc operating-key)
+                            assoc-before left-key $ option:unwrap-or (get expr-data operating-key) nil
                       update-in
-                        [] :sessions session-id :writer :stack $ :pointer writer
+                        [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                         fn (b)
                           .update-focus (Bookmark b)
                             fn (focus)
@@ -6184,7 +6217,9 @@
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                   bookmark $ Bookmark
-                    get (:stack writer) (:pointer writer)
+                    get
+                      option:unwrap-or (get writer :stack) nil
+                      option:unwrap-or (get writer :pointer) 0
                   parent-bookmark $ .update-focus bookmark butlast
                   last-coord $ last (.get-focus bookmark)
                   parent-path $ .to-path parent-bookmark
@@ -6193,9 +6228,13 @@
                   -> db $ update-in (.to-path bookmark)
                     fn (expr)
                       if
-                        = 1 $ option:unwrap-or (get expr :data) {}
+                        = 1 $ option:unwrap-or
+                          get (assert-type expr 'app.schema/CirruExpr) :data
+                          , {}
                         nth
-                          option:unwrap-or (get expr :data) {}
+                          option:unwrap-or
+                            get (assert-type expr 'app.schema/CirruExpr) :data
+                            , {}
                           , 1
                         , expr
                   -> db
@@ -6211,7 +6250,13 @@
                           child-keys $ sort
                             .to-list $ keys
                               :data $ option:unwrap-or base-expr {}
-                          children $ -> (:data expr) (.to-list) (.sort-by first) (map last)
+                          children $ ->
+                            option:unwrap-or
+                              get (assert-type expr 'app.schema/CirruExpr) :data
+                              , {}
+                            .to-list
+                            .sort-by first
+                            map last
                           idx $ option:unwrap-or (.index-of child-keys last-coord) 0
                           limit-id $ if
                             = idx $ dec (count child-keys)
@@ -6222,7 +6267,8 @@
                             xs children
                             next-id last-coord
                           if (empty? xs) result $ recur
-                            assoc-in result ([] :data next-id) (first xs)
+                            assoc-in result ([] :data next-id)
+                              option:unwrap-or (first xs) nil
                             rest xs
                             bisection/bisect next-id limit-id
           :examples $ []
@@ -6233,7 +6279,9 @@
               let
                   writer $ get-in db ([] :sessions session-id :writer)
                   bookmark $ Bookmark
-                    get (:stack writer) (:pointer writer)
+                    get
+                      option:unwrap-or (get writer :stack) nil
+                      option:unwrap-or (get writer :pointer) 0
                   parent-bookmark $ .update-focus bookmark butlast
                   parent-path $ .to-path parent-bookmark
                   parent-expr $ get-in db parent-path
@@ -6244,10 +6292,12 @@
                     update-in parent-path $ fn (expr)
                       option:unwrap-or
                         first $ vals
-                          option:unwrap-or (get expr :data) {}
+                          option:unwrap-or
+                            get (assert-type expr 'app.schema/CirruExpr) :data
+                            , {}
                         , expr
                     update-in
-                      [] :sessions session-id :writer :stack $ :pointer writer
+                      [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
                       fn (b)
                         .update-focus (Bookmark b) butlast
                   , db
@@ -6258,23 +6308,27 @@
             defn update-leaf (db op-data session-id op-id op-time)
               let
                   writer $ get-in db ([] :sessions session-id :writer)
-                  bookmark $ get (:stack writer) (:pointer writer)
+                  bookmark $ get
+                    option:unwrap-or (get writer :stack) nil
+                    option:unwrap-or (get writer :pointer) 0
                   data-path $ bookmark->path bookmark
                   user-id $ get-in db ([] :sessions session-id :user-id)
                 -> db $ update-in data-path
                   fn (leaf)
-                    if
-                      and
-                        some? $ :at op-data
-                        some? $ :text op-data
-                        >
-                          option:unwrap-or (get op-data :at) 0
-                          option:unwrap-or (get leaf :at) 0
-                      %{} schema/CirruLeaf
-                        :text $ :text op-data
-                        :at $ :at op-data
-                        :by user-id
-                      do (println "|invalid updata op:" op-data) leaf
+                    let
+                        leaf-at $ option:unwrap-or
+                          get (assert-type leaf 'app.schema/CirruLeaf) :at
+                          , 0
+                        op-at $ get op-data :at
+                        op-text $ get op-data :text
+                      if
+                        and (option:some? op-at) (option:some? op-text)
+                          > (option:unwrap-or op-at 0) leaf-at
+                        %{} schema/CirruLeaf
+                          :text $ option:unwrap-or op-text |
+                          :at $ option:unwrap-or op-at 0
+                          :by user-id
+                        do (println "|invalid updata op:" op-data) leaf
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
