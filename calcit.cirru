@@ -6509,16 +6509,19 @@
                     , op-data
                   maybe-user $ find-first
                     fn (user)
-                      and $ = username (:name user)
-                    vals $ :users db
+                      and $ = username
+                        option:unwrap-or (get user :name) nil
+                    vals $ option:unwrap-or (get db :users) {}
                 update-in db ([] :sessions session-id)
                   fn (session)
                     if (some? maybe-user)
                       if
-                        = (md5 password) (:password maybe-user)
-                        -> session $ assoc :user-id (:id maybe-user)
-                        update session :notifications $ push-warning op-id op-time (str "|Wrong password for " username)
-                      update session :notifications $ push-warning op-id op-time (str "|No user named: " username)
+                        = (md5 password)
+                          option:unwrap-or (get maybe-user :password) nil
+                        -> (option:unwrap-or session {})
+                          assoc :user-id $ option:unwrap-or (get maybe-user :id) nil
+                        update (option:unwrap-or session {}) :notifications $ push-warning op-id op-time (str "|Wrong password for " username)
+                      update (option:unwrap-or session {}) :notifications $ push-warning op-id op-time (str "|No user named: " username)
           :examples $ []
           :schema $ :: 'Dynamic
         |log-out $ %{} 'CodeEntry (:doc |)
@@ -6544,10 +6547,10 @@
                     , op-data
                   maybe-user $ find-first
                     fn (user)
-                      = username $ :name user
-                    vals $ :users db
+                      = username $ option:unwrap-or (get user :name) nil
+                    vals $ option:unwrap-or (get db :users) {}
                   new-user-id $ str |u
-                    count $ :users db
+                    count $ option:unwrap-or (get db :users) {}
                 if (some? maybe-user)
                   update-in db ([] :sessions session-id :notifications)
                     push-warning op-id op-time $ str "|Name is token: " username
