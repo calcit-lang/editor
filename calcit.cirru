@@ -190,7 +190,10 @@
                 when (= |visible js/document.visibilityState) (retry-connect!)
               println "|App started!"
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ []
+              :features $ #{} :js-ffi
         |mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def mount-target $ js/document.querySelector |.app
@@ -321,15 +324,23 @@
         |parse-query! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn parse-query! () $ let
-                url-obj $ url-parse js/location.href true
+                url-obj $ unsafe-coerce
+                  url-parse
+                    .-href $ unsafe-coerce js/location JsObject
+                    , true
+                  , JsObject
               to-calcit-data $ .-query url-obj
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ []
+              :features $ #{} :js-ffi
         |ws-host $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def ws-host $ if
               and (exists? js/location)
-                not $ blank? (.-search js/location)
+                not $ blank?
+                  .-search $ unsafe-coerce js/location JsObject
               let
                   query $ parse-query!
                 println "|Loading from url" query
@@ -2341,7 +2352,8 @@
                 js/setTimeout $ fn ()
                   let
                       el $ js/document.querySelector |.el-draft-box
-                    if (some? el) (.!focus el)
+                    if (js-present? el)
+                      .!focus $ unsafe-coerce el JsObject
           :examples $ []
           :schema $ :: 'Dynamic
         |on-path-gen! $ %{} 'CodeEntry (:doc |)
