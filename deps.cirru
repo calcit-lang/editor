@@ -8,6 +8,6 @@
     |Respo/respo-ui.calcit |0.7.3
     |Respo/respo.calcit |0.16.67
     |calcit-lang/bisection-key |0.0.20
-    |calcit-lang/gen-code |0.0.6
+    |calcit-lang/gen-code |0.0.7
     |calcit-lang/recollect |0.0.29
     |mvc-works/ws-edn.calcit |0.0.16
