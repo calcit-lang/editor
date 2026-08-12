@@ -37,8 +37,7 @@ cr tree replace-leaf 'ns/def' --pattern 'old' -e 'new' --leaf  # 批量替换叶
 
 以下文件**严格禁止使用文本替换或直接编辑**：
 
-- **`calcit.cirru`** - 这是 calcit-editor 结构化编辑器的专用格式，包含完整的编辑器元数据
-- **`compact.cirru`** - 这是 Calcit 程序的紧凑快照格式，必须使用 `cr edit` 相关命令进行修改
+- **`calcit.cirru`** - 这是 Calcit 程序的唯一运行快照和结构化编辑源，必须使用 `cr edit` 相关命令进行修改
 
 这两个文件的格式对空格和结构极其敏感，直接文本修改会破坏文件结构。请使用下面文档中的 CLI 命令进行代码查询和修改。
 
@@ -50,7 +49,7 @@ cr tree replace-leaf 'ns/def' --pattern 'old' -e 'new' --leaf  # 批量替换叶
 
 **具体体现：**
 
-- `compact.cirru` 和 `calcit.cirru` 是用 Cirru 格式存储的 Calcit 程序
+- `calcit.cirru` 使用 Cirru 格式存储 Calcit 程序
 - `cr cirru` 工具用于 Cirru 语法与 JSON 的转换（帮助理解和生成代码）
 - Cirru 语法特点：
   - 用缩进代替括号（类似 Python/YAML）
@@ -72,8 +71,8 @@ Calcit 程序使用 `cr` 命令：
 
 ### 主要运行命令
 
-- `cr` 或 `cr compact.cirru` - 代码解释执行，默认读取 config 执行 init-fn 定义的入口
-- `cr compact.cirru js` - 编译生成 JavaScript 代码
+- `cr` 或 `cr calcit.cirru` - 代码解释执行，默认读取 config 执行 init-fn 定义的入口
+- `cr calcit.cirru js` - 编译生成 JavaScript 代码
 - `cr -1 <filepath>` - 执行一次然后退出（不进入监听模式）
 - `cr --check-only` - 仅检查代码正确性，不执行程序
   - 对 init_fn 和 reload_fn 进行预处理验证
@@ -112,7 +111,7 @@ Calcit 程序使用 `cr` 命令：
 - `cr query pkg` - 获取项目包名
 - `cr query config` - 读取项目配置（init_fn, reload_fn, version）
 - `cr query error` - 读取 .calcit-error.cirru 错误堆栈文件
-- `cr query modules` - 列出项目依赖的模块（来自 compact.cirru 配置）
+- `cr query modules` - 列出项目依赖的模块（来自 calcit.cirru 配置）
 
 **渐进式代码探索（Progressive Disclosure）：**
 
@@ -159,7 +158,7 @@ Calcit 程序使用 `cr` 命令：
     - `cr query search-expr 'fn (x)' -f app.main/process -l` - 查找函数定义
     - `cr query search-expr '>> state task-id' -l` - 查找状态访问（匹配 `>> state task-id ...` 或 `>> state`）
     - `cr query search-expr 'dispatch! (:: :states)' -l` - 匹配 `dispatch! (:: :states data)` 类型的表达式
-    - `cr query search-expr 'memof1-call-by' -l` - 查找记忆化调用
+    - `cr query search-expr 'memo-comp-by'` - 查找 Respo 组件记忆化调用
 
 **搜索结果格式：** `[索引1,索引2,...] in 父级上下文`，可配合 `cr tree show <ns/def> -p '<path>'` 查看节点。**修改代码时优先用 search 命令，比逐层导航快 10 倍。**
 
@@ -408,7 +407,7 @@ cr tree replace namespace/def -p '3,2,2,5,2,4,1,2' -e 'let ((x 1)) (+ x task)'
 
 ### 代码编辑 (`cr edit`)
 
-直接编辑 compact.cirru 项目代码，支持两种输入方式：
+结构化编辑 calcit.cirru 项目代码，支持两种输入方式：
 
 - `--file <path>` 或 `-f <path>` - 从文件读取（默认 Cirru 格式，使用 `-J` 指定 JSON）
 - `--json <string>` 或 `-j <string>` - 内联 JSON 字符串

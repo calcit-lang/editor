@@ -6,11 +6,11 @@
     "ct": "server.mjs"
   },
   "scripts": {
-    "watch-server": "cr js",
-    "compile-server": "cr --once js",
-    "compile-page": "cr --once --entry client --emit-path out-page js",
+    "watch-server": "cr calcit.cirru js",
+    "compile-server": "cr calcit.cirru js",
+    "compile-page": "cr calcit.cirru --entry client --emit-path out-page js",
     "release-page": "vite build --base=./",
-    "watch-page": "cr --emit-path out-page/ --entry client js"
+    "watch-page": "cr calcit.cirru --emit-path out-page/ --entry client js"
   },
   "repository": {
     "type": "git",
@@ -18,16 +18,17 @@
   },
   "author": "jiyinyiyong",
   "license": "MIT",
+  "packageManager": "yarn@4.12.0",
   "devDependencies": {
     "bottom-tip": "^0.1.5",
     "cirru-color": "^0.2.4",
     "copy-text-to-clipboard": "^3.2.2",
     "feather-icons": "^4.29.2",
     "url-parse": "^1.5.10",
-    "vite": "^7.3.1"
+    "vite": "^8.2.1"
   },
   "dependencies": {
-    "@calcit/procs": "^0.11.6",
+    "@calcit/procs": "^0.13.11",
     "@google/genai": "^1.37.0",
     "chalk": "^5.6.2",
     "dayjs": "^1.11.19",
