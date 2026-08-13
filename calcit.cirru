@@ -4290,17 +4290,17 @@
           :schema $ :: 'Dynamic
         |CodeEntry $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            def CodeEntry $ defstruct :CodeEntry (:doc 'String) (:code 'Dynamic) (:examples :list)
+            def CodeEntry $ defstruct :CodeEntry (:doc 'String) (:code 'Dynamic) (:examples 'List)
           :examples $ []
           :schema $ :: 'Dynamic
         |CodeEntryCompact $ %{} 'CodeEntry (:doc "|another record for CodeEntry which only used in writing compact file")
           :code $ quote
-            def CodeEntryCompact $ defstruct :CodeEntry (:doc 'String) (:code 'Dynamic) (:examples :list)
+            def CodeEntryCompact $ defstruct :CodeEntry (:doc 'String) (:code 'Dynamic) (:examples 'List)
           :examples $ []
           :schema $ :: 'Dynamic
         |FileEntry $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            def FileEntry $ defstruct :FileEntry (:ns 'String) (:defs :map)
+            def FileEntry $ defstruct :FileEntry (:ns 'String) (:defs 'Map)
           :examples $ []
           :schema $ :: 'Dynamic
         |cirru-compact $ %{} 'CodeEntry (:doc "|a cloned version of tree->cirru to simplify dependency issues")
@@ -6502,7 +6502,7 @@
                     -> db
                       update-in data-path $ fn (expr)
                         update (assert-type expr 'app.schema/CirruExpr) :data $ fn (expr-data)
-                          -> (assert-type expr-data :map) (dissoc operating-key)
+                          -> (assert-type expr-data 'Map) (dissoc operating-key)
                             assoc-before left-key $ option:unwrap-or (get expr-data operating-key) nil
                       update-in
                         [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
