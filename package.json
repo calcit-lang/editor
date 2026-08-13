@@ -28,7 +28,7 @@
     "vite": "^8.2.1"
   },
   "dependencies": {
-    "@calcit/procs": "^0.13.13",
+    "@calcit/procs": "^0.13.15",
     "@google/genai": "^1.37.0",
     "chalk": "^5.6.2",
     "dayjs": "^1.11.19",
