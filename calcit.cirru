@@ -4134,7 +4134,7 @@
                         , {}
                     last-k $ last
                       .sort (.to-list ks) &compare
-                  .update self last-k f
+                  update self last-k f
               .update-nth $ fn (self idx f)
                 let
                     ks $ keys
@@ -4144,7 +4144,7 @@
                     last-k $ nth
                       .sort (.to-list ks) &compare
                       , idx
-                  .update self last-k f
+                  update self last-k f
               .update $ fn (self p f)
                 update self :data $ fn (d) (update d p f)
               .assoc-before $ fn (self p x)
