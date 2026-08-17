@@ -315,7 +315,7 @@
             defn expr-many-items? (x size)
               if (expr? x)
                 let
-                    d $ &struct:get x :data
+                    d $ :data (assert-type x 'app.schema/CirruExpr)
                   or
                     > (count d) size
                     any? (vals d) expr?
@@ -919,9 +919,9 @@
                               option:unwrap-or (get d :writer) {}
                           (:editor d)
                             comp-page-editor (>> states :editor)
-                              option:unwrap-or (&struct:get writer :stack) []
+                              option:unwrap-or (get writer :stack) []
                               , d
-                                option:unwrap-or (&struct:get writer :pointer) 0
+                                option:unwrap-or (get writer :pointer) 0
                                 , picker-mode? theme
                           (:search d)
                             comp-search (>> states :search) d
@@ -1136,7 +1136,10 @@
               let
                   focused? $ = focus coord
                   focus-in? $ coord-contains? focus coord
-                  sorted-children $ -> (&struct:get expr :data) (.to-list) (.sort-by first)
+                  sorted-children $ ->
+                    :data $ assert-type expr 'app.schema/CirruExpr
+                    .to-list
+                    .sort-by first
                   first-id $ if (empty? sorted-children) nil
                     first $ option:unwrap-or (first sorted-children) []
                   last-id $ if (empty? sorted-children) nil
@@ -3214,7 +3217,9 @@
                     if
                       and (struct? target-node)
                         = :Leaf $ &struct:get-name target-node
-                      &struct:get target-node :text
+                      option:unwrap-or
+                        get (unsafe-coerce target-node 'Dynamic) :text
+                        , nil
                       , nil
                     , nil
                   hint-func $ fn (x)
@@ -4114,10 +4119,10 @@
               .nth $ fn (self idx)
                 let
                     d $ option:unwrap-or
-                      get (assert-type self 'app.schema/CirruExpr) :data
+                        :data $ assert-type self 'app.schema/CirruExpr
                       , {}
                     p $ .unwrap (bisection/key-nth d idx)
-                  get self p
+                  get d p
               .append $ fn (self x)
                 update self :data $ fn (d) (bisection/assoc-append d x)
               .prepend $ fn (self x)
@@ -4130,7 +4135,7 @@
                 let
                     ks $ keys
                       option:unwrap-or
-                        get (assert-type self 'app.schema/CirruExpr) :data
+                          :data $ assert-type self 'app.schema/CirruExpr
                         , {}
                     last-k $ last
                       .sort (.to-list ks) &compare
@@ -4139,7 +4144,7 @@
                 let
                     ks $ keys
                       option:unwrap-or
-                        get (assert-type self 'app.schema/CirruExpr) :data
+                          :data $ assert-type self 'app.schema/CirruExpr
                         , {}
                     last-k $ nth
                       .sort (.to-list ks) &compare
@@ -4181,7 +4186,7 @@
                 if (.= self x) pp $ let
                     pairs $ .to-list
                       option:unwrap-or
-                        get (assert-type self 'app.schema/CirruExpr) :data
+                          :data $ assert-type self 'app.schema/CirruExpr
                         , {}
                   apply-args (pairs)
                     fn (ps)
@@ -4206,7 +4211,7 @@
                 if (.= self x) pp $ let
                     pairs $ .to-list
                       option:unwrap-or
-                        get (assert-type self 'app.schema/CirruExpr) :data
+                          :data $ assert-type self 'app.schema/CirruExpr
                         , {}
                   apply-args (pairs)
                     fn (ps)
@@ -4225,7 +4230,7 @@
                                     and $ = :Leaf (&struct:get-name q0)
                                     =
                                       option:unwrap-or
-                                        get (assert-type q0 'app.schema/CirruLeaf) :text
+                                        get (unsafe-coerce q0 'Dynamic) :text
                                         , nil
                                       , follow
                                   , false
@@ -4283,7 +4288,13 @@
             defimpl CirruLeafMethods :CirruLeafTrait
               .= $ fn (self x)
                 if (&struct:matches? self x)
-                  = (get self :text) (get x :text)
+                  =
+                    option:unwrap-or
+                      get (unsafe-coerce self 'Dynamic) :text
+                      , |
+                    option:unwrap-or
+                      get (unsafe-coerce x 'Dynamic) :text
+                      , |
                   , false
               .cirru-kind $ fn (_self) :leaf
           :examples $ []
@@ -4310,11 +4321,11 @@
                 and (struct? x)
                   = :Leaf $ &struct:get-name x
                 option:unwrap-or
-                  get (assert-type x 'app.schema/CirruLeaf) :text
-                  , nil
+                  get (unsafe-coerce x 'Dynamic) :text
+                  , |
                 ->
                   option:unwrap-or
-                    get (assert-type x 'app.schema/CirruExpr) :data
+                      :data $ assert-type x 'app.schema/CirruExpr
                     , {}
                   .to-list
                   .sort-by first
@@ -5602,7 +5613,7 @@
                                       swap! *usages &map:assoc reference $ #{} entry
                                     swap! *entry-deps include reference
                                 parse-bookmarks-collect!
-                                  tree->cirru $ &struct:get v :code
+                                  tree->cirru $ option:unwrap-or (get v :code) nil
                                   , local-defs import-rules this-ns this-def collect!
                                 swap! *deps assoc entry @*entry-deps
                 :: :deps @*deps @*usages
@@ -5906,18 +5917,14 @@
                       let[] (k v) pair $ [] k (call-replace-expr v from to)
                     filter-not $ fn (pair)
                       let[] (k v) pair $ and (leaf? v)
-                        blank? $ option:unwrap-or
-                          get (assert-type v 'app.schema/CirruLeaf) :text
-                          , nil
+                        blank? $ :text (assert-type v 'app.schema/CirruLeaf)
                     pairs-map
                 cond
                     =
-                      option:unwrap-or
-                        get (assert-type expr 'app.schema/CirruLeaf) :text
-                        , nil
+                      :text $ assert-type expr 'app.schema/CirruLeaf
                       , from
                     assoc expr :text to
-                  (= (option:unwrap-or (get (assert-type expr 'app.schema/CirruLeaf) :text) nil) (str |@ from))
+                  (= (:text (assert-type expr 'app.schema/CirruLeaf)) (str |@ from))
                     assoc expr :text $ str |@ to
                   true expr
           :examples $ []
@@ -6359,7 +6366,7 @@
                         next-id $ .unwrap
                           key-nth
                             option:unwrap-or
-                              get (assert-type expr 'app.schema/CirruExpr) :data
+                                :data $ assert-type expr 'app.schema/CirruExpr
                               , nil
                             , 1
                       -> db
@@ -6383,7 +6390,7 @@
                         next-id $ .unwrap
                           key-nth
                             option:unwrap-or
-                              get (assert-type expr 'app.schema/CirruExpr) :data
+                                :data $ assert-type expr 'app.schema/CirruExpr
                               , nil
                             , 1
                         files $ get db :files
@@ -6554,11 +6561,11 @@
                     fn (expr)
                       if
                         = 1 $ option:unwrap-or
-                          get (assert-type expr 'app.schema/CirruExpr) :data
+                            :data $ assert-type expr 'app.schema/CirruExpr
                           , {}
                         nth
                           option:unwrap-or
-                            get (assert-type expr 'app.schema/CirruExpr) :data
+                              :data $ assert-type expr 'app.schema/CirruExpr
                             , {}
                           , 1
                         , expr
@@ -6579,7 +6586,7 @@
                                 , {}
                           children $ ->
                             option:unwrap-or
-                              get (assert-type expr 'app.schema/CirruExpr) :data
+                                :data $ assert-type expr 'app.schema/CirruExpr
                               , {}
                             .to-list
                             .sort-by first
@@ -6620,7 +6627,7 @@
                       option:unwrap-or
                         first $ vals
                           option:unwrap-or
-                            get (assert-type expr 'app.schema/CirruExpr) :data
+                              :data $ assert-type expr 'app.schema/CirruExpr
                             , {}
                         , expr
                     update-in
@@ -6643,9 +6650,7 @@
                 -> db $ update-in data-path
                   fn (leaf)
                     let
-                        leaf-at $ option:unwrap-or
-                          get (assert-type leaf 'app.schema/CirruLeaf) :at
-                          , 0
+                        leaf-at $ :at (assert-type leaf 'app.schema/CirruLeaf)
                         op-at $ get op-data :at
                         op-text $ get op-data :text
                       if
@@ -7529,8 +7534,12 @@
         |tree->cirru $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn tree->cirru (x)
-              if (leaf? x) (&struct:get x :text)
-                -> x (&struct:get :data) (&map:to-list) (&list:sort-by first)
+              if (leaf? x)
+                :text $ assert-type x 'app.schema/CirruLeaf
+                ->
+                  :data $ assert-type x 'app.schema/CirruExpr
+                  &map:to-list
+                  &list:sort-by first
                   map $ fn (entry)
                     tree->cirru $ &list:nth entry 1
           :examples $ []
