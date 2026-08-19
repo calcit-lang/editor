@@ -1,6 +1,6 @@
 {
   "name": "@calcit/editor",
-  "version": "0.9.13",
+  "version": "0.9.14",
   "description": "Structural Editor for Calcit Language",
   "bin": {
     "ct": "server.mjs"
@@ -28,7 +28,7 @@
     "vite": "^8.2.1"
   },
   "dependencies": {
-    "@calcit/procs": "^0.13.19",
+    "@calcit/procs": "^0.13.27",
     "@google/genai": "^1.37.0",
     "chalk": "^5.6.2",
     "dayjs": "^1.11.19",

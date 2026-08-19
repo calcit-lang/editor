@@ -1,10 +1,12 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |app) (:version |0.9.13)
+{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |app)
   :entries $ {}
     :client $ {} (:description |) (:init-fn 'app.client/main!) (:mode :native) (:reload-fn 'app.client/reload!)
-      :modules $ [] |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/ |gen-code/
+      :feature-policy $ {}
+      :modules $ [] |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/ |gen-code/ |js-ffi/
       :type-slots $ {}
     :default $ {} (:description |) (:init-fn 'app.server/main!) (:mode :native) (:reload-fn 'app.server/reload!)
+      :feature-policy $ {}
       :modules $ [] |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
       :type-slots $ {}
   :files $ {}
@@ -19,7 +21,7 @@
           :code $ quote
             defenum %bookmark0 (:def 'String 'String 'Dynamic) (:ns 'String 'Dynamic)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |Bookmark $ %{} 'CodeEntry (:doc "|constructor for definition bookmarks, write `Bookmark $ :: :def ns' def' f` to initialize")
           :code $ quote
             defn Bookmark (b)
@@ -73,12 +75,12 @@
                   (:ns ns' f)
                     if (empty? f) nil $ %:: %bookmark :ns ns' (butlast f)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Impl
         |BookmarkTrait $ %{} 'CodeEntry (:doc |)
           :code $ quote
             deftrait BookmarkTrait (:get-focus :fn) (:get-ns :fn) (:is-ns? :fn) (:is-def? :fn) (:update-focus :fn) (:to-path :fn) (:preview :fn) (:get-parent :fn)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns app.bookmark)
     |app.client $ %{} 'FileEntry
@@ -1373,7 +1375,7 @@
           :code $ quote
             defenum %gen-code-box-action0 $ :plugin 'Fn 'Fn 'Fn
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |GenCodeBoxActionImpl $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defimpl GenCodeBoxActionImpl GenCodeBoxActionTrait
@@ -1390,12 +1392,12 @@
                   :plugin render open reset-state
                   reset-state d!
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Impl
         |GenCodeBoxActionTrait $ %{} 'CodeEntry (:doc |)
           :code $ quote
             deftrait GenCodeBoxActionTrait (:render :fn) (:open :fn) (:reset-state :fn)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |style-panel $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstyle style-panel $ {}
@@ -3405,7 +3407,7 @@
           :code $ quote
             defenum %rename-plugin0 $ :rename-plugin 'Dynamic 'Dynamic 'Dynamic
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |RenamePluginImpl $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defimpl RenamePluginImpl RenamePluginTrait
@@ -3429,12 +3431,12 @@
                   :rename-plugin node cursor state
                   d! cursor $ assoc state :show? false
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Impl
         |RenamePluginTrait $ %{} 'CodeEntry (:doc |)
           :code $ quote
             deftrait RenamePluginTrait (:render :fn) (:show :fn) (:close :fn)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |use-replace-name-modal $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn use-replace-name-modal (states on-replace)
@@ -4275,7 +4277,7 @@
               .compact $ fn (self) (cirru-compact self)
               .cirru-kind $ fn (_self) :expr
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Impl
         |CirruLeaf $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def CirruLeaf $ impl-traits
@@ -4298,7 +4300,7 @@
                   , false
               .cirru-kind $ fn (_self) :leaf
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Impl
         |CodeEntry $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def CodeEntry $ defstruct :CodeEntry (:doc 'String) (:code 'Dynamic) (:examples 'List)
