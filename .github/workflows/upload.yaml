@@ -10,11 +10,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Enable Corepack
         run: |
@@ -28,6 +28,7 @@ jobs:
 
       - name: Upload web assets
         id: deploy
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: Pendect/action-rsyncer@v2.0.0
         env:
           DEPLOY_KEY: ${{secrets.rsync_private_key}}
@@ -39,4 +40,5 @@ jobs:
           dest: "rsync-user@tiye.me:/web-assets/repo/${{ github.repository }}"
 
       - name: Display status from deploy
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: echo "${{ steps.deploy.outputs.status }}"

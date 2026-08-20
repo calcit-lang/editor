@@ -1,10 +1,12 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |app) (:version |0.9.13)
+{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |app)
   :entries $ {}
     :client $ {} (:description |) (:init-fn 'app.client/main!) (:mode :native) (:reload-fn 'app.client/reload!)
-      :modules $ [] |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/ |gen-code/
+      :feature-policy $ {}
+      :modules $ [] |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/ |gen-code/ |js-ffi/
       :type-slots $ {}
     :default $ {} (:description |) (:init-fn 'app.server/main!) (:mode :native) (:reload-fn 'app.server/reload!)
+      :feature-policy $ {}
       :modules $ [] |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
       :type-slots $ {}
   :files $ {}
@@ -19,7 +21,7 @@
           :code $ quote
             defenum %bookmark0 (:def 'String 'String 'Dynamic) (:ns 'String 'Dynamic)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |Bookmark $ %{} 'CodeEntry (:doc "|constructor for definition bookmarks, write `Bookmark $ :: :def ns' def' f` to initialize")
           :code $ quote
             defn Bookmark (b)
@@ -73,12 +75,12 @@
                   (:ns ns' f)
                     if (empty? f) nil $ %:: %bookmark :ns ns' (butlast f)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Impl
         |BookmarkTrait $ %{} 'CodeEntry (:doc |)
           :code $ quote
             deftrait BookmarkTrait (:get-focus :fn) (:get-ns :fn) (:is-ns? :fn) (:is-def? :fn) (:update-focus :fn) (:to-path :fn) (:preview :fn) (:get-parent :fn)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns app.bookmark)
     |app.client $ %{} 'FileEntry
@@ -315,7 +317,7 @@
             defn expr-many-items? (x size)
               if (expr? x)
                 let
-                    d $ &struct:get x :data
+                    d $ :data (assert-type x 'app.schema/CirruExpr)
                   or
                     > (count d) size
                     any? (vals d) expr?
@@ -919,9 +921,9 @@
                               option:unwrap-or (get d :writer) {}
                           (:editor d)
                             comp-page-editor (>> states :editor)
-                              option:unwrap-or (&struct:get writer :stack) []
+                              option:unwrap-or (get writer :stack) []
                               , d
-                                option:unwrap-or (&struct:get writer :pointer) 0
+                                option:unwrap-or (get writer :pointer) 0
                                 , picker-mode? theme
                           (:search d)
                             comp-search (>> states :search) d
@@ -1136,7 +1138,10 @@
               let
                   focused? $ = focus coord
                   focus-in? $ coord-contains? focus coord
-                  sorted-children $ -> (&struct:get expr :data) (.to-list) (.sort-by first)
+                  sorted-children $ ->
+                    :data $ assert-type expr 'app.schema/CirruExpr
+                    .to-list
+                    .sort-by first
                   first-id $ if (empty? sorted-children) nil
                     first $ option:unwrap-or (first sorted-children) []
                   last-id $ if (empty? sorted-children) nil
@@ -1370,7 +1375,7 @@
           :code $ quote
             defenum %gen-code-box-action0 $ :plugin 'Fn 'Fn 'Fn
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |GenCodeBoxActionImpl $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defimpl GenCodeBoxActionImpl GenCodeBoxActionTrait
@@ -1387,12 +1392,12 @@
                   :plugin render open reset-state
                   reset-state d!
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Impl
         |GenCodeBoxActionTrait $ %{} 'CodeEntry (:doc |)
           :code $ quote
             deftrait GenCodeBoxActionTrait (:render :fn) (:open :fn) (:reset-state :fn)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |style-panel $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstyle style-panel $ {}
@@ -3214,7 +3219,9 @@
                     if
                       and (struct? target-node)
                         = :Leaf $ &struct:get-name target-node
-                      &struct:get target-node :text
+                      option:unwrap-or
+                        get (unsafe-coerce target-node 'Dynamic) :text
+                        , nil
                       , nil
                     , nil
                   hint-func $ fn (x)
@@ -3400,7 +3407,7 @@
           :code $ quote
             defenum %rename-plugin0 $ :rename-plugin 'Dynamic 'Dynamic 'Dynamic
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Enum
         |RenamePluginImpl $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defimpl RenamePluginImpl RenamePluginTrait
@@ -3424,12 +3431,12 @@
                   :rename-plugin node cursor state
                   d! cursor $ assoc state :show? false
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Impl
         |RenamePluginTrait $ %{} 'CodeEntry (:doc |)
           :code $ quote
             deftrait RenamePluginTrait (:render :fn) (:show :fn) (:close :fn)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |use-replace-name-modal $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn use-replace-name-modal (states on-replace)
@@ -4114,10 +4121,10 @@
               .nth $ fn (self idx)
                 let
                     d $ option:unwrap-or
-                      get (assert-type self 'app.schema/CirruExpr) :data
+                        :data $ assert-type self 'app.schema/CirruExpr
                       , {}
                     p $ .unwrap (bisection/key-nth d idx)
-                  get self p
+                  get d p
               .append $ fn (self x)
                 update self :data $ fn (d) (bisection/assoc-append d x)
               .prepend $ fn (self x)
@@ -4130,21 +4137,21 @@
                 let
                     ks $ keys
                       option:unwrap-or
-                        get (assert-type self 'app.schema/CirruExpr) :data
+                          :data $ assert-type self 'app.schema/CirruExpr
                         , {}
                     last-k $ last
                       .sort (.to-list ks) &compare
-                  .update self last-k f
+                  update self last-k f
               .update-nth $ fn (self idx f)
                 let
                     ks $ keys
                       option:unwrap-or
-                        get (assert-type self 'app.schema/CirruExpr) :data
+                          :data $ assert-type self 'app.schema/CirruExpr
                         , {}
                     last-k $ nth
                       .sort (.to-list ks) &compare
                       , idx
-                  .update self last-k f
+                  update self last-k f
               .update $ fn (self p f)
                 update self :data $ fn (d) (update d p f)
               .assoc-before $ fn (self p x)
@@ -4181,7 +4188,7 @@
                 if (.= self x) pp $ let
                     pairs $ .to-list
                       option:unwrap-or
-                        get (assert-type self 'app.schema/CirruExpr) :data
+                          :data $ assert-type self 'app.schema/CirruExpr
                         , {}
                   apply-args (pairs)
                     fn (ps)
@@ -4206,7 +4213,7 @@
                 if (.= self x) pp $ let
                     pairs $ .to-list
                       option:unwrap-or
-                        get (assert-type self 'app.schema/CirruExpr) :data
+                          :data $ assert-type self 'app.schema/CirruExpr
                         , {}
                   apply-args (pairs)
                     fn (ps)
@@ -4225,7 +4232,7 @@
                                     and $ = :Leaf (&struct:get-name q0)
                                     =
                                       option:unwrap-or
-                                        get (assert-type q0 'app.schema/CirruLeaf) :text
+                                        get (unsafe-coerce q0 'Dynamic) :text
                                         , nil
                                       , follow
                                   , false
@@ -4270,7 +4277,7 @@
               .compact $ fn (self) (cirru-compact self)
               .cirru-kind $ fn (_self) :expr
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Impl
         |CirruLeaf $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def CirruLeaf $ impl-traits
@@ -4283,11 +4290,17 @@
             defimpl CirruLeafMethods :CirruLeafTrait
               .= $ fn (self x)
                 if (&struct:matches? self x)
-                  = (get self :text) (get x :text)
+                  =
+                    option:unwrap-or
+                      get (unsafe-coerce self 'Dynamic) :text
+                      , |
+                    option:unwrap-or
+                      get (unsafe-coerce x 'Dynamic) :text
+                      , |
                   , false
               .cirru-kind $ fn (_self) :leaf
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Impl
         |CodeEntry $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def CodeEntry $ defstruct :CodeEntry (:doc 'String) (:code 'Dynamic) (:examples 'List)
@@ -4310,11 +4323,11 @@
                 and (struct? x)
                   = :Leaf $ &struct:get-name x
                 option:unwrap-or
-                  get (assert-type x 'app.schema/CirruLeaf) :text
-                  , nil
+                  get (unsafe-coerce x 'Dynamic) :text
+                  , |
                 ->
                   option:unwrap-or
-                    get (assert-type x 'app.schema/CirruExpr) :data
+                      :data $ assert-type x 'app.schema/CirruExpr
                     , {}
                   .to-list
                   .sort-by first
@@ -5602,7 +5615,7 @@
                                       swap! *usages &map:assoc reference $ #{} entry
                                     swap! *entry-deps include reference
                                 parse-bookmarks-collect!
-                                  tree->cirru $ &struct:get v :code
+                                  tree->cirru $ option:unwrap-or (get v :code) nil
                                   , local-defs import-rules this-ns this-def collect!
                                 swap! *deps assoc entry @*entry-deps
                 :: :deps @*deps @*usages
@@ -5906,18 +5919,14 @@
                       let[] (k v) pair $ [] k (call-replace-expr v from to)
                     filter-not $ fn (pair)
                       let[] (k v) pair $ and (leaf? v)
-                        blank? $ option:unwrap-or
-                          get (assert-type v 'app.schema/CirruLeaf) :text
-                          , nil
+                        blank? $ :text (assert-type v 'app.schema/CirruLeaf)
                     pairs-map
                 cond
                     =
-                      option:unwrap-or
-                        get (assert-type expr 'app.schema/CirruLeaf) :text
-                        , nil
+                      :text $ assert-type expr 'app.schema/CirruLeaf
                       , from
                     assoc expr :text to
-                  (= (option:unwrap-or (get (assert-type expr 'app.schema/CirruLeaf) :text) nil) (str |@ from))
+                  (= (:text (assert-type expr 'app.schema/CirruLeaf)) (str |@ from))
                     assoc expr :text $ str |@ to
                   true expr
           :examples $ []
@@ -6359,7 +6368,7 @@
                         next-id $ .unwrap
                           key-nth
                             option:unwrap-or
-                              get (assert-type expr 'app.schema/CirruExpr) :data
+                                :data $ assert-type expr 'app.schema/CirruExpr
                               , nil
                             , 1
                       -> db
@@ -6383,7 +6392,7 @@
                         next-id $ .unwrap
                           key-nth
                             option:unwrap-or
-                              get (assert-type expr 'app.schema/CirruExpr) :data
+                                :data $ assert-type expr 'app.schema/CirruExpr
                               , nil
                             , 1
                         files $ get db :files
@@ -6554,11 +6563,11 @@
                     fn (expr)
                       if
                         = 1 $ option:unwrap-or
-                          get (assert-type expr 'app.schema/CirruExpr) :data
+                            :data $ assert-type expr 'app.schema/CirruExpr
                           , {}
                         nth
                           option:unwrap-or
-                            get (assert-type expr 'app.schema/CirruExpr) :data
+                              :data $ assert-type expr 'app.schema/CirruExpr
                             , {}
                           , 1
                         , expr
@@ -6579,7 +6588,7 @@
                                 , {}
                           children $ ->
                             option:unwrap-or
-                              get (assert-type expr 'app.schema/CirruExpr) :data
+                                :data $ assert-type expr 'app.schema/CirruExpr
                               , {}
                             .to-list
                             .sort-by first
@@ -6620,7 +6629,7 @@
                       option:unwrap-or
                         first $ vals
                           option:unwrap-or
-                            get (assert-type expr 'app.schema/CirruExpr) :data
+                              :data $ assert-type expr 'app.schema/CirruExpr
                             , {}
                         , expr
                     update-in
@@ -6643,9 +6652,7 @@
                 -> db $ update-in data-path
                   fn (leaf)
                     let
-                        leaf-at $ option:unwrap-or
-                          get (assert-type leaf 'app.schema/CirruLeaf) :at
-                          , 0
+                        leaf-at $ :at (assert-type leaf 'app.schema/CirruLeaf)
                         op-at $ get op-data :at
                         op-text $ get op-data :text
                       if
@@ -7529,8 +7536,12 @@
         |tree->cirru $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn tree->cirru (x)
-              if (leaf? x) (&struct:get x :text)
-                -> x (&struct:get :data) (&map:to-list) (&list:sort-by first)
+              if (leaf? x)
+                :text $ assert-type x 'app.schema/CirruLeaf
+                ->
+                  :data $ assert-type x 'app.schema/CirruExpr
+                  &map:to-list
+                  &list:sort-by first
                   map $ fn (entry)
                     tree->cirru $ &list:nth entry 1
           :examples $ []
