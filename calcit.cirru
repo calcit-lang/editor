@@ -7561,7 +7561,7 @@
                         target $ get latest-files filter-ns
                       if (some? target) (assoc old-files filter-ns target) (dissoc old-files filter-ns)
                     , latest-files
-                  calcit-data $ {} (:package pkg) (:about "|file is generated - never edit directly; learn cr edit/tree workflows before changing")
+                  calcit-data $ {} (:package pkg) (:about "|file is generated - never edit directly; learn calcit edit/tree workflows before changing")
                     :configs $ {}
                       :init-fn $ option:unwrap-or (get configs :init-fn) nil
                       :reload-fn $ option:unwrap-or (get configs :reload-fn) nil
