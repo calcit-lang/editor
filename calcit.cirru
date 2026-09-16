@@ -288,7 +288,9 @@
           :code $ quote $ defn render-app! ()
             render! mount-target (comp-container @*states @*store) dispatch!
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'retry-connect! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn retry-connect! ()
             if
@@ -4501,6 +4503,9 @@
             .red $ :: 'Fn $ {}
               :args $ [] 'app.server/ChalkHost 'String
               :return 'String
+            .yellow $ :: 'Fn $ {}
+              :args $ [] 'app.server/ChalkHost 'String
+              :return 'String
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
           :schema $ :: 'Trait
@@ -8526,14 +8531,16 @@
             let
                 __dirname $ path/dirname $ url/fileURLToPath js/import.meta.url
                 pkg $ js/JSON.parse $ fs/readFileSync (path/join __dirname |../package.json)
-                version $ aget (unsafe-coerce pkg JsObject) |version|
-                pkg-name $ aget (unsafe-coerce pkg JsObject) |name|
+                version-key |version|
+                name-key |name|
+                version $ aget (unsafe-coerce pkg JsObject) version-key
+                pkg-name $ aget (unsafe-coerce pkg JsObject) name-key
               -> (latest-version pkg-name)
                 .!then $ fn (npm-version)
                   println $ if (= version npm-version) (str "|Running latest version " version)
-                    .!yellow chalk $ str "|Update is available tagged " npm-version "|, current one is " version
+                    .!yellow (unsafe-coerce chalk ChalkHost) (str "|Update is available tagged " npm-version "|, current one is " version)
                 .catch $ fn (e)
-                  js/console.error $ .!yellow chalk "|Failed to request version:" $ .-message e
+                  (js/console.error (.!yellow (unsafe-coerce chalk ChalkHost) "|Failed to request version:" (.-message e)))
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ []
