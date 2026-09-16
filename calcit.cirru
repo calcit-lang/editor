@@ -5024,7 +5024,7 @@
                 logged-in? $ some? $ option:unwrap-or (get session :user-id) nil
                 router $ option:unwrap-or (get session :router) (:: :files)
                 writer0 $ get session :writer
-                writer $ assert-type writer0 (:: 'Option 'Dynamic)
+                writer $ assert-type writer0 $ :: 'Option 'Dynamic
               if
                 or logged-in? $ = :watching $ assert-type (&enum:nth router 0) 'Tag
                 {}
@@ -5436,7 +5436,8 @@
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defn twig-watching (session my-sid files users)
             let
-                writer $ option:unwrap-or (get session :writer) nil
+                writer0 $ get session :writer
+                writer $ assert-type writer0 $ :: 'Option 'Dynamic
                 bookmark $ to-bookmark writer
                 self? $ = my-sid $ option:unwrap-or (get session :id) nil
                 working? $ some? bookmark
