@@ -4641,7 +4641,9 @@
             clear-twig-caches!
             sync-clients! @*reader-db
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'render-loop! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-loop! ()
             if (not= @*reader-db @*writer-db)
