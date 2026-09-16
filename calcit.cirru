@@ -4625,7 +4625,8 @@
                 new-md5 $ md5 file-content
               if (blank? file-content)
                 ((eprintln (.!red (unsafe-coerce chalk ChalkHost) "|got blank file on change, server might have staled")))
-                if (not= new-md5 (option:unwrap-or @*calcit-md5 |))
+                if
+                  not= new-md5 $ option:unwrap-or @*calcit-md5 |
                   let
                       calcit $ parse-cirru-edn file-content
                     println $ .!blue (unsafe-coerce chalk ChalkHost) "|calcit storage file changed!"
@@ -4710,7 +4711,9 @@
           :code $ quote $ defn sync-clients! (db)
             wss-each! $ fn (sid socket)
               let
-                  session $ option:unwrap-or (get-in db $ [] :sessions sid) {}
+                  session $ option:unwrap-or
+                    get-in db $ [] :sessions sid
+                    , {}
                   old-store $ or (get @*client-caches sid) nil
                   new-store $ twig-container db session
                   changes $ diff-twig old-store new-store $ {} (:key :id)
@@ -4728,7 +4731,7 @@
           :code $ quote $ defn watch-file! ()
             if (fs/existsSync storage-file)
               do
-                reset! *calcit-md5 $ %some $ md5 $ fs/readFileSync storage-file |utf8
+                reset! *calcit-md5 $ %some $ md5 (fs/readFileSync storage-file |utf8)
                 gaze storage-file $ fn (error watcher)
                   if (some? error) (js/console.log error)
                     .!on watcher |changed $ fn (filepath) (flipped js/setTimeout 20 on-file-change!)
@@ -5464,12 +5467,13 @@
                 :working? $ and working? $ not self?
                 :focus $ if-let (bookmark-data bookmark)
                   app.bookmark/get-focus $ Bookmark bookmark-data
-                :expr $ if-let (bookmark-data bookmark) $ let
-                    path0 $ match bookmark-data
-                      (:def ns' def' f) ([] ns' :defs def')
-                      (:ns ns' f) ([] ns' :ns)
-                    path $ assert-type path0 $ :: 'List 'Dynamic
-                  get-in typed-files path
+                :expr $ if-let (bookmark-data bookmark)
+                  let
+                      path0 $ match bookmark-data
+                        (:def ns' def' f) ([] ns' :defs def')
+                        (:ns ns' f) ([] ns' :ns)
+                      path $ assert-type path0 $ :: 'List 'Dynamic
+                    get-in typed-files path
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
