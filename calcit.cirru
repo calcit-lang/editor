@@ -5449,6 +5449,7 @@
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defn twig-watching (session my-sid files users)
             let
+                typed-files $ assert-type files $ :: 'Map 'String 'Dynamic
                 writer0 $ get session :writer
                 writer $ assert-type writer0 $ :: 'Option 'Dynamic
                 bookmark $ to-bookmark writer
@@ -5464,10 +5465,11 @@
                 :focus $ if-let (bookmark-data bookmark)
                   app.bookmark/get-focus $ Bookmark bookmark-data
                 :expr $ if-let (bookmark-data bookmark) $ let
-                    path $ match bookmark-data
+                    path0 $ match bookmark-data
                       (:def ns' def' f) ([] ns' :defs def')
                       (:ns ns' f) ([] ns' :ns)
-                  get-in files path
+                    path $ assert-type path0 $ :: 'List 'Dynamic
+                  get-in typed-files path
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
