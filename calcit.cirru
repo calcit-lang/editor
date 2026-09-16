@@ -5461,9 +5461,10 @@
                 :router $ option:unwrap-or (get session :router) nil
                 :self? self?
                 :working? $ and working? $ not self?
-                :focus $ app.bookmark/get-focus $ Bookmark bookmark
-                :expr $ if working? $ let
-                    path $ match bookmark
+                :focus $ if-let bookmark-data bookmark
+                  app.bookmark/get-focus $ Bookmark bookmark-data
+                :expr $ if-let bookmark-data bookmark $ let
+                    path $ match bookmark-data
                       (:def ns' def' f) ([] ns' :defs def')
                       (:ns ns' f) ([] ns' :ns)
                   get-in files path
