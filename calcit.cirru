@@ -4705,7 +4705,7 @@
                   changes $ diff-twig old-store new-store $ {} (:key :id)
                 when config/dev? $ println "|Changes for" sid |: $ count changes
                 if
-                  not= changes $ []
+                  not $ empty? changes
                   do
                     wss-send! sid $ :: :patch changes
                     swap! *client-caches assoc sid new-store
@@ -4722,7 +4722,9 @@
                   if (some? error) (js/console.log error)
                     .!on watcher |changed $ fn (filepath) (flipped js/setTimeout 20 on-file-change!)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.server
           :require (app.schema :as schema)
