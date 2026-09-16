@@ -5394,17 +5394,22 @@
       :defs $ {} $ 'twig-search
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defn twig-search (files)
-            -> files &map:to-list
-              mapcat $ fn (entry)
+            let
+                typed-files $ assert-type files $ :: 'Map 'String (:: 'Map 'String 'Dynamic)
+              -> typed-files &map:to-list $ mapcat $ hint-fn
+                {:args $ [] 'Dynamic :return $ :: 'List 'Dynamic}
+                (:: fn (entry))
                 let-sugar
                       [] k file
                       , entry
                   concat
                     [] $ :: :ns k
                     ->
-                      option:unwrap-or (get file :defs) nil
+                      assert-type
+                        option:unwrap-or (get file :defs) {}
+                        :: 'Map 'String 'Dynamic
                       &map:to-list
-                      map $ fn (f-entry)
+                      :: map $ :: fn (f-entry)
                         let-sugar
                               [] f-k file
                               , f-entry
