@@ -5394,7 +5394,7 @@
       :defs $ {} $ 'twig-search
         %{} 'CodeEntry (:doc |)
           :code $ quote $ defn twig-search (files)
-            -> files (.to-list)
+            -> files &map:to-list
               mapcat $ fn (entry)
                 let-sugar
                       [] k file
@@ -5403,14 +5403,16 @@
                     [] $ :: :ns k
                     ->
                       option:unwrap-or (get file :defs) nil
-                      .to-list
+                      &map:to-list
                       map $ fn (f-entry)
                         let-sugar
                               [] f-k file
                               , f-entry
                           :: :def k f-k
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'Map 'String 'Dynamic
+            :return $ :: 'List 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.twig.search (:require)
     'app.twig.user $ %{} 'FileEntry
