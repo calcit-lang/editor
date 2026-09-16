@@ -4710,7 +4710,7 @@
           :code $ quote $ defn sync-clients! (db)
             wss-each! $ fn (sid socket)
               let
-                  session $ get-in db $ [] :sessions sid
+                  session $ option:unwrap-or (get-in db $ [] :sessions sid) {}
                   old-store $ or (get @*client-caches sid) nil
                   new-store $ twig-container db session
                   changes $ diff-twig old-store new-store $ {} (:key :id)
@@ -4728,7 +4728,7 @@
           :code $ quote $ defn watch-file! ()
             if (fs/existsSync storage-file)
               do
-                reset! *calcit-md5 $ md5 $ fs/readFileSync storage-file |utf8
+                reset! *calcit-md5 $ %some $ md5 $ fs/readFileSync storage-file |utf8
                 gaze storage-file $ fn (error watcher)
                   if (some? error) (js/console.log error)
                     .!on watcher |changed $ fn (filepath) (flipped js/setTimeout 20 on-file-change!)
@@ -8353,7 +8353,7 @@
                   let
                       db-content $ db->string db
                       started-time $ unsafe-coerce (js/Date.now) 'Number
-                    reset! *calcit-md5 $ md5 db-content
+                    reset! *calcit-md5 $ %some $ md5 db-content
                     persist-async!
                       option:unwrap-or (get config/site :storage-file) |calcit.cirru
                       , db-content started-time
