@@ -4625,7 +4625,9 @@
                     reset! *calcit-md5 new-md5
                     dispatch! (:: :watcher/file-change calcit) nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             println $ .!gray (unsafe-coerce chalk ChalkHost) "|code updated."
