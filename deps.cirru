@@ -2,7 +2,7 @@
 {} (:calcit-version |0.15.1)
   :version |0.9.16
   :dependencies $ {} (|Cumulo/cumulo-util.calcit |0.0.20)
-    |Respo/alerts.calcit |0.10.35
+    |Respo/alerts.calcit |0.10.37
     |Respo/respo-feather.calcit |0.4.15
     |Respo/respo-markdown.calcit |0.4.37
     |Respo/respo-message.calcit |0.0.23
