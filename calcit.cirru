@@ -5023,7 +5023,8 @@
             let
                 logged-in? $ some? $ option:unwrap-or (get session :user-id) nil
                 router $ option:unwrap-or (get session :router) (:: :files)
-                writer $ option:unwrap-or (get session :writer) nil
+                writer0 $ get session :writer
+                writer $ assert-type writer0 (:: 'Option 'Dynamic)
               if
                 or logged-in? $ = :watching $ assert-type (&enum:nth router 0) 'Tag
                 {}
@@ -5453,7 +5454,8 @@
                       (:ns ns' f) ([] ns' :ns)
                   get-in files path
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.twig.watching
           :require
