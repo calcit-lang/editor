@@ -5379,11 +5379,14 @@
               hint-fn $ {}
                 :args $ [] 'String $ :: 'Map 'Tag 'Dynamic
                 :return $ :: 'MapEntryDecision 'String 'Dynamic
-              %:: calcit.core/MapEntryDecision :keep k $ twig-member session $ get users
-                assert-type (option:unwrap-or (get session :user-id) nil) 'String
+              let
+                  user-id $ str $ option:unwrap-or (get session :user-id) |
+                %:: calcit.core/MapEntryDecision :keep k $ twig-member session $ get users user-id
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] (:: 'Map 'String 'Dynamic) (:: 'Map 'String 'Dynamic)
+            :args $ []
+              :: 'Map 'String $ :: 'Map 'Tag 'Dynamic
+              :: 'Map 'String 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.twig.page-members
           :require $ app.twig.member :refer $ twig-member
