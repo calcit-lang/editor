@@ -4625,12 +4625,12 @@
                 new-md5 $ md5 file-content
               if (blank? file-content)
                 ((eprintln (.!red (unsafe-coerce chalk ChalkHost) "|got blank file on change, server might have staled")))
-                if (not= new-md5 @*calcit-md5)
+                if (not= new-md5 (option:unwrap-or @*calcit-md5 |))
                   let
                       calcit $ parse-cirru-edn file-content
                     println $ .!blue (unsafe-coerce chalk ChalkHost) "|calcit storage file changed!"
-                    reset! *calcit-md5 new-md5
-                    dispatch! (:: :watcher/file-change calcit) nil
+                    reset! *calcit-md5 $ %some new-md5
+                    dispatch! (:: :watcher/file-change calcit) |watcher|
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Dynamic)
             :args $ []
