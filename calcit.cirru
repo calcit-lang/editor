@@ -1,11 +1,13 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --full` first. Manual edits must follow format and schema conventions, then run `calcit edit format`.") (:package |app)
+{}
+  :about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --contract` before mutations; use `--full` for first orientation or changed contract digest. Manual edits must follow format and schema conventions, then run `calcit edit format`."
+  :package |app
   :entries $ {}
-    :client $ {} (:description |) (:init-fn 'app.client/main!) (:mode :native) (:reload-fn 'app.client/reload!)
+    :client $ {} (:description |) (:init-fn 'app.client/main!) (:mode :native) (:reload-fn 'app.client/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/ |gen-code/ |js-ffi/
       :type-slots $ {}
-    :default $ {} (:description |) (:init-fn 'app.server/main!) (:mode :native) (:reload-fn 'app.server/reload!)
+    :default $ {} (:description |) (:init-fn 'app.server/main!) (:mode :native) (:reload-fn 'app.server/reload!) (:target :node)
       :feature-policy $ {}
       :modules $ [] |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/
       :type-slots $ {}
@@ -13,208 +15,296 @@
     'app.bookmark $ %{} 'FileEntry
       :defs $ {}
         '%bookmark $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def %bookmark $ impl-traits %bookmark0 BookmarkImpl
+          :code $ quote $ def %bookmark
+            impl-traits
+              defenum %bookmark
+                :def 'String 'String $ :: 'List 'String
+                :ns 'String $ :: 'List 'String
+              , BookmarkImpl
           :examples $ []
-          :schema $ :: 'Dynamic
-        '%bookmark0 $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defenum %bookmark0 (:def 'String 'String 'Dynamic) (:ns 'String 'Dynamic)
+          :schema $ :: 'EnumDef
+        'Bookmark $ %{} 'CodeEntry
+          :doc "|constructor for definition bookmarks, write `Bookmark $ :: :def ns' def' f` to initialize"
+          :code $ quote $ defn Bookmark (b)
+            match b
+              (:def ns' def' f) (%:: %bookmark :def ns' def' f)
+              (:ns ns' f) (%:: %bookmark :ns ns' f)
           :examples $ []
-          :schema $ :: 'Enum
-        'Bookmark $ %{} 'CodeEntry (:doc "|constructor for definition bookmarks, write `Bookmark $ :: :def ns' def' f` to initialize")
-          :code $ quote
-            defn Bookmark (b)
-              tag-match b
-                (:def ns' def' f) (%:: %bookmark :def ns' def' f)
-                (:ns ns' f) (%:: %bookmark :ns ns' f)
-          :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'app.bookmark/%bookmark)
+            :args $ [] 'app.bookmark/%bookmark
         'BookmarkImpl $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defimpl BookmarkImpl BookmarkTrait
-              .get-focus $ fn (self)
-                tag-match self
-                  (:def ns' def' f) f
-                  (:ns ns' f) f
-              .get-ns $ fn (self) (nth self 1)
-              .is-ns? $ fn (self)
-                tag-match self
-                  (:def _ns _def _f) false
-                  (:ns _ns _f) true
-              .is-def? $ fn (self)
-                tag-match self
-                  (:def _ns _def _f) true
-                  (:ns _ns _f) false
-              .update-focus $ fn (self updater)
-                tag-match self
-                  (:def ns' def' f)
-                    %:: %bookmark :def ns' def' $ updater f
-                  (:ns ns' f)
-                    %:: %bookmark :ns ns' $ updater f
-              .to-path $ fn (self)
-                tag-match self
-                  (:def ns' def' f)
-                    concat ([] :files ns' :defs def' :code)
-                      mapcat
+          :code $ quote $ defimpl BookmarkImpl BookmarkTrait
+            .get-focus $ fn (self)
+              match self
+                (:def ns' def' f) f
+                (:ns ns' f) f
+            .get-ns $ fn (self) (nth self 1)
+            .is-ns? $ fn (self)
+              match self
+                (:def _ns _def _f) false
+                (:ns _ns _f) true
+            .is-def? $ fn (self)
+              match self
+                (:def _ns _def _f) true
+                (:ns _ns _f) false
+            .update-focus $ fn (self updater)
+              match self
+                (:def ns' def' f)
+                  %:: %bookmark :def ns' def' $ updater f
+                (:ns ns' f)
+                  %:: %bookmark :ns ns' $ updater f
+            .to-path $ fn (self)
+              match self
+                (:def ns' def' f)
+                  concat ([] :files ns' :defs def' :code)
+                    mapcat
+                      assert-type
                         or f $ []
-                        fn (x) ([] :data x)
-                  (:ns ns' f)
-                    concat ([] :files ns' :ns :code)
-                      mapcat
+                        :: 'List 'String
+                      hint-fn
+                        {}
+                          :args $ [] 'String
+                          :return $ :: 'List 'Dynamic
+                        :: fn (x) ([] :data x)
+                (:ns ns' f)
+                  concat ([] :files ns' :ns :code)
+                    mapcat
+                      assert-type
                         or f $ []
-                        fn (x) ([] :data x)
-              .preview $ fn (self)
-                tag-match self
-                  (:def ns' def' f) (str ns' |/ def')
-                  (:ns ns' f) (str ns' |/)
-              .get-parent $ fn (self)
-                tag-match self
-                  (:def ns' def' f)
-                    if (empty? f) nil $ %:: %bookmark :def ns' def' (butlast f)
-                  (:ns ns' f)
-                    if (empty? f) nil $ %:: %bookmark :ns ns' (butlast f)
+                        :: 'List 'String
+                      hint-fn
+                        {}
+                          :args $ [] 'String
+                          :return $ :: 'List 'Dynamic
+                        :: fn (x) ([] :data x)
+            .preview $ fn (self)
+              match self
+                (:def ns' def' f) (str ns' |/ def')
+                (:ns ns' f) (str ns' |/)
+            .get-parent $ fn (self)
+              match self
+                (:def ns' def' f)
+                  if (empty? f) nil $ %:: %bookmark :def ns' def' $ butlast f
+                (:ns ns' f)
+                  if (empty? f) nil $ %:: %bookmark :ns ns' $ butlast f
           :examples $ []
           :schema $ :: 'Impl
         'BookmarkTrait $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftrait BookmarkTrait (:get-focus :fn) (:get-ns :fn) (:is-ns? :fn) (:is-def? :fn) (:update-focus :fn) (:to-path :fn) (:preview :fn) (:get-parent :fn)
+          :code $ quote $ deftrait BookmarkTrait
+            .get-focus $ :: 'Fn $ {}
+              :args $ [] 'app.bookmark/%bookmark
+              :return $ :: 'List 'String
+            .get-ns $ :: 'Fn $ {}
+              :args $ [] 'app.bookmark/%bookmark
+              :return 'String
+            .is-ns? $ :: 'Fn $ {}
+              :args $ [] 'app.bookmark/%bookmark
+              :return 'Bool
+            .is-def? $ :: 'Fn $ {}
+              :args $ [] 'app.bookmark/%bookmark
+              :return 'Bool
+            .update-focus $ :: 'Fn $ {}
+              :args $ [] 'app.bookmark/%bookmark $ :: 'Fn
+                {}
+                  :args $ [] $ :: 'List 'String
+                  :return $ :: 'List 'String
+              :return 'app.bookmark/%bookmark
+            .to-path $ :: 'Fn $ {}
+              :args $ [] 'app.bookmark/%bookmark
+              :return $ :: 'List 'Dynamic
+            .preview $ :: 'Fn $ {}
+              :args $ [] 'app.bookmark/%bookmark
+              :return 'String
+            .get-parent $ :: 'Fn $ {}
+              :args $ [] 'app.bookmark/%bookmark
+              :return $ :: 'Option 'app.bookmark/%bookmark
           :examples $ []
           :schema $ :: 'Trait
+        'get-focus $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn get-focus (bookmark) (&trait-call BookmarkTrait :get-focus bookmark)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'app.bookmark/%bookmark
+            :return $ :: 'List 'String
+        'get-parent $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn get-parent (bookmark) (&trait-call BookmarkTrait :get-parent bookmark)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'app.bookmark/%bookmark
+            :return $ :: 'Option 'app.bookmark/%bookmark
+        'preview $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn preview (bookmark) (&trait-call BookmarkTrait :preview bookmark)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'String)
+            :args $ [] 'app.bookmark/%bookmark
+        'to-path $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn to-path (bookmark) (&trait-call BookmarkTrait :to-path bookmark)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'app.bookmark/%bookmark
+            :return $ :: 'List 'Dynamic
+        'update-focus $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn update-focus (bookmark updater) (&trait-call BookmarkTrait :update-focus bookmark updater)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'app.bookmark/%bookmark)
+            :args $ [] 'app.bookmark/%bookmark $ :: 'Fn
+              {}
+                :args $ [] $ :: 'List 'String
+                :return $ :: 'List 'String
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote (ns app.bookmark)
+        :code $ quote $ ns app.bookmark
     'app.client $ %{} 'FileEntry
       :defs $ {}
         '*connecting? $ %{} 'CodeEntry (:doc |)
-          :code $ quote (defatom *connecting? false)
+          :code $ quote $ defatom *connecting? false
           :examples $ []
           :schema $ :: 'Dynamic
         '*states $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defatom *states $ {}
-              :states $ {}
-                :cursor $ []
+          :code $ quote $ defatom *states
+            {} $ :states $ {}
+              :cursor $ []
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
         '*store $ %{} 'CodeEntry (:doc |)
-          :code $ quote (defatom *store nil)
+          :code $ quote $ defatom *store nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Ref 'Dynamic
         'connect! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn connect! () (js/console.info |Connecting...) (reset! *connecting? true)
+          :code $ quote $ defn connect! () (js/console.info |Connecting...) (reset! *connecting? true)
+            do
               ws-connect! ws-host $ {}
                 :on-open $ fn (event) (simulate-login!) (detect-watching!) (heartbeat!)
                 :on-close $ fn (event) (reset! *store nil) (reset! *connecting? false) (js/console.error "|Lost connection!")
                   dispatch! $ :: :states/clear
                 :on-data $ fn (data)
-                  tag-match data
+                  match data
                     (:patch changes)
                       do
                         when config/dev? $ js/console.log |Changes changes
-                        reset! *store $ patch-twig @*store changes
+                        reset! *store $ patch-twig @*store $ assert-type changes (:: 'List 'recollect.schema/change-op)
                     _ $ eprintln "|Unknown op:" data
                 :class-mapper $ {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf)
+              , &unit
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+            :features $ #{} :js-ffi
         'detect-watching! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn detect-watching! () $ let
-                query $ parse-query!
-              when
-                option:some? $ get query |watching
-                dispatch! $ :: :router/change
-                  :: :watching $ option:unwrap-or (get query |watching) |
+          :code $ quote $ defn detect-watching! ()
+            do
+              let
+                  query $ parse-query!
+                when
+                  option:some? $ get query |watching
+                  dispatch! $ :: :router/change $ :: :watching
+                    option:unwrap-or (get query |watching) |
+              , &unit
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+            :features $ #{} :js-ffi
         'dispatch! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn dispatch! (op)
-              when
-                and config/dev? $ not= (&enum:nth op 0) :states
-                js/console.info |Dispatch op
-              tag-match op
-                (:states cursor new-state)
-                  reset! *states $ assoc-in @*states (conj cursor :data) new-state
-                (:states-merge cursor state0 changes)
-                  reset! *states $ option:unwrap-or
+          :code $ quote $ defn dispatch! (op)
+            when
+              and config/dev? $ not= (&enum:nth op 0) :states
+              js/console.info |Dispatch op
+            match op
+              (:states cursor new-state)
+                reset! *states $ assert-type
+                  assoc-in @*states
+                    conj
+                      assert-type cursor $ :: 'List 'Dynamic
+                      , :data
+                    , new-state
+                  :: 'Map 'Tag 'Dynamic
+              (:states-merge cursor state0 changes)
+                reset! *states $ assert-type
+                  option:unwrap-or
                     get
                       update-states-merge (&{} :states @*states) cursor state0 changes
                       , :states
                     , {}
-                (:states/clear)
-                  reset! *states $ {}
-                    :states $ {}
-                      :cursor $ []
-                (:manual-state/abstract)
-                  reset! *states $ updater/abstract @*states
-                (:manual-state/draft-box)
-                  reset! *states $ updater/draft-box @*states
-                (:effect/save-files)
-                  do
-                    reset! *states $ updater/clear-editor @*states
-                    send-op! op
-                (:ir/indent)
-                  do
-                    reset! *states $ updater/clear-editor @*states
-                    send-op! op
-                (:ir/unindent)
-                  do
-                    reset! *states $ updater/clear-editor @*states
-                    send-op! op
-                (:ir/reset-files)
-                  do
-                    reset! *states $ updater/clear-editor @*states
-                    send-op! op
-                _ $ send-op! op
+                  :: 'Map 'Tag 'Dynamic
+              (:states/clear)
+                reset! *states $ {} $ :states
+                  {} $ :cursor $ []
+              (:manual-state/abstract)
+                reset! *states $ updater/abstract @*states
+              (:manual-state/draft-box)
+                reset! *states $ updater/draft-box @*states
+              (:effect/save-files)
+                do
+                  reset! *states $ updater/clear-editor @*states
+                  send-op! op
+              (:ir/indent)
+                do
+                  reset! *states $ updater/clear-editor @*states
+                  send-op! op
+              (:ir/unindent)
+                do
+                  reset! *states $ updater/clear-editor @*states
+                  send-op! op
+              (:ir/reset-files)
+                do
+                  reset! *states $ updater/clear-editor @*states
+                  send-op! op
+              _ $ send-op! op
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Dynamic
+            :features $ #{} :js-ffi
         'heartbeat! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn heartbeat! () $ flipped js/setTimeout 3000
-              fn () $ if (ws-connected?)
+          :code $ quote $ defn heartbeat! ()
+            do
+              flipped js/setTimeout 3000 $ fn () $ if (ws-connected?)
                 do
                   ws-send! $ :: :ping
                   heartbeat!
                 println "|Disabled heartbeat since connection lost."
+              , &unit
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+            :features $ #{} :js-ffi
         'main! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn main! ()
-              if config/dev? (load-console-formatter!) (disable-list-structure-check!)
-              println "|Running mode:" $ if config/dev? |dev |release
-              ; reset! *changes-logger $ fn (global-element element changes) (println |Changes: changes)
-              render-app!
-              connect!
-              add-watch *store :changes $ fn (store prev) (render-app!)
-                if
-                  = :editor $ option:unwrap-or
-                    get-in @*store $ [] :router 0
-                    , :unknown
-                  focus!
-              add-watch *states :changes $ fn (states prev) (render-app!)
-              js/window.addEventListener |keydown $ fn (event)
-                on-window-keydown event dispatch! $ option:unwrap-or (get @*store :router) {}
-              js/window.addEventListener |focus $ fn (event) (retry-connect!)
-              js/window.addEventListener |visibilitychange $ fn (event)
-                when
-                  = |visible $ unsafe-coerce js/document.visibilityState 'String
-                  retry-connect!
-              println "|App started!"
+          :code $ quote $ defn main! ()
+            if config/dev? (load-console-formatter!) (disable-list-structure-check!)
+            println "|Running mode:" $ if config/dev? |dev |release
+            ; reset! *changes-logger $ fn (global-element element changes) (println |Changes: changes)
+            render-app!
+            connect!
+            add-watch *store :changes $ fn (store prev) (render-app!)
+              if
+                = :editor $ option:unwrap-or
+                  get-in
+                    assert-type @*store $ :: 'Map 'Tag 'Dynamic
+                    [] :router 0
+                  , :unknown
+                focus!
+            add-watch *states :changes $ fn (states prev) (render-app!)
+            js/window.addEventListener |keydown $ fn (event)
+              on-window-keydown event dispatch! $ option:unwrap-or
+                get
+                  assert-type @*store $ :: 'Map 'Tag 'Dynamic
+                  , :router
+                , {}
+            js/window.addEventListener |focus $ fn (event) (retry-connect!)
+            js/window.addEventListener |visibilitychange $ fn (event)
+              when
+                = |visible $ unsafe-coerce js/document.visibilityState 'String
+                retry-connect!
+            println "|App started!"
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ []
-              :features $ #{} :js-ffi
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'mount-target $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def mount-target $ js/document.querySelector |.app
+          :code $ quote $ def mount-target (js/document.querySelector |.app)
           :examples $ []
           :schema $ :: 'Dynamic
         'reload! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn reload! () $ if (nil? build-errors)
+          :code $ quote $ defn reload! ()
+            if (nil? build-errors)
               do (clear-cache!) (render-app!) (remove-watch *states :changes) (remove-watch *store :changes)
                 add-watch *states :changes $ fn (states prev) (render-app!)
                 add-watch *store :changes $ fn (store prev) (render-app!)
@@ -227,38 +317,45 @@
                 tip! |ok~ nil
               tip! |error build-errors
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'render-app! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn render-app! () $ render! mount-target (comp-container @*states @*store) dispatch!
+          :code $ quote $ defn render-app! ()
+            render! mount-target (comp-container @*states @*store) dispatch!
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'retry-connect! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn retry-connect! () $ if
+          :code $ quote $ defn retry-connect! ()
+            if
               and (nil? @*store) (not @*connecting?)
               connect!
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'send-op! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn send-op! (op) (ws-send! op)
+          :code $ quote $ defn send-op! (op) (ws-send! op)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Dynamic
         'simulate-login! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn simulate-login! () $ let
-                raw $ js/window.localStorage.getItem
-                  option:unwrap-or (get config/site :storage-key) |
+          :code $ quote $ defn simulate-login! ()
+            let
+                raw $ js/window.localStorage.getItem $ option:unwrap-or (get config/site :storage-key) |
               if (js-present? raw)
-                do $ dispatch!
-                  :: :user/log-in $ parse-cirru-edn (unsafe-coerce raw 'String)
+                do $ dispatch! $ :: :user/log-in
+                  parse-cirru-edn $ unsafe-coerce raw 'String
                 do $ println "|Found no storage."
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+            :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc "|browser side main file")
-        :code $ quote
-          ns app.client $ :require
+        :code $ quote $ ns app.client
+          :require
             respo.core :refer $ render! clear-cache! *changes-logger
             respo.cursor :refer $ update-states-merge
             app.comp.container :refer $ comp-container
@@ -276,91 +373,96 @@
     'app.client-updater $ %{} 'FileEntry
       :defs $ {}
         'abstract $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn abstract (states)
-              assoc-in states ([] :editor :data :abstract?) true
+          :code $ quote $ defn abstract (states)
+            assoc-in states ([] :editor :data :abstract?) true
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :return $ :: 'Map 'Tag 'Dynamic
         'clear-editor $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn clear-editor (states)
-              update states :editor $ fn (scope)
-                -> scope .to-list
+          :code $ quote $ defn clear-editor (states)
+            update states :editor $ fn (scope)
+              ->
+                assert-type scope $ :: 'Map 'Tag 'Dynamic
+                , &map:to-list
                   filter $ fn (pair)
                     let[] (k v) pair $ tag? k
                   pairs-map
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :return $ :: 'Map 'Tag 'Dynamic
         'draft-box $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn draft-box (states)
-              assoc-in states ([] :editor :data :draft-box?) true
+          :code $ quote $ defn draft-box (states)
+            assoc-in states ([] :editor :data :draft-box?) true
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote (ns app.client-updater)
+        :code $ quote $ ns app.client-updater
     'app.client-util $ %{} 'FileEntry
       :defs $ {}
+        'UrlParseResultHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait UrlParseResultHost (:query 'Dynamic)
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} $ :query |query
+          :schema $ :: 'Trait
         'coord-contains? $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn coord-contains? (xs ys)
-              if (empty? ys) true $ if (empty? xs) false
-                if
-                  = (first xs) (first ys)
-                  recur (rest xs) (rest ys)
-                  , false
+          :code $ quote $ defn coord-contains? (xs ys)
+            if (empty? ys) true $ if (empty? xs) false $ if
+              = (first xs) (first ys)
+              recur (rest xs) (rest ys)
+              , false
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Bool)
-              :args $ [] (:: 'List 'T) (:: 'List 'T)
-              :generics $ [] 'T
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] (:: 'List 'T) (:: 'List 'T)
+            :generics $ [] 'T
         'expr-many-items? $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn expr-many-items? (x size)
-              if (expr? x)
-                let
-                    d $ :data (assert-type x 'app.schema/CirruExpr)
-                  or
-                    > (count d) size
-                    any? (vals d) expr?
-                , false
+          :code $ quote $ defn expr-many-items? (x size)
+            if (expr? x)
+              let
+                  d $ :data $ assert-type x 'app.schema/CirruExprShape
+                or
+                  > (count d) size
+                  any? (vals d) expr?
+              , false
           :examples $ []
-          :schema $ :: 'Dynamic
-        'expr? $ %{} 'CodeEntry (:doc "|a function to detect expression,\nan expression is represented with a record with `CirruExpr`\n")
-          :code $ quote
-            defn expr? (x)
-              and (struct? x)
-                = :Expr $ &struct:get-name x
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] 'Dynamic 'Number
+        'expr? $ %{} 'CodeEntry
+          :doc "|a function to detect expression,\nan expression is represented with a record with `CirruExpr`\n"
+          :code $ quote $ defn expr? (x)
+            and (struct? x)
+              = :Expr $ &struct:get-name x
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] 'Dynamic
         'leaf? $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn leaf? (x)
-              and (struct? x) (&struct:matches? x schema/CirruLeaf)
+          :code $ quote $ defn leaf? (x)
+            and (struct? x) (&struct:matches? x schema/CirruLeaf)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] 'Dynamic
         'parse-query! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn parse-query! () $ let
+          :code $ quote $ defn parse-query! ()
+            let
                 url-obj $ unsafe-coerce
-                  url-parse
-                    .-href $ unsafe-coerce js/location JsObject
-                    , true
-                  , JsObject
-              to-calcit-data $ .-query url-obj
+                  url-parse (location-href) true
+                  , 'app.client-util/UrlParseResultHost
+              to-calcit-data $ url-obj :query
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ []
-              :features $ #{} :js-ffi
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'ws-host $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def ws-host $ if
+          :code $ quote $ def ws-host
+            if
               and (js-present? js/location)
-                not $ blank?
-                  unsafe-coerce
-                    .-search $ unsafe-coerce js/location JsObject
-                    , String
+                not $ blank? $
+                  unsafe-coerce js/location 'js-ffi.browser/LocationHost
+                  , :search
               let
                   query $ parse-query!
                 println "|Loading from url" query
@@ -372,30 +474,31 @@
           :examples $ []
           :schema $ :: 'String
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.client-util $ :require ([] app.config :as config) ([] |url-parse :default url-parse) (app.schema :as schema)
+        :code $ quote $ ns app.client-util
+          :require ([] app.config :as config) ([] |url-parse :default url-parse) (app.schema :as schema)
+            js-ffi.browser :refer $ location-href
     'app.comp.about $ %{} 'FileEntry
       :defs $ {}
         'comp-about $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-about () $ div
-              {} $ :class-name (str-spaced css/global css/fullscreen css/column)
+          :code $ quote $ defcomp comp-about ()
+            div
+              {} $ :class-name $ str-spaced css/global css/fullscreen css/column
               div
-                {} $ :class-name (str-spaced css/flex css/center)
+                {} $ :class-name $ str-spaced css/flex css/center
                 img $ {} (:src |//cdn.tiye.me/logo/cirru.png)
                   :style $ {} (:width 64) (:height 64) (:border-radius |8px)
                 =< nil 16
                 <> "|No connection to server..." $ {} (:font-family "|Josefin Sans") (:font-weight 300) (:font-size 24)
                   :color $ hsl 0 80 60
                 div
-                  {} $ :style
-                    {} $ :color (hsl 0 0 80)
+                  {} $ :style $ {}
+                    :color $ hsl 0 0 80
                   <> "|Get editor server running with:"
                   pre $ {} (:innerHTML install-commands) (:class-name |copy-commands)
                     :style $ {} (:cursor :pointer) (:padding "|0 8px")
                     :title "|Click to copy."
                     :on-click $ fn (e d!)
-                      copy-silently! $ .replace install-commands "|$ " |
+                      copy-silently! $ &str:replace install-commands "|$ " |
               div
                 {} (:class-name css/center)
                   :style $ {} (:padding "|8px 8px")
@@ -404,12 +507,12 @@
           :examples $ []
           :schema $ :: 'Dynamic
         'install-commands $ %{} 'CodeEntry (:doc "|copy the commands to use")
-          :code $ quote (def install-commands "|$ npm install -g @calcit/editor\n$ ct\n")
+          :code $ quote $ def install-commands "|$ npm install -g @calcit/editor\n$ ct\n"
           :examples $ []
           :schema $ :: 'String
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.about $ :require
+        :code $ quote $ ns app.comp.about
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -421,43 +524,42 @@
             respo-md.comp.md :refer $ comp-md-block
             app.util.dom :refer $ copy-silently!
     'app.comp.abstract $ %{} 'FileEntry
-      :defs $ {}
-        'comp-abstract $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-abstract (states close-modal!)
-              comp-modal close-modal! $ let
-                  cursor $ option:unwrap-or (get states :cursor) nil
-                  state $ or
-                    option:unwrap-or (get states :data) |
-                    , |style-
-                div ({})
-                  input $ {}
-                    :class-name $ str-spaced style/input |el-abstract
-                    :value state
-                    :on-input $ fn (e d!)
-                      d! cursor $ option:unwrap-or (get e :value) nil
-                    :on-keydown $ fn (e d!)
-                      cond
-                          = keycode/enter $ assert-type
-                            option:unwrap-or (get e :key-code) 0
-                            , 'Number
-                          if
-                            not $ blank? state
-                            do (d! :analyze/abstract-def state) (d! cursor nil) (close-modal! d!)
-                        (= keycode/escape (assert-type (option:unwrap-or (get e :key-code) 0) 'Number))
-                          close-modal! d!
-                        true nil
-                  =< nil 8
-                  button $ {} (:class-name style/button) (:inner-text |Submit)
-                    :on-click $ fn (e d!)
-                      if
-                        not $ blank? state
-                        do (d! :analyze/abstract-def state) (d! cursor nil) (close-modal! d!)
+      :defs $ {} $ 'comp-abstract
+        %{} 'CodeEntry (:doc |)
+          :code $ quote $ defcomp comp-abstract (states close-modal!)
+            comp-modal close-modal! $ let
+                cursor $ option:unwrap-or (get states :cursor) nil
+                state $ or
+                  option:unwrap-or (get states :data) |
+                  , |style-
+              div ({})
+                input $ {}
+                  :class-name $ str-spaced style/input |el-abstract
+                  :value state
+                  :on-input $ fn (e d!)
+                    d! cursor $ option:unwrap-or (get e :value) nil
+                  :on-keydown $ fn (e d!)
+                    cond
+                        = keycode/enter $ assert-type
+                          option:unwrap-or (get e :key-code) 0
+                          , 'Number
+                        if
+                          not $ blank? state
+                          do (d! :analyze/abstract-def state) (d! cursor nil) (close-modal! d!)
+                      (= keycode/escape (assert-type (option:unwrap-or (get e :key-code) 0) 'Number))
+                        close-modal! d!
+                      true nil
+                =< nil 8
+                button $ {} (:class-name style/button) (:inner-text |Submit)
+                  :on-click $ fn (e d!)
+                    if
+                      not $ blank? state
+                      do (d! :analyze/abstract-def state) (d! cursor nil) (close-modal! d!)
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.abstract $ :require
+        :code $ quote $ ns app.comp.abstract
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo.core :refer $ defcomp <> span div pre input button a
@@ -468,88 +570,133 @@
             app.keycode :as keycode
     'app.comp.bookmark $ %{} 'FileEntry
       :defs $ {}
+        'DataTransferHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait DataTransferHost
+            .set-data! $ :: 'Fn $ {}
+              :args $ [] 'app.comp.bookmark/DataTransferHost 'String 'String
+              :return 'Unit
+            .get-data $ :: 'Fn $ {}
+              :args $ [] 'app.comp.bookmark/DataTransferHost 'String
+              :return 'String
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} (:get-data |getData) (:set-data! |setData)
+          :schema $ :: 'Trait
+        'DragEventHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait DragEventHost (:data-transfer 'app.comp.bookmark/DataTransferHost)
+            .prevent-default! $ :: 'Fn $ {}
+              :args $ [] 'app.comp.bookmark/DragEventHost
+              :return 'Unit
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} (:data-transfer |dataTransfer) (:prevent-default! |preventDefault)
+          :schema $ :: 'Trait
         'comp-bookmark $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-bookmark (bookmark idx selected?)
-              div
-                unsafe-coerce
-                  {}
-                    :class-name $ str |stack-bookmark (if selected? "| selected-bookmark" |)
-                    :draggable true
-                    :on-click $ on-pick bookmark idx
-                    :on-dragstart $ fn (e d!)
-                      .!setData
-                        unsafe-coerce
-                          .-dataTransfer $ option:unwrap-or (get e :event) ({})
-                          , JsObject
-                        , |id idx
-                    :on-drop $ fn (e d!)
-                      let
-                          target-idx $ js/parseInt
-                            .!getData
-                              unsafe-coerce
-                                .-dataTransfer $ option:unwrap-or (get e :event) ({})
-                                , JsObject
-                              , |id
-                        when (not= target-idx idx)
-                          d! :writer/move-order $ {} (:from target-idx) (:to idx)
-                    :on-dragover $ fn (e d!)
-                      .!preventDefault $ option:unwrap-or (get e :event) ({})
-                  , respo.schema/DomProps
-                tag-match bookmark
-                  (:ns the-ns focus)
-                    div
-                      {} (:class-name css-bookmark)
-                        :style $ {} (:padding |8px)
-                      <> |ns style-kind
-                      span $ {} (:inner-text the-ns)
+          :code $ quote $ defcomp comp-bookmark (bookmark idx selected?)
+            div
+              unsafe-coerce
+                {}
+                  :class-name $ str |stack-bookmark $ if selected? "| selected-bookmark" |
+                  :draggable true
+                  :on-click $ on-pick bookmark idx
+                  :on-dragstart $ fn (e d!)
+                    drag-set-data!
+                      option:unwrap-or (get e :event) nil
+                      , idx
+                  :on-drop $ fn (e d!)
+                    let
+                        target-idx $ drag-get-index $ option:unwrap-or (get e :event) nil
+                      when (not= target-idx idx)
+                        d! :writer/move-order $ {} (:from target-idx) (:to idx)
+                  :on-dragover $ fn (e d!)
+                    drag-prevent-default! $ option:unwrap-or (get e :event) nil
+                , respo.schema/DomProps
+              match bookmark
+                (:ns the-ns focus)
+                  div
+                    {} (:class-name css-bookmark)
+                      :style $ {} $ :padding |8px
+                    <> |ns style-kind
+                    span $ {} (:inner-text the-ns)
+                      :class-name $ str-spaced css/font-normal
+                      :style $ if selected? style-highlight
+                (:def the-ns the-def focus)
+                  div
+                    {} $ :class-name css-bookmark
+                    div ({})
+                      span $ {} (:inner-text the-def)
                         :class-name $ str-spaced css/font-normal
                         :style $ if selected? style-highlight
-                  (:def the-ns the-def focus)
                     div
-                      {} $ :class-name css-bookmark
-                      div ({})
-                        span $ {} (:inner-text the-def)
-                          :class-name $ str-spaced css/font-normal
-                          :style $ if selected? style-highlight
-                      div
-                        {} $ :class-name css/row-middle
-                        =< 4 nil
-                        <> the-ns style-minor
+                      {} $ :class-name css/row-middle
+                      =< 4 nil
+                      <> the-ns style-minor
           :examples $ []
           :schema $ :: 'Dynamic
         'css-bookmark $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-bookmark $ {}
-              |$0 $ {} (:line-height |1.2em) (:padding "|4px 8px") (:cursor :pointer) (:position :relative)
-                :color $ hsl 0 0 70
-                :white-space :nowrap
+          :code $ quote $ defstyle css-bookmark
+            {} $ |$0 $ {} (:line-height |1.2em) (:padding "|4px 8px") (:cursor :pointer) (:position :relative)
+              :color $ hsl 0 0 70
+              :white-space :nowrap
           :examples $ []
           :schema $ :: 'Dynamic
+        'drag-get-index $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn drag-get-index (raw-event)
+            let
+                event $ unsafe-coerce raw-event 'app.comp.bookmark/DragEventHost
+                transfer $ .-data-transfer event
+              unsafe-coerce
+                js/parseInt $ .get-data transfer |id
+                , 'Number
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Number)
+            :args $ [] 'Dynamic
+            :features $ #{} :js-ffi
+        'drag-prevent-default! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn drag-prevent-default! (raw-event)
+            let
+                event $ unsafe-coerce raw-event 'app.comp.bookmark/DragEventHost
+              .prevent-default! event
+              , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Dynamic
+            :features $ #{} :js-ffi
+        'drag-set-data! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn drag-set-data! (raw-event idx)
+            let
+                event $ unsafe-coerce raw-event 'app.comp.bookmark/DragEventHost
+                transfer $ .-data-transfer event
+              .set-data! transfer |id $ str idx
+              , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Dynamic 'Number
+            :features $ #{} :js-ffi
         'on-pick $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-pick (bookmark idx)
-              fn (e d!)
-                let
-                    event $ option:unwrap-or (get e :original-event) ({})
-                    shift? $ .-shiftKey event
-                    alt? $ .-altKey event
-                    meta? $ .-metaKey event
-                  cond
-                    meta? $ d! :writer/collapse idx
-                    alt? $ d! :writer/remove-idx idx
-                    true $ d! :writer/point-to idx
+          :code $ quote $ defn on-pick (bookmark idx)
+            fn (e d!)
+              let
+                  event $ option:unwrap-or (get e :original-event) ({})
+                  shift? $ .-shiftKey event
+                  alt? $ .-altKey event
+                  meta? $ .-metaKey event
+                cond
+                  meta? $ d! :writer/collapse idx
+                  alt? $ d! :writer/remove-idx idx
+                  true $ d! :writer/point-to idx
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] 'Dynamic 'Number
+            :features $ #{} :js-ffi
         'style-highlight $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-highlight $ {}
-              :color $ hsl 0 0 100
+          :code $ quote $ def style-highlight
+            {} $ :color $ hsl 0 0 100
           :examples $ []
           :schema $ :: 'Dynamic
         'style-kind $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-kind $ {}
+          :code $ quote $ def style-kind
+            {}
               :color $ hsl 340 80 60
               :font-family ui/font-normal
               :font-size 12
@@ -558,23 +705,21 @@
           :examples $ []
           :schema $ :: 'Dynamic
         'style-main $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-main $ {}
-              |& $ {} (:vertical-align :middle)
-                :color $ hsl 0 0 70
+          :code $ quote $ defstyle style-main
+            {} $ |& $ {} (:vertical-align :middle)
+              :color $ hsl 0 0 70
           :examples $ []
           :schema $ :: 'Dynamic
         'style-minor $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-minor $ {}
-              |& $ {}
-                :color $ hsl 0 0 40
-                :font-size 12
+          :code $ quote $ defstyle style-minor
+            {} $ |& $ {}
+              :color $ hsl 0 0 40
+              :font-size 12
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.bookmark $ :require
+        :code $ quote $ ns app.comp.bookmark
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -584,45 +729,43 @@
     'app.comp.changed-files $ %{} 'FileEntry
       :defs $ {}
         'comp-changed-files $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-changed-files (states changed-files)
-              div
-                {} $ :class-name style-column
-                <> |Changes style/title
-                list-> ({})
-                  -> changed-files (.to-list)
-                    map $ fn (pair)
-                      let[] (k info) pair $ [] k (comp-changed-info info k)
-                if (empty? changed-files)
-                  div
-                    {} $ :class-name (str-spaced css/font-fancy style-nothing)
-                    <> "|No changes"
-                  div ({})
-                    a $ {} (:inner-text |Save) (:class-name style/button)
-                      :on-click $ fn (e d!)
-                        d! $ :: :effect/save-files
-                    a $ {} (:inner-text |Reset) (:class-name style/button)
-                      :on-click $ fn (e d!)
-                        d! $ :: :ir/reset-files
-                        d! $ :: :states/clear
+          :code $ quote $ defcomp comp-changed-files (states changed-files)
+            div
+              {} $ :class-name style-column
+              <> |Changes style/title
+              list-> ({})
+                -> changed-files (&map:to-list)
+                  map $ fn (pair)
+                    let[] (k info) pair $ [] k $ comp-changed-info info (assert-type k 'String)
+              if (empty? changed-files)
+                div
+                  {} $ :class-name $ str-spaced css/font-fancy style-nothing
+                  <> "|No changes"
+                div ({})
+                  a $ {} (:inner-text |Save) (:class-name style/button)
+                    :on-click $ fn (e d!)
+                      d! $ :: :effect/save-files
+                  a $ {} (:inner-text |Reset) (:class-name style/button)
+                    :on-click $ fn (e d!)
+                      d! $ :: :ir/reset-files
+                      d! $ :: :states/clear
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
+            :args $ [] 'Dynamic $ :: 'Map 'Dynamic 'Dynamic
         'style-column $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-column $ {}
-              |& $ {} (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
+          :code $ quote $ defstyle style-column
+            {} $ |& $ {} (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-nothing $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-nothing $ {}
-              |& $ {}
-                :color $ hsl 0 0 100 0.5
+          :code $ quote $ defstyle style-nothing
+            {} $ |& $ {}
+              :color $ hsl 0 0 100 0.5
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.changed-files $ :require
+        :code $ quote $ ns app.comp.changed-files
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -635,103 +778,103 @@
     'app.comp.changed-info $ %{} 'FileEntry
       :defs $ {}
         'comp-changed-info $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-changed-info (info ns-text)
-              div
-                {} $ :style style-info
-                div ({}) (<> ns-text) (=< 8 nil)
-                  span
-                    {} $ :class-name |is-minor
-                    comp-icon :corner-up-left style-reset $ fn (e d!) (d! :ir/reset-ns ns-text)
-                      d! $ :: :states/clear
-                  =< 24 nil
-                  if
-                    not= :same $ option:unwrap-or (get info :ns) :same
-                    render-status ns-text :ns $ option:unwrap-or (get info :ns) |
-                div
-                  {} (:class-name css/row-parted)
-                    :style $ {} (:align-items :flex-end)
-                  list->
-                    {} $ :style style-defs
-                    ->
-                      option:unwrap-or (get info :defs) {}
-                      .to-list
-                      map $ fn (entry)
-                        let-sugar
-                              [] def-text status
-                              , entry
-                          [] def-text $ div ({}) (render-status ns-text def-text status)
-                  div ({})
-                    comp-icon :save style-reset $ fn (e d!) (d! :effect/save-ns ns-text)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'on-preview $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-preview (ns-text kind status)
-              fn (e d!) (; println |peek ns-text kind status)
-                d! :writer/select $ case-default kind (:: :def ns-text kind)
-                  :ns $ :: :ns ns-text
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'on-reset-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-reset-def (ns-text kind)
-              fn (e d!)
-                d! :ir/reset-at $ case-default kind (:: :def ns-text kind)
-                  :ns $ :: :ns ns-text
-                d! $ :: :states/clear
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'render-status $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn render-status (ns-text kind status)
-              span
-                {} (:style style-status-card)
-                  :title $ str "|Browse " kind
-                  :on-click $ on-preview ns-text kind status
-                <> kind
-                =< 8 nil
-                <> (turn-string status) style-status
-                =< 4 nil
+          :code $ quote $ defcomp comp-changed-info (info ns-text)
+            div
+              {} $ :style style-info
+              div ({}) (<> ns-text) (=< 8 nil)
                 span
                   {} $ :class-name |is-minor
-                  comp-icon :corner-up-left style-reset $ on-reset-def ns-text kind
+                  comp-icon :corner-up-left style-reset $ fn (e d!) (d! :ir/reset-ns ns-text)
+                    d! $ :: :states/clear
+                =< 24 nil
+                if
+                  not= :same $ option:unwrap-or (get info :ns) :same
+                  render-status ns-text :ns $ option:unwrap-or (get info :ns) |
+              div
+                {} (:class-name css/row-parted)
+                  :style $ {} $ :align-items :flex-end
+                list->
+                  {} $ :style style-defs
+                  ->
+                    option:unwrap-or (get info :defs) {}
+                    &map:to-list
+                    map $ fn (entry)
+                      let-sugar
+                            [] def-text status
+                            , entry
+                        [] def-text $ div ({}) (render-status ns-text def-text status)
+                div ({})
+                  comp-icon :save style-reset $ fn (e d!) (d! :effect/save-ns ns-text)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String
+        'on-preview $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn on-preview (ns-text kind status)
+            fn (e d!) (; println |peek ns-text kind status)
+              d! :writer/select $ case-default kind (:: :def ns-text kind)
+                :ns $ :: :ns ns-text
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] 'String 'Dynamic 'Dynamic
+        'on-reset-def $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn on-reset-def (ns-text kind)
+            fn (e d!)
+              d! :ir/reset-at $ case-default kind (:: :def ns-text kind)
+                :ns $ :: :ns ns-text
+              d! $ :: :states/clear
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] 'String 'Dynamic
+        'render-status $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn render-status (ns-text kind status)
+            span
+              {} (:style style-status-card)
+                :title $ str "|Browse " kind
+                :on-click $ on-preview ns-text kind status
+              <> kind
+              =< 8 nil
+              <> (turn-string status) style-status
+              =< 4 nil
+              span
+                {} $ :class-name |is-minor
+                comp-icon :corner-up-left style-reset $ on-reset-def ns-text kind
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
+            :args $ [] 'String 'Dynamic 'Dynamic
         'style-defs $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-defs $ {} (:padding-left 16)
+          :code $ quote $ def style-defs
+            {} $ :padding-left 16
           :examples $ []
           :schema $ :: 'Dynamic
         'style-info $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-info $ {}
+          :code $ quote $ def style-info
+            {}
               :background-color $ hsl 0 0 100 0.1
               :padding 8
               :margin-bottom 8
           :examples $ []
           :schema $ :: 'Dynamic
         'style-reset $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-reset $ {} (:text-decoration :underline) (:font-size 12)
+          :code $ quote $ def style-reset
+            {} (:text-decoration :underline) (:font-size 12)
               :color $ hsl 220 60 80 0.6
               :cursor :pointer
           :examples $ []
           :schema $ :: 'Dynamic
         'style-status $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-status $ {} (:font-size 12) (:font-family "|Josefin Sans")
+          :code $ quote $ def style-status
+            {} (:font-size 12) (:font-family "|Josefin Sans")
               :color $ hsl 160 70 40
           :examples $ []
           :schema $ :: 'Dynamic
         'style-status-card $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-status-card $ {} (:cursor :pointer)
+          :code $ quote $ def style-status-card
+            {} $ :cursor :pointer
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.changed-info $ :require
+        :code $ quote $ ns app.comp.changed-info
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -742,136 +885,129 @@
     'app.comp.configs $ %{} 'FileEntry
       :defs $ {}
         'comp-configs $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-configs (states configs entries)
-              let
-                  version-plugin $ use-prompt (>> states :version)
-                    {} (:text "|Set a version:")
-                      :initial $ option:unwrap-or (get configs :version) nil
-                      :placeholder "|a version number..."
-                      :input-class css/font-code
-                  modules-plugin $ use-prompt (>> states :modules)
-                    {} (:text "|Add modules:")
-                      :initial $ .join-str
+          :code $ quote $ defcomp comp-configs (states configs entries)
+            let
+                version-plugin $ use-prompt (>> states :version)
+                  {} (:text "|Set a version:")
+                    :initial $ option:unwrap-or (get configs :version) nil
+                    :placeholder "|a version number..."
+                    :input-class css/font-code
+                modules-plugin $ use-prompt (>> states :modules)
+                  {} (:text "|Add modules:")
+                    :initial $ join-str
+                      assert-type
                         option:unwrap-or (get configs :modules) []
-                        , "| "
-                      :placeholder "|module/calcit.cirru etc."
-                      :input-class css/font-code
-                      :multiline? true
-                  init-fn-plugin $ use-prompt (>> states :init-fn)
-                    {} (:text "|Set a init-fn:")
-                      :initial $ option:unwrap-or (get configs :init-fn) nil
-                      :placeholder "|a path..."
-                      :input-class css/font-code
-                  reload-fn-plugin $ use-prompt (>> states :reload-fn)
-                    {} (:text "|Set a reload-fn:")
-                      :initial $ option:unwrap-or (get configs :reload-fn) nil
-                      :placeholder "|a path..."
-                      :input-class css/font-code
+                        :: 'List 'String
+                      , "| "
+                    :placeholder "|module/calcit.cirru etc."
+                    :input-class css/font-code
+                    :multiline? true
+                init-fn-plugin $ use-prompt (>> states :init-fn)
+                  {} (:text "|Set a init-fn:")
+                    :initial $ option:unwrap-or (get configs :init-fn) nil
+                    :placeholder "|a path..."
+                    :input-class css/font-code
+                reload-fn-plugin $ use-prompt (>> states :reload-fn)
+                  {} (:text "|Set a reload-fn:")
+                    :initial $ option:unwrap-or (get configs :reload-fn) nil
+                    :placeholder "|a path..."
+                    :input-class css/font-code
+              div
+                {}
+                  :class-name $ str-spaced css/expand css/column
+                  :style $ {} $ :padding "|40px 16px 0 16px"
+                =< nil 8
+                div ({}) (render-label |Version:) (=< 8 nil)
+                  span
+                    {} $ :on-click $ fn (e d!)
+                      .show version-plugin d! $ fn (text)
+                        d! :configs/update $ {} $ :version text
+                    render-field $ option:unwrap-or (get configs :version) nil
                 div
-                  {}
-                    :class-name $ str-spaced css/expand css/column
-                    :style $ {} (:padding "|40px 16px 0 16px")
-                  =< nil 8
-                  div ({}) (render-label |Version:) (=< 8 nil)
-                    span
-                      {} $ :on-click
-                        fn (e d!)
-                          .show version-plugin d! $ fn (text)
-                            d! :configs/update $ {} (:version text)
-                      render-field $ option:unwrap-or (get configs :version) nil
-                  div
-                    {} $ :class-name css/row
-                    render-label |Modules:
-                    =< 8 nil
-                    span
-                      {} $ :on-click
-                        fn (e d!)
-                          .show modules-plugin d! $ fn (text)
-                            d! :configs/update $ {}
-                              :modules $ filter-not
-                                split
-                                  trim $ unsafe-coerce text 'String
-                                  , "| "
-                                , blank?
-                      render-field $ ->
-                        option:unwrap-or (get configs :modules) []
-                        or |
-                        join-str "| "
-                  div ({}) (render-label |init-fn:) (=< 8 nil)
-                    span
-                      {} $ :on-click
-                        fn (e d!)
-                          .show init-fn-plugin d! $ fn (text)
-                            d! :configs/update $ {} (:init-fn text)
-                      render-field $ option:unwrap-or (get configs :init-fn) nil
-                  div ({}) (render-label |reload-fn:) (=< 8 nil)
-                    span
-                      {} $ :on-click
-                        fn (e d!)
-                          .show reload-fn-plugin d! $ fn (text)
-                            d! :configs/update $ {} (:reload-fn text)
-                      render-field $ option:unwrap-or (get configs :reload-fn) nil
-                  pre
-                    {} $ :style
-                      merge $ {} (:max-width |100%) (:overflow :auto)
-                        :color $ hsl 0 0 60
-                    code $ {}
-                      :innerHTML $ trim (format-cirru-edn configs)
-                  comp-entries states entries
-                  .render version-plugin
-                  .render modules-plugin
-                  .render init-fn-plugin
-                  .render reload-fn-plugin
+                  {} $ :class-name css/row
+                  render-label |Modules:
+                  =< 8 nil
+                  span
+                    {} $ :on-click $ fn (e d!)
+                      .show modules-plugin d! $ fn (text)
+                        d! :configs/update $ {} $ :modules
+                          filter-not
+                            split
+                              trim $ unsafe-coerce text 'String
+                              , "| "
+                            , blank?
+                    render-field $ ->
+                      option:unwrap-or (get configs :modules) []
+                      or |
+                      join-str "| "
+                div ({}) (render-label |init-fn:) (=< 8 nil)
+                  span
+                    {} $ :on-click $ fn (e d!)
+                      .show init-fn-plugin d! $ fn (text)
+                        d! :configs/update $ {} $ :init-fn text
+                    render-field $ option:unwrap-or (get configs :init-fn) nil
+                div ({}) (render-label |reload-fn:) (=< 8 nil)
+                  span
+                    {} $ :on-click $ fn (e d!)
+                      .show reload-fn-plugin d! $ fn (text)
+                        d! :configs/update $ {} $ :reload-fn text
+                    render-field $ option:unwrap-or (get configs :reload-fn) nil
+                pre
+                  {} $ :style $ merge
+                    {} (:max-width |100%) (:overflow :auto)
+                      :color $ hsl 0 0 60
+                  code $ {} $ :innerHTML
+                    trim $ format-cirru-edn configs
+                comp-entries states entries
+                .render version-plugin
+                .render modules-plugin
+                .render init-fn-plugin
+                .render reload-fn-plugin
           :examples $ []
           :schema $ :: 'Dynamic
         'comp-entries $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-entries (states entries)
-              let
-                  code-plugin $ use-prompt (>> states :entries-code)
-                    {} (:text "|Update entries:")
-                      :initial $ format-cirru-edn entries
-                      :placeholder "|{} ..."
-                      :input-style $ {} (:font-family ui/font-code)
-                      :multiline? true
-                div ({})
-                  pre $ {}
-                    :style $ merge
-                      {} (:max-width |100%) (:overflow :auto)
-                        :color $ hsl 0 0 60
-                    :inner-text $ format-cirru-edn entries
-                  button $ {} (:class-name style/button) (:inner-text |Edit)
-                    :on-click $ fn (e d!)
-                      .show code-plugin d! $ fn (text)
-                        d! :configs/update-entries $ [] :reset
-                          parse-cirru-edn $ unsafe-coerce text 'String
-                  .render code-plugin
+          :code $ quote $ defcomp comp-entries (states entries)
+            let
+                code-plugin $ use-prompt (>> states :entries-code)
+                  {} (:text "|Update entries:")
+                    :initial $ format-cirru-edn entries
+                    :placeholder "|{} ..."
+                    :input-style $ {} $ :font-family ui/font-code
+                    :multiline? true
+              div ({})
+                pre $ {}
+                  :style $ merge $ {} (:max-width |100%) (:overflow :auto)
+                    :color $ hsl 0 0 60
+                  :inner-text $ format-cirru-edn entries
+                button $ {} (:class-name style/button) (:inner-text |Edit)
+                  :on-click $ fn (e d!)
+                    .show code-plugin d! $ fn (text)
+                      d! :configs/update-entries $ [] :reset $ parse-cirru-edn (unsafe-coerce text 'String)
+                .render code-plugin
           :examples $ []
           :schema $ :: 'Dynamic
         'render-field $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn render-field (v)
-              <>
-                if (blank? v) |- v
-                str-spaced css/font-code style-value
+          :code $ quote $ defn render-field (v)
+            <>
+              if (blank? v) |- v
+              str-spaced css/font-code style-value
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
+            :args $ [] 'Dynamic
         'render-label $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn render-label (title) (<> title css/font-fancy)
+          :code $ quote $ defn render-label (title) (<> title css/font-fancy)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
+            :args $ [] 'String
         'style-value $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-value $ {}
-              |& $ {} (:cursor :pointer)
-                :color $ hsl 200 90 80
+          :code $ quote $ defstyle style-value
+            {} $ |& $ {} (:cursor :pointer)
+              :color $ hsl 200 90 80
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.configs $ :require
+        :code $ quote $ ns app.comp.configs
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -884,80 +1020,83 @@
     'app.comp.container $ %{} 'FileEntry
       :defs $ {}
         'comp-container $ %{} 'CodeEntry (:doc "|respo UI main entry")
-          :code $ quote
-            defcomp comp-container (states store)
-              let
-                  state $ option:unwrap-or (get states :data) {}
-                  session $ option:unwrap-or (get store :session) {}
-                  writer $ option:unwrap-or (get session :writer) {}
-                  router $ option:unwrap-or (get store :router) (:: :login)
-                  theme $ get-in store ([] :user :theme)
-                  picker-mode? $ option:some? (get writer :picker-mode)
-                if (nil? store) (comp-about)
+          :code $ quote $ defcomp comp-container (states store)
+            let
+                state $ option:unwrap-or (get states :data) {}
+                session $ option:unwrap-or (get store :session) {}
+                writer $ option:unwrap-or (get session :writer) {}
+                router $ option:unwrap-or (get store :router) (:: :login)
+                theme $ get-in store $ [] :user :theme
+                picker-mode? $ option:some? $ get writer :picker-mode
+              if (nil? store) (comp-about)
+                div
+                  {} $ :class-name $ str-spaced css/global css/fullscreen css/column style-container
+                  if (not picker-mode?)
+                    comp-header (>> states :header) (&enum:nth router 0)
+                      option:unwrap-or (get store :logged-in?) false
+                      option:unwrap-or (get store :stats) {}
                   div
-                    {} $ :class-name (str-spaced css/global css/fullscreen css/column style-container)
-                    if (not picker-mode?)
-                      comp-header (>> states :header) (&enum:nth router 0)
-                        option:unwrap-or (get store :logged-in?) false
-                        option:unwrap-or (get store :stats) {}
-                    div
-                      {} $ :class-name (str-spaced css/row css/expand)
-                      if
-                        option:unwrap-or (get store :logged-in?) false
-                        tag-match router
-                          (:profile d)
-                            comp-profile (>> states :profile)
-                              option:unwrap-or (get store :user) {}
-                              option:unwrap-or (get session :id) nil
-                              , d
-                          (:files d)
-                            comp-page-files (>> states :files)
-                              option:unwrap-or (get writer :selected-ns) nil
-                              , d
-                          (:graph d)
-                            comp-deps-graph (>> states :graph)
-                              option:unwrap-or (get d :package) nil
-                              option:unwrap-or (get d :configs) {}
-                              option:unwrap-or (get d :entries) {}
-                              option:unwrap-or (get d :deps-dict) {}
-                              option:unwrap-or (get d :writer) {}
-                          (:editor d)
-                            comp-page-editor (>> states :editor)
-                              option:unwrap-or (get writer :stack) []
-                              , d
-                                option:unwrap-or (get writer :pointer) 0
-                                , picker-mode? theme
-                          (:search d)
-                            comp-search (>> states :search) d
-                          (:watching d)
+                    {} $ :class-name $ str-spaced css/row css/expand
+                    if
+                      option:unwrap-or (get store :logged-in?) false
+                      match router
+                        (:profile d)
+                          comp-profile (>> states :profile)
+                            option:unwrap-or (get store :user) {}
+                            option:unwrap-or (get session :id) nil
+                            , d
+                        (:files d)
+                          comp-page-files (>> states :files)
+                            option:unwrap-or (get writer :selected-ns) nil
+                            , d
+                        (:graph d)
+                          comp-deps-graph (>> states :graph)
+                            option:unwrap-or (get d :package) nil
+                            option:unwrap-or (get d :configs) {}
+                            option:unwrap-or (get d :entries) {}
+                            option:unwrap-or (get d :deps-dict) {}
+                            option:unwrap-or (get d :writer) {}
+                        (:editor d)
+                          comp-page-editor (>> states :editor)
+                            option:unwrap-or (get writer :stack) []
+                            , d
+                              option:unwrap-or (get writer :pointer) 0
+                              , picker-mode? theme
+                        (:search d)
+                          comp-search (>> states :search)
+                            assert-type d $ :: 'List 'app.bookmark/%bookmark
+                        (:watching d)
+                          comp-watching (>> states :watching) d $ option:unwrap-or (get session :theme) :star-trail
+                        (:configs d)
+                          comp-configs (>> states :configs)
+                            option:unwrap-or (get d :configs) {}
+                            option:unwrap-or (get d :entries) {}
+                        _ $ div ({})
+                          <> $ str "|404 page: " $ to-lispy-string router
+                      if (some? router)
+                        match router
+                          (:watcher d)
                             comp-watching (>> states :watching) d $ option:unwrap-or (get session :theme) :star-trail
-                          (:configs d)
-                            comp-configs (>> states :configs)
-                              option:unwrap-or (get d :configs) {}
-                              option:unwrap-or (get d :entries) {}
-                          _ $ div ({})
-                            <> $ str "|404 page: " (to-lispy-string router)
-                        if (some? router)
-                          tag-match router
-                            (:watcher d)
-                              comp-watching (>> states :watching) d $ option:unwrap-or (get session :theme) :star-trail
-                            _ $ comp-login (>> states :login)
-                          comp-login $ >> states :login
-                    when dev? $ comp-inspect |Session store style-inspector
-                    ; when dev? $ comp-inspect "|Router data" states
-                      merge style-inspector $ {} (:left 100)
-                    comp-messages $ get-in store ([] :session :notifications)
+                          _ $ comp-login $ >> states :login
+                        comp-login $ >> states :login
+                  when dev? $ comp-inspect |Session store style-inspector
+                  ; when dev? $ comp-inspect "|Router data" states $ merge style-inspector
+                    {} $ :left 100
+                  comp-messages $ assert-type
+                    option:unwrap-or
+                      get-in store $ [] :session :notifications
+                      []
+                    :: 'List $ :: 'Map 'Tag 'Dynamic
           :examples $ []
           :schema $ :: 'Dynamic
         'style-container $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-container $ {}
-              |& $ {} (:background-color :black) (:color :white)
+          :code $ quote $ defstyle style-container
+            {} $ |& $ {} (:background-color :black) (:color :white)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-inspector $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-inspector $ {} (:bottom 40) (:left 0) (:max-width |100%)
+          :code $ quote $ def style-inspector
+            {} (:bottom 40) (:left 0) (:max-width |100%)
               :background-color $ hsl 0 0 50
               :color :black
               :opacity 1
@@ -965,8 +1104,8 @@
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.container $ :require
+        :code $ quote $ ns app.comp.container
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -991,118 +1130,121 @@
     'app.comp.draft-box $ %{} 'FileEntry
       :defs $ {}
         'comp-draft-box $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-draft-box (states expr focus close-modal!)
-              let
-                  cursor $ option:unwrap-or (get states :cursor) nil
-                comp-modal
-                  fn (d!) (d! cursor nil) (close-modal! d!)
-                  let
-                      path $ -> focus
-                        mapcat $ fn (x) ([] :data x)
-                      node $ option:unwrap-or (get-in expr path) nil
-                      missing? $ nil? node
-                      an-expr? $ expr? node
-                    if missing?
-                      span $ {} (:class-name css-wrong) (:inner-text "|Does not edit expression!")
-                        :on-click $ fn (e d!) (close-modal! d!)
-                      let
-                          state $ or
-                            option:unwrap-or (get states :data) |
-                            if an-expr?
-                              format-cirru $ [] (tree->cirru node)
-                              :text $ assert-type node 'app.schema/CirruLeaf
+          :code $ quote $ defcomp comp-draft-box (states expr focus close-modal!)
+            let
+                cursor $ option:unwrap-or (get states :cursor) nil
+              comp-modal
+                fn (d!) (d! cursor nil) (close-modal! d!)
+                let
+                    path $ ->
+                      assert-type focus $ :: 'List 'Number
+                      mapcat $ hint-fn $ {}
+                        :args $ [] 'Number
+                        :return $ :: 'List 'Dynamic
+                        :: fn (x) ([] :data x)
+                    node $ option:unwrap-or (get-in expr path) nil
+                    missing? $ nil? node
+                    an-expr? $ expr? node
+                  if missing?
+                    span $ {} (:class-name css-wrong) (:inner-text "|Does not edit expression!")
+                      :on-click $ fn (e d!) (close-modal! d!)
+                    let
+                        state $ or
+                          option:unwrap-or (get states :data) |
+                          if an-expr?
+                            format-cirru $ [] $ tree->cirru node
+                            :text $ assert-type node 'app.schema/CirruLeafShape
+                      div
+                        {} $ :class-name css/column
                         div
-                          {} $ :class-name css/column
-                          div
-                            {} $ :style style-original
-                            if an-expr? (<> "|Cirru Mode" style-mode)
-                              textarea $ {} (:spellcheck false) (:class-name css-text)
-                                :value $ if an-expr?
-                                  format-cirru $ tree->cirru node
-                                  :text $ assert-type node 'app.schema/CirruLeaf
-                          =< nil 8
-                          textarea $ {}
-                            :class-name $ str-spaced |el-draft-box css-draft-area
-                            :value state
-                            :on-input $ fn (e d!)
-                              d! cursor $ option:unwrap-or (get e :value) nil
-                            :on-keydown $ fn (e d!)
-                              cond
-                                  = keycode/escape $ assert-type
-                                    option:unwrap-or (get e :key-code) 0
-                                    , 'Number
+                          {} $ :style style-original
+                          if an-expr? (<> "|Cirru Mode" style-mode)
+                            textarea $ {} (:spellcheck false) (:class-name css-text)
+                              :value $ if an-expr?
+                                format-cirru $ tree->cirru node
+                                :text $ assert-type node 'app.schema/CirruLeafShape
+                        =< nil 8
+                        textarea $ {}
+                          :class-name $ str-spaced |el-draft-box css-draft-area
+                          :value state
+                          :on-input $ fn (e d!)
+                            d! cursor $ option:unwrap-or (get e :value) nil
+                          :on-keydown $ fn (e d!)
+                            cond
+                                = keycode/escape $ assert-type
+                                  option:unwrap-or (get e :key-code) 0
+                                  , 'Number
+                                close-modal! d!
+                              (and (= keycode/s (assert-type (option:unwrap-or (get e :key-code) 0) 'Number)) (.-metaKey (option:unwrap-or (get e :event) {})))
+                                do
+                                  .!preventDefault $ option:unwrap-or (get e :event) {}
+                                  if an-expr?
+                                    d! :ir/draft-expr $ parse-cirru-edn state
+                                    d! :ir/update-leaf $ {} (:text state)
+                                      :at $ now!
+                                  d! cursor nil
                                   close-modal! d!
-                                (and (= keycode/s (assert-type (option:unwrap-or (get e :key-code) 0) 'Number)) (.-metaKey (option:unwrap-or (get e :event) {})))
-                                  do
-                                    .!preventDefault $ option:unwrap-or (get e :event) {}
-                                    if an-expr?
-                                      d! :ir/draft-expr $ parse-cirru-edn state
-                                      d! :ir/update-leaf $ {} (:text state)
-                                        :at $ now!
-                                    d! cursor nil
-                                    close-modal! d!
-                                true nil
-                          =< nil 8
-                          div
-                            {} $ :class-name (str-spaced css/row style-toolbar)
-                            button $ {} (:class-name style/button) (:inner-text |Apply)
-                              :on-click $ on-submit an-expr? state cursor close-modal! false
-                            button $ {} (:class-name style/button) (:inner-text |Submit)
-                              :on-click $ on-submit an-expr? state cursor close-modal! true
+                              true nil
+                        =< nil 8
+                        div
+                          {} $ :class-name $ str-spaced css/row style-toolbar
+                          button $ {} (:class-name style/button) (:inner-text |Apply)
+                            :on-click $ on-submit an-expr? state cursor close-modal! false
+                          button $ {} (:class-name style/button) (:inner-text |Submit)
+                            :on-click $ on-submit an-expr? state cursor close-modal! true
           :examples $ []
           :schema $ :: 'Dynamic
         'css-draft-area $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-draft-area $ {}
-              |$0 $ {}
-                :background-color $ hsl 0 0 100 0.2
-                :min-height 320
-                :line-height |1.6em
-                :min-width 960
-                :color :white
-                :font-family ui/font-code
-                :font-size 14
-                :outline :none
-                :border :none
-                :padding 8
-                :min-width 800
-                :vertical-align :top
+          :code $ quote $ defstyle css-draft-area
+            {} $ |$0 $ {}
+              :background-color $ hsl 0 0 100 0.2
+              :min-height 320
+              :line-height |1.6em
+              :min-width 960
+              :color :white
+              :font-family ui/font-code
+              :font-size 14
+              :outline :none
+              :border :none
+              :padding 8
+              :min-width 800
+              :vertical-align :top
           :examples $ []
           :schema $ :: 'Dynamic
         'css-text $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-text $ {}
-              |$0 $ {} (:font-family ui/font-code) (:color :white) (:padding "|8px 8px") (:height 60) (:display :block) (:width |100%)
-                :background-color $ hsl 0 0 100 0.2
-                :outline :none
-                :border :none
-                :font-size 14
-                :padding 8
-                :min-width 800
-                :vetical-align :top
+          :code $ quote $ defstyle css-text
+            {} $ |$0 $ {} (:font-family ui/font-code) (:color :white) (:padding "|8px 8px") (:height 60) (:display :block) (:width |100%)
+              :background-color $ hsl 0 0 100 0.2
+              :outline :none
+              :border :none
+              :font-size 14
+              :padding 8
+              :min-width 800
+              :vetical-align :top
           :examples $ []
           :schema $ :: 'Dynamic
         'css-wrong $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-wrong $ {}
-              |$0 $ {} (:color :red) (:font-size 24) (:font-weight 100) (:font-family "|Josefin Sans") (:cursor :pointer)
+          :code $ quote $ defstyle css-wrong
+            {} $ |$0 $ {} (:color :red) (:font-size 24) (:font-weight 100) (:font-family "|Josefin Sans") (:cursor :pointer)
           :examples $ []
           :schema $ :: 'Dynamic
         'on-submit $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-submit (expr? text cursor close-modal! close?)
-              fn (e d!)
-                if expr?
-                  d! :ir/draft-expr $ first (parse-cirru-list text)
-                  d! :ir/update-leaf $ {} (:text text)
-                    :at $ now!
-                if close? $ do (d! cursor nil) (close-modal! d!)
+          :code $ quote $ defn on-submit (expr? text cursor close-modal! close?)
+            fn (e d!)
+              if expr?
+                d! :ir/draft-expr $ first $ parse-cirru-list text
+                d! :ir/update-leaf $ {} (:text text)
+                  :at $ now!
+              if close? $ do (d! cursor nil) (close-modal! d!)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] 'Bool 'String 'Dynamic
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] 'Dynamic
+              , 'Bool
         'style-mode $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-mode $ {}
+          :code $ quote $ def style-mode
+            {}
               :color $ hsl 0 0 100 0.6
               :background-color $ hsl 300 50 50 0.6
               :padding "|0 8px"
@@ -1111,19 +1253,18 @@
           :examples $ []
           :schema $ :: 'Dynamic
         'style-original $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-original $ {} (:max-height 240) (:overflow :auto)
+          :code $ quote $ def style-original
+            {} (:max-height 240) (:overflow :auto)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-toolbar $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-toolbar $ {}
-              |& $ {} (:justify-content :flex-end)
+          :code $ quote $ defstyle style-toolbar
+            {} $ |& $ {} (:justify-content :flex-end)
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.draft-box $ :require
+        :code $ quote $ ns app.comp.draft-box
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -1137,179 +1278,183 @@
     'app.comp.expr $ %{} 'FileEntry
       :defs $ {}
         'comp-expr $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-expr (states expr focus coord others tail? layout-mode readonly? picker-mode? theme depth)
-              let
-                  focused? $ = focus coord
-                  focus-in? $ coord-contains? focus coord
-                  sorted-children $ ->
-                    :data $ assert-type expr 'app.schema/CirruExpr
-                    .to-list
-                    .sort-by first
-                  first-id $ if (empty? sorted-children) nil
-                    first $ option:unwrap-or (first sorted-children) []
-                  last-id $ if (empty? sorted-children) nil
-                    first $ option:unwrap-or (last sorted-children) []
-                list->
-                  {} (:tab-index 0)
-                    :class-name $ str-spaced |comp-expr style-expr (base-style-expr theme) (if focused? |cirru-focused |)
-                    :style $ decide-expr-theme expr (includes? others coord) focused? focus-in? tail? layout-mode (count coord) depth theme
-                    :on $ if readonly?
-                      {} $ :click
-                        fn (e d!)
-                          if picker-mode? $ do
-                            .!preventDefault $ unsafe-coerce
-                              option:unwrap-or (get e :event) {}
-                              , JsObject
-                            d! :writer/pick-node $ tree->cirru expr
-                      {}
-                        :keydown $ on-keydown coord expr picker-mode?
-                        :click $ fn (e d!)
-                          if picker-mode?
-                            do
-                              .!preventDefault $ unsafe-coerce
-                                option:unwrap-or (get e :event) {}
-                                , JsObject
-                              d! :writer/pick-node $ tree->cirru expr
-                            d! :writer/focus coord
-                  loop
-                      result $ []
-                      children sorted-children
-                      prev-mode :inline
-                    if (empty? children) result $ let-sugar
-                          [] k child
-                          option:unwrap-or (first children) []
-                        child-coord $ conj coord k
-                        partial-others $ -> others
-                          filter $ fn (x) (coord-contains? x child-coord)
-                        cursor-key k
-                        mode $ if (leaf? child) :inline
-                          if (expr-many-items? child 6) :block $ case-default prev-mode :block (:inline :inline-block)
-                            :inline-block $ if (expr-many-items? child 2) :block :inline-block
-                      recur
-                        conj result $ [] k
-                          if (leaf? child)
-                            comp-leaf (>> states cursor-key) child focus child-coord (includes? partial-others child-coord) (= first-id k) readonly? picker-mode? theme
-                            comp-expr (>> states cursor-key) child focus child-coord partial-others (= last-id k) mode readonly? picker-mode? theme $ inc depth
-                        rest children
-                        , mode
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'on-keydown $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-keydown (coord expr picker-mode?)
-              fn (e d!)
-                let
-                    event $ unsafe-coerce
-                      option:unwrap-or (get e :original-event) {}
-                      , JsObject
-                    shift? $ unsafe-coerce (.-shiftKey event) Bool
-                    meta? $ or
-                      unsafe-coerce (.-metaKey event) Bool
-                      unsafe-coerce (.-ctrlKey event) Bool
-                    alt? $ unsafe-coerce (.-altKey event) Bool
-                    code $ assert-type
-                      option:unwrap-or (get e :key-code) 0
-                      , 'Number
-                  cond
-                      and meta? $ = code keycode/enter
-                      d! (if shift? :ir/append-leaf :ir/prepend-leaf) nil
-                    (and meta? (= code keycode/enter))
-                      d! :ir/prepend-leaf nil
-                    (= code keycode/enter)
-                      if (empty? coord) (d! :ir/prepend-leaf nil)
-                        d! (if shift? :ir/expr-before :ir/expr-after) nil
-                    (= code keycode/backspace) (d! :ir/delete-node nil)
-                    (= code keycode/space)
-                      do
-                        d! (if shift? :ir/leaf-before :ir/leaf-after) nil
-                        .!preventDefault event
-                    (= code keycode/tab)
-                      do
-                        d! $ :: (if shift? :ir/unindent :ir/indent)
-                        .!preventDefault event
-                    (= code keycode/up)
-                      do
-                        if
-                          not $ empty? coord
-                          d! $ :: :writer/go-up
-                        .!preventDefault event
-                    (= code keycode/down)
-                      do
-                        d! :writer/go-down $ {} (:tail? shift?)
-                        .!preventDefault event
-                    (and meta? alt? (= code keycode/left))
-                      do
-                        d! $ :: :ir/swap-left
-                        .!preventDefault event
-                    (= code keycode/left)
-                      do
-                        d! $ :: :writer/go-left
-                        .!preventDefault event
-                    (= code keycode/right)
-                      do
-                        d! $ :: :writer/go-right
-                        .!preventDefault event
-                    (and meta? (= code keycode/c))
-                      do-copy-logics! d!
-                        format-cirru $ [] (tree->cirru expr)
-                        , |Copied!
-                    (and meta? (= code keycode/x))
-                      do
-                        do-copy-logics! d!
-                          format-cirru $ [] (tree->cirru expr)
-                          , |Copied!
-                        d! :ir/delete-node nil
-                    (and meta? (= code keycode/v))
-                      on-paste! d!
-                    (and meta? (= code keycode/b))
-                      d! :ir/duplicate nil
-                    (and meta? (= code keycode/d))
-                      do
-                        if shift?
-                          let
-                              tree $ tree->cirru expr
-                            do $ if
-                              and
-                                >= (count tree) 1
-                                string? $ option:unwrap-or (first tree) |
-                              d! :analyze/goto-def $ {}
-                                :text $ option:unwrap-or (first tree) |
-                                :forced? true
-                                :args $ .slice tree 1
-                              d! :notify/push-message $ [] :warn "|Can not create a function!"
+          :code $ quote $ defcomp comp-expr
+            states expr focus coord others tail? layout-mode readonly? picker-mode? theme depth
+            let
+                focused? $ = focus coord
+                focus-in? $ coord-contains? focus coord
+                sorted-children $ ->
+                  :data $ assert-type expr 'app.schema/CirruExprShape
+                  &map:to-list
+                  sort $ fn (a b)
+                    &compare
+                      assert-type
+                        option:unwrap-or (first a) 0
+                        , 'Number
+                      assert-type
+                        option:unwrap-or (first b) 0
+                        , 'Number
+                first-id $ if (empty? sorted-children) nil $ first
+                  option:unwrap-or (first sorted-children) []
+                last-id $ if (empty? sorted-children) nil $ first
+                  option:unwrap-or (last sorted-children) []
+              list->
+                {} (:tab-index 0)
+                  :class-name $ str-spaced |comp-expr style-expr (base-style-expr theme) (if focused? |cirru-focused |)
+                  :style $ decide-expr-theme expr (includes? others coord) focused? focus-in? tail? layout-mode (count coord) depth theme
+                  :on $ if readonly?
+                    {} $ :click $ fn (e d!)
+                      if picker-mode? $ do
+                        app.util.dom/prevent-default! $ option:unwrap-or (get e :event) nil
+                        d! :writer/pick-node $ tree->cirru expr
+                    {}
+                      :keydown $ on-keydown coord expr picker-mode?
+                      :click $ fn (e d!)
+                        if picker-mode?
                           do
-                            d! $ :: :manual-state/abstract
-                            js/setTimeout $ fn ()
-                              let
-                                  el $ js/document.querySelector |.el-abstract
-                                if (js-present? el)
-                                  .!focus $ unsafe-coerce el JsObject
-                        .!preventDefault event
-                    (and meta? (= code keycode/slash) (not shift?))
-                      d! $ :: :ir/toggle-comment
-                    (and picker-mode? (= code keycode/escape))
-                      d! $ :: :writer/picker-mode
-                    (and meta? alt? (= code keycode/num-4))
-                      d! $ :: :ir/fold-to-end
-                    true $ do
-                      ; println |Keydown $ :key-code e
-                      on-window-keydown event d! $ {} (:name :editor)
+                            app.util.dom/prevent-default! $ option:unwrap-or (get e :event) nil
+                            d! :writer/pick-node $ tree->cirru expr
+                          d! :writer/focus coord
+                loop
+                    result $ assert-type ([])
+                      :: 'List $ :: 'List 'Dynamic
+                    children sorted-children
+                    prev-mode :inline
+                  if (empty? children) result $ let-sugar
+                        [] k child
+                        option:unwrap-or (first children) []
+                      child-coord $ conj coord k
+                      partial-others $ -> others $ filter
+                        fn (x) (coord-contains? x child-coord)
+                      cursor-key k
+                      mode $ if (leaf? child) :inline $ if (expr-many-items? child 6) :block
+                        case-default prev-mode :block (:inline :inline-block)
+                          :inline-block $ if (expr-many-items? child 2) :block :inline-block
+                    recur
+                      conj
+                        assert-type result $ :: 'List $ :: 'List 'Dynamic
+                        [] k $ if (leaf? child)
+                          comp-leaf (>> states cursor-key) child focus child-coord (includes? partial-others child-coord) (= first-id k) readonly? picker-mode? theme
+                          comp-expr (>> states cursor-key) child focus child-coord partial-others (= last-id k) mode readonly? picker-mode? theme $ inc depth
+                      rest children
+                      , mode
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ [] 'Dynamic 'Dynamic 'Dynamic
-              :features $ #{} :js-ffi
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
+            :args $ [] 'Dynamic 'app.schema/CirruExprShape (:: 'List 'Number) (:: 'List 'Number)
+              :: 'Set $ :: 'List 'Number
+              , 'Bool 'Tag 'Bool 'Bool 'Tag 'Number
+            :features $ #{} :js-ffi
+        'on-keydown $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn on-keydown (coord expr picker-mode?)
+            fn (e d!)
+              let
+                  event $ unsafe-coerce
+                    option:unwrap-or (get e :original-event) {}
+                    , 'js-ffi.browser/KeyboardEventHost
+                  shift? $ unsafe-coerce (.-shift-key? event) Bool
+                  meta? $ or
+                    unsafe-coerce (.-meta-key? event) Bool
+                    unsafe-coerce (.-ctrl-key? event) Bool
+                  alt? $ unsafe-coerce (.-alt-key? event) Bool
+                  code $ assert-type
+                    option:unwrap-or (get e :key-code) 0
+                    , 'Number
+                cond
+                    and meta? $ = code keycode/enter
+                    d! (if shift? :ir/append-leaf :ir/prepend-leaf) nil
+                  (and meta? (= code keycode/enter))
+                    d! :ir/prepend-leaf nil
+                  (= code keycode/enter)
+                    if (empty? coord) (d! :ir/prepend-leaf nil)
+                      d! (if shift? :ir/expr-before :ir/expr-after) nil
+                  (= code keycode/backspace) (d! :ir/delete-node nil)
+                  (= code keycode/space)
+                    do
+                      d! (if shift? :ir/leaf-before :ir/leaf-after) nil
+                      .prevent-default! event
+                  (= code keycode/tab)
+                    do
+                      d! $ :: $ if shift? :ir/unindent :ir/indent
+                      .prevent-default! event
+                  (= code keycode/up)
+                    do
+                      if
+                        not $ empty? coord
+                        d! $ :: :writer/go-up
+                      .prevent-default! event
+                  (= code keycode/down)
+                    do
+                      d! :writer/go-down $ {} $ :tail? shift?
+                      .prevent-default! event
+                  (and meta? alt? (= code keycode/left))
+                    do
+                      d! $ :: :ir/swap-left
+                      .prevent-default! event
+                  (= code keycode/left)
+                    do
+                      d! $ :: :writer/go-left
+                      .prevent-default! event
+                  (= code keycode/right)
+                    do
+                      d! $ :: :writer/go-right
+                      .prevent-default! event
+                  (and meta? (= code keycode/c))
+                    do-copy-logics! d!
+                      format-cirru $ [] $ tree->cirru expr
+                      , |Copied!
+                  (and meta? (= code keycode/x))
+                    do
+                      do-copy-logics! d!
+                        format-cirru $ [] $ tree->cirru expr
+                        , |Copied!
+                      d! :ir/delete-node nil
+                  (and meta? (= code keycode/v))
+                    on-paste! d!
+                  (and meta? (= code keycode/b))
+                    d! :ir/duplicate nil
+                  (and meta? (= code keycode/d))
+                    do
+                      if shift?
+                        let
+                            tree $ tree->cirru expr
+                          do $ if
+                            and
+                              >= (count tree) 1
+                              string? $ option:unwrap-or (first tree) |
+                            d! :analyze/goto-def $ {}
+                              :text $ option:unwrap-or (first tree) |
+                              :forced? true
+                              :args $ slice tree 1
+                            d! :notify/push-message $ [] :warn "|Can not create a function!"
+                        do
+                          d! $ :: :manual-state/abstract
+                          js/setTimeout $ fn () $ match (js-ffi.browser/query-selector |.el-abstract)
+                            (:some el) (js-ffi.browser/element-focus! el)
+                            (:none) &unit
+                      .prevent-default! event
+                  (and meta? (= code keycode/slash) (not shift?))
+                    d! $ :: :ir/toggle-comment
+                  (and picker-mode? (= code keycode/escape))
+                    d! $ :: :writer/picker-mode
+                  (and meta? alt? (= code keycode/num-4))
+                    d! $ :: :ir/fold-to-end
+                  true $ do
+                    ; println |Keydown $ :key-code e
+                    on-window-keydown event d! $ {} $ :name :editor
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] (:: 'List 'Number) 'app.schema/CirruExprShape 'Bool
+            :features $ #{} :js-ffi
         'style-expr $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-expr $ {}
+          :code $ quote $ defstyle style-expr
+            {}
               |& $ {}
-              |&.cirru-focused $ {} (:animation "|border-blinking 1s ease infinite normal")
+              |&.cirru-focused $ {} $ :animation "|border-blinking 1s ease infinite normal"
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.expr $ :require
+        :code $ quote $ ns app.comp.expr
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo.core :refer $ defcomp list-> >> <> span div a
@@ -1325,42 +1470,41 @@
             app.schema :refer $ CirruLeaf CirruExpr
             respo.css :refer $ defstyle
     'app.comp.file-replacer $ %{} 'FileEntry
-      :defs $ {}
-        'comp-file-replacer $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-file-replacer (states file)
-              let
-                  cursor $ option:unwrap-or (get states :cursor) []
-                  state $ assert-type
-                    or
-                      option:unwrap-or (get states :data)
-                        format-cirru-edn $ file->cirru file false
+      :defs $ {} $ 'comp-file-replacer
+        %{} 'CodeEntry (:doc |)
+          :code $ quote $ defcomp comp-file-replacer (states file)
+            let
+                cursor $ option:unwrap-or (get states :cursor) []
+                state $ assert-type
+                  or
+                    option:unwrap-or (get states :data)
                       format-cirru-edn $ file->cirru file false
-                    , 'String
-                comp-modal
-                  fn (d!) (d! :writer/draft-ns nil)
+                    format-cirru-edn $ file->cirru file false
+                  , 'String
+              comp-modal
+                fn (d!) (d! :writer/draft-ns nil)
+                div
+                  {} $ :style ui/column
+                  textarea $ {} (:value state) (:class-name style/input)
+                    :style $ {} (:width 800) (:height 400) (:white-space :pre) (:line-height |20px)
+                    :on-input $ fn (e d!)
+                      d! cursor $ option:unwrap-or (get e :value) nil
+                  =< nil 8
                   div
-                    {} $ :style ui/column
-                    textarea $ {} (:value state) (:class-name style/input)
-                      :style $ {} (:width 800) (:height 400) (:white-space :pre) (:line-height |20px)
-                      :on-input $ fn (e d!)
-                        d! cursor $ option:unwrap-or (get e :value) nil
-                    =< nil 8
-                    div
-                      {} (:class-name css/row)
-                        :style $ {} (:justify-content :flex-end)
-                      button $ {} (:inner-text |Submit) (:class-name style/button)
-                        :on-click $ fn (e d!)
-                          if
-                            not= state $ format-cirru-edn file
-                            d! :ir/replace-file $ parse-cirru-edn state
-                          d! cursor nil
-                          d! :writer/draft-ns nil
+                    {} (:class-name css/row)
+                      :style $ {} $ :justify-content :flex-end
+                    button $ {} (:inner-text |Submit) (:class-name style/button)
+                      :on-click $ fn (e d!)
+                        if
+                          not= state $ format-cirru-edn file
+                          d! :ir/replace-file $ parse-cirru-edn state
+                        d! cursor nil
+                        d! :writer/draft-ns nil
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.file-replacer $ :require
+        :code $ quote $ ns app.comp.file-replacer
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -1373,96 +1517,127 @@
     'app.comp.gen-code-box $ %{} 'FileEntry
       :defs $ {}
         '%gen-code-box-action $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def %gen-code-box-action $ impl-traits %gen-code-box-action0 GenCodeBoxActionImpl
+          :code $ quote $ def %gen-code-box-action (impl-traits %gen-code-box-action0 GenCodeBoxActionImpl)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'EnumDef
         '%gen-code-box-action0 $ %{} 'CodeEntry (:doc |)
-          :code $ quote
+          :code $ quote $ def %gen-code-box-action0
             defenum %gen-code-box-action0 $ :plugin 'Fn 'Fn 'Fn
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'EnumDef
         'GenCodeBoxActionImpl $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defimpl GenCodeBoxActionImpl GenCodeBoxActionTrait
-              .render $ fn (self)
-                tag-match self $
-                  :plugin render open reset-state
-                  render
-              .open $ fn (self d!)
-                tag-match self $
-                  :plugin render open reset-state
-                  open d!
-              .reset-state $ fn (self d!)
-                tag-match self $
-                  :plugin render open reset-state
-                  reset-state d!
+          :code $ quote $ defimpl GenCodeBoxActionImpl GenCodeBoxActionTrait
+            .render $ fn (self)
+              match self $
+                :plugin render open reset-state
+                render
+            .open $ fn (self d!)
+              match self $
+                :plugin render open reset-state
+                open d!
+            .reset-state $ fn (self d!)
+              match self $
+                :plugin render open reset-state
+                reset-state d!
           :examples $ []
           :schema $ :: 'Impl
         'GenCodeBoxActionTrait $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftrait GenCodeBoxActionTrait (:render :fn) (:open :fn) (:reset-state :fn)
+          :code $ quote $ deftrait GenCodeBoxActionTrait (:render :fn) (:open :fn) (:reset-state :fn)
           :examples $ []
           :schema $ :: 'Trait
+        'open-gen-code-box! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn open-gen-code-box! (plugin d!)
+            match plugin $
+              :plugin render open reset-state
+              open d!
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'app.comp.gen-code-box/%gen-code-box-action $ :: 'Fn
+              {} (:return 'Unit)
+                :args $ [] 'Dynamic
+        'render-gen-code-box $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn render-gen-code-box (plugin)
+            match plugin $
+              :plugin render open reset-state
+              , render
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'app.comp.gen-code-box/%gen-code-box-action
+        'reset-gen-code-box! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn reset-gen-code-box! (plugin d!)
+            match plugin $
+              :plugin render open reset-state
+              reset-state d!
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'app.comp.gen-code-box/%gen-code-box-action $ :: 'Fn
+              {} (:return 'Unit)
+                :args $ [] 'Dynamic
         'style-panel $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-panel $ {}
-              |& $ {} (:width 600)
-                :background-color $ hsl 0 0 100
-                :border-radius |6px
+          :code $ quote $ defstyle style-panel
+            {} $ |& $ {} (:width 600)
+              :background-color $ hsl 0 0 100
+              :border-radius |6px
           :examples $ []
           :schema $ :: 'Dynamic
         'use-gen-code-box $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn use-gen-code-box (states expr focus)
-              let
-                  cursor $ option:unwrap-or (get states :cursor) []
-                  state $ either
-                    option:unwrap-or (get states :data) nil
-                    {} $ :show? false
-                  path $ -> focus
-                    either $ []
-                    mapcat $ fn (x) ([] :data x)
-                  node $ option:unwrap-or (get-in expr path) nil
-                  close-modal! $ fn (d!)
-                    d! cursor $ assoc state :show? false
-                  plugin-code-gen $ use-gen-code (>> states :gen-code)
-                    fn () $ format-cirru
-                      [] $ tree->cirru node
-                    fn (code d!)
-                      d! :ir/draft-expr $ first (parse-cirru-list code)
-                      close-modal! d!
-                %:: %gen-code-box-action :plugin
-                  fn () $ if
-                    option:unwrap-or (get state :show?) false
-                    comp-modal
-                      fn (d!) (.reset-state plugin-code-gen d!) (close-modal! d!)
-                      let
-                          path $ -> focus
-                            mapcat $ fn (x) ([] :data x)
-                          node $ get-in expr path
-                          missing? $ nil? node
-                          an-expr? $ expr? node
-                        if missing?
-                          span $ {} (:class-name |) (:inner-text "|Does not edit expression!")
-                            :on-click $ fn (e d!) (close-modal! d!)
-                          let
-                              state $ or
-                                option:unwrap-or (get states :data) nil
-                                if an-expr?
-                                  format-cirru $ [] (tree->cirru node)
-                                  :text $ assert-type node 'app.schema/CirruLeaf
-                            div
-                              {} $ :class-name (str-spaced css/column style-panel)
-                              .render plugin-code-gen
-                  fn (d!)
-                    d! cursor $ assoc state :show? true
-                  fn (d!) (.reset-state plugin-code-gen d!)
+          :code $ quote $ defn use-gen-code-box (states expr focus)
+            let
+                cursor $ option:unwrap-or (get states :cursor) []
+                state $ either
+                  option:unwrap-or (get states :data) nil
+                  {} $ :show? false
+                path $ -> focus
+                  either $ []
+                  mapcat $ hint-fn
+                    {}
+                      :args $ [] 'Number
+                      :return $ :: 'List 'Dynamic
+                    :: fn (x) ([] :data x)
+                node $ option:unwrap-or (get-in expr path) nil
+                close-modal! $ fn (d!)
+                  d! cursor $ assoc state :show? false
+                plugin-code-gen $ use-gen-code (>> states :gen-code)
+                  fn () $ format-cirru $ [] (tree->cirru node)
+                  fn (code d!)
+                    d! :ir/draft-expr $ first $ parse-cirru-list code
+                    close-modal! d!
+              %:: %gen-code-box-action :plugin
+                fn () $ if
+                  option:unwrap-or (get state :show?) false
+                  comp-modal
+                    fn (d!) (.reset-state plugin-code-gen d!) (close-modal! d!)
+                    let
+                        path $ -> focus $ mapcat
+                          hint-fn
+                            {}
+                              :args $ [] 'Number
+                              :return $ :: 'List 'Dynamic
+                            :: fn (x) ([] :data x)
+                        node $ get-in expr path
+                        missing? $ nil? node
+                        an-expr? $ expr? node
+                      if missing?
+                        span $ {} (:class-name |) (:inner-text "|Does not edit expression!")
+                          :on-click $ fn (e d!) (close-modal! d!)
+                        let
+                            state $ or
+                              option:unwrap-or (get states :data) nil
+                              if an-expr?
+                                format-cirru $ [] $ tree->cirru node
+                                :text $ assert-type node 'app.schema/CirruLeafShape
+                          div
+                            {} $ :class-name $ str-spaced css/column style-panel
+                            .render plugin-code-gen
+                fn (d!)
+                  d! cursor $ assoc state :show? true
+                fn (d!) (.reset-state plugin-code-gen d!)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'app.comp.gen-code-box/%gen-code-box-action)
+            :args $ [] 'Dynamic 'Dynamic $ :: 'List 'Number
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.gen-code-box $ :require
+        :code $ quote $ ns app.comp.gen-code-box
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -1476,185 +1651,195 @@
             gen-code.core :refer $ use-gen-code
     'app.comp.graph $ %{} 'FileEntry
       :defs $ {}
+        'GraphElementHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait GraphElementHost (:style 'app.comp.graph/GraphStyleHost)
+            .query-selector $ :: 'Fn $ {}
+              :args $ [] 'app.comp.graph/GraphElementHost 'String
+              :return $ :: 'JsNullish 'app.comp.graph/GraphElementHost
+            .scroll-into-view $ :: 'Fn $ {}
+              :args $ [] 'app.comp.graph/GraphElementHost
+              :return 'Unit
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} (:query-selector |querySelector) (:scroll-into-view |scrollIntoView)
+          :schema $ :: 'Trait
+        'GraphStyleHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait GraphStyleHost (:opacity 'String) (:background-color 'String) (:padding 'String) (:transition-duration 'String)
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} (:background-color |backgroundColor) (:transition-duration |transitionDuration)
+            :writable $ #{} :background-color :opacity :padding :transition-duration
+          :schema $ :: 'Trait
         'comp-deps-graph $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-deps-graph (states pkg configs entries deps-dict writer)
-              let
-                  init-fn $ option:unwrap-or (get configs :init-fn) |
-                  pair $ .split init-fn |/
-                  that-ns $ nth pair 0
-                  that-def $ nth pair 1
-                  cursor $ option:unwrap-or (get states :cursor) nil
-                  state $ either
-                    option:unwrap-or (get states :data) {}
-                    {}
-                      :ns $ nth pair 0
-                      :def $ nth pair 1
-                  plugin-entries $ use-modal-menu (>> states :entries-menu)
-                    {} (:title |Entries)
-                      :style $ {} (:width 300)
-                      :backdrop-style $ {}
-                      :items $ concat
-                        [] $ :: :item (:: :def that-ns that-def) init-fn
-                        -> entries
-                          either $ {}
-                          , vals .to-list $ map
-                            fn (conf)
-                              let
-                                  pair $ .split
-                                    option:unwrap-or (get conf :init-fn) |
-                                    , |/
-                                :: :item
-                                  :: :def (nth pair 0) (nth pair 1)
+          :code $ quote $ defcomp comp-deps-graph (states pkg configs entries deps-dict writer)
+            let
+                init-fn $ option:unwrap-or (get configs :init-fn) |
+                pair $ split (assert-type init-fn 'String) |/
+                that-ns $ nth pair 0
+                that-def $ nth pair 1
+                cursor $ option:unwrap-or (get states :cursor) nil
+                state $ either
+                  option:unwrap-or (get states :data) {}
+                  {}
+                    :ns $ nth pair 0
+                    :def $ nth pair 1
+                plugin-entries $ use-modal-menu (>> states :entries-menu)
+                  {} (:title |Entries)
+                    :style $ {} $ :width 300
+                    :backdrop-style $ {}
+                    :items $ concat
+                      [] $ :: :item (:: :def that-ns that-def) init-fn
+                      -> entries
+                        either $ {}
+                        , vals &set:to-list $ map $ fn (conf)
+                          let
+                              pair $ split
+                                assert-type
                                   option:unwrap-or (get conf :init-fn) |
-                      :on-result $ fn (result d!)
-                        tag-match (nth result 1)
-                          (:def a-ns a-def)
-                            d! cursor $ {} (:ns a-ns) (:def a-def)
-                  pointer $ get writer :pointer
-                  bookmark $ if (some? pointer)
-                    get-in writer $ [] :stack
-                      option:unwrap-or (get writer :pointer) nil
-                    , nil
-                [] (effect-navigate bookmark)
+                                  , 'String
+                                , |/
+                            :: :item
+                              :: :def (nth pair 0) (nth pair 1)
+                              option:unwrap-or (get conf :init-fn) |
+                    :on-result $ fn (result d!)
+                      match
+                        option:unwrap $ nth result 1
+                        (:def a-ns a-def)
+                          d! cursor $ {} (:ns a-ns) (:def a-def)
+                pointer $ get writer :pointer
+                bookmark $ if (some? pointer)
+                  get-in writer $ [] :stack $ option:unwrap-or (get writer :pointer) nil
+                  , nil
+              [] (effect-navigate bookmark)
+                div
+                  {} $ :style $ {} (:padding-right 24)
                   div
-                    {} $ :style
-                      {} $ :padding-right 24
-                    div
-                      {} $ :style
-                        {} $ :padding "|4px 16px"
-                      span $ {}
-                        :inner-text $ str
-                          option:unwrap-or (get state :ns) |
-                          , |/
-                            option:unwrap-or (get state :def) |
-                        :on-click $ fn (e d!) (.show plugin-entries d!)
-                        :class-name style-def-entry
-                      .render plugin-entries
-                    comp-entry-deps
-                      option:unwrap-or (get state :ns) |
-                      option:unwrap-or (get state :def) |
-                      , deps-dict pkg $ []
+                    {} $ :style $ {} (:padding "|4px 16px")
+                    span $ {}
+                      :inner-text $ str
+                        option:unwrap-or (get state :ns) |
+                        , |/ $ option:unwrap-or (get state :def) |
+                      :on-click $ fn (e d!) (.show plugin-entries d!)
+                      :class-name style-def-entry
+                    .render plugin-entries
+                  comp-entry-deps
+                    option:unwrap-or (get state :ns) |
+                    option:unwrap-or (get state :def) |
+                    , deps-dict pkg $ []
           :examples $ []
           :schema $ :: 'Dynamic
         'comp-entry-deps $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn comp-entry-deps (that-ns that-def deps-dict pkg footprints)
-              let
-                  entry $ :: :def that-ns that-def
-                  this-deps $ option:unwrap-or (get deps-dict entry) (#{})
-                  internal-deps $ -> this-deps (.to-list)
-                    filter $ fn (item)
-                      tag-match item
-                        (:reference child-ns child-def)
-                          .starts-with? child-ns $ str pkg |.
-                        _ false
-                  root? $ empty? footprints
-                  show-ns? $ and (not root?)
-                    not= that-ns $ option:unwrap-or
-                      get
-                        option:unwrap-or (last footprints) []
-                        , 1
-                      , |
-                  has-children? $ not (empty? internal-deps)
-                div
-                  {} $ :class-name (str-spaced css/row-middle style-entry)
-                  if (not root?)
-                    div
-                      {} $ :class-name
-                        str-spaced style-def-ns $ if (and show-ns? has-children?) css/column
-                      span $ {}
-                        :class-name $ str-spaced css/font-code! style-def
-                        :id $ gen-def-id that-ns that-def
-                        :inner-text that-def
-                        :on-click $ fn (e d!)
-                          d! :writer/edit $ :: :def that-ns that-def
-                      if show-ns? $ <> that-ns
-                        str-spaced style-ns $ if has-children? nil style-ns-pad
-                  if (includes? footprints entry)
-                    div ({})
-                      <> |Recur $ str-spaced css/font-fancy style-recur
-                    if has-children? $ list->
-                      {} $ :class-name style-deps-area
-                      -> internal-deps $ map
-                        fn (item)
-                          [] (str item)
-                            tag-match item
-                              (:reference child-ns child-def)
-                                memo-comp-by (str child-ns |/ child-def) comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
-                              _ $ div ({})
-                                <> $ str "|Unknown data: " item
+          :code $ quote $ defn comp-entry-deps (that-ns that-def deps-dict pkg footprints)
+            let
+                entry $ :: :def that-ns that-def
+                this-deps $ option:unwrap-or (get deps-dict entry) (#{})
+                internal-deps $ -> this-deps (&set:to-list)
+                  filter $ fn (item)
+                    match item
+                      (:reference child-ns child-def)
+                        starts-with? (assert-type child-ns 'String) (str pkg |.)
+                      _ false
+                root? $ empty? footprints
+                show-ns? $ and (not root?)
+                  not= that-ns $ option:unwrap-or
+                    get
+                      option:unwrap-or (last footprints) []
+                      , 1
+                    , |
+                has-children? $ not $ empty? internal-deps
+              div
+                {} $ :class-name $ str-spaced css/row-middle style-entry
+                if (not root?)
+                  div
+                    {} $ :class-name $ str-spaced style-def-ns
+                      if (and show-ns? has-children?) css/column
+                    span $ {}
+                      :class-name $ str-spaced css/font-code! style-def
+                      :id $ gen-def-id that-ns that-def
+                      :inner-text that-def
+                      :on-click $ fn (e d!)
+                        d! :writer/edit $ :: :def that-ns that-def
+                    if show-ns? $ <> that-ns $ str-spaced style-ns (if has-children? nil style-ns-pad)
+                if (includes? footprints entry)
+                  div ({})
+                    <> |Recur $ str-spaced css/font-fancy style-recur
+                  if has-children? $ list->
+                    {} $ :class-name style-deps-area
+                    -> internal-deps $ map $ fn (item)
+                      [] (str item)
+                        match item
+                          (:reference child-ns child-def)
+                            memo-comp-by (str child-ns |/ child-def) comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
+                          _ $ div ({})
+                            <> $ str "|Unknown data: " item
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
+            :args $ [] 'String 'String
+              :: 'Map 'Dynamic $ :: 'Set 'Dynamic
+              , 'String $ :: 'List 'Dynamic
         'effect-navigate $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defeffect effect-navigate (bookmark) (action el at?)
-              if
-                and (= action :mount) (some? bookmark)
-                tag-match bookmark $
-                  :def the-ns the-def coord
-                  try
-                    let
-                        id $ str |# (gen-def-id the-ns the-def)
-                        target $ .!querySelector el id
-                      if (js-present? target)
-                        do
-                          .!scrollIntoView $ unsafe-coerce target JsObject
+          :code $ quote $ defeffect effect-navigate (bookmark) (action el at?)
+            if
+              and (= action :mount) (some? bookmark)
+              match bookmark $
+                :def the-ns the-def coord
+                try
+                  let
+                      id $ str |# $ gen-def-id the-ns the-def
+                      host-el $ unsafe-coerce el 'app.comp.graph/GraphElementHost
+                      target-opt $ js-nullish->option $ .query-selector host-el id
+                    match target-opt
+                      (:some target)
+                        do (.scroll-into-view target)
                           let
-                              s $ unsafe-coerce
-                                .-style $ unsafe-coerce target JsObject
-                                , JsObject
+                              s $ .-style target
                             -> s .-opacity $ set! |1
-                            -> s .-backgroundColor $ set! (hsl 0 0 100 0.4)
+                            -> s .-background-color $ set! $ hsl 0 0 100 0.4
                             -> s .-padding $ set! "|0px 8px"
-                            ; -> s .-transitionDuration $ set! |0ms
-                            ; flipped js/setTimeout 100 $ fn ()
-                              -> s .-backgroundColor $ set! (hsl 0 0 100 0)
-                              -> s .-transitionDuration $ set! |1000ms
-                        js/console.warn "|found no target for:" id
-                    fn (error) (js/console.error error)
+                            flipped js/setTimeout 100 $ fn ()
+                              -> s .-background-color $ set! $ hsl 0 0 100 0
+                              -> s .-transition-duration $ set! |1000ms
+                      (:none) (js/console.warn "|found no target for:" id)
+                  fn (error) (js/console.error error)
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ [] 'Dynamic
-              :features $ #{} :js-ffi
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic
+            :features $ #{} :js-ffi
         'gen-def-id $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn gen-def-id (that-ns that-def)
-              -> (str |def__ that-ns |__ that-def) (.replace |. |_DOT_) (.replace |! |_EXP_) (.replace |# |_SHA_) (.replace |* |_STAR_) (.replace |? |_QUE_) (.replace |% |_PCT_)
+          :code $ quote $ defn gen-def-id (that-ns that-def)
+            -> (str |def__ that-ns |__ that-def) (&str:replace |. |_DOT_) (&str:replace |! |_EXP_) (&str:replace |# |_SHA_) (&str:replace |* |_STAR_) (&str:replace |? |_QUE_) (&str:replace |% |_PCT_)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'String)
+            :args $ [] 'String 'String
         'style-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-def $ {}
-              |& $ {} (:white-space :pre)
-                :color $ hsl 0 0 100
-                :cursor :pointer
-                :line-height |20px
-                ; :transition-duration |400ms
-                ; :transition-property |background-color
-                :border-radius |8px
+          :code $ quote $ defstyle style-def
+            {} $ |& $ {} (:white-space :pre)
+              :color $ hsl 0 0 100
+              :cursor :pointer
+              :line-height |20px
+              ; :transition-duration |400ms
+              ; :transition-property |background-color
+              :border-radius |8px
           :examples $ []
           :schema $ :: 'Dynamic
         'style-def-entry $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-def-entry $ {}
+          :code $ quote $ defstyle style-def-entry
+            {}
               |& $ {} (:cursor :pointer)
                 :color $ hsl 0 0 80
-              |&:hover $ {}
-                :color $ hsl 0 0 100
+              |&:hover $ {} $ :color (hsl 0 0 100)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-def-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-def-ns $ {}
+          :code $ quote $ defstyle style-def-ns
+            {}
               |& $ {} (:top 0) (:position :sticky) (:opacity 0.6) (:margin-right |12px)
-              |&:hover $ {} (:opacity 1)
+              |&:hover $ {} $ :opacity 1
           :examples $ []
           :schema $ :: 'Dynamic
         'style-deps-area $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-deps-area $ {}
+          :code $ quote $ defstyle style-deps-area
+            {}
               |& $ {} (:max-height |96vh) (:overflow :auto)
                 :border-color $ hsl 0 0 100 0.3
                 :border-style :solid
@@ -1663,50 +1848,45 @@
                 :padding "|4px 0px 4px 0"
                 :transition |300ms
                 :transition-property |border-color
-              |&:hover $ {}
-                :border-color $ hsl 0 0 100 0.5
+              |&:hover $ {} $ :border-color (hsl 0 0 100 0.5)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-entry $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-entry $ {}
-              |& $ {}
-                ; :border-left $ str "|1px solid " (hsl 0 0 90 0.4)
-                :padding-left |8px
-                :margin-left |8px
-                :border-radius |8px
-                ; :box-shadow "|0 0 2px #888"
+          :code $ quote $ defstyle style-entry
+            {} $ |& $ {}
+              ; :border-left $ str "|1px solid " $ hsl 0 0 90 0.4
+              :padding-left |8px
+              :margin-left |8px
+              :border-radius |8px
+              ; :box-shadow "|0 0 2px #888"
           :examples $ []
           :schema $ :: 'Dynamic
         'style-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-ns $ {}
-              |& $ {} (:font-size 12) (:vertical-align :middle) (; :margin-left 8) (:white-space :nowrap)
-                :color $ hsl 0 0 50
-                :line-height |12px
-                :margin-bottom 4
+          :code $ quote $ defstyle style-ns
+            {} $ |& $ {} (:font-size 12) (:vertical-align :middle) (; :margin-left 8) (:white-space :nowrap)
+              :color $ hsl 0 0 50
+              :line-height |12px
+              :margin-bottom 4
           :examples $ []
           :schema $ :: 'Dynamic
         'style-ns-pad $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-ns-pad $ {}
-              |& $ {} (:margin-left 8)
+          :code $ quote $ defstyle style-ns-pad
+            {} $ |& $ {} (:margin-left 8)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-recur $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-recur $ {}
-              |& $ {}
-                :color $ hsl 0 0 60
-                :border-radius |8px
-                :background-color $ hsl 300 10 100 0.2
-                :margin "|2px 8px"
-                :padding "|0 8px"
+          :code $ quote $ defstyle style-recur
+            {} $ |& $ {}
+              :color $ hsl 0 0 60
+              :border-radius |8px
+              :background-color $ hsl 300 10 100 0.2
+              :margin "|2px 8px"
+              :padding "|0 8px"
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.graph $ :require
+        :code $ quote $ ns app.comp.graph
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -1719,95 +1899,95 @@
     'app.comp.header $ %{} 'FileEntry
       :defs $ {}
         'comp-header $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-header (states router-name logged-in? stats)
-              let
-                  broadcast-plugin $ use-prompt (>> states :broadcast)
-                    {} $ :text "|Message to broadcast"
+          :code $ quote $ defcomp comp-header (states router-name logged-in? stats)
+            let
+                broadcast-plugin $ use-prompt (>> states :broadcast)
+                  {} $ :text "|Message to broadcast"
+              div
+                {} $ :class-name $ str-spaced css/row-center css/font-fancy style-header
                 div
-                  {} $ :class-name (str-spaced css/row-center css/font-fancy style-header)
-                  div
-                    {} $ :class-name css/row-center
-                    render-entry |Files :files router-name $ fn (e d!)
-                      d! $ :: :router/change (:: :files)
-                    render-entry |Graph :graph router-name $ fn (e d!)
-                      d! $ :: :router/change (:: :graph)
-                    render-entry |Editor :editor router-name $ fn (e d!)
-                      d! $ :: :router/change (:: :editor)
-                    render-entry |Search :search router-name $ fn (e d!)
-                      d! $ :: :router/change (:: :search)
-                      focus-search!
-                    render-entry |Configs :configs router-name $ fn (e d!)
-                      d! $ :: :router/change (:: :configs)
-                    a
-                      {} (:href |https://github.com/Cirru/calcit-editor/wiki/Keyboard-Shortcuts) (:target |_blank) (:class-name css-entry)
-                      <> |Shortcuts style-link
-                      <> "|↗" css/font-code
-                  div
-                    {} $ :class-name css/row-middle
-                    comp-icon :radio
-                      {} (:font-size 18)
-                        :color $ hsl 200 80 70 0.6
-                        :cursor :pointer
-                      fn (e d!)
-                        .show broadcast-plugin d! $ fn (result)
-                          if (some? result) (d! :notify/broadcast result)
-                    =< 12 nil
-                    render-entry
-                      if logged-in?
-                        str |Profile: $ option:unwrap-or (get stats :members-count) 0
-                        , |Guest
-                      , :profile router-name $ fn (e d!)
-                        d! $ :: :router/change (:: :profile)
-                  .render broadcast-plugin
+                  {} $ :class-name css/row-center
+                  render-entry |Files :files router-name $ fn (e d!)
+                    d! $ :: :router/change $ :: :files
+                  render-entry |Graph :graph router-name $ fn (e d!)
+                    d! $ :: :router/change $ :: :graph
+                  render-entry |Editor :editor router-name $ fn (e d!)
+                    d! $ :: :router/change $ :: :editor
+                  render-entry |Search :search router-name $ fn (e d!)
+                    d! $ :: :router/change $ :: :search
+                    focus-search!
+                  render-entry |Configs :configs router-name $ fn (e d!)
+                    d! $ :: :router/change $ :: :configs
+                  a
+                    {}
+                      :href |https://github.com/Cirru/calcit-editor/wiki/Keyboard-Shortcuts
+                      :target |_blank
+                      :class-name css-entry
+                    <> |Shortcuts style-link
+                    <> "|↗" css/font-code
+                div
+                  {} $ :class-name css/row-middle
+                  comp-icon :radio
+                    {} (:font-size 18)
+                      :color $ hsl 200 80 70 0.6
+                      :cursor :pointer
+                    fn (e d!)
+                      .show broadcast-plugin d! $ fn (result)
+                        if (some? result) (d! :notify/broadcast result)
+                  =< 12 nil
+                  render-entry
+                    if logged-in?
+                      str |Profile: $ option:unwrap-or (get stats :members-count) 0
+                      , |Guest
+                    , :profile router-name $ fn (e d!)
+                      d! $ :: :router/change $ :: :profile
+                .render broadcast-plugin
           :examples $ []
           :schema $ :: 'Dynamic
         'css-entry $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-entry $ {}
+          :code $ quote $ defstyle css-entry
+            {}
               |$0 $ {} (:cursor :pointer) (:padding "|0 12px")
                 :color $ hsl 0 0 100 0.6
                 :text-decoration :none
                 :vertical-align :middle
-              |&:hover $ {}
-                :color $ hsl 0 0 100 0.7
-              |&:active $ {} (:transform "|scale(1.02)")
+              |&:hover $ {} $ :color (hsl 0 0 100 0.7)
+              |&:active $ {} $ :transform "|scale(1.02)"
           :examples $ []
           :schema $ :: 'Dynamic
         'render-entry $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn render-entry (page-name this-page router-name on-click)
-              div
-                {} (:class-name css-entry) (:on-click on-click)
-                  :style $ if (= this-page router-name) style-highlight
-                <> page-name nil
+          :code $ quote $ defn render-entry (page-name this-page router-name on-click)
+            div
+              {} (:class-name css-entry) (:on-click on-click)
+                :style $ if (= this-page router-name) style-highlight
+              <> page-name nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
+            :args $ [] 'String 'Tag 'Tag 'respo.schema/EventHandler
         'style-header $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-header $ {}
+          :code $ quote $ defstyle style-header
+            {}
               |$0 $ {} (:height 30) (:justify-content :space-between) (:padding "|0 16px") (:font-size 15) (:line-height |18px) (:color :white) (:font-weight 300) (:position :fixed) (:top 0) (:right 0) (:z-index 100) (:transition-duration |240ms) (; :opacity 0.1)
                 :background-color $ hsl 0 0 0 0.2
-                :border-bottom $ str "|1px solid " (hsl 0 0 100 0.2)
+                :border-bottom $ str "|1px solid " $ hsl 0 0 100 0.2
               "|$0 > *" $ {} (:opacity 0.5) (:transition-duration |240ms)
-              |$0:hover $ {} (:opacity 1)
-              "|$0:hover > *" $ {} (:opacity 1)
+              |$0:hover $ {} $ :opacity 1
+              "|$0:hover > *" $ {} $ :opacity 1
           :examples $ []
           :schema $ :: 'Dynamic
         'style-highlight $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-highlight $ {}
-              :color $ hsl 0 0 100
+          :code $ quote $ def style-highlight
+            {} $ :color $ hsl 0 0 100
           :examples $ []
           :schema $ :: 'Dynamic
         'style-link $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-link $ {} (:font-size 14) (:font-weight 100)
+          :code $ quote $ def style-link
+            {} (:font-size 14) (:font-weight 100)
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.header $ :require
+        :code $ quote $ ns app.comp.header
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -1819,174 +1999,179 @@
             respo-alerts.core :refer $ use-prompt
     'app.comp.leaf $ %{} 'FileEntry
       :defs $ {}
+        'LeafInputTargetHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait LeafInputTargetHost (:selection-start 'Number) (:selection-end 'Number)
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} (:selection-end |selectionEnd) (:selection-start |selectionStart)
+          :schema $ :: 'Trait
+        'LeafKeyboardEventHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait LeafKeyboardEventHost (:shift-key? 'Bool) (:meta-key? 'Bool) (:ctrl-key? 'Bool) (:alt-key? 'Bool) (:target 'app.comp.leaf/LeafInputTargetHost)
+            .prevent-default! $ :: 'Fn $ {}
+              :args $ [] 'app.comp.leaf/LeafKeyboardEventHost
+              :return 'Unit
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} (:alt-key? |altKey) (:ctrl-key? |ctrlKey) (:meta-key? |metaKey) (:prevent-default! |preventDefault) (:shift-key? |shiftKey)
+          :schema $ :: 'Trait
         'comp-leaf $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-leaf (states leaf focus coord by-other? first? readonly? picker-mode? theme)
-              let
-                  cursor $ option:unwrap-or (get states :cursor) []
-                  state $ or
-                    option:unwrap-or (get states :data) nil
-                    , initial-state
-                  text $ or
-                    if
-                      >
-                        option:unwrap-or (get state :at) 0
-                        option:unwrap-or (get leaf :at) 0
-                      option:unwrap-or (get state :text) |
-                      option:unwrap-or (get leaf :text) |
-                    , |
-                  focused? $ = focus coord
-                textarea $ {} (:value text) (:spellcheck false)
-                  :class-name $ str-spaced |comp-leaf (base-style-leaf theme)
-                    if (= focus coord) |cirru-focused |
-                  :read-only readonly?
-                  :style $ decide-leaf-theme text focused? first? by-other? theme
-                  :on $ if readonly?
-                    {} $ :click (on-focus leaf coord picker-mode?)
-                    {}
-                      :click $ on-focus leaf coord picker-mode?
-                      :keydown $ on-keydown state leaf coord picker-mode?
-                      :input $ on-input state coord cursor
+          :code $ quote $ defcomp comp-leaf
+            states leaf focus coord by-other? first? readonly? picker-mode? theme
+            let
+                cursor $ option:unwrap-or (get states :cursor) []
+                state $ or
+                  option:unwrap-or (get states :data) nil
+                  , initial-state
+                text $ or
+                  if
+                    >
+                      option:unwrap-or (get state :at) 0
+                      option:unwrap-or (get leaf :at) 0
+                    option:unwrap-or (get state :text) |
+                    option:unwrap-or (get leaf :text) |
+                  , |
+                focused? $ = focus coord
+              textarea $ {} (:value text) (:spellcheck false)
+                :class-name $ str-spaced |comp-leaf (base-style-leaf theme)
+                  if (= focus coord) |cirru-focused |
+                :read-only readonly?
+                :style $ decide-leaf-theme text focused? first? by-other? theme
+                :on $ if readonly?
+                  {} $ :click $ on-focus leaf coord picker-mode?
+                  {}
+                    :click $ on-focus leaf coord picker-mode?
+                    :keydown $ on-keydown state leaf coord picker-mode?
+                    :input $ on-input state coord cursor
           :examples $ []
           :schema $ :: 'Dynamic
         'initial-state $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def initial-state $ {} (:text |) (:at 0)
+          :code $ quote $ def initial-state
+            {} (:text |) (:at 0)
           :examples $ []
           :schema $ :: 'Dynamic
         'on-focus $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-focus (leaf coord picker-mode?)
-              fn (e d!)
-                if picker-mode?
-                  do
-                    .!preventDefault $ option:unwrap-or (get e :event) {}
-                    d! :writer/pick-node $ tree->cirru leaf
-                  d! :writer/focus coord
+          :code $ quote $ defn on-focus (leaf coord picker-mode?)
+            fn (e d!)
+              if picker-mode?
+                do
+                  .!preventDefault $ option:unwrap-or (get e :event) {}
+                  d! :writer/pick-node $ tree->cirru leaf
+                d! :writer/focus coord
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ [] 'Dynamic 'Dynamic 'Dynamic
-              :features $ #{} :js-ffi
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic 'Dynamic 'Dynamic
+            :features $ #{} :js-ffi
         'on-input $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-input (state coord cursor)
-              fn (e d!)
-                let
-                    now $ util/now!
-                  d! :ir/update-leaf $ {}
-                    :text $ option:unwrap-or (get e :value) |
-                    :at now
-                  d! cursor $ assoc
-                    assoc state :text $ option:unwrap-or (get e :value) |
-                    , :at now
+          :code $ quote $ defn on-input (state coord cursor)
+            fn (e d!)
+              let
+                  now $ util/now!
+                d! :ir/update-leaf $ {}
+                  :text $ option:unwrap-or (get e :value) |
+                  :at now
+                d! cursor $ assoc
+                  assoc state :text $ option:unwrap-or (get e :value) |
+                  , :at now
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Number) (:: 'List 'Number)
         'on-keydown $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-keydown (state leaf coord picker-mode?)
-              fn (e d!)
-                let
-                    event $ unsafe-coerce
-                      option:unwrap-or (get e :original-event) {}
-                      , JsObject
-                    code $ assert-type
-                      option:unwrap-or (get e :key-code) 0
-                      , 'Number
-                    shift? $ unsafe-coerce (.-shiftKey event) Bool
-                    meta? $ or
-                      unsafe-coerce (.-metaKey event) Bool
-                      unsafe-coerce (.-ctrlKey event) Bool
-                    alt? $ unsafe-coerce (.-altKey event) Bool
-                    event-target $ unsafe-coerce (.-target event) JsObject
-                    selection-start $ unsafe-coerce (.-selectionStart event-target) Number
-                    selection-end $ unsafe-coerce (.-selectionEnd event-target) Number
-                    selected? $ not= selection-start selection-end
-                    text $ if
-                      >
-                        option:unwrap-or (get state :at) 0
-                        option:unwrap-or (get leaf :at) 0
-                      option:unwrap-or (get state :text) |
-                      option:unwrap-or (get leaf :text) |
-                    text-length $ count text
-                  cond
-                      = code keycode/backspace
+          :code $ quote $ defn on-keydown (state leaf coord picker-mode?)
+            fn (e d!)
+              let
+                  event $ unsafe-coerce
+                    option:unwrap-or (get e :original-event) {}
+                    , 'app.comp.leaf/LeafKeyboardEventHost
+                  code $ assert-type
+                    option:unwrap-or (get e :key-code) 0
+                    , 'Number
+                  shift? $ unsafe-coerce (.-shift-key? event) Bool
+                  meta? $ or
+                    unsafe-coerce (.-meta-key? event) Bool
+                    unsafe-coerce (.-ctrl-key? event) Bool
+                  alt? $ unsafe-coerce (.-alt-key? event) Bool
+                  event-target $ unsafe-coerce (.-target event) 'app.comp.leaf/LeafInputTargetHost
+                  selection-start $ unsafe-coerce (.-selection-start event-target) Number
+                  selection-end $ unsafe-coerce (.-selection-end event-target) Number
+                  selected? $ not= selection-start selection-end
+                  text $ if
+                    >
+                      option:unwrap-or (get state :at) 0
+                      :at leaf
+                    option:unwrap-or (get state :text) |
+                    :text leaf
+                  text-length $ count text
+                cond
+                    = code keycode/backspace
+                    if
+                      and $ = | text
+                      d! :ir/delete-node nil
+                  (and (= code keycode/space) (not shift?))
+                    do (d! :ir/leaf-after nil) (.prevent-default! event)
+                  (= code keycode/enter)
+                    do
+                      d! (if shift? :ir/leaf-before :ir/leaf-after) nil
+                      .prevent-default! event
+                  (= code keycode/tab)
+                    do
+                      d! $ :: $ if shift? :ir/unindent-leaf :ir/indent
+                      .prevent-default! event
+                  (= code keycode/up)
+                    do
                       if
-                        and $ = | text
-                        d! :ir/delete-node nil
-                    (and (= code keycode/space) (not shift?))
-                      do (d! :ir/leaf-after nil) (.!preventDefault event)
-                    (= code keycode/enter)
+                        not $ empty? coord
+                        d! $ :: :writer/go-up
+                      .prevent-default! event
+                  (and meta? alt? (= code keycode/left))
+                    do
+                      d! $ :: :ir/swap-left
+                      .prevent-default! event
+                  (and (not selected?) (= code keycode/left))
+                    if (= 0 selection-start)
                       do
-                        d! (if shift? :ir/leaf-before :ir/leaf-after) nil
-                        .!preventDefault event
-                    (= code keycode/tab)
+                        d! $ :: :writer/go-left
+                        .prevent-default! event
+                  (and meta? (= code keycode/b))
+                    d! :analyze/peek-def $ :text leaf
+                  (and (not selected?) (= code keycode/right))
+                    if (= text-length selection-end)
                       do
-                        d! $ :: (if shift? :ir/unindent-leaf :ir/indent)
-                        .!preventDefault event
-                    (= code keycode/up)
-                      do
-                        if
-                          not $ empty? coord
-                          d! $ :: :writer/go-up
-                        .!preventDefault event
-                    (and meta? alt? (= code keycode/left))
-                      do
-                        d! $ :: :ir/swap-left
-                        .!preventDefault event
-                    (and (not selected?) (= code keycode/left))
-                      if (= 0 selection-start)
+                        d! $ :: :writer/go-right
+                        .prevent-default! event
+                  (and meta? (= code keycode/c) (= (.-selection-start (unsafe-coerce (.-target event) 'app.comp.leaf/LeafInputTargetHost)) (.-selection-end (unsafe-coerce (.-target event) 'app.comp.leaf/LeafInputTargetHost))))
+                    do-copy-logics! d! (tree->cirru leaf) |Copied!
+                  (and meta? shift? (= code keycode/v))
+                    do (on-paste! d!) (.prevent-default! event)
+                  (and meta? (= code keycode/d))
+                    do (.prevent-default! event)
+                      if
+                        -> ([] "|\"" || "|#\"")
+                          any? $ fn (x)
+                            starts-with? (:text leaf) x
                         do
-                          d! $ :: :writer/go-left
-                          .!preventDefault event
-                    (and meta? (= code keycode/b))
-                      d! :analyze/peek-def $ option:unwrap-or (get leaf :text) |
-                    (and (not selected?) (= code keycode/right))
-                      if (= text-length selection-end)
-                        do
-                          d! $ :: :writer/go-right
-                          .!preventDefault event
-                    (and meta? (= code keycode/c) (= (.-selectionStart (unsafe-coerce (.-target event) JsObject)) (.-selectionEnd (unsafe-coerce (.-target event) JsObject))))
-                      do-copy-logics! d! (tree->cirru leaf) |Copied!
-                    (and meta? shift? (= code keycode/v))
-                      do (on-paste! d!) (.!preventDefault event)
-                    (and meta? (= code keycode/d))
-                      do (.!preventDefault event)
-                        if
-                          -> ([] "|\"" || "|#\"")
-                            any? $ fn (x)
-                              starts-with?
-                                option:unwrap-or (get leaf :text) |
-                                , x
-                          do
-                            d! $ :: :manual-state/draft-box
-                            js/setTimeout $ fn ()
-                              let
-                                  el $ js/document.querySelector |.el-draft-box
-                                if (js-present? el) (.!focus el)
-                          d! :analyze/goto-def $ {}
-                            :text $ option:unwrap-or (get leaf :text) |
-                            :forced? shift?
-                    (and meta? (= code keycode/slash) (not shift?))
-                      do $ js/window.open
-                        str |https://apis.calcit-lang.org/?q= $ js/encodeURIComponent
-                          last $ split
-                            option:unwrap-or (get leaf :text) |
-                            , |/
-                    (and picker-mode? (= code keycode/escape))
-                      d! $ :: :writer/picker-mode
-                    (and meta? alt? (= code keycode/num-4))
-                      d! $ :: :ir/fold-to-end
-                    true $ do (; println "|Keydown leaf" code)
-                      on-window-keydown event d! $ {} (:name :editor)
+                          d! $ :: :manual-state/draft-box
+                          js/setTimeout $ fn () $ match (js-ffi.browser/query-selector |.el-draft-box)
+                            (:some el) (js-ffi.browser/element-focus! el)
+                            (:none) &unit
+                        d! :analyze/goto-def $ {}
+                          :text $ :text leaf
+                          :forced? shift?
+                  (and meta? (= code keycode/slash) (not shift?))
+                    do $ js/window.open $ str |https://apis.calcit-lang.org/?q=
+                      js/encodeURIComponent $ last $ split (:text leaf) |/
+                  (and picker-mode? (= code keycode/escape))
+                    d! $ :: :writer/picker-mode
+                  (and meta? alt? (= code keycode/num-4))
+                    d! $ :: :ir/fold-to-end
+                  true $ do (; println "|Keydown leaf" code)
+                    on-window-keydown event d! $ {} $ :name :editor
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
-              :features $ #{} :js-ffi
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'app.schema/CirruLeafShape (:: 'List 'Number) 'Bool
+            :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.leaf $ :require
+        :code $ quote $ ns app.comp.leaf
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo.core :refer $ defcomp <> span div input textarea a
@@ -2001,83 +2186,82 @@
     'app.comp.login $ %{} 'FileEntry
       :defs $ {}
         'comp-login $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-login (states)
-              let
-                  cursor $ option:unwrap-or (get states :cursor) []
-                  state $ or
-                    option:unwrap-or (get states :data) initial-state
-                    , initial-state
+          :code $ quote $ defcomp comp-login (states)
+            let
+                cursor $ option:unwrap-or (get states :cursor) []
+                state $ or
+                  option:unwrap-or (get states :data) initial-state
+                  , initial-state
+              div
+                {} (:class-name css/column) (:style style-login)
                 div
-                  {} (:class-name css/column) (:style style-login)
-                  div
-                    {} $ :class-name css/column
-                    div ({})
-                      input $ {} (:placeholder |Username)
-                        :value $ option:unwrap-or (get state :username) |
-                        :class-name style/input
-                        :on-input $ on-input state cursor :username
-                    =< nil 8
-                    div ({})
-                      input $ {} (:placeholder |Password)
-                        :value $ option:unwrap-or (get state :password) |
-                        :class-name style/input
-                        :on-input $ on-input state cursor :password
+                  {} $ :class-name css/column
+                  div ({})
+                    input $ {} (:placeholder |Username)
+                      :value $ option:unwrap-or (get state :username) |
+                      :class-name style/input
+                      :on-input $ on-input state cursor :username
                   =< nil 8
-                  div
-                    {} $ :style style-control
-                    button $ {} (:inner-text "|Sign up") (:class-name style/button)
-                      :on-click $ on-submit
-                        option:unwrap-or (get state :username) |
-                        option:unwrap-or (get state :password) |
-                        , true
-                    =< 8 nil
-                    button $ {} (:inner-text "|Log in") (:class-name style/button)
-                      :on-click $ on-submit
-                        option:unwrap-or (get state :username) |
-                        option:unwrap-or (get state :password) |
-                        , false
+                  div ({})
+                    input $ {} (:placeholder |Password)
+                      :value $ option:unwrap-or (get state :password) |
+                      :class-name style/input
+                      :on-input $ on-input state cursor :password
+                =< nil 8
+                div
+                  {} $ :style style-control
+                  button $ {} (:inner-text "|Sign up") (:class-name style/button)
+                    :on-click $ on-submit
+                      option:unwrap-or (get state :username) |
+                      option:unwrap-or (get state :password) |
+                      , true
+                  =< 8 nil
+                  button $ {} (:inner-text "|Log in") (:class-name style/button)
+                    :on-click $ on-submit
+                      option:unwrap-or (get state :username) |
+                      option:unwrap-or (get state :password) |
+                      , false
           :examples $ []
           :schema $ :: 'Dynamic
         'initial-state $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def initial-state $ {} (:username |) (:password |)
+          :code $ quote $ def initial-state
+            {} (:username |) (:password |)
           :examples $ []
           :schema $ :: 'Dynamic
         'on-input $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-input (state cursor k)
-              fn (e dispatch!)
-                dispatch! cursor $ assoc state k
-                  option:unwrap-or (get e :value) nil
-                {} (:name |Alice) (:age 30) (:is-active true) (:occupation "|Software Engineer")
+          :code $ quote $ defn on-input (state cursor k)
+            fn (e dispatch!)
+              dispatch! cursor $ assoc state k $ option:unwrap-or (get e :value) nil
+              {} (:name |Alice) (:age 30) (:is-active true) (:occupation "|Software Engineer")
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'Tag
         'on-submit $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-submit (username password signup?)
-              fn (e dispatch!)
-                dispatch! (if signup? :user/sign-up :user/log-in) ([] username password)
-                js/window.localStorage.setItem
-                  option:unwrap-or (get config/site :storage-key) nil
-                  format-cirru-edn $ [] username password
+          :code $ quote $ defn on-submit (username password signup?)
+            fn (e dispatch!)
+              dispatch! (if signup? :user/sign-up :user/log-in) ([] username password)
+              js/window.localStorage.setItem
+                option:unwrap-or (get config/site :storage-key) nil
+                format-cirru-edn $ [] username password
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] 'String 'String 'Bool
+            :features $ #{} :js-ffi
         'style-control $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-control $ merge
+          :code $ quote $ def style-control
+            merge
               assert-type ui/flex $ :: 'Map 'Tag 'Dynamic
               {} $ :text-align :right
           :examples $ []
           :schema $ :: 'Dynamic
         'style-login $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-login $ {} (:padding 16)
+          :code $ quote $ def style-login
+            {} $ :padding 16
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.login $ :require
+        :code $ quote $ ns app.comp.login
+          :require
             respo.core :refer $ defcomp >> <> div input button span
             respo.comp.space :refer $ =<
             respo.comp.inspect :refer $ comp-inspect
@@ -2088,56 +2272,54 @@
     'app.comp.messages $ %{} 'FileEntry
       :defs $ {}
         'comp-messages $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-messages (messages)
-              list-> ({})
-                -> messages
-                  drop $ &max 0
-                    - (count messages) 3
-                  map-indexed $ fn (idx msg)
-                    []
-                      option:unwrap-or (get msg :id) nil
-                      div
-                        {} (:class-name css-message)
-                          :style $ {}
-                            :bottom $ + 8 (* idx 28)
-                            :color $ case-default
-                              option:unwrap-or (get msg :kind) :info
-                              hsl 120 80 80
-                              :error $ hsl 0 80 80
-                              :warning $ hsl 60 80 80
-                              :info $ hsl 240 80 80
-                          :on-click $ fn (e d!) (d! :notify/clear nil)
-                        <>
-                          unsafe-coerce
-                            ->
-                              option:unwrap-or (get msg :time) nil
-                              , Dayjs $ .!format |mm:ss
-                            , 'String
-                          str-spaced css/font-code style-time-short
-                        =< 8 nil
-                        <>
-                          option:unwrap-or (get msg :text) |
-                          , nil
+          :code $ quote $ defcomp comp-messages (messages)
+            list-> ({})
+              -> messages
+                drop $ &max 0 $ - (count messages) 3
+                map-indexed $ fn (idx msg)
+                  []
+                    option:unwrap-or (get msg :id) nil
+                    div
+                      {} (:class-name css-message)
+                        :style $ {}
+                          :bottom $ + 8 $ * idx 28
+                          :color $ case-default
+                            option:unwrap-or (get msg :kind) :info
+                            hsl 120 80 80
+                            :error $ hsl 0 80 80
+                            :warning $ hsl 60 80 80
+                            :info $ hsl 240 80 80
+                        :on-click $ fn (e d!) (d! :notify/clear nil)
+                      <>
+                        unsafe-coerce
+                          ->
+                            option:unwrap-or (get msg :time) nil
+                            , Dayjs $ .!format |mm:ss
+                          , 'String
+                        str-spaced css/font-code style-time-short
+                      =< 8 nil
+                      <>
+                        option:unwrap-or (get msg :text) |
+                        , nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
+            :args $ [] $ :: 'List (:: 'Map 'Tag 'Dynamic)
         'css-message $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-message $ {}
+          :code $ quote $ defstyle css-message
+            {}
               |$0 $ {} (:position :absolute) (:left 8) (:cursor :pointer) (:font-weight 100) (:font-family |Hind) (:padding "|0 8px") (:transition-duration |200ms) (:border-radius |6px) (:z-index 200)
                 :background-color $ hsl 0 0 0 0.5
-              |$0:hover $ {} (:transform "|scale(1.03)")
+              |$0:hover $ {} $ :transform "|scale(1.03)"
           :examples $ []
           :schema $ :: 'Dynamic
         'style-time-short $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-time-short $ {}
-              |& $ {} (:font-size 12) (:opacity 0.7)
+          :code $ quote $ defstyle style-time-short
+            {} $ |& $ {} (:font-size 12) (:opacity 0.7)
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.messages $ :require
+        :code $ quote $ ns app.comp.messages
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -2150,28 +2332,25 @@
     'app.comp.modal $ %{} 'FileEntry
       :defs $ {}
         'comp-modal $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-modal (close-modal! inner-tree)
+          :code $ quote $ defcomp comp-modal (close-modal! inner-tree)
+            div
+              {}
+                :class-name $ str-spaced css/center style-backdrop
+                :on-click $ fn (e d!) (close-modal! d!)
               div
-                {}
-                  :class-name $ str-spaced css/center style-backdrop
-                  :on-click $ fn (e d!) (close-modal! d!)
-                div
-                  {} $ :on-click
-                    fn (e d!) (; println |nothing!)
-                  , inner-tree
+                {} $ :on-click $ fn (e d!) (; println |nothing!)
+                , inner-tree
           :examples $ []
           :schema $ :: 'Dynamic
         'style-backdrop $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-backdrop $ {}
-              |& $ {} (:position :fixed) (:width |100%) (:height |100%) (:top 0) (:left 0)
-                :background-color $ hsl 0 0 0 0.6
+          :code $ quote $ defstyle style-backdrop
+            {} $ |& $ {} (:position :fixed) (:width |100%) (:height |100%) (:top 0) (:left 0)
+              :background-color $ hsl 0 0 0 0.6
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.modal $ :require
+        :code $ quote $ ns app.comp.modal
+          :require
             respo.css :refer $ defstyle
             respo-ui.css :as css
             respo.util.format :refer $ hsl
@@ -2181,381 +2360,385 @@
             respo.comp.space :refer $ =<
     'app.comp.page-editor $ %{} 'FileEntry
       :defs $ {}
+        'BookmarkElementHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait BookmarkElementHost
+            .query-selector $ :: 'Fn $ {}
+              :args $ [] 'app.comp.page-editor/BookmarkElementHost 'String
+              :return $ :: 'JsNullish 'app.comp.page-editor/BookmarkElementHost
+            .scroll-into-view-if-needed $ :: 'Fn $ {}
+              :args $ [] 'app.comp.page-editor/BookmarkElementHost
+              :return 'Unit
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} (:query-selector |querySelector) (:scroll-into-view-if-needed |scrollIntoViewIfNeeded)
+          :schema $ :: 'Trait
         'comp-doc $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-doc (states expr-entry bookmark)
-              let
-                  ns? $ = :ns
-                    option:unwrap-or (nth bookmark 0) :unknown
-                  doc-plugin $ use-prompt (>> states :doc)
-                    {}
-                      :text $ if ns? "|Namespace doc:" "|Function doc:"
-                      :initial $ option:unwrap-or (get expr-entry :doc) |
-                      :placeholder "|...some docs..."
-                      :input-style $ {} (:height 600) (:resize :vertical) (:font-family ui/font-code) (:font-size 13)
-                      :class-name css/font-code!
-                      :multiline? true
-                  doc $ option:unwrap-or (get expr-entry :doc) |
-                  no-doc? $ blank? doc
+          :code $ quote $ defcomp comp-doc (states expr-entry bookmark)
+            let
+                ns? $ = :ns $ option:unwrap-or (nth bookmark 0) :unknown
+                doc-plugin $ use-prompt (>> states :doc)
+                  {}
+                    :text $ if ns? "|Namespace doc:" "|Function doc:"
+                    :initial $ option:unwrap-or (get expr-entry :doc) |
+                    :placeholder "|...some docs..."
+                    :input-style $ {} (:height 600) (:resize :vertical) (:font-family ui/font-code) (:font-size 13)
+                    :class-name css/font-code!
+                    :multiline? true
+                doc $ option:unwrap-or (get expr-entry :doc) |
+                no-doc? $ blank? doc
+              div
+                {} $ :style $ {} (:margin-left 32)
                 div
-                  {} $ :style
-                    {} $ :margin-left 32
-                  div
-                    {}
-                      :class-name $ str-spaced style-doc (if no-doc? style-doc-empty)
-                      :on-click $ fn (e d!)
-                        .show doc-plugin d! $ fn (text)
-                          d! $ :: :writer/doc-set
-                            tag-match bookmark
-                              (:def the-ns the-def f) (:: :def the-ns the-def)
-                              (:ns the-ns f) (:: :ns the-ns)
-                            , text
-                    if no-doc? (<> "|no doc")
-                      comp-md-block doc $ {}
-                  .render doc-plugin
+                  {}
+                    :class-name $ str-spaced style-doc $ if no-doc? style-doc-empty
+                    :on-click $ fn (e d!)
+                      .show doc-plugin d! $ fn (text)
+                        d! $ :: :writer/doc-set
+                          match bookmark
+                            (:def the-ns the-def f) (:: :def the-ns the-def)
+                            (:ns the-ns f) (:: :ns the-ns)
+                          , text
+                  if no-doc? (<> "|no doc")
+                    comp-md-block doc $ {}
+                .render doc-plugin
           :examples $ []
           :schema $ :: 'Dynamic
         'comp-local-link $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-local-link (ns-name def-name)
-              span
-                {}
-                  :class-name $ str-spaced css/link-slight css/font-code style-local-link
-                  :on-click $ fn (e d!)
-                    d! $ :: :writer/edit (:: :def ns-name def-name)
-                <> def-name
+          :code $ quote $ defcomp comp-local-link (ns-name def-name)
+            span
+              {}
+                :class-name $ str-spaced css/link-slight css/font-code style-local-link
+                :on-click $ fn (e d!)
+                  d! $ :: :writer/edit $ :: :def ns-name def-name
+              <> def-name
           :examples $ []
           :schema $ :: 'Dynamic
         'comp-page-editor $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-page-editor (states stack router-data pointer picker-mode? theme)
-              let
-                  cursor $ option:unwrap-or (get states :cursor) []
-                  state $ or
-                    option:unwrap-or (get states :data) initial-state
-                    , initial-state
-                  bookmark $ option:unwrap-or (get stack pointer)
-                    :: :ns | $ []
-                  expr-entry $ option:unwrap-or (get router-data :expr) nil
-                  expr $ option:unwrap-or (get expr-entry :code) nil
-                  focus $ option:unwrap-or (get router-data :focus) ([])
-                  readonly? false
-                  close-draft-box! $ fn (d!)
-                    d! cursor $ assoc state :draft-box? false
-                  close-abstract! $ fn (d!)
-                    d! cursor $ assoc state :abstract? false
-                  plugin-gen-code-box $ use-gen-code-box (>> states :gen-code-plugin) expr focus
-                div
-                  {} $ :class-name css-page-editor
-                  if (empty? stack)
-                    div
-                      {} $ :class-name css-stack
-                      <> |Empty style-nothing
-                    comp-stack stack pointer
-                  if (empty? stack)
-                    div
-                      {} $ :style
-                        {} $ :padding "|12px 0"
-                      <> "|Nothing to edit" style-nothing
-                    div
-                      {} $ :class-name css-editor
-                      let
-                          others $ ->
-                            option:unwrap-or (get router-data :others) []
+          :code $ quote $ defcomp comp-page-editor (states stack router-data pointer picker-mode? theme)
+            let
+                cursor $ option:unwrap-or (get states :cursor) []
+                state $ or
+                  option:unwrap-or (get states :data) initial-state
+                  , initial-state
+                bookmark $ option:unwrap-or (get stack pointer)
+                  :: :ns | $ []
+                expr-entry $ option:unwrap-or (get router-data :expr) nil
+                expr $ option:unwrap-or (get expr-entry :code) nil
+                focus $ option:unwrap-or (get router-data :focus) ([])
+                readonly? false
+                close-draft-box! $ fn (d!)
+                  d! cursor $ assoc state :draft-box? false
+                close-abstract! $ fn (d!)
+                  d! cursor $ assoc state :abstract? false
+                plugin-gen-code-box $ use-gen-code-box (>> states :gen-code-plugin) expr focus
+              div
+                {} $ :class-name css-page-editor
+                if (empty? stack)
+                  div
+                    {} $ :class-name css-stack
+                    <> |Empty style-nothing
+                  comp-stack stack pointer
+                if (empty? stack)
+                  div
+                    {} $ :style $ {} (:padding "|12px 0")
+                    <> "|Nothing to edit" style-nothing
+                  div
+                    {} $ :class-name css-editor
+                    let
+                        others $ assert-type
+                          ->
+                            assert-type
+                              option:unwrap-or (get router-data :others) ({})
+                              :: 'Map 'Dynamic 'Dynamic
                             vals
                             map $ fn (x)
                               option:unwrap-or (get x :focus) nil
+                          :: 'Set $ :: 'List 'Number
+                      div
+                        {} $ :class-name css-area
+                        if (some? expr-entry)
+                          div ({})
+                            div
+                              {} $ :class-name $ str-spaced css/row-parted
+                              comp-doc (>> states :doc) expr-entry bookmark
+                            comp-expr
+                              >> states $ bookmark-full-str bookmark
+                              assert-type expr 'app.schema/CirruExprShape
+                              , focus ([]) others false :inline readonly? picker-mode? theme 0
                         div
-                          {} $ :class-name css-area
-                          if (some? expr-entry)
-                            div ({})
-                              div
-                                {} $ :class-name (str-spaced css/row-parted)
-                                comp-doc (>> states :doc) expr-entry bookmark
-                              comp-expr
-                                >> states $ bookmark-full-str bookmark
-                                , expr focus ([]) others false false readonly? picker-mode? theme 0
-                          div
+                          {}
+                            :class-name $ str-spaced css/row-parted
+                            :style $ {} $ :margin-top 66
+                          span $ {}
+                          comp-usages $ option:unwrap-or (get router-data :usages) nil
+                        if-let
+                          locals $ get router-data :preview-locals
+                          list->
                             {}
-                              :class-name $ str-spaced css/row-parted
-                              :style $ {} (:margin-top 66)
-                            span $ {}
-                            comp-usages $ option:unwrap-or (get router-data :usages) nil
-                          if-let
-                            locals $ get router-data :preview-locals
-                            list->
-                              {}
-                                :class-name $ str-spaced css/row css/gap8
-                                :style $ {} (:margin "|32px 48px") (:flex-wrap :wrap)
-                              -> locals .to-list (.sort &compare)
-                                map $ fn (def-name)
-                                  [] def-name $ comp-local-link (nth bookmark 1) def-name
-                      let
-                          peek-def $ option:unwrap-or (get router-data :peek-def) nil
-                        if (some? peek-def) (comp-peek-def peek-def)
-                      comp-status-bar cursor state states router-data bookmark theme $ fn (d!) (.reset-state plugin-gen-code-box d!) (.open plugin-gen-code-box d!)
-                      if
-                        option:unwrap-or (get state :draft-box?) false
-                        comp-draft-box (>> states :draft-box) expr focus close-draft-box!
-                      .render plugin-gen-code-box
-                      if
-                        option:unwrap-or (get state :abstract?) false
-                        comp-abstract (>> states :abstract) close-abstract!
-                      ; comp-inspect |Expr router-data style/inspector
-                  if picker-mode? $ comp-picker-notice
-                    option:unwrap-or (get router-data :picker-choices) []
-                    get-in expr $ mapcat focus prepend-data
+                              :class-name $ str-spaced css/row css/gap8
+                              :style $ {} (:margin "|32px 48px") (:flex-wrap :wrap)
+                            -> locals &set:to-list (sort &compare)
+                              map $ fn (def-name)
+                                [] def-name $ comp-local-link (nth bookmark 1) def-name
+                          div $ {}
+                    let
+                        peek-def $ option:unwrap-or (get router-data :peek-def) nil
+                      if (some? peek-def) (comp-peek-def peek-def)
+                    comp-status-bar cursor state states router-data bookmark theme $ fn (d!) (reset-gen-code-box! plugin-gen-code-box d!) (open-gen-code-box! plugin-gen-code-box d!)
+                    if
+                      option:unwrap-or (get state :draft-box?) false
+                      comp-draft-box (>> states :draft-box) expr focus close-draft-box!
+                    render-gen-code-box plugin-gen-code-box
+                    if
+                      option:unwrap-or (get state :abstract?) false
+                      comp-abstract (>> states :abstract) close-abstract!
+                    ; comp-inspect |Expr router-data style/inspector
+                if picker-mode? $ comp-picker-notice
+                  option:unwrap-or (get router-data :picker-choices) []
+                  get-in expr $ mapcat
+                    assert-type focus $ :: 'List 'Number
+                    , prepend-data
           :examples $ []
           :schema $ :: 'Dynamic
         'comp-stack $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-stack (stack pointer)
-              [] (effect-focus-bookmark pointer)
-                list->
-                  {} $ :class-name css-stack
-                  -> stack $ map-indexed
-                    fn (idx bookmark)
-                      [] idx $ comp-bookmark bookmark idx (= idx pointer)
+          :code $ quote $ defcomp comp-stack (stack pointer)
+            [] (effect-focus-bookmark pointer)
+              list->
+                {} $ :class-name css-stack
+                -> stack $ map-indexed $ fn (idx bookmark)
+                  [] idx $ comp-bookmark bookmark idx $ = idx pointer
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
+            :args $ [] (:: 'List 'Dynamic) 'Number
         'comp-status-bar $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-status-bar (cursor state states router-data bookmark theme open-gen-code-box)
-              let
-                  old-name $ tag-match bookmark
-                    (:def ns' def' f) (str ns' |/ def')
-                    (:ns ns' f) (str ns')
-                  confirm-delete-plugin $ use-confirm (>> states :delete)
-                    {} $ :text
-                      str "|Confirm deleting current path: " $ tag-match bookmark
-                        (:def ns' def' f) (str ns' |/ def')
-                        (:ns ns' f) (str "|ns: " ns')
-                  confirm-reset-plugin $ use-confirm (>> states :reset)
-                    {} $ :text "|Confirm reset changes to this expr?"
-                  rename-plugin $ use-prompt (>> states :rename)
-                    {}
-                      :text $ str "|Renaming: " old-name
-                      :initial old-name
-                  add-plugin $ use-prompt (>> states :add)
-                    {}
-                      :text $ str "|Add function name:"
-                      :initial |
-                  replace-plugin $ use-replace-name-modal (>> states :replace)
-                    fn (from to d!)
-                      d! :ir/expr-replace $ {} (:bookmark bookmark) (:from from) (:to to)
+          :code $ quote $ defcomp comp-status-bar (cursor state states router-data bookmark theme open-gen-code-box)
+            let
+                old-name $ match bookmark
+                  (:def ns' def' f) (str ns' |/ def')
+                  (:ns ns' f) (str ns')
+                confirm-delete-plugin $ use-confirm (>> states :delete)
+                  {} $ :text $ str "|Confirm deleting current path: "
+                    match bookmark
+                      (:def ns' def' f) (str ns' |/ def')
+                      (:ns ns' f) (str "|ns: " ns')
+                confirm-reset-plugin $ use-confirm (>> states :reset)
+                  {} $ :text "|Confirm reset changes to this expr?"
+                rename-plugin $ use-prompt (>> states :rename)
+                  {}
+                    :text $ str "|Renaming: " old-name
+                    :initial old-name
+                add-plugin $ use-prompt (>> states :add)
+                  {}
+                    :text $ str "|Add function name:"
+                    :initial |
+                replace-plugin $ use-replace-name-modal (>> states :replace)
+                  fn (from to d!)
+                    d! :ir/expr-replace $ {} (:bookmark bookmark) (:from from) (:to to)
+              div
+                {} $ :class-name $ str-spaced css/row css/gap8 css-status-bar
                 div
-                  {} $ :class-name (str-spaced css/row css/gap8 css-status-bar)
-                  div
-                    {} $ :class-name (str-spaced css/row css/gap8)
-                    span $ {} (:inner-text |Add)
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ fn (e d!)
-                        .show add-plugin d! $ fn (result)
-                          let
-                              text $ trim (unsafe-coerce result 'String)
-                            when-not (blank? text)
-                              d! :ir/add-def $ [] (nth bookmark 1) text
-                              d! $ :: :writer/edit
-                                :: :def (nth bookmark 1) text
-                    if
-                      = :same $ option:unwrap-or (get router-data :changed) :unknown
-                      <>
-                        str $ option:unwrap-or (get router-data :changed) nil
-                        {} (:font-family ui/font-fancy) (:margin "|0 8px")
-                          :color $ hsl 260 60 70
-                      span $ {}
-                        :class-name $ str-spaced css/font-fancy style-link
-                        :inner-text |Reset
-                        :on-click $ fn (e d!)
-                          .show confirm-reset-plugin d! $ fn () (on-reset-expr bookmark d!)
-                    span $ {} (:inner-text |Picker-mode)
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ fn (e d!) (d! :writer/picker-mode nil)
-                    span $ {} (:inner-text |Delete)
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ fn (e d!)
-                        .show confirm-delete-plugin d! $ fn ()
-                          if (some? bookmark) (d! :ir/delete-entry bookmark) (js/console.warn "|No entry to delete")
-                    span $ {} (:inner-text |Rename)
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ fn (e d!)
-                        .show rename-plugin d! $ fn (result) (on-rename-def result bookmark d!)
-                    span $ {} (:inner-text |Replace)
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ fn (e d!) (.show replace-plugin d!)
-                    span $ {} (:inner-text |Draft-box)
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ on-draft-box state cursor
-                    span $ {} (:inner-text |Gen-code)
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ fn (e d!) (open-gen-code-box d!)
-                    span $ {} (:inner-text |Exporting)
-                      :class-name $ str-spaced css/font-fancy style-link
-                      :on-click $ on-path-gen! bookmark
-                  div
-                    {} $ :class-name css/row
-                    comp-theme-menu (>> states :theme) theme
-                  div
-                    {} $ :class-name (str-spaced css/row-middle css/gap8)
+                  {} $ :class-name $ str-spaced css/row css/gap8
+                  span $ {} (:inner-text |Add)
+                    :class-name $ str-spaced css/font-fancy style-link
+                    :on-click $ fn (e d!)
+                      .show add-plugin d! $ fn (result)
+                        let
+                            text $ trim $ unsafe-coerce result 'String
+                          when-not (blank? text)
+                            d! :ir/add-def $ [] (nth bookmark 1) text
+                            d! $ :: :writer/edit $ :: :def (nth bookmark 1) text
+                  if
+                    = :same $ option:unwrap-or (get router-data :changed) :unknown
                     <>
-                      str "|Writers("
-                        count $ option:unwrap-or (get router-data :others) []
-                        , "|)"
-                      , style-hint
-                    list->
-                      {} $ :style style-watchers
-                      ->
-                        assert-type
-                          option:unwrap-or (get router-data :others) ({})
-                          , 'Map
-                        vals
-                        .to-list
-                        map $ fn (info)
-                          []
-                            option:unwrap-or (get info :session-id) nil
-                            <>
-                              option:unwrap-or (get info :nickname) |
-                              , style-watcher
-                    <>
-                      str "|Watchers("
-                        count $ option:unwrap-or (get router-data :watchers) {}
-                        , "|)"
-                      , style-hint
-                    list->
-                      {} $ :style style-watchers
-                      ->
-                        option:unwrap-or (get router-data :watchers) {}
-                        .to-list
-                        map $ fn (entry)
-                          let-sugar
-                                [] sid member
-                                , entry
-                            [] sid $ <>
-                              option:unwrap-or (get member :nickname) |
-                              , style-watcher
-                  .render confirm-delete-plugin
-                  .render confirm-reset-plugin
-                  .render rename-plugin
-                  .render add-plugin
-                  .render replace-plugin
+                      str $ option:unwrap-or (get router-data :changed) nil
+                      {} (:font-family ui/font-fancy) (:margin "|0 8px")
+                        :color $ hsl 260 60 70
+                    span $ {}
+                      :class-name $ str-spaced css/font-fancy style-link
+                      :inner-text |Reset
+                      :on-click $ fn (e d!)
+                        .show confirm-reset-plugin d! $ fn () $ on-reset-expr bookmark d!
+                  span $ {} (:inner-text |Picker-mode)
+                    :class-name $ str-spaced css/font-fancy style-link
+                    :on-click $ fn (e d!) (d! :writer/picker-mode nil)
+                  span $ {} (:inner-text |Delete)
+                    :class-name $ str-spaced css/font-fancy style-link
+                    :on-click $ fn (e d!)
+                      .show confirm-delete-plugin d! $ fn () $ if (some? bookmark) (d! :ir/delete-entry bookmark) (js/console.warn "|No entry to delete")
+                  span $ {} (:inner-text |Rename)
+                    :class-name $ str-spaced css/font-fancy style-link
+                    :on-click $ fn (e d!)
+                      .show rename-plugin d! $ fn (result) (on-rename-def result bookmark d!)
+                  span $ {} (:inner-text |Replace)
+                    :class-name $ str-spaced css/font-fancy style-link
+                    :on-click $ fn (e d!) (show-replace-plugin! replace-plugin d!)
+                  span $ {} (:inner-text |Draft-box)
+                    :class-name $ str-spaced css/font-fancy style-link
+                    :on-click $ on-draft-box state cursor
+                  span $ {} (:inner-text |Gen-code)
+                    :class-name $ str-spaced css/font-fancy style-link
+                    :on-click $ fn (e d!) (open-gen-code-box d!)
+                  span $ {} (:inner-text |Exporting)
+                    :class-name $ str-spaced css/font-fancy style-link
+                    :on-click $ on-path-gen! bookmark
+                div
+                  {} $ :class-name css/row
+                  comp-theme-menu (>> states :theme) theme
+                div
+                  {} $ :class-name $ str-spaced css/row-middle css/gap8
+                  <>
+                    str "|Writers("
+                      count $ option:unwrap-or (get router-data :others) []
+                      , "|)"
+                    , style-hint
+                  list->
+                    {} $ :style style-watchers
+                    ->
+                      assert-type
+                        option:unwrap-or (get router-data :others) ({})
+                        , 'Map
+                      vals
+                      &set:to-list
+                      map $ fn (info)
+                        []
+                          option:unwrap-or (get info :session-id) nil
+                          <>
+                            option:unwrap-or (get info :nickname) |
+                            , style-watcher
+                  <>
+                    str "|Watchers("
+                      count $ option:unwrap-or (get router-data :watchers) {}
+                      , "|)"
+                    , style-hint
+                  list->
+                    {} $ :style style-watchers
+                    ->
+                      option:unwrap-or (get router-data :watchers) {}
+                      &map:to-list
+                      map $ fn (entry)
+                        let-sugar
+                              [] sid member
+                              , entry
+                          [] sid $ <>
+                            option:unwrap-or (get member :nickname) |
+                            , style-watcher
+                .render confirm-delete-plugin
+                .render confirm-reset-plugin
+                .render rename-plugin
+                .render add-plugin
+                render-replace-plugin replace-plugin
           :examples $ []
           :schema $ :: 'Dynamic
         'comp-usages $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-usages (usages)
-              if (some? usages)
-                list->
-                  {} $ :class-name (str-spaced css/row style-usages)
-                  -> usages .to-list $ map
-                    fn (usage)
-                      tag-match usage $
-                        :def the-ns the-def
-                        [] (str the-ns |/ the-def)
-                          div
-                            {}
-                              :class-name $ str-spaced css/column style-usage
-                              :on-click $ fn (e d!)
-                                d! $ :: :writer/select (:: :def the-ns the-def)
-                            <> the-def style-usage-def
-                            <> the-ns style-tiny
-                <> |orphin style-placeholder
+          :code $ quote $ defcomp comp-usages (usages)
+            if (some? usages)
+              list->
+                {} $ :class-name $ str-spaced css/row style-usages
+                -> usages &set:to-list $ map $ fn (usage)
+                  match usage $
+                    :def the-ns the-def
+                    [] (str the-ns |/ the-def)
+                      div
+                        {}
+                          :class-name $ str-spaced css/column style-usage
+                          :on-click $ fn (e d!)
+                            d! $ :: :writer/select $ :: :def the-ns the-def
+                        <> the-def style-usage-def
+                        <> the-ns style-tiny
+              <> |orphin style-placeholder
           :examples $ []
           :schema $ :: 'Dynamic
         'css-area $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-area $ {}
-              |$0 $ {} (:position :fixed) (:right 0) (:left 100) (:bottom 0) (:top 0) (:overflow :auto) (:padding-bottom |60vh) (:padding-top 120) (:flex 1) (:padding-right 8)
-                :background-color $ hsl 0 0 0 0.4
+          :code $ quote $ defstyle css-area
+            {} $ |$0 $ {} (:position :fixed) (:right 0) (:left 100) (:bottom 0) (:top 0) (:overflow :auto) (:padding-bottom |60vh) (:padding-top 120) (:flex 1) (:padding-right 8)
+              :background-color $ hsl 0 0 0 0.4
           :examples $ []
           :schema $ :: 'Dynamic
         'css-editor $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-editor $ {}
-              |$0 $ merge
-                assert-type ui/flex $ :: 'Map 'Tag 'Dynamic
-                assert-type ui/column $ :: 'Map 'Tag 'Dynamic
-                {} (:position :absolute) (:left 100)
+          :code $ quote $ defstyle css-editor
+            {} $ |$0 $ merge
+              assert-type ui/flex $ :: 'Map 'Tag 'Dynamic
+              assert-type ui/column $ :: 'Map 'Tag 'Dynamic
+              {} (:position :absolute) (:left 100)
           :examples $ []
           :schema $ :: 'Dynamic
         'css-page-editor $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-page-editor $ {}
-              |$0 $ merge
-                assert-type ui/row $ :: 'Map 'Tag 'Dynamic
-                assert-type ui/flex $ :: 'Map 'Tag 'Dynamic
-                {} $ :z-index 80
+          :code $ quote $ defstyle css-page-editor
+            {} $ |$0 $ merge
+              assert-type ui/row $ :: 'Map 'Tag 'Dynamic
+              assert-type ui/flex $ :: 'Map 'Tag 'Dynamic
+              {} $ :z-index 80
           :examples $ []
           :schema $ :: 'Dynamic
         'css-stack $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-stack $ {}
+          :code $ quote $ defstyle css-stack
+            {}
               |$0 $ {} (:overflow :auto) (:padding "|48px 0 80px 0") (:opacity 0.8) (:position :relative) (:box-shadow "|0 0 4px black")
                 :background-color $ hsl 0 0 0 0.6
               |$0:hover $ {} (:opacity 1) (:z-index 100)
           :examples $ []
           :schema $ :: 'Dynamic
         'css-status-bar $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-status-bar $ {}
-              |$0 $ merge ui/row
-                {} (:justify-content :space-between) (:padding "|0 8px") (:position :fixed) (:bottom 0) (:right 0) (:opacity 0.4) (:transition-duration |240ms) (:transition-property |opacity)
-                  :background-color $ hsl 0 0 0 0.5
-              |$0:hover $ {} (:opacity 1)
+          :code $ quote $ defstyle css-status-bar
+            {}
+              |$0 $ merge ui/row $ {} (:justify-content :space-between) (:padding "|0 8px") (:position :fixed) (:bottom 0) (:right 0) (:opacity 0.4) (:transition-duration |240ms) (:transition-property |opacity)
+                :background-color $ hsl 0 0 0 0.5
+              |$0:hover $ {} $ :opacity 1
           :examples $ []
           :schema $ :: 'Dynamic
         'effect-focus-bookmark $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defeffect effect-focus-bookmark (pointer) (action el at?)
-              if (= action :update)
-                let
-                    target $ .!querySelector el |.selected-bookmark
-                  if (js-present? target)
-                    .!scrollIntoViewIfNeeded $ unsafe-coerce target JsObject
+          :code $ quote $ defeffect effect-focus-bookmark (pointer) (action el at?)
+            if (= action :update)
+              let
+                  host-el $ unsafe-coerce el 'app.comp.page-editor/BookmarkElementHost
+                  target-opt $ js-nullish->option $ .query-selector host-el |.selected-bookmark
+                match target-opt
+                  (:some target) (.scroll-into-view-if-needed target)
+                  (:none) &unit
           :examples $ []
           :schema $ :: 'Dynamic
         'initial-state $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def initial-state $ {} (:draft-box? false)
+          :code $ quote $ def initial-state
+            {} $ :draft-box? false
           :examples $ []
           :schema $ :: 'Dynamic
         'on-draft-box $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-draft-box (state cursor)
-              fn (e d!)
-                d! cursor $ update state :draft-box? not
-                js/setTimeout $ fn ()
-                  let
-                      el $ js/document.querySelector |.el-draft-box
-                    if (js-present? el)
-                      .!focus $ unsafe-coerce el JsObject
+          :code $ quote $ defn on-draft-box (state cursor)
+            fn (e d!)
+              d! cursor $ update state :draft-box? not
+              js-ffi.browser/set-timeout!
+                fn () $ match (js-ffi.browser/query-selector |.el-draft-box)
+                  (:some el) (js-ffi.browser/element-focus! el)
+                  (:none) &unit
+                , 0
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic
         'on-path-gen! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-path-gen! (bookmark)
-              fn (e d!)
-                tag-match bookmark
-                  (:def ns' def' f)
-                    let
-                        code $ []
-                          [] ns' |:refer $ [] def'
-                      do-copy-logics! d! (format-cirru code) (str "|Copied path of " def')
-                  (:ns the-ns f)
-                    let
-                        code $ []
-                          [] the-ns |:as $ last (split the-ns |.)
-                      do-copy-logics! d! (format-cirru code) (str "|Copied path of " the-ns)
+          :code $ quote $ defn on-path-gen! (bookmark)
+            fn (e d!)
+              match bookmark
+                (:def ns' def' f)
+                  let
+                      code $ [] $ [] ns' |:refer ([] def')
+                    do-copy-logics! d! (format-cirru code) (str "|Copied path of " def')
+                (:ns the-ns f)
+                  let
+                      code $ [] $ [] the-ns |:as
+                        last $ split the-ns |.
+                    do-copy-logics! d! (format-cirru code) (str "|Copied path of " the-ns)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] 'app.bookmark/%bookmark
         'on-rename-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-rename-def (new-name bookmark d!)
+          :code $ quote $ defn on-rename-def (new-name bookmark d!)
+            do
               when
                 not $ blank? new-name
                 let-sugar
                       [] ns-text def-text
                       split new-name |/
-                  d! :ir/rename $ tag-match bookmark
+                  d! :ir/rename $ match bookmark
                     (:def ns' def' f)
                       {} (:kind :def)
                         :ns $ {} (:from ns') (:to ns-text)
@@ -2563,144 +2746,141 @@
                     (:ns ns' f)
                       {} (:kind :ns)
                         :ns $ {} (:from ns') (:to ns-text)
+              , &unit
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'String 'app.bookmark/%bookmark $ :: 'Fn
+              {} (:return 'Unit)
+                :args $ [] 'Dynamic
         'on-reset-expr $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-reset-expr (bookmark d!)
-              d! :ir/reset-at $ tag-match bookmark
-                (:ns ns' f) (:: :ns ns')
-                (:def ns' def' f) (:: :def ns' def')
-              d! $ :: :states/clear
+          :code $ quote $ defn on-reset-expr (bookmark d!)
+            d! :ir/reset-at $ match bookmark
+              (:ns ns' f) (:: :ns ns')
+              (:def ns' def' f) (:: :def ns' def')
+            d! $ :: :states/clear
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'app.bookmark/%bookmark $ :: 'Fn
+              {} (:return 'Unit)
+                :args $ [] 'Dynamic
         'style-doc $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-doc $ {}
+          :code $ quote $ defstyle style-doc
+            {}
               |& $ {}
                 :color $ hsl 0 0 100 0.6
                 :transition-duration |200ms
                 :line-height |20px
-              "|& .md-p" $ {} (:margin-bottom 12)
+              "|& .md-p" $ {} $ :margin-bottom 12
               "|& div>code" $ {} (:font-family ui/font-code) (:border-radius |6px) (:margin "|0 2px") (:padding "|2px 6px") (:font-size 12)
-                :border $ str "|1px solid " (hsl 0 0 98 0.25)
+                :border $ str "|1px solid " $ hsl 0 0 98 0.25
               "|& .md-code-block" $ {} (:font-family ui/font-code) (:border-radius |6px) (:margin "|0 0 8px 8px") (:padding "|6px 24px 6px 8px") (:width :fit-content) (:font-size 12)
                 :color $ hsl 0 0 50
-                :border $ str "|1px solid " (hsl 0 0 98 0.18)
+                :border $ str "|1px solid " $ hsl 0 0 98 0.18
               "|& a[href]" $ {} (:pointer-events :none)
                 :color $ hsl 230 80 70
               "|& img" $ {} (:max-height 400) (:max-width 400) (:transform "|scale(1)") (:border-radius |34x)
-                :box-shadow $ str "|0 0 3px " (hsl 0 0 100 0.5)
-              |&:hover $ {}
-                :color $ hsl 0 0 100 1
+                :box-shadow $ str "|0 0 3px " $ hsl 0 0 100 0.5
+              |&:hover $ {} $ :color (hsl 0 0 100 1)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-doc-empty $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-doc-empty $ {}
-              |& $ {} (:font-style :italic) (:opacity 0.5)
+          :code $ quote $ defstyle style-doc-empty
+            {} $ |& $ {} (:font-style :italic) (:opacity 0.5)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-hint $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-hint $ {}
+          :code $ quote $ def style-hint
+            {}
               :color $ hsl 0 0 100 0.6
               :font-family ui/font-fancy
           :examples $ []
           :schema $ :: 'Dynamic
         'style-link $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-link $ {}
-              |& $ {} (:cursor :pointer) (:font-size 14)
-                :color $ hsl 200 50 80
+          :code $ quote $ defstyle style-link
+            {} $ |& $ {} (:cursor :pointer) (:font-size 14)
+              :color $ hsl 200 50 80
           :examples $ []
           :schema $ :: 'Dynamic
         'style-local-link $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-local-link $ {}
+          :code $ quote $ defstyle style-local-link
+            {}
               |& $ {} (:white-space :nowrap) (:margin "|0 2px")
-              |span& $ {}
-                :color $ hsl 200 40 64
-              |span&:hover $ {}
-                :color $ hsl 200 60 76
+              |span& $ {} $ :color (hsl 200 40 64)
+              |span&:hover $ {} $ :color (hsl 200 60 76)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-missing $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-missing $ {} (:font-family "|Josefin Sans")
+          :code $ quote $ def style-missing
+            {} (:font-family "|Josefin Sans")
               :color $ hsl 10 60 50
               :font-size 20
               :font-weight 100
           :examples $ []
           :schema $ :: 'Dynamic
         'style-nothing $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-nothing $ {}
+          :code $ quote $ def style-nothing
+            {}
               :color $ hsl 0 0 100 0.4
               :padding "|0 16px"
               :font-family "|Josefin Sans"
           :examples $ []
           :schema $ :: 'Dynamic
         'style-placeholder $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-placeholder $ {}
-              :& $ {} (:font-size 12) (:font-style :italic)
-                :color $ hsl 0 0 36
-                :line-height |1
+          :code $ quote $ defstyle style-placeholder
+            {} $ :& $ {} (:font-size 12) (:font-style :italic)
+              :color $ hsl 0 0 36
+              :line-height |1
           :examples $ []
           :schema $ :: 'Dynamic
         'style-tiny $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-tiny $ {}
-              :& $ {} (:font-size 12)
-                :color $ hsl 0 0 36
-                :line-height |1
+          :code $ quote $ defstyle style-tiny
+            {} $ :& $ {} (:font-size 12)
+              :color $ hsl 0 0 36
+              :line-height |1
           :examples $ []
           :schema $ :: 'Dynamic
         'style-usage $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-usage $ {}
+          :code $ quote $ defstyle style-usage
+            {}
               :& $ {} (:margin-right 8) (:opacity 0.8) (:cursor :pointer)
                 :color $ hsl 0 0 80
-              :&:hover $ {} (:opacity 1)
+              :&:hover $ {} $ :opacity 1
           :examples $ []
           :schema $ :: 'Dynamic
         'style-usage-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-usage-def $ {}
-              :& $ {} (:line-height |20px)
+          :code $ quote $ defstyle style-usage-def
+            {} $ :& $ {} (:line-height |20px)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-usages $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-usages $ {}
-              |& $ {} (:max-width |80%) (:justify-content :flex-end) (:flex-wrap :wrap) (:row-gap 12)
+          :code $ quote $ defstyle style-usages
+            {} $ |& $ {} (:max-width |80%) (:justify-content :flex-end) (:flex-wrap :wrap) (:row-gap 12)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-watcher $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-watcher $ {}
+          :code $ quote $ def style-watcher
+            {}
               :color $ hsl 0 0 100 0.7
               :margin-left 8
           :examples $ []
           :schema $ :: 'Dynamic
         'style-watchers $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-watchers $ merge
+          :code $ quote $ def style-watchers
+            merge
               assert-type ui/row $ :: 'Map 'Tag 'Dynamic
               {} $ :display :inline-block
           :examples $ []
           :schema $ :: 'Dynamic
         'ui-missing $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def ui-missing $ div
+          :code $ quote $ def ui-missing
+            div
               {} $ :style style-missing
               <> "|Expression is missing!" nil
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.page-editor $ :require
+        :code $ quote $ ns app.comp.page-editor
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -2720,252 +2900,248 @@
             app.util :refer $ tree->cirru prepend-data bookmark-full-str
             app.util.dom :refer $ do-copy-logics!
             respo-alerts.core :refer $ use-confirm use-prompt
-            app.comp.replace-name :refer $ use-replace-name-modal
+            app.comp.replace-name :refer $ use-replace-name-modal show-replace-plugin! render-replace-plugin
             app.comp.picker-notice :refer $ comp-picker-notice
             respo-md.comp.md :refer $ comp-md-block
-            app.comp.gen-code-box :refer $ use-gen-code-box
+            app.comp.gen-code-box :refer $ use-gen-code-box reset-gen-code-box! open-gen-code-box! render-gen-code-box
     'app.comp.page-files $ %{} 'FileEntry
       :defs $ {}
         'comp-file $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-file (states selected-ns defs-dict highlights configs)
-              let
-                  cursor $ option:unwrap-or (get states :cursor) []
-                  state $ or
-                    option:unwrap-or (get states :data) {}
-                    {} $ :def-text |
-                  duplicate-plugin $ use-prompt (>> states :duplicate)
-                    {} (:initial selected-ns) (:text "|a namespace:")
-                  add-plugin $ use-prompt (>> states :add)
-                    {} $ :text "|New definition:"
-                div
-                  {} $ :class-name (str-spaced css/column css-file)
-                  div ({}) (<> |File style/title) (=< 16 nil)
-                    span $ {} (:inner-text |Draft) (:class-name style/button)
-                      :on-click $ fn (e d!) (d! :writer/draft-ns selected-ns)
-                    span $ {} (:inner-text |Clone) (:class-name style/button)
-                      :on-click $ fn (e d!)
-                        .show duplicate-plugin d! $ fn (result)
-                          if (.includes? result |.) (d! :ir/clone-ns result)
-                            d! :notify/push-message $ [] :warn (str "|Not a good name: " result)
-                  div ({})
-                    span $ {} (:inner-text selected-ns) (:style style-link)
-                      :on-click $ fn (e d!)
-                        d! $ :: :writer/edit (:: :ns selected-ns)
-                    =< 16 nil
-                    comp-icon :plus
-                      {} (:font-size 14)
-                        :color $ hsl 0 0 70
-                        :cursor :pointer
-                      fn (e d!)
-                        .show add-plugin d! $ fn (result)
-                          let
-                              text $ trim result
-                            when-not (blank? text)
-                              d! :ir/add-def $ [] selected-ns text
-                  ; div ({})
-                    input $ {}
-                      :value $ option:unwrap-or (get state :def-text) |
-                      :placeholder |filter...
-                      :style style-input
-                      :on-input $ fn (e d!)
-                        d! cursor $ assoc state :def-text (:value e)
-                  =< nil 8
-                  list->
-                    {} (:class-name css/expand)
-                      :style $ {} (:padding-bottom 120)
-                    -> defs-dict keys (.to-list)
-                      filter $ fn (def-text)
-                        .includes? def-text $ option:unwrap-or (get state :def-text) |
-                      sort &compare
-                      map $ fn (def-text)
-                        [] def-text $ let
-                            confirm-remove-plugin $ use-confirm
-                              >> states $ str :rm def-text
-                              {} $ :text (str "|Sure to remove def: " def-text "| ?")
+          :code $ quote $ defcomp comp-file (states selected-ns defs-dict highlights configs)
+            let
+                cursor $ option:unwrap-or (get states :cursor) []
+                state $ or
+                  option:unwrap-or (get states :data) {}
+                  {} $ :def-text |
+                duplicate-plugin $ use-prompt (>> states :duplicate)
+                  {} (:initial selected-ns) (:text "|a namespace:")
+                add-plugin $ use-prompt (>> states :add)
+                  {} $ :text "|New definition:"
+              div
+                {} $ :class-name $ str-spaced css/column css-file
+                div ({}) (<> |File style/title) (=< 16 nil)
+                  span $ {} (:inner-text |Draft) (:class-name style/button)
+                    :on-click $ fn (e d!) (d! :writer/draft-ns selected-ns)
+                  span $ {} (:inner-text |Clone) (:class-name style/button)
+                    :on-click $ fn (e d!)
+                      .show duplicate-plugin d! $ fn (result)
+                        if
+                          &str:includes? (assert-type result 'String) |.
+                          d! :ir/clone-ns result
+                          d! :notify/push-message $ [] :warn $ str "|Not a good name: " result
+                div ({})
+                  span $ {} (:inner-text selected-ns) (:style style-link)
+                    :on-click $ fn (e d!)
+                      d! $ :: :writer/edit $ :: :ns selected-ns
+                  =< 16 nil
+                  comp-icon :plus
+                    {} (:font-size 14)
+                      :color $ hsl 0 0 70
+                      :cursor :pointer
+                    fn (e d!)
+                      .show add-plugin d! $ fn (result)
+                        let
+                            text $ trim result
+                          when-not (blank? text)
+                            d! :ir/add-def $ [] selected-ns text
+                ; div ({})
+                  input $ {}
+                    :value $ option:unwrap-or (get state :def-text) |
+                    :placeholder |filter...
+                    :style style-input
+                    :on-input $ fn (e d!)
+                      d! cursor $ assoc state :def-text $ :value e
+                =< nil 8
+                list->
+                  {} (:class-name css/expand)
+                    :style $ {} $ :padding-bottom 120
+                  -> defs-dict keys (&set:to-list)
+                    filter $ fn (def-text)
+                      &str:includes? (assert-type def-text 'String)
+                        option:unwrap-or (get state :def-text) |
+                    sort &compare
+                    map $ fn (def-text)
+                      [] def-text $ let
+                          confirm-remove-plugin $ use-confirm
+                            >> states $ str :rm def-text
+                            {} $ :text $ str "|Sure to remove def: " def-text "| ?"
+                        div
+                          {}
+                            :class-name $ str-spaced css/row-parted style-def |hoverable
+                            :style $ if
+                              includes? highlights $ :: :def selected-ns def-text
+                              {} $ :color :white
+                            :on-click $ fn (e d!)
+                              d! $ :: :writer/edit $ :: :def selected-ns def-text
                           div
+                            {} $ :class-name css/row
+                            <> def-text nil
+                            =< 8 nil
+                            <>
+                              &str:replace
+                                option:unwrap-or (get defs-dict def-text) |
+                                , &newline |
+                              , style-def-doc
+                          =< 16 nil
+                          span
                             {}
-                              :class-name $ str-spaced css/row-parted style-def |hoverable
-                              :style $ if
-                                includes? highlights $ :: :def selected-ns def-text
-                                {} $ :color :white
+                              :class-name $ str-spaced |is-minor style-remove
                               :on-click $ fn (e d!)
-                                d! $ :: :writer/edit (:: :def selected-ns def-text)
-                            div
-                              {} $ :class-name css/row
-                              <> def-text nil
-                              =< 8 nil
-                              <>
-                                .replace
-                                  option:unwrap-or (get defs-dict def-text) |
-                                  , &newline |
-                                , style-def-doc
-                            =< 16 nil
-                            span
-                              {}
-                                :class-name $ str-spaced |is-minor style-remove
-                                :on-click $ fn (e d!)
-                                  option:unwrap-or
-                                    get
-                                      option:unwrap-or (get e :event) {}
-                                      , :event
-                                    , nil
-                                  .show confirm-remove-plugin d! $ fn () (d! :ir/remove-def def-text)
-                              comp-i :x 12 $ hsl 0 0 80 0.5
-                            .render confirm-remove-plugin
-                  .render duplicate-plugin
-                  .render add-plugin
+                                option:unwrap-or
+                                  get
+                                    option:unwrap-or (get e :event) {}
+                                    , :event
+                                  , nil
+                                .show confirm-remove-plugin d! $ fn () $ d! :ir/remove-def def-text
+                            comp-i :x 12 $ hsl 0 0 80 0.5
+                          .render confirm-remove-plugin
+                .render duplicate-plugin
+                .render add-plugin
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
+            :args $ [] 'Dynamic 'String (:: 'Map 'String 'String) (:: 'Set 'Dynamic) 'Dynamic
         'comp-namespace-list $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-namespace-list (states ns-dict selected-ns ns-highlights)
-              let
-                  cursor $ option:unwrap-or (get states :cursor) nil
-                  state $ or
-                    option:unwrap-or (get states :data) {}
-                    {} $ :ns-text |
-                  plugin-add-ns $ use-prompt (>> states :add-ns)
-                    {} $ :title "|New namespace:"
+          :code $ quote $ defcomp comp-namespace-list (states ns-dict selected-ns ns-highlights)
+            let
+                cursor $ option:unwrap-or (get states :cursor) nil
+                state $ or
+                  option:unwrap-or (get states :data) {}
+                  {} $ :ns-text |
+                plugin-add-ns $ use-prompt (>> states :add-ns)
+                  {} $ :title "|New namespace:"
+              div
+                {} $ :class-name $ str-spaced css/column style-list
                 div
-                  {} $ :class-name (str-spaced css/column style-list)
-                  div
-                    {} $ :class-name style/title
-                    <> |Namespaces
-                    =< 8 nil
-                    comp-icon :plus
-                      {}
-                        :color $ hsl 0 0 70
-                        :font-size 14
-                        :cursor :pointer
-                      fn (e d!)
-                        .show plugin-add-ns d! $ fn (result)
-                          let
-                              text $ trim result
-                            when-not (blank? text) (d! :ir/add-ns text)
-                  ; div ({})
-                    input $ {}
-                      :value $ :ns-text state
-                      :placeholder |filter...
-                      :style style-input
-                      :on-input $ fn (e d!)
-                        d! cursor $ assoc state :ns-text (:value e)
-                  =< nil 8
-                  list->
-                    {} (:class-name css/expand)
-                      :style $ {} (:padding-bottom 120)
-                    -> ns-dict (.to-list)
-                      filter $ fn (pair)
+                  {} $ :class-name style/title
+                  <> |Namespaces
+                  =< 8 nil
+                  comp-icon :plus
+                    {}
+                      :color $ hsl 0 0 70
+                      :font-size 14
+                      :cursor :pointer
+                    fn (e d!)
+                      .show plugin-add-ns d! $ fn (result)
                         let
-                            ns-text $ option:unwrap-or (nth pair 0) |
-                          includes?
-                            join-str
-                              rest $ split ns-text |.
-                              , |.
-                            option:unwrap-or (get state :ns-text) |
-                      sort $ fn (a b)
-                        &compare
-                          option:unwrap-or (first a) |
-                          option:unwrap-or (first b) |
-                      map $ fn (pair)
-                        let
-                            ns-text $ nth pair 0
-                          [] ns-text $ comp-ns-entry (>> states ns-text) ns-text (nth pair 1) (= selected-ns ns-text) ns-highlights
-                  .render plugin-add-ns
+                            text $ trim result
+                          when-not (blank? text) (d! :ir/add-ns text)
+                ; div ({})
+                  input $ {}
+                    :value $ :ns-text state
+                    :placeholder |filter...
+                    :style style-input
+                    :on-input $ fn (e d!)
+                      d! cursor $ assoc state :ns-text $ :value e
+                =< nil 8
+                list->
+                  {} (:class-name css/expand)
+                    :style $ {} $ :padding-bottom 120
+                  -> ns-dict (&map:to-list)
+                    filter $ fn (pair)
+                      let
+                          ns-text $ option:unwrap-or (nth pair 0) |
+                        includes?
+                          join-str
+                            rest $ split ns-text |.
+                            , |.
+                          option:unwrap-or (get state :ns-text) |
+                    sort $ fn (a b)
+                      &compare
+                        option:unwrap-or (first a) |
+                        option:unwrap-or (first b) |
+                    map $ fn (pair)
+                      let
+                          ns-text $ nth pair 0
+                        [] ns-text $ comp-ns-entry (>> states ns-text) ns-text (nth pair 1) (= selected-ns ns-text) ns-highlights
+                .render plugin-add-ns
           :examples $ []
           :schema $ :: 'Dynamic
         'comp-ns-entry $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-ns-entry (states ns-text ns-doc selected? ns-highlights)
-              let
-                  plugin-rm-ns $ use-confirm (>> states :rm-ns)
-                    {} $ :text (str "|Sure to remove namespace: " ns-text "| ?")
-                  has-highlight? $ includes? ns-highlights ns-text
-                div
+          :code $ quote $ defcomp comp-ns-entry (states ns-text ns-doc selected? ns-highlights)
+            let
+                plugin-rm-ns $ use-confirm (>> states :rm-ns)
+                  {} $ :text $ str "|Sure to remove namespace: " ns-text "| ?"
+                has-highlight? $ includes? ns-highlights ns-text
+              div
+                {}
+                  :class-name $ str-spaced css/row-parted style-ns $ if selected? "|hoverable is-selected" |hoverable
+                  :style $ if has-highlight? $ {} (:color :white)
+                  :on-click $ fn (e d!) (d! :session/select-ns ns-text)
+                let
+                    pieces $ split ns-text |.
+                  span ({})
+                    <>
+                      str
+                        join-str (butlast pieces) |.
+                        , |.
+                      {} $ :color $ if has-highlight? (hsl 0 0 76) (hsl 0 0 50)
+                    <> $ option:unwrap-or (last pieces) |
+                    =< 8 nil
+                    <> ns-doc style-ns-doc
+                span
                   {}
-                    :class-name $ str-spaced css/row-parted style-ns (if selected? "|hoverable is-selected" |hoverable)
-                    :style $ if has-highlight?
-                      {} $ :color :white
-                    :on-click $ fn (e d!) (d! :session/select-ns ns-text)
-                  let
-                      pieces $ split ns-text |.
-                    span ({})
-                      <>
-                        str
-                          join-str (butlast pieces) |.
-                          , |.
-                        {} $ :color
-                          if has-highlight? (hsl 0 0 76) (hsl 0 0 50)
-                      <> $ option:unwrap-or (last pieces) |
-                      =< 8 nil
-                      <> ns-doc style-ns-doc
-                  span
-                    {}
-                      :class-name $ str-spaced |is-minor style-remove
-                      :on-click $ fn (e d!)
-                        .!preventDefault $ option:unwrap-or (get e :event) {}
-                        .show plugin-rm-ns d! $ fn () (d! :ir/remove-ns ns-text)
-                    comp-i :x 12 $ hsl 0 0 80 0.6
-                  .render plugin-rm-ns
+                    :class-name $ str-spaced |is-minor style-remove
+                    :on-click $ fn (e d!)
+                      .!preventDefault $ option:unwrap-or (get e :event) {}
+                      .show plugin-rm-ns d! $ fn () $ d! :ir/remove-ns ns-text
+                  comp-i :x 12 $ hsl 0 0 80 0.6
+                .render plugin-rm-ns
           :examples $ []
           :schema $ :: 'Dynamic
         'comp-page-files $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-page-files (states selected-ns router-data)
-              let
-                  highlights $ ->
-                    assert-type
-                      option:unwrap-or (get router-data :highlights) {}
-                      , 'Map
-                    vals
-                  ns-highlights $ map highlights
-                    fn (x) (nth x 1)
-                div
-                  {} $ :class-name (str-spaced css/flex css/row style-container)
-                  comp-namespace-list (>> states :ns)
-                    option:unwrap-or (get router-data :ns-dict) {}
-                    , selected-ns ns-highlights
-                  =< 24 nil
-                  if (some? selected-ns)
-                    comp-file (>> states selected-ns) selected-ns
-                      option:unwrap-or (get router-data :defs-dict) {}
-                      , highlights $ option:unwrap-or (get router-data :file-configs) {}
-                    render-empty
-                  =< 32 nil
-                  comp-changed-files (>> states :files)
-                    option:unwrap-or (get router-data :changed-files) {}
-                  ; comp-inspect selected-ns router-data style-inspect
-                  if
-                    option:some? $ get router-data :peeking-file
-                    comp-file-replacer (>> states :replacer)
-                      option:unwrap-or (get router-data :peeking-file) nil
+          :code $ quote $ defcomp comp-page-files (states selected-ns router-data)
+            let
+                highlights $ ->
+                  assert-type
+                    option:unwrap-or (get router-data :highlights) {}
+                    , 'Map
+                  vals
+                ns-highlights $ map highlights $ fn (x) (nth x 1)
+              div
+                {} $ :class-name $ str-spaced css/flex css/row style-container
+                comp-namespace-list (>> states :ns)
+                  option:unwrap-or (get router-data :ns-dict) {}
+                  , selected-ns ns-highlights
+                =< 24 nil
+                if (some? selected-ns)
+                  comp-file (>> states selected-ns) selected-ns
+                    option:unwrap-or (get router-data :defs-dict) {}
+                    , highlights $ option:unwrap-or (get router-data :file-configs) {}
+                  render-empty
+                =< 32 nil
+                comp-changed-files (>> states :files)
+                  option:unwrap-or (get router-data :changed-files) {}
+                ; comp-inspect selected-ns router-data style-inspect
+                if
+                  option:some? $ get router-data :peeking-file
+                  comp-file-replacer (>> states :replacer)
+                    option:unwrap-or (get router-data :peeking-file) nil
           :examples $ []
           :schema $ :: 'Dynamic
         'css-file $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-file $ {}
-              |$0 $ {} (:width 360) (:overflow :auto) (:padding-top 24)
+          :code $ quote $ defstyle css-file
+            {} $ |$0 $ {} (:width 360) (:overflow :auto) (:padding-top 24)
           :examples $ []
           :schema $ :: 'Dynamic
         'render-empty $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn render-empty () $ div
+          :code $ quote $ defn render-empty ()
+            div
               {} (:class-name css/font-fancy)
                 :style $ {} (:width 280)
                   :color $ hsl 0 0 100 0.5
                   :padding "|60px 0"
               <> |Empty nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
+            :args $ []
         'style-container $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-container $ {}
-              |& $ {} (:padding "|0px 16px")
+          :code $ quote $ defstyle style-container
+            {} $ |& $ {} (:padding "|0px 16px")
           :examples $ []
           :schema $ :: 'Dynamic
         'style-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-def $ {}
+          :code $ quote $ defstyle style-def
+            {}
               |& $ {} (:padding "|0 8px") (:position :relative)
                 :color $ hsl 0 0 74
                 :border-radius |8px
@@ -2976,39 +3152,37 @@
           :examples $ []
           :schema $ :: 'Dynamic
         'style-def-doc $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-def-doc $ {}
-              |& $ {}
-                :color $ hsl 0 0 100 0.5
-                :max-width |120px
-                :overflow :hidden
-                :white-space :nowrap
-                :text-overflow :ellipsis
-                :font-family ui/font-fancy
-                :white-space :nowrap
+          :code $ quote $ defstyle style-def-doc
+            {} $ |& $ {}
+              :color $ hsl 0 0 100 0.5
+              :max-width |120px
+              :overflow :hidden
+              :white-space :nowrap
+              :text-overflow :ellipsis
+              :font-family ui/font-fancy
+              :white-space :nowrap
           :examples $ []
           :schema $ :: 'Dynamic
         'style-inspect $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-inspect $ {} (:opacity 1)
+          :code $ quote $ def style-inspect
+            {} (:opacity 1)
               :background-color $ hsl 0 0 100
               :color :black
           :examples $ []
           :schema $ :: 'Dynamic
         'style-link $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-link $ {} (:cursor :pointer)
+          :code $ quote $ def style-link
+            {} $ :cursor :pointer
           :examples $ []
           :schema $ :: 'Dynamic
         'style-list $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-list $ {}
-              |& $ {} (:width 360) (:overflow :auto) (:padding-top 24)
+          :code $ quote $ defstyle style-list
+            {} $ |& $ {} (:width 360) (:overflow :auto) (:padding-top 24)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-ns $ {}
+          :code $ quote $ defstyle style-ns
+            {}
               |& $ {} (:cursor :pointer) (:vertical-align :middle) (:position :relative) (:padding "|0 8px")
                 :color $ hsl 0 0 74 1
                 :border-radius |8px
@@ -3019,22 +3193,21 @@
           :examples $ []
           :schema $ :: 'Dynamic
         'style-ns-doc $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-ns-doc $ {}
-              |& $ {}
-                :color $ hsl 0 0 100 0.5
-                :white-space :nowrap
-                :max-width |120px
-                :display :inline-block
-                :overflow :hidden
-                :text-overflow :ellipsis
-                :vertical-align :middle
-                :font-family ui/font-fancy
+          :code $ quote $ defstyle style-ns-doc
+            {} $ |& $ {}
+              :color $ hsl 0 0 100 0.5
+              :white-space :nowrap
+              :max-width |120px
+              :display :inline-block
+              :overflow :hidden
+              :text-overflow :ellipsis
+              :vertical-align :middle
+              :font-family ui/font-fancy
           :examples $ []
           :schema $ :: 'Dynamic
         'style-remove $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-remove $ {}
+          :code $ quote $ defstyle style-remove
+            {}
               |& $ {}
                 :color $ hsl 0 50 70
                 :font-size 12
@@ -3047,8 +3220,8 @@
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.page-files $ :require
+        :code $ quote $ ns app.comp.page-files
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -3066,100 +3239,99 @@
     'app.comp.page-members $ %{} 'FileEntry
       :defs $ {}
         'comp-page-members $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-page-members (router-data session-id)
-              div
-                {} (:class-name css/flex) (:style style-members)
-                list-> ({})
-                  -> router-data (.to-list)
-                    map $ fn (entry)
-                      let-sugar
-                            [] k member
-                            , entry
-                          member-name $ if
-                            option:some? $ get member :user
-                            option:unwrap-or
-                              get-in member $ [] :user :nickname
-                              , |
-                            , |Guest
-                        [] k $ div
-                          {} (:class-name style-row)
-                            :on-click $ on-watch k
-                          <>
-                            str member-name $ if (= k session-id) "| (yourself)" |
-                            , style-name
-                          =< 32 nil
-                          <>
-                            option:unwrap-or (get member :page) |
-                            , style-page-name
-                          =< 32 nil
-                          let
-                              bookmark $ option:unwrap-or (get member :bookmark)
-                                :: :ns | $ []
-                            if (some? bookmark)
-                              <>
-                                tag-match bookmark
-                                  (:def ns' def' f)
-                                    str-spaced |DEF ns' def' $ join-str f |_
-                                  (:ns ns' f)
-                                    str-spaced |NS ns' $ join-str f |_
-                                , style-bookmark
-                          =< 32 nil
-                          if (= k session-id)
-                            a
-                              {}
-                                :href $ let
-                                    url-obj $ url-parse js/location.href true
-                                  aset (.-query url-obj) |watching k
-                                  .!toString url-obj
-                                :target |_blank
-                                :style $ {}
-                                  :color $ hsl 240 80 80
-                              <> "|Watching url" nil
+          :code $ quote $ defcomp comp-page-members (router-data session-id)
+            div
+              {} (:class-name css/flex) (:style style-members)
+              list-> ({})
+                -> router-data (&map:to-list)
+                  map $ fn (entry)
+                    let-sugar
+                          [] k member
+                          , entry
+                        member-name $ if
+                          option:some? $ get member :user
+                          option:unwrap-or
+                            get-in member $ [] :user :nickname
+                            , |
+                          , |Guest
+                      [] k $ div
+                        {} (:class-name style-row)
+                          :on-click $ on-watch k
+                        <>
+                          str member-name $ if (= k session-id) "| (yourself)" |
+                          , style-name
+                        =< 32 nil
+                        <>
+                          option:unwrap-or (get member :page) |
+                          , style-page-name
+                        =< 32 nil
+                        let
+                            bookmark $ option:unwrap-or (get member :bookmark)
+                              :: :ns | $ []
+                          if (some? bookmark)
+                            <>
+                              match bookmark
+                                (:def ns' def' f)
+                                  str-spaced |DEF ns' def' $ join-str
+                                    assert-type f $ :: 'List 'String
+                                    , |_
+                                (:ns ns' f)
+                                  str-spaced |NS ns' $ join-str
+                                    assert-type f $ :: 'List 'String
+                                    , |_
+                              , style-bookmark
+                        =< 32 nil
+                        if (= k session-id)
+                          a
+                            {}
+                              :href $ let
+                                  url-obj $ url-parse js/location.href true
+                                aset (.-query url-obj) |watching k
+                                .!toString url-obj
+                              :target |_blank
+                              :style $ {} $ :color (hsl 240 80 80)
+                            <> "|Watching url" nil
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ [] 'Dynamic 'Dynamic
-              :features $ #{} :js-ffi
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
+            :args $ [] (:: 'Map 'Dynamic 'Dynamic) 'String
+            :features $ #{} :js-ffi
         'on-watch $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-watch (session-id)
-              fn (e d!)
-                d! :router/change $ :: :watching session-id
+          :code $ quote $ defn on-watch (session-id)
+            fn (e d!)
+              d! :router/change $ :: :watching session-id
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] 'String
         'style-bookmark $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-bookmark $ {} (:font-family |Menlo,monospace) (:min-width 200) (:display :inline-block)
+          :code $ quote $ def style-bookmark
+            {} (:font-family |Menlo,monospace) (:min-width 200) (:display :inline-block)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-members $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-members $ {} (:padding "|40px 16px 0 16px")
+          :code $ quote $ def style-members
+            {} $ :padding "|40px 16px 0 16px"
           :examples $ []
           :schema $ :: 'Dynamic
         'style-name $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-name $ {} (:min-width 160) (:display :inline-block)
+          :code $ quote $ def style-name
+            {} (:min-width 160) (:display :inline-block)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-page-name $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-page-name $ {}
-              |& $ {} (:min-width 160) (:display :inline-block)
+          :code $ quote $ defstyle style-page-name
+            {} $ |& $ {} (:min-width 160) (:display :inline-block)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-row $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-row $ {}
+          :code $ quote $ defstyle style-row
+            {}
               |& $ {} (:cursor :pointer) (:padding "|0 8px") (:border-radius |4px) (:transition-duration |300ms)
-              |&:hover $ {}
-                :background-color $ hsl 0 0 100 0.14
+              |&:hover $ {} $ :background-color (hsl 0 0 100 0.14)
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.page-members $ :require
+        :code $ quote $ ns app.comp.page-members
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -3171,48 +3343,45 @@
     'app.comp.peek-def $ %{} 'FileEntry
       :defs $ {}
         'comp-peek-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-peek-def (expr-entry)
-              let
-                  doc $ option:unwrap-or (get expr-entry :doc) |
-                  simple-expr $ option:unwrap-or (get expr-entry :code) nil
-                div
-                  {} $ :class-name (str-spaced css/row style-peek-def)
-                  <>
-                    stringify-s-expr $ tree->cirru simple-expr
-                    {} (:font-family "|Source Code Pro, Iosevka,Consolas,monospace") (:white-space :nowrap) (:overflow :hidden) (:text-overflow :ellipsis) (:max-width 480)
-                  =< 8 nil
-                  if (blank? doc) (<> |...doc... style-empty-doc) (<> doc style-doc)
-                  comp-icon :delete
-                    {} (:font-size 14)
-                      :color $ hsl 0 90 70
-                      :cursor :pointer
-                      :margin-left 8
-                    fn (e d!) (d! :writer/hide-peek nil)
+          :code $ quote $ defcomp comp-peek-def (expr-entry)
+            let
+                doc $ option:unwrap-or (get expr-entry :doc) |
+                simple-expr $ option:unwrap-or (get expr-entry :code) nil
+              div
+                {} $ :class-name $ str-spaced css/row style-peek-def
+                <>
+                  stringify-s-expr $ tree->cirru simple-expr
+                  {} (:font-family "|Source Code Pro, Iosevka,Consolas,monospace") (:white-space :nowrap) (:overflow :hidden) (:text-overflow :ellipsis) (:max-width 480)
+                =< 8 nil
+                if (blank? doc) (<> |...doc... style-empty-doc) (<> doc style-doc)
+                comp-icon :delete
+                  {} (:font-size 14)
+                    :color $ hsl 0 90 70
+                    :cursor :pointer
+                    :margin-left 8
+                  fn (e d!) (d! :writer/hide-peek nil)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-doc $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-doc $ {}
-              |& $ {} (:font-family ui/font-fancy)
+          :code $ quote $ defstyle style-doc
+            {} $ |& $ {} (:font-family ui/font-fancy)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-empty-doc $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-empty-doc $ {}
-              |& $ {} (:font-style :italic) (:opacity 0.6)
+          :code $ quote $ defstyle style-empty-doc
+            {} $ |& $ {} (:font-style :italic) (:opacity 0.6)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-peek-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-peek-def $ {}
+          :code $ quote $ defstyle style-peek-def
+            {}
               |& $ {} (:align-items :center) (:font-size 12) (:line-height |1.5em) (:position :fixed) (:bottom 4) (:opacity 0.5)
-              |&:hover $ {} (:opacity 1)
+              |&:hover $ {} $ :opacity 1
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.peek-def $ :require
+        :code $ quote $ ns app.comp.peek-def
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo.core :refer $ defcomp >> <> span div pre input button a
@@ -3226,75 +3395,78 @@
     'app.comp.picker-notice $ %{} 'FileEntry
       :defs $ {}
         'comp-picker-notice $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-picker-notice (choices target-node)
-              let
-                  imported-names $ option:unwrap-or (get choices :imported) {}
-                  defined-names $ option:unwrap-or (get choices :defined) {}
-                  render-code $ fn (x)
-                    span $ {} (:inner-text x) (:class-name css-name-code)
-                      :on-click $ fn (e d!) (d! :writer/pick-node x)
-                  hint $ if (struct? target-node)
-                    if
-                      and (struct? target-node)
-                        = :Leaf $ &struct:get-name target-node
-                      option:unwrap-or
-                        get (unsafe-coerce target-node 'Dynamic) :text
-                        , |
+          :code $ quote $ defcomp comp-picker-notice (choices target-node)
+            let
+                imported-names $ assert-type
+                  option:unwrap-or (get choices :imported) {}
+                  :: 'Map 'String $ :: 'List 'String
+                defined-names $ assert-type
+                  option:unwrap-or (get choices :defined) {}
+                  :: 'Set 'String
+                render-code $ fn (x)
+                  span $ {} (:inner-text x) (:class-name css-name-code)
+                    :on-click $ fn (e d!) (d! :writer/pick-node x)
+                hint $ if (struct? target-node)
+                  if
+                    and (struct? target-node)
+                      = :Leaf $ &struct:get-name target-node
+                    option:unwrap-or
+                      get (unsafe-coerce target-node 'Dynamic) :text
                       , |
                     , |
-                  hint-func $ fn (x)
-                    if (blank? hint) true $ .includes? x hint
+                  , |
+                hint-func $ fn (x)
+                  if (blank? hint) true $ &str:includes? (assert-type x 'String) hint
+              div
+                {} $ :class-name css-picker-container
                 div
-                  {} $ :class-name css-picker-container
-                  div
-                    {} $ :class-name css-picker-tip
-                    <> "|Picker mode..."
-                  comp-icon :x
-                    {} (:font-size 18) (:cursor :pointer) (:position :absolute) (:top 4) (:right 4)
-                      :color $ hsl 200 80 70 0.6
-                    fn (e d!)
-                      d! $ :: :writer/picker-mode
-                  list->
-                    {} $ :class-name style-list-container
-                    -> imported-names (.to-list)
-                      filter $ fn (pair)
-                        .any?
-                          option:unwrap-or (nth pair 1) []
-                          , hint-func
-                      sort $ fn (a b)
-                        let
-                            a1 $ &compare
-                              count $ option:unwrap-or (nth a 1) []
-                              count $ option:unwrap-or (nth b 1) []
-                          if (= 0 a1)
-                            &compare
-                              option:unwrap-or (first a) |
-                              option:unwrap-or (first b) |
-                            , a1
-                      map $ fn (xs)
-                        let
-                            ns $ option:unwrap-or (first xs) |
-                          [] ns $ list->
-                            {} (:title ns) (:class-name style-list-container)
-                            ->
-                              option:unwrap-or (nth xs 1) ([])
-                              map $ fn (x)
-                                [] x $ render-code x
-                  =< nil 6
-                  let
-                      names $ -> defined-names (.to-list) (filter hint-func)
-                    if-not (empty? names)
-                      list->
-                        {} $ :class-name style-list-container
-                        -> names (sort)
-                          map $ fn (x)
-                            [] x $ render-code x
+                  {} $ :class-name css-picker-tip
+                  <> "|Picker mode..."
+                comp-icon :x
+                  {} (:font-size 18) (:cursor :pointer) (:position :absolute) (:top 4) (:right 4)
+                    :color $ hsl 200 80 70 0.6
+                  fn (e d!)
+                    d! $ :: :writer/picker-mode
+                list->
+                  {} $ :class-name style-list-container
+                  -> imported-names (&map:to-list)
+                    filter $ fn (pair)
+                      any?
+                        option:unwrap-or (nth pair 1) []
+                        , hint-func
+                    sort $ fn (a b)
+                      let
+                          a1 $ &compare
+                            count $ option:unwrap-or (nth a 1) []
+                            count $ option:unwrap-or (nth b 1) []
+                        if (= 0 a1)
+                          &compare
+                            option:unwrap-or (first a) |
+                            option:unwrap-or (first b) |
+                          , a1
+                    map $ fn (xs)
+                      let
+                          ns $ option:unwrap-or (first xs) |
+                        [] ns $ list->
+                          {} (:title ns) (:class-name style-list-container)
+                          ->
+                            option:unwrap-or (nth xs 1) ([])
+                            map $ fn (x)
+                              [] x $ render-code x
+                =< nil 6
+                let
+                    names $ -> defined-names (&set:to-list) (filter hint-func)
+                  if-not (empty? names)
+                    list->
+                      {} $ :class-name style-list-container
+                      -> names (sort)
+                        map $ fn (x)
+                          [] x $ render-code x
           :examples $ []
           :schema $ :: 'Dynamic
         'css-name-code $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-name-code $ {}
+          :code $ quote $ defstyle css-name-code
+            {}
               |$0 $ {} (:font-family ui/font-code) (:cursor :pointer) (:font-size 11) (:margin-bottom 4) (:word-break :none) (:line-height |12px) (:border-radius |4px)
                 :color $ hsl 0 0 90
                 :background-color $ hsl 0 0 50 0.2
@@ -3306,31 +3478,28 @@
           :examples $ []
           :schema $ :: 'Dynamic
         'css-picker-container $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-picker-container $ {}
-              |$0 $ merge ui/column
-                {} (:padding "|2px 4px") (:position :fixed) (:line-height |1.6em) (:top 6) (:left |50%) (:transform "|translate(-50%,0)") (:margin |auto) (:z-index 100) (:border-radius |4px) (:max-width |66vw) (:min-height |40px) (:min-width |200px)
-                  :border $ str "|1px solid " (hsl 0 0 70 0.4)
-                  :background-color $ hsl 0 0 20 0.7
+          :code $ quote $ defstyle css-picker-container
+            {} $ |$0 $ merge ui/column
+              {} (:padding "|2px 4px") (:position :fixed) (:line-height |1.6em) (:top 6) (:left |50%) (:transform "|translate(-50%,0)") (:margin |auto) (:z-index 100) (:border-radius |4px) (:max-width |66vw) (:min-height |40px) (:min-width |200px)
+                :border $ str "|1px solid " $ hsl 0 0 70 0.4
+                :background-color $ hsl 0 0 20 0.7
           :examples $ []
           :schema $ :: 'Dynamic
         'css-picker-tip $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-picker-tip $ {}
-              |$0 $ {} (:font-family ui/font-fancy) (:font-size 28) (:font-weight 300) (:line-height |21px) (:cursor :pointer) (:position :absolute) (:right 4) (:bottom 4) (:z-index -1)
-                :color $ hsl 0 0 90 0.4
+          :code $ quote $ defstyle css-picker-tip
+            {} $ |$0 $ {} (:font-family ui/font-fancy) (:font-size 28) (:font-weight 300) (:line-height |21px) (:cursor :pointer) (:position :absolute) (:right 4) (:bottom 4) (:z-index -1)
+              :color $ hsl 0 0 90 0.4
           :examples $ []
           :schema $ :: 'Dynamic
         'style-list-container $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-list-container $ {}
-              |$0 $ merge ui/row
-                {} (:flex-wrap :wrap) (:column-gap |4px)
+          :code $ quote $ defstyle style-list-container
+            {} $ |$0 $ merge ui/row
+              {} (:flex-wrap :wrap) (:column-gap |4px)
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.picker-notice $ :require
+        :code $ quote $ ns app.comp.picker-notice
+          :require
             respo.core :refer $ defcomp list-> >> <> span div a pre
             respo-ui.core :as ui
             respo.util.format :refer $ hsl
@@ -3341,69 +3510,69 @@
     'app.comp.profile $ %{} 'FileEntry
       :defs $ {}
         'comp-profile $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-profile (states user sid router-data)
-              let
-                  rename-plugin $ use-prompt (>> states :rename)
-                    {}
-                      :initial $ option:unwrap-or (get user :nickname) |
-                      :text "|Pick a nickname:"
-                div
+          :code $ quote $ defcomp comp-profile (states user sid router-data)
+            let
+                rename-plugin $ use-prompt (>> states :rename)
                   {}
-                    :class-name $ str-spaced css/row css/flex
-                    :style $ {} (:padding "|24px 16px")
-                  div
-                    {} $ :class-name css/flex
-                    div ({})
-                      <>
-                        str "|Hello! " $ option:unwrap-or (get user :nickname) |
-                        str-spaced css/font-fancy style-greet
-                      =< 4 nil
-                      comp-icon :edit-2
-                        {} (:font-size 14)
-                          :color $ hsl 0 0 40
-                          :cursor :pointer
-                        fn (e d!)
-                          .show rename-plugin d! $ fn (result)
-                            d! :user/nickname $ trim result
-                      =< 8 nil
-                      <>
-                        str "|id: " $ option:unwrap-or (get user :name) |
-                        , style-id
-                    =< nil 80
-                    div ({})
-                      button $ {} (:inner-text "|Log out") (:class-name style/button) (:on-click on-log-out)
-                    .render rename-plugin
-                  div
-                    {} (:class-name css/flex)
-                      :style $ {} (:flex 3)
-                    comp-page-members
-                      option:unwrap-or (get router-data :members) {}
-                      , sid
+                    :initial $ option:unwrap-or (get user :nickname) |
+                    :text "|Pick a nickname:"
+              div
+                {}
+                  :class-name $ str-spaced css/row css/flex
+                  :style $ {} $ :padding "|24px 16px"
+                div
+                  {} $ :class-name css/flex
+                  div ({})
+                    <>
+                      str "|Hello! " $ option:unwrap-or (get user :nickname) |
+                      str-spaced css/font-fancy style-greet
+                    =< 4 nil
+                    comp-icon :edit-2
+                      {} (:font-size 14)
+                        :color $ hsl 0 0 40
+                        :cursor :pointer
+                      fn (e d!)
+                        .show rename-plugin d! $ fn (result)
+                          d! :user/nickname $ trim result
+                    =< 8 nil
+                    <>
+                      str "|id: " $ option:unwrap-or (get user :name) |
+                      , style-id
+                  =< nil 80
+                  div ({})
+                    button $ {} (:inner-text "|Log out") (:class-name style/button) (:on-click on-log-out)
+                  .render rename-plugin
+                div
+                  {} (:class-name css/flex)
+                    :style $ {} $ :flex 3
+                  comp-page-members
+                    option:unwrap-or (get router-data :members) {}
+                    , sid
           :examples $ []
           :schema $ :: 'Dynamic
         'on-log-out $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-log-out (e dispatch!) (dispatch! :user/log-out nil)
-              js/window.localStorage.removeItem $ option:unwrap-or (get config/site :storage-key) nil
+          :code $ quote $ defn on-log-out (e dispatch!)
+            do (dispatch! :user/log-out nil)
+              js-ffi.browser/storage-remove! $ option:unwrap-or (get config/site :storage-key) |
+              , &unit
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Dynamic 'Dynamic
         'style-greet $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-greet $ {}
-              |& $ {} (:font-size 40) (:font-weight 100)
-                :color $ hsl 0 0 100 0.8
+          :code $ quote $ defstyle style-greet
+            {} $ |& $ {} (:font-size 40) (:font-weight 100)
+              :color $ hsl 0 0 100 0.8
           :examples $ []
           :schema $ :: 'Dynamic
         'style-id $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-id $ {} (:font-family "|Josefin Sans") (:font-weight 100)
+          :code $ quote $ def style-id
+            {} (:font-family "|Josefin Sans") (:font-weight 100)
               :color $ hsl 0 0 60
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.profile $ :require
+        :code $ quote $ ns app.comp.profile
+          :require
             respo.util.format :refer $ hsl
             app.schema :as schema
             respo-ui.core :as ui
@@ -3419,113 +3588,153 @@
     'app.comp.replace-name $ %{} 'FileEntry
       :defs $ {}
         '%rename-plugin $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def %rename-plugin $ impl-traits %rename-plugin0 RenamePluginImpl
+          :code $ quote $ def %rename-plugin (impl-traits %rename-plugin0 RenamePluginImpl)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'EnumDef
         '%rename-plugin0 $ %{} 'CodeEntry (:doc |)
-          :code $ quote
+          :code $ quote $ def %rename-plugin0
             defenum %rename-plugin0 $ :rename-plugin 'Dynamic 'Dynamic 'Dynamic
           :examples $ []
-          :schema $ :: 'Enum
+          :schema $ :: 'EnumDef
         'RenamePluginImpl $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defimpl RenamePluginImpl RenamePluginTrait
-              .render $ fn (self)
-                tag-match self $
-                  :rename-plugin node cursor s
-                  , node
-              .show $ fn (self d!)
-                tag-match self $
-                  :rename-plugin node cursor state
-                  do
-                    d! cursor $ merge state
-                      {} (:old-name |) (:new-name |) (:show? true)
-                    js/setTimeout $ fn ()
-                      let
-                          el $ js/document.querySelector |#replace-input
-                        if (js-present? el)
-                          .!select $ unsafe-coerce el JsObject
-              .close $ fn (self d!)
-                tag-match self $
-                  :rename-plugin node cursor state
-                  d! cursor $ assoc state :show? false
+          :code $ quote $ defimpl RenamePluginImpl RenamePluginTrait
+            .render $ fn (self)
+              match self $
+                :rename-plugin node cursor s
+                , node
+            .show $ fn (self d!)
+              match self $
+                :rename-plugin node cursor state
+                do
+                  d! cursor $ merge-dynamic
+                    assert-type state $ :: 'Map 'Tag 'Dynamic
+                    {} (:old-name |) (:new-name |) (:show? true)
+                  js-ffi.browser/set-timeout!
+                    fn () $ select-replace-input!
+                    , 0
+            .close $ fn (self d!)
+              match self $
+                :rename-plugin node cursor state
+                d! cursor $ assoc state :show? false
           :examples $ []
           :schema $ :: 'Impl
         'RenamePluginTrait $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftrait RenamePluginTrait (:render :fn) (:show :fn) (:close :fn)
+          :code $ quote $ deftrait RenamePluginTrait (:render :fn) (:show :fn) (:close :fn)
           :examples $ []
           :schema $ :: 'Trait
-        'use-replace-name-modal $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn use-replace-name-modal (states on-replace)
-              let
-                  cursor $ option:unwrap-or (get states :cursor) nil
-                  state $ or
-                    option:unwrap-or (get states :data) {}
-                    {} (:old-name |) (:new-name |) (:show? false)
-                  on-submit $ fn (d!) (; "|special trick to use spaces to remove a leaf")
-                    when
-                      and
-                        not $ blank?
-                          option:unwrap-or (get state :old-name) |
-                        not $ =
-                          option:unwrap-or (get state :new-name) |
-                          , |
-                      on-replace
-                        option:unwrap-or (get state :old-name) |
-                        option:unwrap-or (get state :new-name) |
-                        , d!
-                      d! cursor $ assoc state :show? false
-                  node $ comp-modal
-                    {} (:title "|Replace variable")
-                      :style $ {} (:width 240)
-                      :container-style $ {}
-                      :render-body $ fn (? arg)
-                        div
-                          {} $ :style
-                            merge ui/column $ {} (:padding "|8px 16px")
-                          div ({})
-                            input $ {} (:placeholder |from...)
-                              :style $ merge ui/input
-                                {} $ :font-family ui/font-code
-                              :value $ option:unwrap-or (get state :old-name) |
-                              :autofocus true
-                              :id |replace-input
-                              :on-input $ fn (e d!)
-                                d! cursor $ assoc state :old-name
-                                  option:unwrap-or (get e :value) nil
-                          =< nil 8
-                          div ({})
-                            input $ {} (:placeholder |to...)
-                              :style $ merge ui/input
-                                {} $ :font-family ui/font-code
-                              :on-input $ fn (e d!)
-                                d! cursor $ assoc state :new-name
-                                  option:unwrap-or (get e :value) nil
-                              :value $ option:unwrap-or (get state :new-name) |
-                              :on-keydown $ fn (e d!)
-                                if
-                                  = 13 $ assert-type
-                                    option:unwrap-or (get e :key-code) 0
-                                    , 'Number
-                                  on-submit d!
-                          =< nil 8
-                          div
-                            {} $ :style ui/row-parted
-                            span $ {}
-                            button $ {} (:style ui/button) (:inner-text |Replace)
-                              :on-click $ fn (e d!) (on-submit d!)
-                    option:unwrap-or (get state :show?) false
-                    fn (d!)
-                      d! cursor $ assoc state :show? false
-                %:: %rename-plugin :rename-plugin node cursor state
+        'ReplaceInputHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait ReplaceInputHost
+            .select! $ :: 'Fn $ {}
+              :args $ [] 'app.comp.replace-name/ReplaceInputHost
+              :return 'Unit
           :examples $ []
-          :schema $ :: 'Dynamic
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} $ :select! |select
+          :schema $ :: 'Trait
+        'render-replace-plugin $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn render-replace-plugin (plugin)
+            match plugin $
+              :rename-plugin node cursor state
+              , node
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'app.comp.replace-name/%rename-plugin
+        'select-replace-input! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn select-replace-input! ()
+            match (js-ffi.browser/query-selector |#replace-input)
+              (:some el)
+                let
+                    input $ unsafe-coerce el 'app.comp.replace-name/ReplaceInputHost
+                  .select! input
+              (:none) &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+            :features $ #{} :js-ffi
+        'show-replace-plugin! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn show-replace-plugin! (plugin d!)
+            match plugin $
+              :rename-plugin node cursor state
+              do
+                d! cursor $ merge-dynamic
+                  assert-type state $ :: 'Map 'Tag 'Dynamic
+                  {} (:old-name |) (:new-name |) (:show? true)
+                js-ffi.browser/set-timeout!
+                  fn () $ select-replace-input!
+                  , 0
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'app.comp.replace-name/%rename-plugin $ :: 'Fn
+              {} (:return 'Unit)
+                :args $ [] 'Dynamic
+        'use-replace-name-modal $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn use-replace-name-modal (states on-replace)
+            let
+                cursor $ option:unwrap-or (get states :cursor) nil
+                state $ or
+                  option:unwrap-or (get states :data) {}
+                  {} (:old-name |) (:new-name |) (:show? false)
+                on-submit $ fn (d!) (; "|special trick to use spaces to remove a leaf")
+                  when
+                    and
+                      not $ blank? $ option:unwrap-or (get state :old-name) |
+                      not $ =
+                        option:unwrap-or (get state :new-name) |
+                        , |
+                    on-replace
+                      option:unwrap-or (get state :old-name) |
+                      option:unwrap-or (get state :new-name) |
+                      , d!
+                    d! cursor $ assoc state :show? false
+                node $ comp-modal
+                  {} (:title "|Replace variable")
+                    :style $ {} $ :width 240
+                    :container-style $ {}
+                    :render-body $ fn (arg)
+                      div
+                        {} $ :style $ merge ui/column
+                          {} $ :padding "|8px 16px"
+                        div ({})
+                          input $ {} (:placeholder |from...)
+                            :style $ merge ui/input $ {} (:font-family ui/font-code)
+                            :value $ option:unwrap-or (get state :old-name) |
+                            :autofocus true
+                            :id |replace-input
+                            :on-input $ fn (e d!)
+                              d! cursor $ assoc state :old-name $ option:unwrap-or (get e :value) nil
+                        =< nil 8
+                        div ({})
+                          input $ {} (:placeholder |to...)
+                            :style $ merge ui/input $ {} (:font-family ui/font-code)
+                            :on-input $ fn (e d!)
+                              d! cursor $ assoc state :new-name $ option:unwrap-or (get e :value) nil
+                            :value $ option:unwrap-or (get state :new-name) |
+                            :on-keydown $ fn (e d!)
+                              if
+                                = 13 $ assert-type
+                                  option:unwrap-or (get e :key-code) 0
+                                  , 'Number
+                                on-submit d!
+                        =< nil 8
+                        div
+                          {} $ :style ui/row-parted
+                          span $ {}
+                          button $ {} (:style ui/button) (:inner-text |Replace)
+                            :on-click $ fn (e d!) (on-submit d!)
+                  option:unwrap-or (get state :show?) false
+                  fn (d!)
+                    d! cursor $ assoc state :show? false
+              %:: %rename-plugin :rename-plugin node cursor state
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'app.comp.replace-name/%rename-plugin)
+            :args $ [] (:: 'Map 'Tag 'Dynamic)
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] 'String 'String $ :: 'Fn
+                  {} (:return 'Unit)
+                    :args $ [] 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.replace-name $ :require
+        :code $ quote $ ns app.comp.replace-name
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo.core :refer $ defcomp <> span div pre input button img a br
@@ -3535,264 +3744,274 @@
     'app.comp.search $ %{} 'FileEntry
       :defs $ {}
         'bookmark->str $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn bookmark->str (bookmark)
-              tag-match bookmark
-                (:def ns' def') (str ns' |/ def')
-                (:def ns' def' f) (str ns' |/ def')
-                (:ns ns') ns'
-                (:ns ns' f) ns'
+          :code $ quote $ defn bookmark->str (bookmark)
+            match bookmark
+              (:def ns' def' f) (str ns' |/ def')
+              (:ns ns' f) ns'
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'String)
+            :args $ [] 'app.bookmark/%bookmark
         'comp-no-results $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-no-results () $ div
-              {} $ :style
-                merge ui/row-middle $ {} (:padding 8) (:font-family ui/font-fancy)
+          :code $ quote $ defcomp comp-no-results ()
+            div
+              {} $ :style $ merge ui/row-middle
+                {} (:padding 8) (:font-family ui/font-fancy)
                   :color $ hsl 0 0 60
                   :font-weight 300
               <> "|No results"
           :examples $ []
           :schema $ :: 'Dynamic
         'comp-search $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-search (states router-data)
-              let
-                  cursor $ option:unwrap-or (get states :cursor) nil
-                  state $ or
-                    option:unwrap-or (get states :data) initial-state
-                    , initial-state
-                  queries $ ->
-                    split
-                      option:unwrap-or (get state :query) |
-                      , "| "
-                    map $ fn (x) (trim x)
-                  def-candidates $ -> router-data
+          :code $ quote $ defcomp comp-search (states router-data)
+            let
+                cursor $ option:unwrap-or (get states :cursor) nil
+                state $ or
+                  option:unwrap-or (get states :data) initial-state
+                  , initial-state
+                queries $ ->
+                  split
+                    option:unwrap-or (get state :query) |
+                    , "| "
+                  map $ fn (x) (trim x)
+                def-candidates $ assert-type
+                  -> router-data
                     filter $ fn (bookmark)
-                      tag-match bookmark
-                        (:def ns' def')
+                      match bookmark
+                        (:def ns' def' f)
                           every? queries $ fn (y)
-                            .includes? (or def' |) y
+                            &str:includes? (or def' |) y
                         _ false
-                    .sort-by $ if
+                    sort $ if
                       blank? $ option:unwrap-or (get state :query) |
-                      , bookmark->str query-length
-                  ns-candidates $ -> router-data
+                      fn (a b)
+                        &compare (bookmark->str a) (bookmark->str b)
+                      fn (a b)
+                        &compare (query-length a) (query-length b)
+                  :: 'List 'app.bookmark/%bookmark
+                ns-candidates $ assert-type
+                  -> router-data
                     filter $ fn (bookmark)
-                      tag-match bookmark
-                        (:ns ns')
-                          every? queries $ fn (y) (.includes? ns' y)
+                      match bookmark
+                        (:ns ns' f)
+                          every? queries $ fn (y) (&str:includes? ns' y)
                         _ false
-                    .sort-by $ if
+                    sort $ if
                       blank? $ option:unwrap-or (get state :query) |
-                      , bookmark->str query-length
+                      fn (a b)
+                        &compare (bookmark->str a) (bookmark->str b)
+                      fn (a b)
+                        &compare (query-length a) (query-length b)
+                  :: 'List 'app.bookmark/%bookmark
+              div
+                {} $ :class-name $ str-spaced css/expand css/row css-search
                 div
-                  {} $ :class-name (str-spaced css/expand css/row css-search)
-                  div
-                    {} (:class-name css/column)
-                      :style $ {} (:width 320) (:height |100%)
-                    div ({})
-                      input $ {} (:placeholder "|Type to search...")
-                        :value $ option:unwrap-or (get state :query) |
-                        :class-name $ str-spaced style/input |search-input
-                        :style $ {} (:width |100%)
-                        :on-input $ on-input state cursor
-                        :on-keydown $ on-keydown state
-                          if
-                            = :ns $ option:unwrap-or (get state :mode) :def
-                            , ns-candidates def-candidates
-                          , cursor
-                    if (empty? def-candidates) (comp-no-results)
-                    list->
-                      {} $ :class-name (str-spaced css/expand style-body)
-                      -> def-candidates (take 20)
-                        map-indexed $ fn (idx bookmark)
-                          let
-                              text $ bookmark->str bookmark
-                              selected? $ and
-                                = :def $ option:unwrap-or (get state :mode) :def
-                                = idx $ option:unwrap-or (get state :selection) 0
-                            [] text $ tag-match bookmark
-                              (:def ns' def')
-                                div
-                                  {}
-                                    :class-name $ str-spaced |hoverable style-candidate (if selected? style-highlight)
-                                    :on-click $ on-select bookmark cursor
-                                  <> def' nil
-                                  =< 8 nil
-                                  <> ns' $ str-spaced style-candidate-ns (if selected? style-highlight)
-                  div
-                    {} (:class-name css/column)
-                      :style $ {} (:width 320) (:height |100%)
-                    =< nil 32
-                    if (empty? ns-candidates) (comp-no-results)
-                    list->
-                      {} $ :class-name (str-spaced css/expand style-body)
-                      -> ns-candidates (take 20)
-                        map-indexed $ fn (idx bookmark)
-                          [] (nth bookmark 1)
-                            let
-                                pieces $ split
-                                  option:unwrap-or (nth bookmark 1) |
-                                  , |.
-                                selected? $ and
-                                  = :ns $ option:unwrap-or (get state :mode) :def
-                                  = idx $ option:unwrap-or (get state :selection) 0
+                  {} (:class-name css/column)
+                    :style $ {} (:width 320) (:height |100%)
+                  div ({})
+                    input $ {} (:placeholder "|Type to search...")
+                      :value $ option:unwrap-or (get state :query) |
+                      :class-name $ str-spaced style/input |search-input
+                      :style $ {} $ :width |100%
+                      :on-input $ on-input state cursor
+                      :on-keydown $ on-keydown state
+                        if
+                          = :ns $ option:unwrap-or (get state :mode) :def
+                          , ns-candidates def-candidates
+                        , cursor
+                  if (empty? def-candidates) (comp-no-results)
+                  list->
+                    {} $ :class-name $ str-spaced css/expand style-body
+                    -> def-candidates (take 20)
+                      map-indexed $ fn (idx bookmark)
+                        let
+                            text $ bookmark->str bookmark
+                            selected? $ and
+                              = :def $ option:unwrap-or (get state :mode) :def
+                              = idx $ option:unwrap-or (get state :selection) 0
+                          [] text $ match bookmark
+                            (:def ns' def' f)
                               div
                                 {}
-                                  :class-name $ str-spaced |hoverable css/row-middle style-candidate (if selected? style-highlight)
+                                  :class-name $ str-spaced |hoverable style-candidate $ if selected? style-highlight
                                   :on-click $ on-select bookmark cursor
-                                span ({})
-                                  <>
-                                    str
-                                      .join-str (butlast pieces) |.
-                                      , |.
-                                    {} $ :color (hsl 0 0 50)
-                                  <>
-                                    option:unwrap-or (last pieces) |
-                                    , style-last-piece
+                                <> def' nil
                                 =< 8 nil
-                                span $ {} (:inner-text |import) (:class-name style-use-ns)
-                                  :on-click $ fn (e d!)
-                                    d! $ :: :analyze/use-import-def bookmark
-                                    d! cursor initial-state
-                  div $ {} (:class-name css/flex)
-                  div
-                    {} (:class-name css/column-parted)
-                      :style $ {} (:padding 16)
-                    a $ {} (:href |https://repo.cirru.org/hovenia-editor/?port=6011) (:inner-text "|Hovenia Editor") (:class-name css/link)
-                      :style $ {}
-                        :color $ hsl 200 40 50
-                      :target |_blank
+                                <> ns' $ str-spaced style-candidate-ns $ if selected? style-highlight
+                            _ $ div $ {}
+                div
+                  {} (:class-name css/column)
+                    :style $ {} (:width 320) (:height |100%)
+                  =< nil 32
+                  if (empty? ns-candidates) (comp-no-results)
+                  list->
+                    {} $ :class-name $ str-spaced css/expand style-body
+                    -> ns-candidates (take 20)
+                      map-indexed $ fn (idx bookmark)
+                        [] (nth bookmark 1)
+                          let
+                              pieces $ split
+                                option:unwrap-or (nth bookmark 1) |
+                                , |.
+                              selected? $ and
+                                = :ns $ option:unwrap-or (get state :mode) :def
+                                = idx $ option:unwrap-or (get state :selection) 0
+                            div
+                              {}
+                                :class-name $ str-spaced |hoverable css/row-middle style-candidate $ if selected? style-highlight
+                                :on-click $ on-select bookmark cursor
+                              span ({})
+                                <>
+                                  str
+                                    join-str (butlast pieces) |.
+                                    , |.
+                                  {} $ :color $ hsl 0 0 50
+                                <>
+                                  option:unwrap-or (last pieces) |
+                                  , style-last-piece
+                              =< 8 nil
+                              span $ {} (:inner-text |import) (:class-name style-use-ns)
+                                :on-click $ fn (e d!)
+                                  d! $ :: :analyze/use-import-def bookmark
+                                  d! cursor initial-state
+                div $ {} $ :class-name css/flex
+                div
+                  {} (:class-name css/column-parted)
+                    :style $ {} $ :padding 16
+                  a $ {}
+                    :href |https://repo.cirru.org/hovenia-editor/?port=6011
+                    :inner-text "|Hovenia Editor"
+                    :class-name css/link
+                    :style $ {} $ :color (hsl 200 40 50)
+                    :target |_blank
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'app.bookmark/%bookmark)
         'css-search $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-search $ {}
-              |$0 $ {} (:height |100%) (:padding "|40px 16px 0 16px")
+          :code $ quote $ defstyle css-search
+            {} $ |$0 $ {} (:height |100%) (:padding "|40px 16px 0 16px")
           :examples $ []
           :schema $ :: 'Dynamic
         'initial-state $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def initial-state $ {} (:query |) (:selection 0) (:mode :def)
+          :code $ quote $ def initial-state
+            {} (:query |) (:selection 0) (:mode :def)
           :examples $ []
           :schema $ :: 'Dynamic
         'on-input $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-input (state cursor)
-              fn (e d!)
-                d! cursor $ -> state
-                  assoc :query $ option:unwrap-or (get e :value) nil
-                  assoc :selection 0
+          :code $ quote $ defn on-input (state cursor)
+            fn (e d!)
+              d! cursor $ -> state
+                assoc :query $ option:unwrap-or (get e :value) nil
+                assoc :selection 0
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic
         'on-keydown $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-keydown (state candidates cursor)
-              fn (e d!)
-                let
-                    code $ assert-type
-                      option:unwrap-or (get e :key-code) 0
-                      , 'Number
-                    event $ option:unwrap-or (get e :original-event) {}
-                  cond
-                      = keycode/enter code
-                      let
-                          target $ get candidates
-                            option:unwrap-or (get state :selection) 0
-                        if (some? target)
+          :code $ quote $ defn on-keydown (state candidates cursor)
+            fn (e d!)
+              let
+                  code $ assert-type
+                    option:unwrap-or (get e :key-code) 0
+                    , 'Number
+                  event $ option:unwrap-or (get e :original-event) {}
+                cond
+                    = keycode/enter code
+                    let
+                        target $ get candidates $ search-selection state
+                      if (some? target)
+                        if
+                          option:unwrap-or (get e :shift?) false
                           if
-                            option:unwrap-or (get e :shift?) false
-                            if
-                              = :def $ option:unwrap-or (get state :mode) :def
-                              do
-                                d! $ :: :analyze/use-import-def target
-                                d! cursor initial-state
-                              do
-                                d! $ :: :analyze/use-import-def target
-                                d! cursor initial-state
-                            do (d! :writer/select target) (d! cursor initial-state)
-                    (= keycode/up code)
-                      do (.!preventDefault event)
-                        if
-                          >
-                            option:unwrap-or (get state :selection) 0
-                            , 0
-                          d! cursor $ update state :selection dec
-                    (= keycode/escape code)
-                      do
-                        d! $ :: :router/change (:: :editor)
-                        d! cursor initial-state
-                    (= keycode/down code)
-                      do (.!preventDefault event)
-                        if
-                          <
-                            option:unwrap-or (get state :selection) 0
-                            dec $ count candidates
-                          d! cursor $ update state :selection inc
-                    (and (option:unwrap-or (get e :meta?) false) (= keycode/b code))
-                      d! cursor $ update state :mode
-                        fn (mode)
-                          if (= mode :ns) :def :ns
-                    true $ on-window-keydown
-                      option:unwrap-or (get e :event) {}
-                      , d!
-                        {} $ :name :search
+                            = :def $ option:unwrap-or (get state :mode) :def
+                            do
+                              d! $ :: :analyze/use-import-def target
+                              d! cursor initial-state
+                            do
+                              d! $ :: :analyze/use-import-def target
+                              d! cursor initial-state
+                          do (d! :writer/select target) (d! cursor initial-state)
+                  (= keycode/up code)
+                    do (prevent-default! event)
+                      if
+                        > (search-selection state) 0
+                        d! cursor $ assoc state :selection $ dec (search-selection state)
+                  (= keycode/escape code)
+                    do
+                      d! $ :: :router/change $ :: :editor
+                      d! cursor initial-state
+                  (= keycode/down code)
+                    do (prevent-default! event)
+                      if
+                        < (search-selection state)
+                          dec $ count candidates
+                        d! cursor $ assoc state :selection $ inc (search-selection state)
+                  (and (option:unwrap-or (get e :meta?) false) (= keycode/b code))
+                    d! cursor $ assoc state :mode $ if
+                      =
+                        assert-type
+                          option:unwrap-or (get state :mode) :def
+                          , 'Tag
+                        , :ns
+                      , :def :ns
+                  true $ on-window-keydown
+                    option:unwrap-or (get e :event) {}
+                    , d! $ {} (:name :search)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'app.bookmark/%bookmark) 'Dynamic
         'on-select $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-select (bookmark cursor)
-              fn (e d!) (d! :writer/select bookmark) (d! cursor initial-state)
+          :code $ quote $ defn on-select (bookmark cursor)
+            fn (e d!) (d! :writer/select bookmark) (d! cursor initial-state)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'respo.schema/EventHandler)
+            :args $ [] 'app.bookmark/%bookmark 'Dynamic
         'query-length $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn query-length (bookmark)
-              tag-match bookmark
-                (:def ns' def' f) (count def')
-                (:def ns' def') (count def')
-                (:ns ns' f) (count ns')
-                (:ns ns') (count ns')
+          :code $ quote $ defn query-length (bookmark)
+            match bookmark
+              (:def ns' def' f) (count def')
+              (:ns ns' f) (count ns')
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Number)
+            :args $ [] 'app.bookmark/%bookmark
+        'search-selection $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn search-selection (state)
+            assert-type
+              option:unwrap-or (get state :selection) 0
+              , 'Number
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Number)
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
         'style-body $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-body $ {}
-              |& $ {} (:overflow :auto) (:padding-bottom 80)
+          :code $ quote $ defstyle style-body
+            {} $ |& $ {} (:overflow :auto) (:padding-bottom 80)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-candidate $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-candidate $ {}
-              |& $ {} (:padding "|0 8px")
-                :color $ hsl 0 0 100 0.6
-                :cursor :pointer
+          :code $ quote $ defstyle style-candidate
+            {} $ |& $ {} (:padding "|0 8px")
+              :color $ hsl 0 0 100 0.6
+              :cursor :pointer
           :examples $ []
           :schema $ :: 'Dynamic
         'style-candidate-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-candidate-ns $ {}
-              |& $ {} (:font-size 12)
-                :color $ hsl 0 0 40
+          :code $ quote $ defstyle style-candidate-ns
+            {} $ |& $ {} (:font-size 12)
+              :color $ hsl 0 0 40
           :examples $ []
           :schema $ :: 'Dynamic
         'style-highlight $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-highlight $ {}
-              |& $ {} (:color :white) (:opacity 1)
+          :code $ quote $ defstyle style-highlight
+            {} $ |& $ {} (:color :white) (:opacity 1)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-last-piece $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-last-piece $ {}
-              |& $ {}
-                :color $ hsl 0 0 80
+          :code $ quote $ defstyle style-last-piece
+            {} $ |& $ {}
+              :color $ hsl 0 0 80
           :examples $ []
           :schema $ :: 'Dynamic
         'style-use-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-use-ns $ {}
+          :code $ quote $ defstyle style-use-ns
+            {}
               |& $ {} (:opacity 0) (:color :white) (:font-size 12)
               (str |. style-candidate "|:hover &")
                 {} $ :opacity 0.4
@@ -3803,8 +4022,8 @@
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.search $ :require
+        :code $ quote $ ns app.comp.search
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -3816,66 +4035,61 @@
             app.client-util :as util
             app.style :as style
             app.util.shortcuts :refer $ on-window-keydown
+            app.util.dom :refer $ prevent-default!
     'app.comp.theme-menu $ %{} 'FileEntry
       :defs $ {}
         'comp-theme-menu $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-theme-menu (states theme)
-              let
-                  cursor $ option:unwrap-or (get states :cursor) []
-                  state $ option:unwrap-or (get states :data) false
-                div
-                  {}
-                    :class-name $ str-spaced css/font-fancy style-theme-menu
-                    :on-click $ fn (e d!)
-                      d! cursor $ not state
-                  <> $ or theme "|no theme"
-                  if state $ list->
-                    {} (:class-name style-menu)
-                      :on-click $ fn (e d!)
-                    -> theme-list $ map
-                      fn (theme-name)
-                        [] theme-name $ div
-                          {}
-                            :style $ if (= theme theme-name)
-                              {} $ :color :white
-                            :class-name style-menu-item
-                            :on-click $ fn (e d!) (d! :user/change-theme theme-name) (d! cursor false)
-                          <> theme-name
+          :code $ quote $ defcomp comp-theme-menu (states theme)
+            let
+                cursor $ option:unwrap-or (get states :cursor) []
+                state $ option:unwrap-or (get states :data) false
+              div
+                {}
+                  :class-name $ str-spaced css/font-fancy style-theme-menu
+                  :on-click $ fn (e d!)
+                    d! cursor $ not state
+                <> $ or theme "|no theme"
+                if state $ list->
+                  {} (:class-name style-menu)
+                    :on-click $ fn $ e d!
+                  -> theme-list $ map $ fn (theme-name)
+                    [] theme-name $ div
+                      {}
+                        :style $ if (= theme theme-name)
+                          {} $ :color :white
+                        :class-name style-menu-item
+                        :on-click $ fn (e d!) (d! :user/change-theme theme-name) (d! cursor false)
+                      <> $ str theme-name
           :examples $ []
           :schema $ :: 'Dynamic
         'style-menu $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-menu $ {}
-              |& $ {} (:position :absolute) (:bottom |100%) (:right 0) (:background-color :black)
-                :border $ str "|1px solid " (hsl 0 0 100 0.2)
+          :code $ quote $ defstyle style-menu
+            {} $ |& $ {} (:position :absolute) (:bottom |100%) (:right 0) (:background-color :black)
+              :border $ str "|1px solid " $ hsl 0 0 100 0.2
           :examples $ []
           :schema $ :: 'Dynamic
         'style-menu-item $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-menu-item $ {}
-              |& $ {}
-                :color $ hsl 0 0 70
-                :padding "|0 8px"
+          :code $ quote $ defstyle style-menu-item
+            {} $ |& $ {}
+              :color $ hsl 0 0 70
+              :padding "|0 8px"
           :examples $ []
           :schema $ :: 'Dynamic
         'style-theme-menu $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle style-theme-menu $ {}
-              |& $ {} (:position :relative) (:width 60)
-                :color $ hsl 0 0 80 0.4
-                :cursor :pointer
-                :display :inline-block
+          :code $ quote $ defstyle style-theme-menu
+            {} $ |& $ {} (:position :relative) (:width 60)
+              :color $ hsl 0 0 80 0.4
+              :cursor :pointer
+              :display :inline-block
           :examples $ []
           :schema $ :: 'Dynamic
         'theme-list $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def theme-list $ [] :star-trail :beginner :curves
+          :code $ quote $ def theme-list ([] :star-trail :beginner :curves)
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.theme-menu $ :require
+        :code $ quote $ ns app.comp.theme-menu
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
@@ -3887,74 +4101,77 @@
     'app.comp.watching $ %{} 'FileEntry
       :defs $ {}
         'comp-watching $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defcomp comp-watching (states router-data theme)
-              let
-                  expr $ option:unwrap-or
+          :code $ quote $ defcomp comp-watching (states router-data theme)
+            let
+                expr $ assert-type
+                  option:unwrap-or
                     get
                       option:unwrap-or (get router-data :expr) nil
                       , :code
                     , nil
-                  focus $ option:unwrap-or (get router-data :focus) nil
-                  bookmark $ Bookmark
-                    option:unwrap-or (get router-data :bookmark) nil
-                  others $ {}
-                  member-name $ option:unwrap-or
-                    get-in router-data $ [] :member :nickname
-                    , |
-                  readonly? true
-                if (nil? router-data)
+                  , 'app.schema/CirruExprShape
+                focus $ assert-type
+                  option:unwrap-or (get router-data :focus) nil
+                  :: 'List 'Number
+                bookmark $ Bookmark $ assert-type
+                  option:unwrap-or (get router-data :bookmark) nil
+                  , 'app.bookmark/%bookmark
+                others $ #{}
+                member-name $ option:unwrap-or
+                  get-in router-data $ [] :member :nickname
+                  , |
+                readonly? true
+              if (nil? router-data)
+                div
+                  {} $ :style style-container
+                  <> "|Session is missing!" nil
+                if
+                  option:unwrap-or (get router-data :self?) false
                   div
                     {} $ :style style-container
-                    <> "|Session is missing!" nil
-                  if
-                    option:unwrap-or (get router-data :self?) false
-                    div
-                      {} $ :style style-container
-                      <> "|Watching at yourself :)" style-title
-                    div
-                      {} $ :style (merge ui/column style-container)
-                      when
-                        option:unwrap-or (get router-data :working?) false
-                        div
-                          {} $ :style
-                            merge
-                              assert-type ui/flex $ :: 'Map 'Tag 'Dynamic
-                              {} $ :overflow :auto
-                          comp-doc (>> states :doc)
-                            option:unwrap-or (get router-data :expr) nil
-                            , bookmark
-                          comp-expr
-                            >> states $ .preview bookmark
-                            , expr focus ([]) others false false readonly? false (or theme :star-trail) 0
-                      =< nil 16
-                      div ({}) (<> "|Watching mode" style-tip) (=< 16 nil) (<> member-name nil) (=< 16 nil)
-                        <> (.preview bookmark) nil
-                        =< 16 nil
-                        comp-theme-menu (>> states :theme) (or theme :star-trail)
+                    <> "|Watching at yourself :)" style-title
+                  div
+                    {} $ :style $ merge ui/column style-container
+                    when
+                      option:unwrap-or (get router-data :working?) false
+                      div
+                        {} $ :style $ merge
+                          assert-type ui/flex $ :: 'Map 'Tag 'Dynamic
+                          {} $ :overflow :auto
+                        comp-doc (>> states :doc)
+                          option:unwrap-or (get router-data :expr) nil
+                          , bookmark
+                        comp-expr
+                          >> states $ app.bookmark/preview bookmark
+                          , expr focus ([]) others false :inline readonly? false (or theme :star-trail) 0
+                    =< nil 16
+                    div ({}) (<> "|Watching mode" style-tip) (=< 16 nil) (<> member-name nil) (=< 16 nil)
+                      <> (app.bookmark/preview bookmark) nil
+                      =< 16 nil
+                      comp-theme-menu (>> states :theme) (or theme :star-trail)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-container $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-container $ {} (:padding "|40px 16px 0 16px")
+          :code $ quote $ def style-container
+            {} $ :padding "|40px 16px 0 16px"
           :examples $ []
           :schema $ :: 'Dynamic
         'style-tip $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-tip $ {} (:font-family "|Josefin Sans")
+          :code $ quote $ def style-tip
+            {} (:font-family "|Josefin Sans")
               :background-color $ hsl 0 0 100 0.3
               :border-radius |4px
               :padding "|4px 8px"
           :examples $ []
           :schema $ :: 'Dynamic
         'style-title $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-title $ {} (:font-family "|Josefin Sans")
+          :code $ quote $ def style-title
+            {} $ :font-family "|Josefin Sans"
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.comp.watching $ :require
+        :code $ quote $ ns app.comp.watching
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo.core :refer $ defcomp >> <> span div input pre a
@@ -3972,8 +4189,8 @@
     'app.config $ %{} 'FileEntry
       :defs $ {}
         'cdn? $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def cdn? $ cond
+          :code $ quote $ def cdn?
+            cond
                 exists? js/window
                 , false
               (exists? js/process) (= |true js/process.env.cdn)
@@ -3981,426 +4198,590 @@
           :examples $ []
           :schema $ :: 'Bool
         'dev? $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def dev? $ = |dev
-              option:unwrap-or (get-env |mode) |release
+          :code $ quote $ def dev?
+            = |dev $ option:unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Bool
         'site $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def site $ {} (:port nil) (:title "|Calcit Editor") (:icon |https://cdn.tiye.me/logo/cirru.png) (:theme |#eeeeff) (:storage-key |calcit-storage) (:storage-file |calcit.cirru)
+          :code $ quote $ def site
+            {} (:port nil) (:title "|Calcit Editor") (:icon |https://cdn.tiye.me/logo/cirru.png) (:theme |#eeeeff) (:storage-key |calcit-storage) (:storage-file |calcit.cirru)
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.config $ :require ([] app.schema :as schema)
+        :code $ quote $ ns app.config
+          :require $ [] app.schema :as schema
     'app.keycode $ %{} 'FileEntry
       :defs $ {}
         'b $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def b 66)
+          :code $ quote $ def b 66
           :examples $ []
           :schema $ :: 'Number
         'backspace $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def backspace 8)
+          :code $ quote $ def backspace 8
           :examples $ []
           :schema $ :: 'Number
         'c $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def c 67)
+          :code $ quote $ def c 67
           :examples $ []
           :schema $ :: 'Number
         'd $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def d 68)
+          :code $ quote $ def d 68
           :examples $ []
           :schema $ :: 'Number
         'down $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def down 40)
+          :code $ quote $ def down 40
           :examples $ []
           :schema $ :: 'Number
         'e $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def e 69)
+          :code $ quote $ def e 69
           :examples $ []
           :schema $ :: 'Number
         'enter $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def enter 13)
+          :code $ quote $ def enter 13
           :examples $ []
           :schema $ :: 'Number
         'escape $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def escape 27)
+          :code $ quote $ def escape 27
           :examples $ []
           :schema $ :: 'Number
         'f $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def f 70)
+          :code $ quote $ def f 70
           :examples $ []
           :schema $ :: 'Number
         'i $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def i 73)
+          :code $ quote $ def i 73
           :examples $ []
           :schema $ :: 'Number
         'j $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def j 74)
+          :code $ quote $ def j 74
           :examples $ []
           :schema $ :: 'Number
         'k $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def k 75)
+          :code $ quote $ def k 75
           :examples $ []
           :schema $ :: 'Number
         'left $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def left 37)
+          :code $ quote $ def left 37
           :examples $ []
           :schema $ :: 'Number
         'num-4 $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def num-4 52)
+          :code $ quote $ def num-4 52
           :examples $ []
           :schema $ :: 'Number
         'o $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def o 79)
+          :code $ quote $ def o 79
           :examples $ []
           :schema $ :: 'Number
         'p $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def p 80)
+          :code $ quote $ def p 80
           :examples $ []
           :schema $ :: 'Number
         'period $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def period 190)
+          :code $ quote $ def period 190
           :examples $ []
           :schema $ :: 'Number
         'right $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def right 39)
+          :code $ quote $ def right 39
           :examples $ []
           :schema $ :: 'Number
         's $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def s 83)
+          :code $ quote $ def s 83
           :examples $ []
           :schema $ :: 'Number
         'slash $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def slash 191)
+          :code $ quote $ def slash 191
           :examples $ []
           :schema $ :: 'Number
         'space $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def space 32)
+          :code $ quote $ def space 32
           :examples $ []
           :schema $ :: 'Number
         'tab $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def tab 9)
+          :code $ quote $ def tab 9
           :examples $ []
           :schema $ :: 'Number
         'up $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def up 38)
+          :code $ quote $ def up 38
           :examples $ []
           :schema $ :: 'Number
         'v $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def v 86)
+          :code $ quote $ def v 86
           :examples $ []
           :schema $ :: 'Number
         'x $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def x 88)
+          :code $ quote $ def x 88
           :examples $ []
           :schema $ :: 'Number
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote (ns app.keycode)
+        :code $ quote $ ns app.keycode
     'app.polyfill $ %{} 'FileEntry
       :defs $ {}
+        'CanvasContextHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait CanvasContextHost (:font 'String)
+            .measure-text $ :: 'Fn $ {}
+              :args $ [] 'app.polyfill/CanvasContextHost 'String
+              :return 'app.polyfill/TextMetricsHost
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} $ :measure-text |measureText
+            :writable $ #{} :font
+          :schema $ :: 'Trait
+        'CanvasHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait CanvasHost
+            .get-context $ :: 'Fn $ {}
+              :args $ [] 'app.polyfill/CanvasHost 'String
+              :return 'app.polyfill/CanvasContextHost
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} $ :get-context |getContext
+          :schema $ :: 'Trait
+        'PolyfillDocumentHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait PolyfillDocumentHost
+            .create-element $ :: 'Fn $ {}
+              :args $ [] 'app.polyfill/PolyfillDocumentHost 'String
+              :return 'app.polyfill/CanvasHost
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} $ :create-element |createElement
+          :schema $ :: 'Trait
+        'TextMetricsHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait TextMetricsHost (:width 'Number)
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+          :schema $ :: 'Trait
         'ctx $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def ctx $ if
-              and (js-present? js/document) (js-present? js/window)
-              .!getContext
-                unsafe-coerce
-                  .!createElement (unsafe-coerce js/document JsObject) |canvas
-                  , JsObject
-                , |2d
-              , nil
+          :code $ quote $ defn ctx ()
+            let
+                document $ unsafe-coerce js/document 'app.polyfill/PolyfillDocumentHost
+                canvas $ .create-element document |canvas
+              .get-context canvas |2d
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'app.polyfill/CanvasContextHost)
+            :args $ []
+            :features $ #{} :js-ffi
         'text-width* $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn text-width* (content font-size font-family)
-              if (some? ctx)
-                do
-                  set! (.-font ctx) (str font-size "|px " font-family)
-                  .-width $ unsafe-coerce
-                    .!measureText (unsafe-coerce ctx JsObject) content
-                    , JsObject
-                , nil
+          :code $ quote $ defn text-width* (content font-size font-family)
+            let
+                context $ ctx
+              set! (.-font context) (str font-size "|px " font-family)
+              unsafe-coerce
+                .-width $ .measure-text context content
+                , 'Number
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ [] 'Dynamic 'Dynamic 'Dynamic
-              :features $ #{} :js-ffi
+          :schema $ :: 'Fn $ {} (:return 'Number)
+            :args $ [] 'String 'Number 'String
+            :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote (ns app.polyfill)
+        :code $ quote $ ns app.polyfill
     'app.schema $ %{} 'FileEntry
       :defs $ {}
         'CirruExpr $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def CirruExpr $ impl-traits
-              defstruct :Expr (:by 'String) (:at 'Number) (:data 'Dynamic)
-              , CirruExprMethods
+          :code $ quote $ def CirruExpr (impl-traits CirruExprShape CirruExprMethods)
           :examples $ []
           :schema $ :: 'Dynamic
         'CirruExprMethods $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defimpl CirruExprMethods :CirruExprTrait
-              .get $ fn (self p)
-                get-in self $ [] :data p
-              .get-in $ fn (self pp)
-                get-in self $ mapcat pp
-                  fn (p) ([] :data p)
-              .nth $ fn (self idx)
+          :code $ quote $ defimpl CirruExprMethods app.schema/CirruExprTrait
+            .get $ fn (self p)
+              get-in self $ [] :data p
+            .get-in $ fn (self pp)
+              get-in self $ mapcat
+                assert-type pp $ :: 'List 'String
+                hint-fn
+                  {}
+                    :args $ [] 'String
+                    :return $ :: 'List 'Tag
+                  :: fn (p) ([] :data p)
+            .nth $ fn (self idx)
+              let
+                  d $ assert-type
+                    :data $ assert-type self 'app.schema/CirruExprShape
+                    :: 'Map 'String 'Dynamic
+                  p $ option:unwrap $ bisection/key-nth d idx
+                get d p
+            .append $ fn (self x)
+              update-expr-data self $ fn (d) (bisection/assoc-append d x)
+            .prepend $ fn (self x)
+              update-expr-data self $ fn (d) (bisection/assoc-prepend d x)
+            .replace $ fn (self p x)
+              update-expr-data self $ fn (d) (assoc d p x)
+            .replace-nth $ fn (self idx x)
+              update-expr-data self $ fn (d) (bisection/assoc-nth d idx x)
+            .update-last $ fn (self f)
+              let
+                  d $ :data $ assert-type self 'app.schema/CirruExprShape
+                  last-k $ option:unwrap $ last
+                    sort
+                      &set:to-list $ keys d
+                      , &compare
+                update-expr-data-at self last-k $ assert-type f $ :: 'Fn
+                  {}
+                    :args $ [] 'Dynamic
+                    :return 'Dynamic
+            .update-nth $ fn (self idx f)
+              let
+                  d $ :data $ assert-type self 'app.schema/CirruExprShape
+                  key $ option:unwrap $ nth
+                    sort
+                      &set:to-list $ keys d
+                      , &compare
+                    , idx
+                update-expr-data-at self key $ assert-type f $ :: 'Fn
+                  {}
+                    :args $ [] 'Dynamic
+                    :return 'Dynamic
+            .update $ fn (self p f)
+              update-expr-data-at self p $ assert-type f $ :: 'Fn
+                {}
+                  :args $ [] 'Dynamic
+                  :return 'Dynamic
+            .assoc-before $ fn (self p x)
+              update-expr-data self $ fn (d) (bisection/assoc-before d p x)
+            .assoc-before-nth $ fn (self idx x)
+              update-expr-data self $ fn (d) (bisection/assoc-before-nth d idx x)
+            .asspc-after $ fn (self p x)
+              update-expr-data self $ fn (d) (bisection/assoc-after d p x)
+            .asspc-after-nth $ fn (self idx x)
+              update-expr-data self $ fn (d) (bisection/assoc-after-nth d idx x)
+            .dissoc $ fn (self p)
+              update-expr-data self $ fn (d)
+                dissoc d $ assert-type p 'String
+            .dissoc-nth $ fn (self idx)
+              update-expr-data self $ fn (d)
                 let
-                    d $ assert-type
-                      option:unwrap-or
-                        :data $ assert-type self 'app.schema/CirruExpr
-                        {}
-                      :: 'Map 'String 'Dynamic
-                    p $ .unwrap (bisection/key-nth d idx)
-                  get d p
-              .append $ fn (self x)
-                update self :data $ fn (d) (bisection/assoc-append d x)
-              .prepend $ fn (self x)
-                update self :data $ fn (d) (bisection/assoc-prepend d x)
-              .replace $ fn (self p x)
-                update self :data $ fn (d) (assoc d p x)
-              .replace-nth $ fn (self idx x)
-                update self :data $ fn (d) (bisection/assoc-nth d idx x)
-              .update-last $ fn (self f)
+                    p $ option:unwrap $ bisection/key-nth d idx
+                  dissoc d p
+            .assoc-in $ fn (self pp x)
+              list-match pp
+                () $ raise "|does no expect empty path"
+                (p0 ps)
+                  update-expr-data self $ fn (d)
+                    if (empty? ps)
+                      assoc d (assert-type p0 'String) x
+                      update d p0 $ fn (child)
+                        &trait-call app.schema/CirruExprTrait :assoc-in (assert-type child 'app.schema/CirruExprShape) ps x
+            .append-in $ fn (self pp x)
+              list-match pp
+                () $ raise "|does no expect empty path"
+                (p0 ps)
+                  update-expr-data self $ fn (d)
+                    if (empty? ps) (bisection/assoc-append d x)
+                      update d p0 $ fn (child)
+                        &trait-call app.schema/CirruExprTrait :append-in (assert-type child 'app.schema/CirruExprShape) ps x
+            .find-with-base $ fn (self x pp)
+              if
+                &trait-call app.schema/CirruExprTrait := (assert-type self 'app.schema/CirruExprShape) x
+                :: :some $ assert-type pp $ :: 'List 'String
                 let
-                    ks $ keys
-                      assert-type
-                        option:unwrap-or
-                          :data $ assert-type self 'app.schema/CirruExpr
-                          {}
-                        :: 'Map 'String 'Dynamic
-                    last-k $ last
-                      .sort (.to-list ks) &compare
-                  update self last-k f
-              .update-nth $ fn (self idx f)
-                let
-                    ks $ keys
-                      assert-type
-                        option:unwrap-or
-                          :data $ assert-type self 'app.schema/CirruExpr
-                          {}
-                        :: 'Map 'String 'Dynamic
-                    last-k $ nth
-                      .sort (.to-list ks) &compare
-                      , idx
-                  update self last-k f
-              .update $ fn (self p f)
-                update self :data $ fn (d) (update d p f)
-              .assoc-before $ fn (self p x)
-                update self :data $ fn (d) (bisection/assoc-before d p x)
-              .assoc-before-nth $ fn (self idx x)
-                update self :data $ fn (d) (bisection/assoc-before-nth d idx x)
-              .asspc-after $ fn (self p x)
-                update self :data $ fn (d) (bisection/assoc-after d p x)
-              .asspc-after-nth $ fn (self idx x)
-                update self :data $ fn (d) (bisection/assoc-after-nth d idx x)
-              .dissoc $ fn (self p)
-                update self :data $ fn (d) (dissoc d p)
-              .dissoc-nth $ fn (self idx)
-                update self :data $ fn (d)
-                  let
-                      p $ p
-                        .unwrap $ bisection/key-nth d idx
-                    dissoc d p
-              .assoc-in $ fn (self pp x)
-                list-match pp
-                  () $ raise "|does no expect empty path"
-                  (p0 ps)
-                    update self :data $ fn (d)
-                      if (empty? ps) (assoc d p0 x)
-                        update d p0 $ fn (child) (.assoc-in child ps x)
-              .append-in $ fn (self pp x)
-                list-match pp
-                  () $ raise "|does no expect empty path"
-                  (p0 ps)
-                    update self :data $ fn (d)
-                      if (empty? ps) (bisection/assoc-append d x)
-                        update d p0 $ fn (child) (.append-in child ps x)
-              .find-with-base $ fn (self x pp)
-                if (.= self x) pp $ let
-                    pairs $ .to-list
-                      option:unwrap-or
-                          :data $ assert-type self 'app.schema/CirruExpr
-                        , {}
+                    pairs $ &map:to-list $ :data (assert-type self 'app.schema/CirruExprShape)
                   apply-args (pairs)
                     fn (ps)
                       list-match ps
                         () $ :: :none
                         (p0 pss)
                           let
-                              k $ .unwrap (nth p0 0)
-                              child $ .unwrap (nth p0 1)
-                            if (.= child x)
-                              :: :some $ conj pp k
+                              k $ option:unwrap $ nth p0 0
+                              child $ option:unwrap $ nth p0 1
+                            if (cirru-node-equal? child x)
+                              :: :some $ conj
+                                assert-type pp $ :: 'List 'String
+                                assert-type k 'String
                               if (&struct:matches? self child)
-                                tag-match
-                                  .find-with-base child x $ conj pp k
+                                match
+                                  &trait-call app.schema/CirruExprTrait :find-with-base (assert-type child 'app.schema/CirruExprShape) x $ conj
+                                    assert-type pp $ :: 'List 'String
+                                    assert-type k 'String
                                   (:some v) (:: :some v)
                                   (:none)
                                     recur $ rest ps
                                 recur $ rest ps
-              .find $ fn (self x)
-                .find-with-base self x $ []
-              .find-before-with-base $ fn (self x follow pp)
-                if (.= self x) pp $ let
-                    pairs $ .to-list
-                      option:unwrap-or
-                          :data $ assert-type self 'app.schema/CirruExpr
-                        , {}
+            .find $ fn (self x)
+              &trait-call app.schema/CirruExprTrait :find-with-base (assert-type self 'app.schema/CirruExprShape) x $ []
+            .find-before-with-base $ fn (self x follow pp)
+              if
+                &trait-call app.schema/CirruExprTrait := (assert-type self 'app.schema/CirruExprShape) x
+                :: :some $ assert-type pp $ :: 'List 'String
+                let
+                    pairs $ &map:to-list $ :data (assert-type self 'app.schema/CirruExprShape)
                   apply-args (pairs)
                     fn (ps)
                       list-match ps
                         () $ :: :none
                         (p0 pss)
                           let
-                              k $ .unwrap (nth p0 0)
-                              child $ .unwrap (nth p0 1)
-                            ; js/console.log x child $ .= child x
+                              k $ option:unwrap $ nth p0 0
+                              child $ option:unwrap $ nth p0 1
+                            ; js/console.log x child $ cirru-node-equal? child x
                             if
-                              and (.= child x)
+                              and (cirru-node-equal? child x)
                                 if-let
                                   q0 $ get-in (wo-js-log pss) ([] 0 1)
                                   and (struct? q0)
-                                    and $ = :Leaf (&struct:get-name q0)
+                                    and $ = :Leaf $ &struct:get-name q0
                                     =
                                       option:unwrap-or
                                         get (unsafe-coerce q0 'Dynamic) :text
                                         , nil
                                       , follow
                                   , false
-                              :: :some $ conj pp k
+                              :: :some $ conj
+                                assert-type pp $ :: 'List 'String
+                                assert-type k 'String
                               if (&struct:matches? self child)
-                                tag-match
-                                  .find-before-with-base child x follow $ conj pp k
+                                match
+                                  &trait-call app.schema/CirruExprTrait :find-before-with-base (assert-type child 'app.schema/CirruExprShape) x follow $ conj
+                                    assert-type pp $ :: 'List 'String
+                                    assert-type k 'String
                                   (:some v) (:: :some v)
                                   (:none)
                                     recur $ rest ps
                                 recur $ rest ps
-              .find-before $ fn (self x follow)
-                .find-before-with-base self x follow $ []
-              .= $ fn (self x)
-                if (&struct:matches? self x)
-                  let
-                      other $ assert-type x 'app.schema/CirruExpr
-                      self-data $ assert-type
-                        option:unwrap-or
-                          :data $ assert-type self 'app.schema/CirruExpr
-                          {}
-                        :: 'Map 'String 'Dynamic
-                      other-data $ assert-type
-                        option:unwrap-or (:data other) ({})
-                        :: 'Map 'String 'Dynamic
-                      self-keys $ .sort
-                        .to-list $ keys self-data
-                        , &compare
-                      other-keys $ .sort
-                        .to-list $ keys other-data
-                        , &compare
-                      size $ count self-keys
-                    if
-                      = size $ count other-keys
-                      -> (range size)
-                        every? $ fn (idx)
-                          let
-                              self-key $ .unwrap (nth self-keys idx)
-                              other-key $ .unwrap (nth other-keys idx)
-                              self-child $ .unwrap (get self-data self-key)
-                              other-child $ .unwrap (get other-data other-key)
-                            .= self-child other-child
-                      , false
-                  , false
-              .dispatch $ fn (self commands)
-                list-match commands
-                  () $ raise "|does not expect empty ops"
-                  (command more)
-                    tag-match command
-                      (:update p)
-                        update self :data $ fn (d)
-                          update d p $ fn (child) (.dispatch child more)
-                      (:update-last)
-                        .update-last self $ fn (child) (.dispatch child more)
-                      (:update-nth idx)
-                        .update-nth self idx $ fn (child) (.dispatch child more)
-                      (:replace v) v
-                      (:dissoc p) (.dissoc self p)
-                      (:assoc p v) (.assoc self p v)
-                      (:append v) (.append self v)
-                      (:prepend v) (.prepend self v)
-              .compact $ fn (self) (cirru-compact self)
-              .cirru-kind $ fn (_self) :expr
+            .find-before $ fn (self x follow)
+              &trait-call app.schema/CirruExprTrait :find-before-with-base (assert-type self 'app.schema/CirruExprShape) x follow $ []
+            .= $ fn (self x)
+              if (&struct:matches? self x)
+                let
+                    other $ assert-type x 'app.schema/CirruExprShape
+                    self-data $ assert-type
+                      :data $ assert-type self 'app.schema/CirruExprShape
+                      :: 'Map 'String 'Dynamic
+                    other-data $ assert-type (:data other) (:: 'Map 'String 'Dynamic)
+                    self-keys $ sort
+                      &set:to-list $ keys self-data
+                      , &compare
+                    other-keys $ sort
+                      &set:to-list $ keys other-data
+                      , &compare
+                    size $ count self-keys
+                  if
+                    = size $ count other-keys
+                    -> (range size)
+                      every? $ fn (idx)
+                        let
+                            self-key $ assert-type
+                              option:unwrap $ nth self-keys idx
+                              , 'String
+                            other-key $ assert-type
+                              option:unwrap $ nth other-keys idx
+                              , 'String
+                            self-child $ option:unwrap $ get self-data self-key
+                            other-child $ option:unwrap $ get other-data other-key
+                          cirru-node-equal? self-child other-child
+                    , false
+                , false
+            .dispatch $ fn (self commands)
+              list-match commands
+                () $ raise "|does not expect empty ops"
+                (command more)
+                  match command
+                    (:update p)
+                      update-expr-data self $ fn (d)
+                        update d (assert-type p 'String)
+                          fn (child)
+                            &trait-call app.schema/CirruExprTrait :dispatch (assert-type child 'app.schema/CirruExprShape) more
+                    (:update-last)
+                      &trait-call app.schema/CirruExprTrait :update-last (assert-type self 'app.schema/CirruExprShape)
+                        fn (child)
+                          &trait-call app.schema/CirruExprTrait :dispatch (assert-type child 'app.schema/CirruExprShape) more
+                    (:update-nth idx)
+                      &trait-call app.schema/CirruExprTrait :update-nth (assert-type self 'app.schema/CirruExprShape) (assert-type idx 'Number)
+                        fn (child)
+                          &trait-call app.schema/CirruExprTrait :dispatch (assert-type child 'app.schema/CirruExprShape) more
+                    (:replace v) v
+                    (:dissoc p)
+                      &trait-call app.schema/CirruExprTrait :dissoc (assert-type self 'app.schema/CirruExprShape) (assert-type p 'String)
+                    (:assoc p v)
+                      &trait-call app.schema/CirruExprTrait :replace (assert-type self 'app.schema/CirruExprShape) (assert-type p 'String) v
+                    (:append v)
+                      &trait-call app.schema/CirruExprTrait :append (assert-type self 'app.schema/CirruExprShape) v
+                    (:prepend v)
+                      &trait-call app.schema/CirruExprTrait :prepend (assert-type self 'app.schema/CirruExprShape) v
+            .compact $ fn (self) (cirru-compact self)
+            .cirru-kind $ fn (_self) :expr
           :examples $ []
           :schema $ :: 'Impl
+        'CirruExprShape $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct :Expr (:by 'String) (:at 'Number)
+            :data $ :: 'Map 'String 'Dynamic
+          :examples $ []
+          :schema $ :: 'StructDef
+        'CirruExprTrait $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait CirruExprTrait
+            .get $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'String
+              :return $ :: 'Option 'Dynamic
+            .get-in $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape $ :: 'List 'String
+              :return $ :: 'Option 'Dynamic
+            .nth $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'Number
+              :return $ :: 'Option 'Dynamic
+            .append $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'Dynamic
+              :return 'app.schema/CirruExprShape
+            .prepend $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'Dynamic
+              :return 'app.schema/CirruExprShape
+            .replace $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'String 'Dynamic
+              :return 'app.schema/CirruExprShape
+            .replace-nth $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'Number 'Dynamic
+              :return 'app.schema/CirruExprShape
+            .update-last $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape $ :: 'Fn
+                {}
+                  :args $ [] 'Dynamic
+                  :return 'Dynamic
+              :return 'app.schema/CirruExprShape
+            .update-nth $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'Number $ :: 'Fn
+                {}
+                  :args $ [] 'Dynamic
+                  :return 'Dynamic
+              :return 'app.schema/CirruExprShape
+            .update $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'String $ :: 'Fn
+                {}
+                  :args $ [] 'Dynamic
+                  :return 'Dynamic
+              :return 'app.schema/CirruExprShape
+            .assoc-before $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'String 'Dynamic
+              :return 'app.schema/CirruExprShape
+            .assoc-before-nth $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'Number 'Dynamic
+              :return 'app.schema/CirruExprShape
+            .asspc-after $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'String 'Dynamic
+              :return 'app.schema/CirruExprShape
+            .asspc-after-nth $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'Number 'Dynamic
+              :return 'app.schema/CirruExprShape
+            .dissoc $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'String
+              :return 'app.schema/CirruExprShape
+            .dissoc-nth $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'Number
+              :return 'app.schema/CirruExprShape
+            .assoc-in $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape (:: 'List 'String) 'Dynamic
+              :return 'app.schema/CirruExprShape
+            .append-in $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape (:: 'List 'String) 'Dynamic
+              :return 'app.schema/CirruExprShape
+            .find-with-base $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'Dynamic $ :: 'List 'String
+              :return $ :: 'Option $ :: 'List 'String
+            .find $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'Dynamic
+              :return $ :: 'Option $ :: 'List 'String
+            .find-before-with-base $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'Dynamic 'String $ :: 'List 'String
+              :return $ :: 'Option $ :: 'List 'String
+            .find-before $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'Dynamic 'String
+              :return $ :: 'Option $ :: 'List 'String
+            .= $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape 'Dynamic
+              :return 'Bool
+            .dispatch $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape $ :: 'List 'Dynamic
+              :return 'Dynamic
+            .compact $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape
+              :return 'Dynamic
+            .cirru-kind $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruExprShape
+              :return 'Tag
+          :examples $ []
+          :schema $ :: 'Trait
         'CirruLeaf $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def CirruLeaf $ impl-traits
-              defstruct :Leaf (:at 'Number) (:by 'String) (:text 'String)
-              , CirruLeafMethods
+          :code $ quote $ def CirruLeaf (impl-traits CirruLeafShape CirruLeafMethods)
           :examples $ []
           :schema $ :: 'Dynamic
         'CirruLeafMethods $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defimpl CirruLeafMethods :CirruLeafTrait
-              .= $ fn (self x)
-                if (&struct:matches? self x)
-                  =
-                    option:unwrap-or
-                      get (unsafe-coerce self 'Dynamic) :text
-                      , |
-                    option:unwrap-or
-                      get (unsafe-coerce x 'Dynamic) :text
-                      , |
-                  , false
-              .cirru-kind $ fn (_self) :leaf
+          :code $ quote $ defimpl CirruLeafMethods app.schema/CirruLeafTrait
+            .= $ fn (self x)
+              if (&struct:matches? self x)
+                =
+                  :text $ assert-type self 'app.schema/CirruLeafShape
+                  :text $ assert-type x 'app.schema/CirruLeafShape
+                , false
+            .cirru-kind $ fn (_self) :leaf
           :examples $ []
           :schema $ :: 'Impl
+        'CirruLeafShape $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct :Leaf (:at 'Number) (:by 'String) (:text 'String)
+          :examples $ []
+          :schema $ :: 'StructDef
+        'CirruLeafTrait $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait CirruLeafTrait
+            .= $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruLeafShape 'Dynamic
+              :return 'Bool
+            .cirru-kind $ :: 'Fn $ {}
+              :args $ [] 'app.schema/CirruLeafShape
+              :return 'Tag
+          :examples $ []
+          :schema $ :: 'Trait
         'CodeEntry $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def CodeEntry $ defstruct :CodeEntry (:doc 'String) (:code 'Dynamic) (:examples 'List)
+          :code $ quote $ def CodeEntry
+            defstruct :CodeEntry (:doc 'String) (:code 'Dynamic) (:examples 'List)
           :examples $ []
           :schema $ :: 'Dynamic
-        'CodeEntryCompact $ %{} 'CodeEntry (:doc "|another record for CodeEntry which only used in writing compact file")
-          :code $ quote
-            def CodeEntryCompact $ defstruct :CodeEntry (:doc 'String) (:code 'Dynamic) (:examples 'List)
+        'CodeEntryCompact $ %{} 'CodeEntry
+          :doc "|another record for CodeEntry which only used in writing compact file"
+          :code $ quote $ def CodeEntryCompact
+            defstruct :CodeEntry (:doc 'String) (:code 'Dynamic) (:examples 'List)
           :examples $ []
           :schema $ :: 'Dynamic
         'FileEntry $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def FileEntry $ defstruct :FileEntry (:ns 'app.schema/CodeEntry)
+          :code $ quote $ def FileEntry
+            defstruct :FileEntry (:ns 'app.schema/CodeEntry)
               :defs $ :: 'Map 'String 'app.schema/CodeEntry
           :examples $ []
           :schema $ :: 'Dynamic
-        'cirru-compact $ %{} 'CodeEntry (:doc "|a cloned version of tree->cirru to simplify dependency issues")
-          :code $ quote
-            defn cirru-compact (x)
-              if
-                and (struct? x)
-                  = :Leaf $ &struct:get-name x
-                option:unwrap-or
-                  get (unsafe-coerce x 'Dynamic) :text
-                  , |
-                ->
-                  option:unwrap-or
-                      :data $ assert-type x 'app.schema/CirruExpr
-                    , {}
-                  .to-list
-                  .sort-by first
-                  map $ fn (entry)
-                    cirru-compact $ last entry
+        'cirru-compact $ %{} 'CodeEntry
+          :doc "|a cloned version of tree->cirru to simplify dependency issues"
+          :code $ quote $ defn cirru-compact (x)
+            if
+              and (struct? x)
+                = :Leaf $ &struct:get-name x
+              :text $ assert-type x 'app.schema/CirruLeafShape
+              ->
+                :data $ assert-type x 'app.schema/CirruExprShape
+                &map:to-list
+                &list:sort-by first
+                map $ fn (entry)
+                  cirru-compact $ option:unwrap $ last entry
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic
+        'cirru-node-equal? $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn cirru-node-equal? (a b)
+            if
+              and (struct? a)
+                = :Expr $ &struct:get-name a
+              &trait-call app.schema/CirruExprTrait := (assert-type a 'app.schema/CirruExprShape) b
+              if
+                and (struct? a)
+                  = :Leaf $ &struct:get-name a
+                &trait-call app.schema/CirruLeafTrait := (assert-type a 'app.schema/CirruLeafShape) b
+                = a b
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] 'Dynamic 'Dynamic
         'configs $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def configs $ {} (:port 6001) (:expose-port 6011) (:init-fn |app.main/main!) (:reload-fn |app.main/reload!)
+          :code $ quote $ def configs
+            {} (:port 6001) (:expose-port 6011) (:init-fn |app.main/main!) (:reload-fn |app.main/reload!)
               :modules $ []
               :version |0.0.1
           :examples $ []
           :schema $ :: 'Dynamic
         'database $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def database $ {}
-              :sessions $ do session ({})
+          :code $ quote $ def database
+            {}
+              :sessions $ do session $ {}
               :users $ {}
               :package |app
               :files $ {}
@@ -4410,15 +4791,15 @@
               :usages-dict $ {}
               :deps-dict $ {}
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Map 'Tag 'Dynamic
         'notification $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def notification $ {} (:id nil) (:kind nil) (:text nil) (:time nil)
+          :code $ quote $ def notification
+            {} (:id nil) (:kind nil) (:text nil) (:time nil)
           :examples $ []
           :schema $ :: 'Dynamic
         'page-data $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def page-data $ {}
+          :code $ quote $ def page-data
+            {}
               :files $ {}
                 :ns-dict $ #{}
                 :defs-dict $ #{}
@@ -4430,15 +4811,15 @@
           :examples $ []
           :schema $ :: 'Dynamic
         'router $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def router $ {} (:name nil) (:title nil)
+          :code $ quote $ def router
+            {} (:name nil) (:title nil)
               :data $ {}
               :router nil
           :examples $ []
           :schema $ :: 'Dynamic
         'session $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def session $ {} (:user-id nil) (:id nil)
+          :code $ quote $ def session
+            {} (:user-id nil) (:id nil)
               :router $ :: :files
               :notifications $ []
               :writer $ {} (:selected-ns nil) (:draft-ns nil) (:peek-def nil) (:pointer 0)
@@ -4447,258 +4828,302 @@
               :theme :star-trail
           :examples $ []
           :schema $ :: 'Dynamic
+        'update-expr-data $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn update-expr-data (self f)
+            assoc self :data $ f $ :data self
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'app.schema/CirruExprShape)
+            :args $ [] 'app.schema/CirruExprShape $ :: 'Fn
+              {}
+                :args $ [] $ :: 'Map 'String 'Dynamic
+                :return $ :: 'Map 'String 'Dynamic
+        'update-expr-data-at $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn update-expr-data-at (self p f)
+            update-expr-data self $ fn (d) (update d p f)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'app.schema/CirruExprShape)
+            :args $ [] 'app.schema/CirruExprShape 'String $ :: 'Fn
+              {} (:return 'Dynamic)
+                :args $ [] 'Dynamic
         'user $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def user $ {} (:name nil) (:id nil) (:nickname nil) (:avatar nil) (:password nil) (:theme :star-trail)
+          :code $ quote $ def user
+            {} (:name nil) (:id nil) (:nickname nil) (:avatar nil) (:password nil) (:theme :star-trail)
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.schema $ :require (bisection-key.core :as bisection-core) (bisection-key.util :as bisection)
+        :code $ quote $ ns app.schema
+          :require (bisection-key.core :as bisection-core) (bisection-key.util :as bisection)
     'app.server $ %{} 'FileEntry
       :defs $ {}
         '*calcit-md5 $ %{} 'CodeEntry (:doc |)
-          :code $ quote (defatom *calcit-md5 nil)
+          :code $ quote $ defatom *calcit-md5 nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Ref $ :: 'Option 'String
         '*client-caches $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defatom *client-caches $ {}
+          :code $ quote $ defatom *client-caches ({})
           :examples $ []
           :schema $ :: 'Dynamic
         '*reader-db $ %{} 'CodeEntry (:doc |)
-          :code $ quote (defatom *reader-db @*writer-db)
+          :code $ quote $ defatom *reader-db @*writer-db
           :examples $ []
           :schema $ :: 'Dynamic
         '*writer-db $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defatom *writer-db $ -> initial-db
+          :code $ quote $ defatom *writer-db
+            -> initial-db
               assoc :saved-files $ option:unwrap-or (get initial-db :files) {}
               assoc :sessions $ {}
           :examples $ []
           :schema $ :: 'Dynamic
+        'ChalkHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait ChalkHost
+            .gray $ :: 'Fn $ {}
+              :args $ [] 'app.server/ChalkHost 'String
+              :return 'String
+            .blue $ :: 'Fn $ {}
+              :args $ [] 'app.server/ChalkHost 'String
+              :return 'String
+            .red $ :: 'Fn $ {}
+              :args $ [] 'app.server/ChalkHost 'String
+              :return 'String
+            .yellow $ :: 'Fn $ {}
+              :args $ [] 'app.server/ChalkHost 'String
+              :return 'String
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
+          :schema $ :: 'Trait
         'compile-all-files! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn compile-all-files! (configs)
-              handle-files!
-                assoc @*writer-db :saved-files $ {}
-                , *calcit-md5 configs
-                  fn (op) (println "|After compile:" op)
-                  , false nil
+          :code $ quote $ defn compile-all-files! (configs)
+            handle-files!
+              assoc @*writer-db :saved-files $ {}
+              , *calcit-md5 configs
+                fn (op) (println "|After compile:" op)
+                , false $ %none
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :features $ #{} :js-ffi
         'dispatch! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn dispatch! (op sid)
-              when
-                and config/dev? $ not= :ping
-                  option:unwrap-or (first op) :unknown
-                js/console.log |Action op sid
-              let
-                  d2! $ fn (op2) (dispatch! op2 sid)
-                  op-id $ nanoid
-                  op-time $ js/Date.now
-                tag-match op
-                  (:effect/save-files)
-                    handle-files! @*writer-db *calcit-md5
-                      option:unwrap-or (get initial-db :configs) {}
-                      , d2! true nil
-                  (:effect/save-ns ns)
-                    handle-files! @*writer-db *calcit-md5
-                      option:unwrap-or (get initial-db :configs) {}
-                      , d2! true ns
-                  (:ping) nil
-                  _ $ reset! *writer-db (updater @*writer-db op sid op-id op-time)
+          :code $ quote $ defn dispatch! (op sid)
+            when
+              and config/dev? $ not= :ping $ option:unwrap-or (first op) :unknown
+              js/console.log |Action op sid
+            let
+                d2! $ fn (op2) (dispatch! op2 sid)
+                op-id $ nanoid
+                op-time $ unsafe-coerce (js/Date.now) 'Number
+              match op
+                (:effect/save-files)
+                  handle-files! @*writer-db *calcit-md5
+                    option:unwrap-or (get initial-db :configs) {}
+                    , d2! true $ %none
+                (:effect/save-ns ns)
+                  handle-files! @*writer-db *calcit-md5
+                    option:unwrap-or (get initial-db :configs) {}
+                    , d2! true $ %some $ assert-type ns 'String
+                (:ping) nil
+                _ $ reset! *writer-db $ updater @*writer-db op sid op-id op-time
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic 'String
+            :features $ #{} :js-ffi
         'expose-files! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn expose-files! (port)
-              let
-                  server $ createServer
-                    fn (req res)
-                      hint-fn $ {} (:async true)
-                      ; js/console.log (.-url req) (.-headers req)
-                      .!setHeader res |Access-Control-Allow-Origin |*
-                      .!setHeader res |Access-Control-Allow-Headers |*
-                      if
-                        = |OPTIONS $ unsafe-coerce (.-method req) 'String
-                        do (.!writeHead res 200) (.!end res |OK)
-                        case-default (.-url req)
-                          do (.!writeHead res 404) (.!end res "|not found. check url")
-                          |/ $ .!end res "|echo from Calcit Editor"
-                          |/favicon.ico $ do (.!writeHead res 404) (.!end res |)
-                          |/load-error $ readFile |./.calcit-error.cirru |utf8 (make-file-response res)
-                          |/load-calcit $ readFile |./calcit.cirru |utf8 (make-file-response res)
-                          |/calcit-data $ readFile |./calcit.cirru |utf8 (make-file-response res)
-                .!listen server port $ fn ()
-                  let
-                      link $ .!blue chalk (str |http://localhost: port)
-                    println $ str "|port " port "| ok, local configs exposed on " link
+          :code $ quote $ defn expose-files! (port)
+            let
+                server $ createServer $ fn (req res)
+                  hint-fn $ {} $ :async true
+                  ; js/console.log (.-url req) (.-headers req)
+                  .!setHeader res |Access-Control-Allow-Origin |*
+                  .!setHeader res |Access-Control-Allow-Headers |*
+                  if
+                    = |OPTIONS $ unsafe-coerce (.-method req) 'String
+                    do (.!writeHead res 200) (.!end res |OK)
+                    case-default (.-url req)
+                      do (.!writeHead res 404) (.!end res "|not found. check url")
+                      |/ $ .!end res "|echo from Calcit Editor"
+                      |/favicon.ico $ do (.!writeHead res 404) (.!end res |)
+                      |/load-error $ readFile |./.calcit-error.cirru |utf8 $ make-file-response res
+                      |/load-calcit $ readFile |./calcit.cirru |utf8 $ make-file-response res
+                      |/calcit-data $ readFile |./calcit.cirru |utf8 $ make-file-response res
+              .!listen server port $ fn () $ let
+                  link $ .!blue (unsafe-coerce chalk ChalkHost) (str |http://localhost: port)
+                println $ str "|port " port "| ok, local configs exposed on " link
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Number
+            :features $ #{} :js-ffi
         'initial-db $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def initial-db $ merge schema/database
-              let
-                  found? $ fs/existsSync storage-file
-                  configs $ get schema/database :configs
-                if found?
-                  println $ .!gray chalk "|Loading calcit.cirru"
-                  println $ .!yellow chalk "|Using default schema."
-                if found?
-                  let
-                      started-at $ unsafe-coerce (js/Date.now) 'Number
-                      data $ parse-cirru-edn (fs/readFileSync storage-file |utf8)
+          :code $ quote $ def initial-db
+            merge schema/database $ let
+                found? $ node/file-exists? storage-file
+                configs $ get schema/database :configs
+              if found? (println "|Loading calcit.cirru") (println "|Using default schema.")
+              if found?
+                let
+                    started-at $ shared/now-ms
+                    data $ assert-type
+                      parse-cirru-edn (node/read-text! storage-file)
                         {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf) (:CodeEntry schema/CodeEntry)
-                      cost $ -
-                        unsafe-coerce (js/Date.now) 'Number
-                        , started-at
-                    println $ .!gray chalk (str "|Took " cost "|ms to load.")
-                    , data
-                  if (option:some? configs)
-                    {} $ :configs (.unwrap configs)
+                      :: 'Map 'Tag 'Dynamic
+                    cost $ - (shared/now-ms) started-at
+                  println $ str "|Took " cost "|ms to load."
+                  , data
+                if (option:some? configs)
+                  {} $ :configs $ option:unwrap configs
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Map 'Tag 'Dynamic
         'main! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn main! ()
-              if config/dev? $ load-console-formatter!
-              let
-                  configs $ option:unwrap-or (get initial-db :configs) {}
-                  cli-configs $ get-cli-configs!
-                case-default
-                  option:unwrap-or (get cli-configs :op) nil
-                  do (start-server! configs) (check-version!)
-                    dispatch! (:: :analyze/refresh-usages-dict) |system
-                  |compile $ compile-all-files! configs
+          :code $ quote $ defn main! ()
+            if config/dev? $ load-console-formatter!
+            let
+                configs $ option:unwrap-or (get initial-db :configs) {}
+                cli-configs $ get-cli-configs!
+              case-default
+                option:unwrap-or (get cli-configs :op) nil
+                do (start-server! configs) (check-version!)
+                  dispatch! (:: :analyze/refresh-usages-dict) |system
+                |compile $ compile-all-files! configs
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ []
-              :features $ #{} :js-ffi
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'make-file-response $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn make-file-response (res)
-              fn (err ? content)
-                if (some? err)
-                  do (.!writeHead res 400)
-                    .!end res $ format-cirru-edn
-                      {} $ :message (str err)
-                  do (.!setHeader res |Content-Type |text/plain) (.!writeHead res 200) (.!end res content)
+          :code $ quote $ defn make-file-response (res)
+            fn (err content)
+              if (some? err)
+                do (.!writeHead res 400)
+                  .!end res $ format-cirru-edn $ {}
+                    :message $ str err
+                do (.!setHeader res |Content-Type |text/plain) (.!writeHead res 200) (.!end res content)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic
+            :features $ #{} :js-ffi
         'on-file-change! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-file-change! () $ let
+          :code $ quote $ defn on-file-change! ()
+            let
                 file-content $ fs/readFileSync storage-file |utf8
                 new-md5 $ md5 file-content
               if (blank? file-content)
-                eprintln $ .!red chalk "|got blank file on change, server might have staled"
-                if (not= new-md5 @*calcit-md5)
+                ((eprintln (.!red (unsafe-coerce chalk ChalkHost) "|got blank file on change, server might have staled")))
+                if
+                  not= new-md5 $ option:unwrap-or @*calcit-md5 |
                   let
                       calcit $ parse-cirru-edn file-content
-                    println $ .!blue chalk "|calcit storage file changed!"
-                    reset! *calcit-md5 new-md5
-                    dispatch! (:: :watcher/file-change calcit) nil
+                    println $ .!blue (unsafe-coerce chalk ChalkHost) "|calcit storage file changed!"
+                    reset! *calcit-md5 $ %some new-md5
+                    dispatch! (:: :watcher/file-change calcit) |watcher|
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn reload! ()
-              println $ .!gray chalk "|code updated."
-              clear-twig-caches!
-              sync-clients! @*reader-db
+          :code $ quote $ defn reload! ()
+            println $ .!gray (unsafe-coerce chalk ChalkHost) "|code updated."
+            clear-twig-caches!
+            sync-clients! @*reader-db
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'render-loop! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn render-loop! ()
-              if (not= @*reader-db @*writer-db)
-                do (reset! *reader-db @*writer-db) (; println "|render loop") (sync-clients! @*reader-db)
-              js/setTimeout render-loop! 20
+          :code $ quote $ defn render-loop! ()
+            if (not= @*reader-db @*writer-db)
+              do (reset! *reader-db @*writer-db) (; println "|render loop") (sync-clients! @*reader-db)
+            js/setTimeout render-loop! 20
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'run-server! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn run-server! (dispatch! port)
-              wss-serve! port $ {}
-                :on-open $ fn (sid socket)
-                  dispatch! (:: :session/connect) sid
-                  println $ .!gray chalk (str "|client connected: " sid)
-                :on-data $ fn (sid action) (dispatch! action sid)
-                :on-close $ fn (sid event)
-                  println $ .!gray chalk (str "|client disconnected: " sid)
-                  dispatch! (:: :session/disconnect) sid
-                :on-error $ fn (error) (js/console.error error)
-                :class-mapper $ {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf)
+          :code $ quote $ defn run-server! (dispatch! port)
+            wss-serve! port $ {}
+              :on-open $ fn (sid socket)
+                dispatch! (:: :session/connect) sid
+                println $ str |client-connected: sid
+              :on-data $ fn (sid action) (dispatch! action sid)
+              :on-close $ fn (sid event)
+                println $ str |client-disconnected: sid
+                dispatch! (:: :session/disconnect) sid
+              :on-error $ fn (error) (eprintln error)
+              :class-mapper $ {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+              :: 'Fn $ {} (:return 'Dynamic)
+                :args $ [] 'Dynamic 'String
+              , 'Number
         'start-server! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn start-server! (configs)
-              pick-port!
-                either
-                  option:unwrap-or (get configs :port) nil
-                  option:unwrap-or (get schema/configs :port) nil
-                fn (unoccupied-port) (run-server! dispatch! unoccupied-port)
-              pick-http-port!
-                either
-                  option:unwrap-or (get configs :expose-port) nil
-                  option:unwrap-or (get schema/configs :expose-port) nil
-                fn (unoccupied-port) (expose-files! unoccupied-port)
-              render-loop!
-              watch-file!
-              js/process.on |SIGINT $ fn (code & args)
-                if
-                  empty? $ option:unwrap-or (get @*writer-db :files) nil
-                  println "|Not writing empty project."
-                  do
-                    let
-                        started-time $ js/Date.now
-                      persist! storage-file (db->string @*writer-db) started-time
-                    println (str &newline "|Saved calcit.cirru")
-                      str $ if (some? code) (str "|with " code)
-                js/process.exit
+          :code $ quote $ defn start-server! (configs)
+            pick-port!
+              either
+                option:unwrap-or (get configs :port) nil
+                option:unwrap-or (get schema/configs :port) nil
+              fn (unoccupied-port) (run-server! dispatch! unoccupied-port)
+            pick-http-port!
+              either
+                option:unwrap-or (get configs :expose-port) nil
+                option:unwrap-or (get schema/configs :expose-port) nil
+              fn (unoccupied-port) (expose-files! unoccupied-port)
+            render-loop!
+            watch-file!
+            js/process.on |SIGINT $ fn (code & args)
+              if
+                empty? $ option:unwrap-or (get @*writer-db :files) nil
+                println "|Not writing empty project."
+                do
+                  let
+                      started-time $ unsafe-coerce (js/Date.now) 'Number
+                    persist! storage-file (db->string @*writer-db) started-time
+                  println (str &newline "|Saved calcit.cirru")
+                    str $ if (some? code) (str "|with " code)
+              js/process.exit
+              , &unit
+            , &unit
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :features $ #{} :js-ffi
         'storage-file $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def storage-file $ path/join (js/process.cwd)
+          :code $ quote $ def storage-file
+            path/join (js/process.cwd)
               .unwrap $ get config/site :storage-file
           :examples $ []
           :schema $ :: 'Dynamic
         'sync-clients! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn sync-clients! (db)
-              wss-each! $ fn (sid socket)
-                let
-                    session $ get-in db ([] :sessions sid)
-                    old-store $ or (get @*client-caches sid) nil
-                    new-store $ twig-container db session
-                    changes $ diff-twig old-store new-store
-                      {} $ :key :id
-                  when config/dev? $ println "|Changes for" sid |: (count changes)
-                  if
-                    not= changes $ []
-                    do
-                      wss-send! sid $ :: :patch changes
-                      swap! *client-caches assoc sid new-store
+          :code $ quote $ defn sync-clients! (db)
+            wss-each! $ fn (sid socket)
+              let
+                  session $ option:unwrap-or
+                    get-in db $ [] :sessions sid
+                    , {}
+                  old-store $ or (get @*client-caches sid) nil
+                  new-store $ twig-container db session
+                  changes $ diff-twig old-store new-store $ {} (:key :id)
+                when config/dev? $ println "|Changes for" sid |: $ count changes
+                if
+                  not $ empty? changes
+                  do
+                    wss-send! sid $ :: :patch changes
+                    swap! *client-caches assoc sid new-store
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :features $ #{} :js-ffi
         'watch-file! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn watch-file! () $ if (fs/existsSync storage-file)
+          :code $ quote $ defn watch-file! ()
+            if (fs/existsSync storage-file)
               do
-                reset! *calcit-md5 $ md5 (fs/readFileSync storage-file |utf8)
+                reset! *calcit-md5 $ %some $ md5 (fs/readFileSync storage-file |utf8)
                 gaze storage-file $ fn (error watcher)
                   if (some? error) (js/console.log error)
                     .!on watcher |changed $ fn (filepath) (flipped js/setTimeout 20 on-file-change!)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.server $ :require (app.schema :as schema)
+        :code $ quote $ ns app.server
+          :require (app.schema :as schema)
             app.updater :refer $ updater
             app.util.compile :refer $ handle-files! persist! md5
             app.util.env :refer $ pick-port! pick-http-port!
@@ -4719,11 +5144,13 @@
             app.util.env :refer $ get-cli-configs!
             |nanoid :refer $ nanoid
             app.updater.analyze :refer $ parse-all-deps
+            js-ffi.node :as node
+            js-ffi.shared :as shared
     'app.style $ %{} 'FileEntry
       :defs $ {}
         'button $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle button $ {}
+          :code $ quote $ defstyle button
+            {}
               |& $ {}
                 :background-color $ hsl 0 0 100 0
                 :text-decoration :underline
@@ -4739,354 +5166,368 @@
                 :outline :none
                 :cursor :pointer
                 :transition-duration |200ms
-              |&:hover $ {}
-                :color $ hsl 0 0 100 0.6
+              |&:hover $ {} $ :color (hsl 0 0 100 0.6)
           :examples $ []
           :schema $ :: 'Dynamic
         'input $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle input $ {}
-              |& $ merge ui/input
-                {}
-                  :background-color $ hsl 0 0 100 0.16
-                  :color $ hsl 0 0 100
-                  :font-family |Menlo,monospace
-                  :border :none
+          :code $ quote $ defstyle input
+            {} $ |& $ merge ui/input
+              {}
+                :background-color $ hsl 0 0 100 0.16
+                :color $ hsl 0 0 100
+                :font-family |Menlo,monospace
+                :border :none
           :examples $ []
           :schema $ :: 'Dynamic
         'inspector $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def inspector $ {} (:opacity 0.9)
+          :code $ quote $ def inspector
+            {} (:opacity 0.9)
               :background-color $ hsl 0 0 90
               :color :black
           :examples $ []
           :schema $ :: 'Dynamic
         'title $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle title $ {}
-              |& $ {} (:font-family ui/font-fancy) (:font-size 18) (:font-weight 100)
-                :color $ hsl 0 0 80
+          :code $ quote $ defstyle title
+            {} $ |& $ {} (:font-family ui/font-fancy) (:font-size 18) (:font-weight 100)
+              :color $ hsl 0 0 80
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.style $ :require (respo-ui.core :as ui)
+        :code $ quote $ ns app.style
+          :require (respo-ui.core :as ui)
             respo.util.format :refer $ hsl
             respo.css :refer $ defstyle
     'app.theme $ %{} 'FileEntry
       :defs $ {}
         'base-style-expr $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn base-style-expr (theme)
-              case-default theme |css-expr-unknown (:star-trail star-trail/css-expr) (:curves curves/css-expr) (:beginner beginner/css-expr)
+          :code $ quote $ defn base-style-expr (theme)
+            case-default theme |css-expr-unknown (:star-trail star-trail/css-expr) (:curves curves/css-expr) (:beginner beginner/css-expr)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'String)
+            :args $ [] 'Tag
         'base-style-leaf $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn base-style-leaf (theme)
-              case-default theme |css-leaf-unknown (:star-trail star-trail/css-leaf) (:curves curves/css-leaf) (:beginner beginner/css-leaf)
+          :code $ quote $ defn base-style-leaf (theme)
+            case-default theme |css-leaf-unknown (:star-trail star-trail/css-leaf) (:curves curves/css-leaf) (:beginner beginner/css-leaf)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'String)
+            :args $ [] 'Tag
         'decide-expr-theme $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn decide-expr-theme (expr has-others? focused? focus-in? tail? layout-mode length depth theme)
-              case-default theme ({})
-                :star-trail $ star-trail/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth
-                :curves $ curves/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth
-                :beginner $ beginner/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth
+          :code $ quote $ defn decide-expr-theme
+            expr has-others? focused? focus-in? tail? layout-mode length depth theme
+            case-default theme ({})
+              :star-trail $ star-trail/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth
+              :curves $ curves/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth
+              :beginner $ beginner/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'app.schema/CirruExprShape 'Bool 'Bool 'Bool 'Bool 'Tag 'Number 'Number 'Tag
+            :return $ :: 'Map 'Dynamic 'Dynamic
         'decide-leaf-theme $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn decide-leaf-theme (text focused? first? by-other? theme)
-              case-default theme ({})
-                :star-trail $ star-trail/decide-leaf-style text focused? first? by-other?
-                :curves $ curves/decide-leaf-style text focused? first? by-other?
-                :beginner $ beginner/decide-leaf-style text focused? first? by-other?
+          :code $ quote $ defn decide-leaf-theme (text focused? first? by-other? theme)
+            case-default theme ({})
+              :star-trail $ star-trail/decide-leaf-style text focused? first? by-other?
+              :curves $ curves/decide-leaf-style text focused? first? by-other?
+              :beginner $ beginner/decide-leaf-style text focused? first? by-other?
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'String 'Bool 'Bool 'Bool 'Tag
+            :return $ :: 'Map 'Dynamic 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.theme $ :require (app.theme.star-trail :as star-trail) (app.theme.curves :as curves) (app.theme.beginner :as beginner)
+        :code $ quote $ ns app.theme
+          :require (app.theme.star-trail :as star-trail) (app.theme.curves :as curves) (app.theme.beginner :as beginner)
     'app.theme.beginner $ %{} 'FileEntry
       :defs $ {}
         'css-expr $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def css-expr star-trail/css-expr)
+          :code $ quote $ def css-expr star-trail/css-expr
           :examples $ []
           :schema $ :: 'Dynamic
         'css-leaf $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def css-leaf star-trail/css-leaf)
+          :code $ quote $ def css-leaf star-trail/css-leaf
           :examples $ []
           :schema $ :: 'Dynamic
         'decide-expr-style $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn decide-expr-style (expr has-others? focused? focus-in? tail? layout-mode length depth)
-              merge (star-trail/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth) style-expr-beginner
+          :code $ quote $ defn decide-expr-style (expr has-others? focused? focus-in? tail? layout-mode length depth)
+            merge
+              star-trail/decide-expr-style expr has-others? focused? focus-in? tail? layout-mode length depth
+              , style-expr-beginner
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'app.schema/CirruExprShape 'Bool 'Bool 'Bool 'Bool 'Tag 'Number 'Number
+            :return $ :: 'Map 'Dynamic 'Dynamic
         'decide-leaf-style $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn decide-leaf-style (text focused? first? by-other?)
-              merge $ star-trail/decide-leaf-style text focused? first? by-other?
+          :code $ quote $ defn decide-leaf-style (text focused? first? by-other?)
+            merge $ star-trail/decide-leaf-style text focused? first? by-other?
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'String 'Bool 'Bool 'Bool
+            :return $ :: 'Map 'Dynamic 'Dynamic
         'style-expr-beginner $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-expr-beginner $ {}
-              :outline $ str "|1px solid " (hsl 200 80 70 0.2)
+          :code $ quote $ def style-expr-beginner
+            {} $ :outline $ str "|1px solid " (hsl 200 80 70 0.2)
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.theme.beginner $ :require (app.theme.star-trail :as star-trail)
+        :code $ quote $ ns app.theme.beginner
+          :require (app.theme.star-trail :as star-trail)
             respo.util.format :refer $ hsl
     'app.theme.curves $ %{} 'FileEntry
       :defs $ {}
         'css-expr $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def css-expr star-trail/css-expr)
+          :code $ quote $ def css-expr star-trail/css-expr
           :examples $ []
           :schema $ :: 'Dynamic
         'css-leaf $ %{} 'CodeEntry (:doc |)
-          :code $ quote (def css-leaf star-trail/css-leaf)
+          :code $ quote $ def css-leaf star-trail/css-leaf
           :examples $ []
           :schema $ :: 'Dynamic
         'decide-expr-style $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn decide-expr-style (expr has-others? focused? focus-in? tail? layout-mode length depth)
-              let
-                  base $ {} (:border-radius |16px) (:display :inline-block) (:border-width "|0 1px")
-                    :border-color $ hsl 0 0 80 0.5
-                    :padding "|4px 8px"
-                if focused?
-                  assoc base :border-color $ hsl 0 0 100 0.8
-                  , base
+          :code $ quote $ defn decide-expr-style (expr has-others? focused? focus-in? tail? layout-mode length depth)
+            let
+                base $ {} (:border-radius |16px) (:display :inline-block) (:border-width "|0 1px")
+                  :border-color $ hsl 0 0 80 0.5
+                  :padding "|4px 8px"
+              if focused?
+                assoc base :border-color $ hsl 0 0 100 0.8
+                , base
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'app.schema/CirruExprShape 'Bool 'Bool 'Bool 'Bool 'Tag 'Number 'Number
+            :return $ :: 'Map 'Dynamic 'Dynamic
         'decide-leaf-style $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn decide-leaf-style (text focused? first? by-other?)
-              merge (star-trail/decide-leaf-style text focused? first? by-other?) ({})
+          :code $ quote $ defn decide-leaf-style (text focused? first? by-other?)
+            merge (star-trail/decide-leaf-style text focused? first? by-other?) ({})
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'String 'Bool 'Bool 'Bool
+            :return $ :: 'Map 'Dynamic 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.theme.curves $ :require (app.theme.star-trail :as star-trail)
+        :code $ quote $ ns app.theme.curves
+          :require (app.theme.star-trail :as star-trail)
             respo.util.format :refer $ hsl
             respo.css :refer $ defstyle
     'app.theme.star-trail $ %{} 'FileEntry
       :defs $ {}
+        'RegexHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait RegexHost
+            .test $ :: 'Fn $ {}
+              :args $ [] 'app.theme.star-trail/RegexHost 'String
+              :return 'Bool
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+          :schema $ :: 'Trait
         'base-style-expr $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn base-style-expr () css-expr
+          :code $ quote $ defn base-style-expr () css-expr
           :examples $ []
           :schema $ :: 'Dynamic
         'base-style-leaf $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn base-style-leaf () style-leaf
+          :code $ quote $ defn base-style-leaf () style-leaf
           :examples $ []
           :schema $ :: 'Dynamic
         'css-expr $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-expr $ {}
-              |$0 $ {} (:border-width "|0 0 0px 1px") (:border-style :solid) (:min-height 24) (:outline :none) (:padding-left 10) (:font-family |Menlo,monospace) (:font-size 13) (:margin-bottom 2) (:margin-right 1) (:margin-left 8) (:line-height |1em) (:border-radius |8px) (:transition-duration |200ms) (:transition-property |background,opacity,border-color)
-                :border-color $ hsl 200 100 76 0.5
+          :code $ quote $ defstyle css-expr
+            {} $ |$0 $ {} (:border-width "|0 0 0px 1px") (:border-style :solid) (:min-height 24) (:outline :none) (:padding-left 10) (:font-family |Menlo,monospace) (:font-size 13) (:margin-bottom 2) (:margin-right 1) (:margin-left 8) (:line-height |1em) (:border-radius |8px) (:transition-duration |200ms) (:transition-property |background,opacity,border-color)
+              :border-color $ hsl 200 100 76 0.5
           :examples $ []
           :schema $ :: 'Dynamic
         'css-leaf $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defstyle css-leaf $ {} (|$0 style-leaf)
+          :code $ quote $ defstyle css-leaf
+            {} $ |$0 style-leaf
           :examples $ []
           :schema $ :: 'Dynamic
         'decide-expr-style $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn decide-expr-style (expr has-others? focused? focus-in? tail? layout-mode length depth)
-              -> ({})
-                merge-style-if has-others? $ {}
-                  :border-color $ hsl 0 0 100 0.6
-                merge-style-if focused? $ {}
-                  :border-color $ hsl 0 0 100 0.9
-                merge-style-if focus-in? $ {} (:opacity 1)
-                merge-style-if
-                  and (> length 0) (not tail?) (not= layout-mode :block)
-                  , style-expr-simple
-                merge-style-if tail? style-expr-tail
+          :code $ quote $ defn decide-expr-style (expr has-others? focused? focus-in? tail? layout-mode length depth)
+            -> ({})
+              merge-style-if has-others? $ {} $ :border-color (hsl 0 0 100 0.6)
+              merge-style-if focused? $ {} $ :border-color (hsl 0 0 100 0.9)
+              merge-style-if focus-in? $ {} $ :opacity 1
+              merge-style-if
+                and (> length 0) (not tail?) (not= layout-mode :block)
+                , style-expr-simple
+              merge-style-if tail? style-expr-tail
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'app.schema/CirruExprShape 'Bool 'Bool 'Bool 'Bool 'Tag 'Number 'Number
+            :return $ :: 'Map 'Dynamic 'Dynamic
         'decide-leaf-style $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn decide-leaf-style (text focused? first? by-other?)
-              let
-                  has-blank? $ or (= text |) (.includes? text "| ")
-                  best-width $ + 8
-                    text-width* text
-                      option:unwrap-or (get style-leaf :font-size) 14
-                      option:unwrap-or (get style-leaf :font-family) ui/font-code
-                  max-width 240
-                ->
-                  {} $ :width
-                    js/Math.max 9 $ js/Math.min best-width max-width
-                  merge-style-if first? $ {}
-                    :color $ hsl 40 85 60
-                  merge-style-if (.starts-with? text |:)
-                    {} $ :color (hsl 240 30 64)
-                  merge-style-if
-                    or (.starts-with? text ||) (.starts-with? text "|\"")
-                    {} $ :color (hsl 120 60 56)
-                  merge-style-if (.starts-with? text "|#\"")
-                    {} $ :color (hsl 300 60 56)
-                  merge-style-if
-                    or (= text |true) (= text |false)
-                    {} $ :color (hsl 250 50 60)
-                  merge-style-if (= text |nil)
-                    {} $ :color (hsl 310 60 40)
-                  merge-style-if (> best-width max-width) style-partial
-                  merge-style-if (.includes? text &newline) style-big
-                  merge-style-if
-                    .!test (new js/RegExp |^-?\d) text
-                    , style-number
-                  merge-style-if has-blank? style-space
-                  merge-style-if (or focused? by-other?) style-highlight
+          :code $ quote $ defn decide-leaf-style (text focused? first? by-other?)
+            let
+                has-blank? $ or (= text |) (&str:includes? text "| ")
+                best-width $ + 8 $ text-width* text
+                  option:unwrap-or (get style-leaf :font-size) 14
+                  option:unwrap-or (get style-leaf :font-family) ui/font-code
+                max-width 240
+              ->
+                {} $ :width $ &max 9 (&min best-width max-width)
+                merge-style-if first? $ {} $ :color (hsl 40 85 60)
+                merge-style-if (starts-with? text |:)
+                  {} $ :color $ hsl 240 30 64
+                merge-style-if
+                  or (starts-with? text ||) (starts-with? text "|\"")
+                  {} $ :color $ hsl 120 60 56
+                merge-style-if (starts-with? text "|#\"")
+                  {} $ :color $ hsl 300 60 56
+                merge-style-if
+                  or (= text |true) (= text |false)
+                  {} $ :color $ hsl 250 50 60
+                merge-style-if (= text |nil)
+                  {} $ :color $ hsl 310 60 40
+                merge-style-if (> best-width max-width) style-partial
+                merge-style-if (&str:includes? text &newline) style-big
+                merge-style-if (number-prefix? text) style-number
+                merge-style-if has-blank? style-space
+                merge-style-if (or focused? by-other?) style-highlight
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
-              :features $ #{} :js-ffi
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'String 'Bool 'Bool 'Bool
+            :return $ :: 'Map 'Dynamic 'Dynamic
         'merge-style-if $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn merge-style-if (base condition extra)
-              if condition (merge base extra) base
+          :code $ quote $ defn merge-style-if (base condition extra)
+            if condition (merge base extra) base
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Dynamic 'Dynamic) 'Bool $ :: 'Map 'Dynamic 'Dynamic
+            :return $ :: 'Map 'Dynamic 'Dynamic
+        'number-prefix? $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn number-prefix? (text)
+            let
+                pattern $ unsafe-coerce (new js/RegExp |^-?\d) 'app.theme.star-trail/RegexHost
+              .test pattern text
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] 'String
+            :features $ #{} :js-ffi
         'style-big $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-big $ {}
-              :border-right $ str "|16px solid " (hsl 0 0 30)
+          :code $ quote $ def style-big
+            {} $ :border-right $ str "|16px solid " (hsl 0 0 30)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-expr-simple $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-expr-simple $ {} (:display :inline-block) (:border-width "|0 0 1px 0") (:min-width 32) (:padding-left 11) (:padding-right 11) (:padding-bottom -1) (:vertical-align :top)
+          :code $ quote $ def style-expr-simple
+            {} (:display :inline-block) (:border-width "|0 0 1px 0") (:min-width 32) (:padding-left 11) (:padding-right 11) (:padding-bottom -1) (:vertical-align :top)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-expr-tail $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-expr-tail $ {} (:display :inline-block) (:vertical-align :top) (:padding-left 10)
+          :code $ quote $ def style-expr-tail
+            {} (:display :inline-block) (:vertical-align :top) (:padding-left 10)
           :examples $ []
           :schema $ :: 'Dynamic
         'style-highlight $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-highlight $ {}
-              :background-color $ hsl 0 0 100 0.2
+          :code $ quote $ def style-highlight
+            {} $ :background-color $ hsl 0 0 100 0.2
           :examples $ []
           :schema $ :: 'Dynamic
         'style-leaf $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-leaf $ {} (:line-height |24px) (:height 24) (:margin "|1px 1px") (:padding "|0px 4px") (:background-color :transparent) (:min-width 8) (:font-family ui/font-code) (:font-size 14) (:vertical-align :baseline) (:text-align :left) (:border-width "|1px 1px 1px 1px") (:resize :none) (:white-space :nowrap) (:outline :none) (:border :none) (:border-radius |6px) (:transition-duration |100ms) (:transition-property |background,opacity,border-color)
+          :code $ quote $ def style-leaf
+            {} (:line-height |24px) (:height 24) (:margin "|1px 1px") (:padding "|0px 4px") (:background-color :transparent) (:min-width 8) (:font-family ui/font-code) (:font-size 14) (:vertical-align :baseline) (:text-align :left) (:border-width "|1px 1px 1px 1px") (:resize :none) (:white-space :nowrap) (:outline :none) (:border :none) (:border-radius |6px) (:transition-duration |100ms) (:transition-property |background,opacity,border-color)
               :color $ hsl 200 14 60
           :examples $ []
           :schema $ :: 'Dynamic
         'style-number $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-number $ {}
-              :color $ hsl 0 70 40
+          :code $ quote $ def style-number
+            {} $ :color $ hsl 0 70 40
           :examples $ []
           :schema $ :: 'Dynamic
         'style-partial $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-partial $ {}
-              :border-right $ str "|8px solid " (hsl 0 0 30)
+          :code $ quote $ def style-partial
+            {}
+              :border-right $ str "|8px solid " $ hsl 0 0 30
               :padding-right 0
           :examples $ []
           :schema $ :: 'Dynamic
         'style-space $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def style-space $ {}
-              :background-color $ hsl 0 0 100 0.12
+          :code $ quote $ def style-space
+            {} $ :background-color $ hsl 0 0 100 0.12
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.theme.star-trail $ :require
+        :code $ quote $ ns app.theme.star-trail
+          :require
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             app.polyfill :refer $ text-width*
             app.style :as style
             respo.css :refer $ defstyle
     'app.twig.container $ %{} 'FileEntry
-      :defs $ {}
-        'twig-container $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn twig-container (db session)
-              let
-                  logged-in? $ some?
-                    option:unwrap-or (get session :user-id) nil
-                  router $ option:unwrap-or (get session :router) (:: :files)
-                  writer $ option:unwrap-or (get session :writer) nil
-                if
-                  or logged-in? $ = :watching
-                    assert-type (&enum:nth router 0) 'Tag
-                  {}
-                    :session $ dissoc session :router
-                    :logged-in? logged-in?
-                    :user $ if logged-in?
-                      twig-user $ get-in db
-                        [] :users $ option:unwrap-or (get session :user-id) nil
-                    :router $ tag-match router
-                      (:files)
-                        :: :files $ twig-page-files
+      :defs $ {} $ 'twig-container
+        %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn twig-container (db session)
+            let
+                logged-in? $ some? $ option:unwrap-or (get session :user-id) nil
+                router $ option:unwrap-or (get session :router) (:: :files)
+                writer0 $ get session :writer
+                writer $ assert-type writer0 $ :: 'Option 'Dynamic
+              if
+                or logged-in? $ = :watching $ assert-type (&enum:nth router 0) 'Tag
+                {}
+                  :session $ dissoc session :router
+                  :logged-in? logged-in?
+                  :user $ if logged-in? $ twig-user
+                    option:unwrap-or
+                      get-in db $ [] :users $ option:unwrap-or (get session :user-id) nil
+                      {}
+                  :router $ match router
+                    (:files)
+                      :: :files $ twig-page-files
+                        assert-type
                           option:unwrap-or (get db :files) nil
-                          get-in session $ [] :writer :selected-ns
+                          :: 'Map 'String 'app.schema/FileEntry
+                        get-in session $ [] :writer :selected-ns
+                        assert-type
                           option:unwrap-or (get db :saved-files) nil
-                          get-in session $ [] :writer :draft-ns
-                          option:unwrap-or (get db :sessions) nil
-                          option:unwrap-or (get session :id) nil
-                      (:graph)
-                        :: :graph $ {}
-                          :package $ option:unwrap-or (get db :package) nil
-                          :configs $ option:unwrap-or (get db :configs) nil
-                          :deps-dict $ option:unwrap-or (get db :deps-dict) nil
-                          :entries $ option:unwrap-or (get db :entries) nil
-                          :writer $ option:unwrap-or (get session :writer) nil
-                      (:editor)
-                        :: :editor $ twig-page-editor
+                          :: 'Map 'String 'app.schema/FileEntry
+                        get-in session $ [] :writer :draft-ns
+                        option:unwrap-or (get db :sessions) nil
+                        option:unwrap-or (get session :id) nil
+                    (:graph)
+                      :: :graph $ {}
+                        :package $ option:unwrap-or (get db :package) nil
+                        :configs $ option:unwrap-or (get db :configs) nil
+                        :deps-dict $ option:unwrap-or (get db :deps-dict) nil
+                        :entries $ option:unwrap-or (get db :entries) nil
+                        :writer $ option:unwrap-or (get session :writer) nil
+                    (:editor)
+                      :: :editor $ twig-page-editor
+                        assert-type
                           option:unwrap-or (get db :files) nil
+                          :: 'Map 'String 'app.schema/FileEntry
+                        assert-type
                           option:unwrap-or (get db :saved-files) nil
+                          :: 'Map 'String 'app.schema/FileEntry
+                        option:unwrap-or (get db :sessions) nil
+                        option:unwrap-or (get db :users) nil
+                        assert-type (option:unwrap writer) (:: 'Map 'Tag 'Dynamic)
+                        option:unwrap-or (get session :id) nil
+                        option:unwrap-or (get db :usages-dict) nil
+                    (:profile)
+                      :: :profile $ {} $ :members
+                        twig-page-members
                           option:unwrap-or (get db :sessions) nil
                           option:unwrap-or (get db :users) nil
-                          , writer
+                    (:search)
+                      :: :search $ twig-search $ option:unwrap-or (get db :files) nil
+                    (:watching his-sid)
+                      :: :watching $ let
+                          sessions $ option:unwrap-or (get db :sessions) nil
+                        if (contains? sessions his-sid)
+                          twig-watching (get sessions his-sid)
                             option:unwrap-or (get session :id) nil
-                            option:unwrap-or (get db :usages-dict) nil
-                      (:profile)
-                        :: :profile $ {}
-                          :members $ twig-page-members
-                            option:unwrap-or (get db :sessions) nil
+                            option:unwrap-or (get db :files) nil
                             option:unwrap-or (get db :users) nil
-                      (:search)
-                        :: :search $ twig-search
-                          option:unwrap-or (get db :files) nil
-                      (:watching his-sid)
-                        :: :watching $ let
-                            sessions $ option:unwrap-or (get db :sessions) nil
-                          if (contains? sessions his-sid)
-                            twig-watching (get sessions his-sid)
-                              option:unwrap-or (get session :id) nil
-                              option:unwrap-or (get db :files) nil
-                              option:unwrap-or (get db :users) nil
-                            , nil
-                      (:configs)
-                        :: :configs $ {}
-                          :configs $ option:unwrap-or (get db :configs) nil
-                          :entries $ option:unwrap-or (get db :entries) nil
-                    :stats $ {}
-                      :members-count $ count
-                        option:unwrap-or (get db :sessions) nil
-                  {} (:session session) (:logged-in? false)
-                    :stats $ {} (:members-count 0)
+                          , nil
+                    (:configs)
+                      :: :configs $ {}
+                        :configs $ option:unwrap-or (get db :configs) nil
+                        :entries $ option:unwrap-or (get db :entries) nil
+                  :stats $ {} $ :members-count
+                    count $ option:unwrap-or (get db :sessions) nil
+                {} (:session session) (:logged-in? false)
+                  :stats $ {} $ :members-count 0
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'Map 'Tag 'Dynamic)
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.twig.container $ :require
+        :code $ quote $ ns app.twig.container
+          :require
             app.twig.user :refer $ twig-user
             app.twig.page-files :refer $ twig-page-files
             app.twig.page-editor :refer $ twig-page-editor
@@ -5095,1809 +5536,2069 @@
             app.twig.watching :refer $ twig-watching
             app.updater.analyze :refer $ parse-all-deps
     'app.twig.member $ %{} 'FileEntry
-      :defs $ {}
-        'twig-member $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn twig-member (session user)
-              {} (:user user)
-                :nickname $ option:unwrap-or (get session :nickname) nil
-                :bookmark $ let
-                    writer $ option:unwrap-or (get session :writer) nil
-                  get
-                    option:unwrap-or (get writer :stack) nil
-                    option:unwrap-or (get writer :pointer) 0
-                :page $ get-in session ([] :router 0)
+      :defs $ {} $ 'twig-member
+        %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn twig-member (session user)
+            {} (:user user)
+              :nickname $ option:unwrap-or (get session :nickname) nil
+              :bookmark $ let
+                  writer $ option:unwrap-or (get session :writer) nil
+                get
+                  option:unwrap-or (get writer :stack) nil
+                  option:unwrap-or (get writer :pointer) 0
+              :page $ get-in session $ [] :router 0
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'Map 'Tag 'Dynamic)
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.twig.member $ :require
+        :code $ quote $ ns app.twig.member (:require)
     'app.twig.page-editor $ %{} 'FileEntry
       :defs $ {}
         'pick-from-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn pick-from-ns (ns-info)
-              let
-                  var-names $ keys
-                    option:unwrap-or (get ns-info :defs) ({})
-                  rules $ ->
-                    tree->cirru $ option:unwrap-or
-                      get
-                        option:unwrap-or (get ns-info :ns) {}
-                        , :code
-                      , nil
-                    nth 2
-                    rest
-                    either $ []
-                  import-names $ -> rules
-                    map $ fn (rule)
-                      let
-                          p0 $ first rule
-                          p2 $ last rule
-                        if (string? p2)
-                          [] p0 $ [] (str p2 |/)
-                          [] p0 $ filter p2
-                            fn (x) (not= x |[])
-                    pairs-map
-                {} (:imported import-names) (:defined var-names)
+          :code $ quote $ defn pick-from-ns (ns-info)
+            let
+                var-names $ keys $ assert-type
+                  option:unwrap-or (get ns-info :defs) ({})
+                  :: 'Map 'String 'Dynamic
+                rules $ ->
+                  tree->cirru $ option:unwrap-or
+                    get
+                      option:unwrap-or (get ns-info :ns) {}
+                      , :code
+                    , nil
+                  nth 2
+                  rest
+                  either $ []
+                import-names $ -> rules
+                  map $ fn (rule)
+                    let
+                        p0 $ first rule
+                        p2 $ last rule
+                      if (string? p2)
+                        [] p0 $ [] $ str p2 |/
+                        [] p0 $ filter p2 $ fn (x) (not= x |[])
+                  pairs-map
+              {} (:imported import-names) (:defined var-names)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
         'twig-page-editor $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn twig-page-editor (files old-files sessions users writer session-id usages-dict)
-              let
-                  pointer $ option:unwrap-or (get writer :pointer) 0
-                  stack $ option:unwrap-or (get writer :stack) nil
-                  bookmark $ if (empty? stack) nil (get stack pointer)
-                if (some? bookmark)
-                  let
-                      ns-text $ nth bookmark 1
-                    {}
-                      :focus $ tag-match bookmark
-                        (:ns n f) f
-                        (:def n d f) f
-                      :others $ dissoc
-                        -> sessions
-                          map $ fn (entry)
-                            let
-                                session $ assert-type
-                                  .unwrap $ last entry
-                                  :: 'Map 'Tag 'Dynamic
-                                writer $ assert-type
-                                  option:unwrap-or (get session :writer) ({})
-                                  :: 'Map 'Tag 'Dynamic
-                                router $ option:unwrap-or (get session :router) ([])
-                                a-bookmark $ get
+          :code $ quote $ defn twig-page-editor (files old-files sessions users writer session-id usages-dict)
+            let
+                pointer $ option:unwrap-or (get writer :pointer) 0
+                stack $ option:unwrap-or (get writer :stack) nil
+                bookmark $ if (empty? stack) nil $ get stack pointer
+              if (some? bookmark)
+                let
+                    bookmark $ option:unwrap $ assert-type bookmark (:: 'Option 'app.bookmark/%bookmark)
+                    ns-text $ assert-type
+                      option:unwrap $ nth bookmark 1
+                      , 'String
+                  {}
+                    :focus $ match bookmark
+                      (:ns n f) f
+                      (:def n d f) f
+                    :others $ dissoc
+                      -> (&map:to-list sessions)
+                        map $ fn (entry)
+                          let
+                              session $ assert-type
+                                .unwrap $ last entry
+                                :: 'Map 'Tag 'Dynamic
+                              writer $ assert-type
+                                option:unwrap-or (get session :writer) ({})
+                                :: 'Map 'Tag 'Dynamic
+                              router $ option:unwrap-or (get session :router) ([])
+                              a-bookmark $ assert-type
+                                option:unwrap $ get
                                   option:unwrap-or (get writer :stack) nil
                                   option:unwrap-or (get writer :pointer) 0
-                              [] (first entry)
-                                if
-                                  and
-                                    = :editor $ assert-type
-                                      option:unwrap-or (nth router 0) :unknown
-                                      , 'Tag
-                                    = bookmark a-bookmark
-                                  {}
-                                    :focus $ tag-match a-bookmark
-                                      (:ns n f) f
-                                      (:def n d f) f
-                                    :nickname $ get-in users
-                                      []
-                                        .unwrap $ get session :user-id
-                                        , :nickname
-                                    :session-id $ .unwrap (get session :id)
-                                  , nil
-                          filter $ fn (pair)
-                            option:some? $ last pair
-                          pairs-map
-                        , session-id
-                      :watchers $ -> sessions
-                        filter $ fn (entry)
-                          let-sugar
-                                [] k other-session
-                                , entry
-                              router $ option:unwrap-or (get other-session :router) nil
-                            and
-                              = :watching $ assert-type
-                                option:unwrap-or (nth router 0) :unknown
-                                , 'Tag
-                              =
-                                option:unwrap-or (nth router 1) nil
-                                , session-id
-                        map $ fn (entry)
-                          let-sugar
-                                [] k other-session
-                                , entry
-                            [] k $ twig-user
-                              get users $ option:unwrap-or (get other-session :user-id) nil
+                                , 'app.bookmark/%bookmark
+                            [] (first entry)
+                              if
+                                and
+                                  = :editor $ assert-type
+                                    option:unwrap-or (nth router 0) :unknown
+                                    , 'Tag
+                                  = bookmark a-bookmark
+                                {}
+                                  :focus $ match a-bookmark
+                                    (:ns n f) f
+                                    (:def n d f) f
+                                  :nickname $ get-in users $ []
+                                    assert-type
+                                      .unwrap $ get session :user-id
+                                      , 'String
+                                    , :nickname
+                                  :session-id $ .unwrap $ get session :id
+                                , nil
+                        filter $ fn (pair)
+                          option:some? $ last pair
                         pairs-map
-                      :expr $ tag-match bookmark
-                        (:ns the-ns f)
-                          get-in files $ [] the-ns :ns
-                        (:def the-ns the-def f)
-                          get-in files $ [] the-ns :defs the-def
-                      :peek-def $ let
-                          peek-def $ option:unwrap-or (get writer :peek-def) nil
-                        if (some? peek-def)
-                          get-in files $ []
-                            option:unwrap-or (get peek-def :ns) nil
-                            , :defs
-                              option:unwrap-or (get peek-def :def) nil
-                          , nil
-                      :preview-locals $ tag-match bookmark
-                        (:ns ns' f)
-                          keys $ option:unwrap-or
-                            get-in files $ [] ns' :defs
+                      , session-id
+                    :watchers $ -> (&map:to-list sessions)
+                      filter $ fn (entry)
+                        let-sugar
+                              [] k other-session
+                              , entry
+                            router $ option:unwrap-or (get other-session :router) nil
+                          and
+                            = :watching $ assert-type
+                              option:unwrap-or (nth router 0) :unknown
+                              , 'Tag
+                            =
+                              option:unwrap-or (nth router 1) nil
+                              , session-id
+                      map $ fn (entry)
+                        let-sugar
+                              [] k other-session
+                              , entry
+                          [] k $ twig-user $ option:unwrap-or
+                            get users $ assert-type
+                              option:unwrap-or (get other-session :user-id) nil
+                              , 'String
                             {}
-                        _ nil
-                      :picker-choices $ if
-                        some? $ option:unwrap-or (get writer :picker-mode) nil
-                        pick-from-ns $ get files ns-text
-                      :changed $ let
-                          file $ get files ns-text
-                          old-file $ get old-files ns-text
-                        tag-match bookmark
-                          (:ns the-ns f)
-                            compare-entry
-                              if-let (v file)
-                                :ns $ assert-type v 'app.schema/FileEntry
-                                , nil
-                              if-let (v old-file)
-                                :ns $ assert-type v 'app.schema/FileEntry
-                                , nil
-                          (:def the-ns the-def f)
-                            compare-entry
+                      pairs-map
+                    :expr $ match bookmark
+                      (:ns the-ns f)
+                        match (get files the-ns)
+                          (:some file)
+                            %some $ :ns $ assert-type file 'app.schema/FileEntry
+                          (:none) (%none)
+                      (:def the-ns the-def f)
+                        match (get files the-ns)
+                          (:some file)
+                            get
+                              :defs $ assert-type file 'app.schema/FileEntry
+                              , the-def
+                          (:none) (%none)
+                    :peek-def $ let
+                        peek-def $ option:unwrap-or (get writer :peek-def) nil
+                      if (some? peek-def)
+                        let
+                            peek-ns $ assert-type
+                              option:unwrap $ get peek-def :ns
+                              , 'String
+                            peek-name $ assert-type
+                              option:unwrap $ get peek-def :def
+                              , 'String
+                          match (get files peek-ns)
+                            (:some file)
                               get
-                                if-let (v file)
-                                  :defs $ assert-type v 'app.schema/FileEntry
-                                  {}
-                                , the-def
-                              get
-                                if-let (v old-file)
-                                  :defs $ assert-type v 'app.schema/FileEntry
-                                  {}
-                                , the-def
-                      :usages $ tag-match bookmark
-                        (:def the-ns the-def focus)
-                          get usages-dict $ :: :reference the-ns the-def
-                        _ nil
-                  , nil
+                                :defs $ assert-type file 'app.schema/FileEntry
+                                , peek-name
+                            (:none) (%none)
+                        , nil
+                    :preview-locals $ match bookmark
+                      (:ns ns' f)
+                        match (get files ns')
+                          (:some file)
+                            keys $ :defs $ assert-type file 'app.schema/FileEntry
+                          (:none) nil
+                      _ nil
+                    :picker-choices $ if
+                      some? $ option:unwrap-or (get writer :picker-mode) nil
+                      pick-from-ns $ option:unwrap-or (get files ns-text) ({})
+                    :changed $ let
+                        file $ assert-type (get files ns-text) (:: 'Option 'app.schema/FileEntry)
+                        old-file $ assert-type (get old-files ns-text) (:: 'Option 'app.schema/FileEntry)
+                      match bookmark
+                        (:ns the-ns f)
+                          compare-entry
+                            option:map file $ hint-fn
+                              {}
+                                :args $ [] 'app.schema/FileEntry
+                                :return 'app.schema/CodeEntry
+                              (:: fn (v) (:ns (assert-type v 'app.schema/FileEntry)))
+                            option:map old-file $ hint-fn
+                              {}
+                                :args $ [] 'app.schema/FileEntry
+                                :return 'app.schema/CodeEntry
+                              (:: fn (v) (:ns (assert-type v 'app.schema/FileEntry)))
+                        (:def the-ns the-def f)
+                          compare-entry
+                            option:and-then file $ hint-fn
+                              {}
+                                :args $ [] 'app.schema/FileEntry
+                                :return $ :: 'Option 'app.schema/CodeEntry
+                              (:: fn (v) (get (:defs (assert-type v 'app.schema/FileEntry)) the-def))
+                            option:and-then old-file $ hint-fn
+                              {}
+                                :args $ [] 'app.schema/FileEntry
+                                :return $ :: 'Option 'app.schema/CodeEntry
+                              (:: fn (v) (get (:defs (assert-type v 'app.schema/FileEntry)) the-def))
+                    :usages $ match bookmark
+                      (:def the-ns the-def focus)
+                        get
+                          assert-type usages-dict $ :: 'Map 'Dynamic 'Dynamic
+                          :: :reference the-ns the-def
+                      _ nil
+                , nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] (:: 'Map 'String 'app.schema/FileEntry) (:: 'Map 'String 'app.schema/FileEntry) (:: 'Map 'String 'Dynamic) (:: 'Map 'String 'Dynamic) (:: 'Map 'Tag 'Dynamic) 'String $ :: 'Map 'Dynamic 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.twig.page-editor $ :require
+        :code $ quote $ ns app.twig.page-editor
+          :require
             app.util :refer $ same-buffer? tree->cirru
             app.twig.user :refer $ twig-user
             app.util.list :refer $ compare-entry
     'app.twig.page-files $ %{} 'FileEntry
       :defs $ {}
         'keys-set $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn keys-set (x) (keys x)
+          :code $ quote $ defn keys-set (x) (keys x)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'Map 'String 'Dynamic
+            :return $ :: 'Set 'String
         'render-changed-files $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn render-changed-files (files saved-files)
-              ->
-                union (keys-set files) (keys-set saved-files)
-                filter $ fn (ns-text)
-                  not $ identical? (get files ns-text) (get saved-files ns-text)
-                map $ fn (ns-text)
+          :code $ quote $ defn render-changed-files (files saved-files)
+            ->
+              union (keys-set files) (keys-set saved-files)
+              filter $ fn (ns-text)
+                not $ identical? (get files ns-text) (get saved-files ns-text)
+              map $ fn (ns-text)
+                let
+                    file $ get files ns-text
+                    saved-file $ get saved-files ns-text
+                    file-ns $ assert-type
+                      match file
+                        (:some v)
+                          %some $ :ns $ assert-type v 'app.schema/FileEntry
+                        (:none) (%none)
+                      :: 'Option 'app.schema/CodeEntry
+                    saved-ns $ assert-type
+                      match saved-file
+                        (:some v)
+                          %some $ :ns $ assert-type v 'app.schema/FileEntry
+                        (:none) (%none)
+                      :: 'Option 'app.schema/CodeEntry
+                    defs $ assert-type
+                      match file
+                        (:some v)
+                          :defs $ assert-type v 'app.schema/FileEntry
+                        (:none) ({})
+                      :: 'Map 'String 'app.schema/CodeEntry
+                    saved-defs $ assert-type
+                      match saved-file
+                        (:some v)
+                          :defs $ assert-type v 'app.schema/FileEntry
+                        (:none) ({})
+                      :: 'Map 'String 'app.schema/CodeEntry
+                  [] ns-text $ {}
+                    :ns $ compare-entry file-ns saved-ns
+                    :defs $ let
+                        all-defs $ union (keys defs) (keys saved-defs)
+                      -> all-defs
+                        filter $ fn (def-text)
+                          not= (get defs def-text) (get saved-defs def-text)
+                        map $ fn (def-text)
+                          [] def-text $ compare-entry (get defs def-text) (get saved-defs def-text)
+                        &set:to-list
+                        pairs-map
+              filter $ fn (pair)
+                let[] (k info) pair $ not $ and
+                  = :same $ option:unwrap-or (get info :ns) :missing
+                  empty? $ option:unwrap-or (get info :defs) ({})
+              &set:to-list
+              pairs-map
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'String 'app.schema/FileEntry) (:: 'Map 'String 'app.schema/FileEntry)
+            :return $ :: 'Map 'String 'Dynamic
+        'twig-page-files $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn twig-page-files (files selected-ns saved-files draft-ns sessions sid)
+            {}
+              :ns-dict $ -> files $ filter-map-kv
+                fn (k v)
+                  hint-fn $ {}
+                    :args $ [] 'String 'app.schema/FileEntry
+                    :return $ :: 'MapEntryDecision 'String 'String
+                  %:: calcit.core/MapEntryDecision :keep k $ :doc $ :ns v
+              :defs-dict $ match selected-ns
+                (:some ns-name)
                   let
-                      file $ get files ns-text
-                      saved-file $ get saved-files ns-text
-                      file-ns $ if-let (v file)
-                        :ns $ assert-type v 'app.schema/FileEntry
-                        , nil
-                      saved-ns $ if-let (v saved-file)
-                        :ns $ assert-type v 'app.schema/FileEntry
-                        , nil
-                      defs $ if-let (v file)
-                        :defs $ assert-type v 'app.schema/FileEntry
-                        {}
-                      saved-defs $ if-let (v saved-file)
-                        :defs $ assert-type v 'app.schema/FileEntry
-                        {}
-                    [] ns-text $ {}
-                      :ns $ compare-entry file-ns saved-ns
-                      :defs $ let
-                          all-defs $ union (keys defs) (keys saved-defs)
-                        -> all-defs
-                          filter $ fn (def-text)
-                            not= (get defs def-text) (get saved-defs def-text)
-                          map $ fn (def-text)
-                            [] def-text $ compare-entry (get defs def-text) (get saved-defs def-text)
-                          .to-list
-                          pairs-map
+                      file-entry $ assert-type
+                        option:unwrap $ get files ns-name
+                        , 'app.schema/FileEntry
+                    filter-map-kv (:defs file-entry)
+                      fn (k v)
+                        hint-fn $ {}
+                          :args $ [] 'String 'app.schema/CodeEntry
+                          :return $ :: 'MapEntryDecision 'String 'String
+                        %:: calcit.core/MapEntryDecision :keep k $ :doc v
+                (:none) ({})
+              :changed-files $ render-changed-files files saved-files
+              :peeking-file $ match draft-ns
+                (:some ns-name)
+                  option:unwrap-or (get files ns-name) nil
+                (:none) nil
+              :highlights $ -> (&map:to-list sessions)
+                map $ fn (pair)
+                  let[] (k session) pair $ [] k $ let
+                      writer $ option:unwrap-or (get session :writer) {}
+                      stack $ option:unwrap-or (get writer :stack) []
+                    if (empty? stack) nil $ get stack $ option:unwrap-or (get writer :pointer) 0
                 filter $ fn (pair)
-                  let[] (k info) pair $ not
-                    and
-                      = :same $ option:unwrap-or (get info :ns) :missing
-                      empty? $ option:unwrap-or (get info :defs) ({})
-                .to-list
+                  let[] (k session) pair $ if (= sid k) false $ some? session
                 pairs-map
           :examples $ []
-          :schema $ :: 'Fn
-            {}
-              :args $ [] (:: 'Map 'String 'app.schema/FileEntry) (:: 'Map 'String 'app.schema/FileEntry)
-              :return $ :: 'Map 'String 'Dynamic
-        'twig-page-files $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn twig-page-files (files selected-ns saved-files draft-ns sessions sid)
-              {}
-                :ns-dict $ -> files
-                  map-kv $ fn (k v)
-                    [] k $ get-in v ([] :ns :doc)
-                :defs-dict $ if (some? selected-ns)
-                  ->
-                    get-in files $ [] selected-ns :defs
-                    or $ {}
-                    map-kv $ fn (k v)
-                      [] k $ option:unwrap-or (get v :doc) nil
-                  {}
-                :changed-files $ render-changed-files files saved-files
-                :peeking-file $ if (some? draft-ns) (get files draft-ns) nil
-                :highlights $ -> sessions (.to-list)
-                  map $ fn (pair)
-                    let[] (k session) pair $ [] k
-                      let
-                          writer $ option:unwrap-or (get session :writer) {}
-                          stack $ option:unwrap-or (get writer :stack) []
-                        if (empty? stack) nil $ get stack
-                          option:unwrap-or (get writer :pointer) 0
-                  filter $ fn (pair)
-                    let[] (k session) pair $ if (= sid k) false (some? session)
-                  pairs-map
-          :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'String 'app.schema/FileEntry) (:: 'Option 'String) (:: 'Map 'String 'app.schema/FileEntry) (:: 'Option 'String) (:: 'Map 'String 'Dynamic) 'String
+            :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.twig.page-files $ :require
+        :code $ quote $ ns app.twig.page-files
+          :require
             clojure.set :refer $ union
             app.util :refer $ file->cirru
             app.util.list :refer $ compare-entry
     'app.twig.page-members $ %{} 'FileEntry
-      :defs $ {}
-        'twig-page-members $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn twig-page-members (sessions users)
-              -> sessions $ map-kv
-                fn (k session)
-                  [] k $ twig-member session
-                    get users $ option:unwrap-or (get session :user-id) nil
-          :examples $ []
-          :schema $ :: 'Dynamic
-      :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.twig.page-members $ :require
-            app.twig.member :refer $ twig-member
-    'app.twig.search $ %{} 'FileEntry
-      :defs $ {}
-        'twig-search $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn twig-search (files)
-              -> files (.to-list)
-                mapcat $ fn (entry)
-                  let-sugar
-                        [] k file
-                        , entry
-                    concat
-                      [] $ :: :ns k
-                      ->
-                        option:unwrap-or (get file :defs) nil
-                        .to-list
-                        map $ fn (f-entry)
-                          let-sugar
-                                [] f-k file
-                                , f-entry
-                            :: :def k f-k
-          :examples $ []
-          :schema $ :: 'Dynamic
-      :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.twig.search $ :require
-    'app.twig.user $ %{} 'FileEntry
-      :defs $ {}
-        'twig-user $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn twig-user (user)
-              -> user $ dissoc :password
-          :examples $ []
-          :schema $ :: 'Dynamic
-      :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.twig.user $ :require
-    'app.twig.watching $ %{} 'FileEntry
-      :defs $ {}
-        'twig-watching $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn twig-watching (session my-sid files users)
+      :defs $ {} $ 'twig-page-members
+        %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn twig-page-members (sessions users)
+            -> sessions $ filter-map-kv $ fn (k session)
+              hint-fn $ {}
+                :args $ [] 'String $ :: 'Map 'Tag 'Dynamic
+                :return $ :: 'MapEntryDecision 'String 'Dynamic
               let
-                  writer $ option:unwrap-or (get session :writer) nil
-                  bookmark $ to-bookmark writer
-                  self? $ = my-sid
-                    option:unwrap-or (get session :id) nil
-                  working? $ some? bookmark
-                {}
-                  :member $ twig-user
-                    get users $ option:unwrap-or (get session :user-id) nil
-                  :bookmark bookmark
-                  :router $ option:unwrap-or (get session :router) nil
-                  :self? self?
-                  :working? $ and working? (not self?)
-                  :focus $ .get-focus (Bookmark bookmark)
-                  :expr $ if working?
-                    let
-                        path $ tag-match bookmark
-                          (:def ns' def' f) ([] ns' :defs def')
-                          (:ns ns' f) ([] ns' :ns)
-                      get-in files path
+                  user-id $ str $ option:unwrap-or (get session :user-id) |
+                %:: calcit.core/MapEntryDecision :keep k $ twig-member session $ option:unwrap-or (get users user-id) ({})
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+              :: 'Map 'String $ :: 'Map 'Tag 'Dynamic
+              :: 'Map 'String 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.twig.watching $ :require
+        :code $ quote $ ns app.twig.page-members
+          :require $ app.twig.member :refer $ twig-member
+    'app.twig.search $ %{} 'FileEntry
+      :defs $ {} $ 'twig-search
+        %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn twig-search (files)
+            let
+                typed-files $ assert-type files $ :: 'Map 'String (:: 'Map 'String 'Dynamic)
+              -> typed-files &map:to-list $ mapcat $ hint-fn
+                {:args $ [] 'Dynamic :return $ :: 'List 'Dynamic}
+                (:: fn (entry))
+                let-sugar
+                      [] k file
+                      , entry
+                  concat
+                    [] $ :: :ns k
+                    ->
+                      assert-type
+                        option:unwrap-or (get file :defs) {}
+                        :: 'Map 'String 'Dynamic
+                      &map:to-list
+                      :: map $ :: fn (f-entry)
+                        let-sugar
+                              [] f-k file
+                              , f-entry
+                          :: :def k f-k
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'Map 'String 'Dynamic
+            :return $ :: 'List 'Dynamic
+      :ns $ %{} 'NsEntry (:doc |)
+        :code $ quote $ ns app.twig.search (:require)
+    'app.twig.user $ %{} 'FileEntry
+      :defs $ {} $ 'twig-user
+        %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn twig-user (user)
+            -> user $ dissoc :password
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
+      :ns $ %{} 'NsEntry (:doc |)
+        :code $ quote $ ns app.twig.user (:require)
+    'app.twig.watching $ %{} 'FileEntry
+      :defs $ {} $ 'twig-watching
+        %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn twig-watching (session my-sid files users)
+            let
+                typed-files $ assert-type files $ :: 'Map 'String 'Dynamic
+                writer0 $ get session :writer
+                writer $ assert-type writer0 $ :: 'Option 'Dynamic
+                bookmark $ to-bookmark writer
+                self? $ = my-sid $ option:unwrap-or (get session :id) nil
+                working? $ some? bookmark
+              {}
+                :member $ twig-user $ option:unwrap-or
+                  get users $ option:unwrap-or (get session :user-id) nil
+                  {}
+                :bookmark bookmark
+                :router $ option:unwrap-or (get session :router) nil
+                :self? self?
+                :working? $ and working? $ not self?
+                :focus $ match bookmark
+                  (:some bookmark-data) (app.bookmark/get-focus bookmark-data)
+                  (:none) ([])
+                :expr $ match bookmark
+                  (:some bookmark-data)
+                    match bookmark-data
+                      (:def ns' def' f)
+                        match (get typed-files ns')
+                          (:some file)
+                            get
+                              :defs $ assert-type file 'app.schema/FileEntry
+                              , def'
+                          (:none) (%none)
+                      (:ns ns' f)
+                        match (get typed-files ns')
+                          (:some file)
+                            %some $ :ns $ assert-type file 'app.schema/FileEntry
+                          (:none) (%none)
+                  (:none) (%none)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic
+      :ns $ %{} 'NsEntry (:doc |)
+        :code $ quote $ ns app.twig.watching
+          :require
             app.util :refer $ to-bookmark
             app.twig.user :refer $ twig-user
             app.bookmark :refer $ Bookmark
     'app.updater $ %{} 'FileEntry
-      :defs $ {}
-        'updater $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn updater (db op sid op-id op-time)
-              tag-match op
-                (:session/connect) (session/connect db sid op-id op-time)
-                (:session/disconnect) (session/disconnect db sid op-id op-time)
-                (:session/select-ns op-data) (session/select-ns db op-data sid op-id op-time)
-                (:user/nickname op-data) (user/nickname db op-data sid op-id op-time)
-                (:user/log-in op-data) (user/log-in db op-data sid op-id op-time)
-                (:user/sign-up op-data) (user/sign-up db op-data sid op-id op-time)
-                (:user/log-out op-data) (user/log-out db op-data sid op-id op-time)
-                (:user/change-theme op-data) (user/change-theme db op-data sid op-id op-time)
-                (:router/change op-data) (router/change db op-data sid op-id op-time)
-                (:writer/edit op-data) (writer/edit db op-data sid op-id op-time)
-                (:writer/edit-ns) (writer/edit-ns db sid op-id op-time)
-                (:writer/select op-data) (writer/select db op-data sid op-id op-time)
-                (:writer/point-to op-data) (writer/point-to db op-data sid op-id op-time)
-                (:writer/focus op-data) (writer/focus db op-data sid op-id op-time)
-                (:writer/go-up) (writer/go-up db sid op-id op-time)
-                (:writer/go-down op-data) (writer/go-down db op-data sid op-id op-time)
-                (:writer/go-left) (writer/go-left db sid op-id op-time)
-                (:writer/go-right) (writer/go-right db sid op-id op-time)
-                (:writer/remove-idx op-data) (writer/remove-idx db op-data sid op-id op-time)
-                (:writer/paste op-data) (writer/paste db op-data sid op-id op-time)
-                (:writer/save-files op-data) (writer/save-files db op-data sid op-id op-time)
-                (:writer/collapse op-data) (writer/collapse db op-data sid op-id op-time)
-                (:writer/move-next) (writer/move-next db sid op-id op-time)
-                (:writer/move-previous) (writer/move-previous db sid op-id op-time)
-                (:writer/move-order op-data) (writer/move-order db op-data sid op-id op-time)
-                (:writer/finish) (writer/finish db sid op-id op-time)
-                (:writer/draft-ns op-data) (writer/draft-ns db op-data sid op-id op-time)
-                (:writer/hide-peek op-data) (writer/hide-peek db op-data sid op-id op-time)
-                (:writer/picker-mode) (writer/picker-mode db sid op-id op-time)
-                (:writer/pick-node op-data) (writer/pick-node db op-data sid op-id op-time)
-                (:writer/doc-set path docstring) (writer/doc-set db path docstring sid op-id op-time)
-                (:ir/add-ns op-data) (ir/add-ns db op-data sid op-id op-time)
-                (:ir/add-def op-data) (ir/add-def db op-data sid op-id op-time)
-                (:ir/remove-def op-data) (ir/remove-def db op-data sid op-id op-time)
-                (:ir/remove-ns op-data) (ir/remove-ns db op-data sid op-id op-time)
-                (:ir/prepend-leaf op-data) (ir/prepend-leaf db op-data sid op-id op-time)
-                (:ir/append-leaf op-data) (ir/append-leaf db op-data sid op-id op-time)
-                (:ir/delete-node op-data) (ir/delete-node db op-data sid op-id op-time)
-                (:ir/leaf-after op-data) (ir/leaf-after db op-data sid op-id op-time)
-                (:ir/leaf-before op-data) (ir/leaf-before db op-data sid op-id op-time)
-                (:ir/swap-left) (ir/swap-left db sid op-id op-time)
-                (:ir/expr-before op-data) (ir/expr-before db op-data sid op-id op-time)
-                (:ir/expr-after op-data) (ir/expr-after db op-data sid op-id op-time)
-                (:ir/expr-replace op-data) (ir/expr-replace db op-data sid op-id op-time)
-                (:ir/indent) (ir/indent db sid op-id op-time)
-                (:ir/unindent) (ir/unindent db sid op-id op-time)
-                (:ir/unindent-leaf) (ir/unindent-leaf db sid op-id op-time)
-                (:ir/update-leaf op-data) (ir/update-leaf db op-data sid op-id op-time)
-                (:ir/duplicate op-data) (ir/duplicate db op-data sid op-id op-time)
-                (:ir/rename op-data) (ir/rename db op-data sid op-id op-time)
-                (:ir/cp-ns op-data) (ir/cp-ns db op-data sid op-id op-time)
-                (:ir/mv-ns op-data) (ir/mv-ns db op-data sid op-id op-time)
-                (:ir/delete-entry op-data) (ir/delete-entry db op-data sid op-id op-time)
-                (:ir/reset-files) (ir/reset-files db sid op-id op-time)
-                (:ir/reset-at op-data) (ir/reset-at db op-data sid op-id op-time)
-                (:ir/reset-ns op-data) (ir/reset-ns db op-data sid op-id op-time)
-                (:ir/draft-expr op-data) (ir/draft-expr db op-data sid op-id op-time)
-                (:ir/replace-file op-data) (ir/replace-file db op-data sid op-id op-time)
-                (:ir/file-config op-data) (ir/file-config db op-data sid op-id op-time)
-                (:ir/clone-ns op-data) (ir/clone-ns db op-data sid op-id op-time)
-                (:ir/toggle-comment) (ir/toggle-comment db sid op-id op-time)
-                (:ir/fold-to-end) (ir/fold-to-end db sid op-id op-time)
-                (:notify/push-message op-data) (notify/push-message db op-data sid op-id op-time)
-                (:notify/clear op-data) (notify/clear db op-data sid op-id op-time)
-                (:notify/broadcast op-data) (notify/broadcast db op-data sid op-id op-time)
-                (:analyze/goto-def op-data) (analyze/goto-def db op-data sid op-id op-time)
-                (:analyze/abstract-def op-data) (analyze/abstract-def db op-data sid op-id op-time)
-                (:analyze/peek-def op-data) (analyze/peek-def db op-data sid op-id op-time)
-                (:analyze/refresh-usages-dict) (analyze/refresh-usages-dict db sid op-id op-time)
-                (:analyze/use-import-def target) (analyze/use-import-def db target sid op-id op-time)
-                (:watcher/file-change op-data) (watcher/file-change db op-data sid op-id op-time)
-                (:ping) db
-                (:configs/update op-data) (configs/update-configs db op-data sid op-id op-time)
-                (:configs/update-entries op-data) (configs/update-entries db op-data sid op-id op-time)
-                _ $ do (eprintln "|Unknown op:" op) db
+      :defs $ {} $ 'updater
+        %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn updater (db op sid op-id op-time)
+            match op
+              (:session/connect) (session/connect db sid op-id op-time)
+              (:session/disconnect) (session/disconnect db sid op-id op-time)
+              (:session/select-ns op-data) (session/select-ns db op-data sid op-id op-time)
+              (:user/nickname op-data) (user/nickname db op-data sid op-id op-time)
+              (:user/log-in op-data) (user/log-in db op-data sid op-id op-time)
+              (:user/sign-up op-data) (user/sign-up db op-data sid op-id op-time)
+              (:user/log-out op-data) (user/log-out db op-data sid op-id op-time)
+              (:user/change-theme op-data) (user/change-theme db op-data sid op-id op-time)
+              (:router/change op-data) (router/change db op-data sid op-id op-time)
+              (:writer/edit op-data) (writer/edit db op-data sid op-id op-time)
+              (:writer/edit-ns) (writer/edit-ns db sid op-id op-time)
+              (:writer/select op-data) (writer/select db op-data sid op-id op-time)
+              (:writer/point-to op-data) (writer/point-to db op-data sid op-id op-time)
+              (:writer/focus op-data) (writer/focus db op-data sid op-id op-time)
+              (:writer/go-up) (writer/go-up db sid op-id op-time)
+              (:writer/go-down op-data) (writer/go-down db op-data sid op-id op-time)
+              (:writer/go-left) (writer/go-left db sid op-id op-time)
+              (:writer/go-right) (writer/go-right db sid op-id op-time)
+              (:writer/remove-idx op-data) (writer/remove-idx db op-data sid op-id op-time)
+              (:writer/paste op-data) (writer/paste db op-data sid op-id op-time)
+              (:writer/save-files op-data) (writer/save-files db op-data sid op-id op-time)
+              (:writer/collapse op-data) (writer/collapse db op-data sid op-id op-time)
+              (:writer/move-next) (writer/move-next db sid op-id op-time)
+              (:writer/move-previous) (writer/move-previous db sid op-id op-time)
+              (:writer/move-order op-data) (writer/move-order db op-data sid op-id op-time)
+              (:writer/finish) (writer/finish db sid op-id op-time)
+              (:writer/draft-ns op-data) (writer/draft-ns db op-data sid op-id op-time)
+              (:writer/hide-peek op-data) (writer/hide-peek db op-data sid op-id op-time)
+              (:writer/picker-mode) (writer/picker-mode db sid op-id op-time)
+              (:writer/pick-node op-data) (writer/pick-node db op-data sid op-id op-time)
+              (:writer/doc-set path docstring) (writer/doc-set db path docstring sid op-id op-time)
+              (:ir/add-ns op-data) (ir/add-ns db op-data sid op-id op-time)
+              (:ir/add-def op-data) (ir/add-def db op-data sid op-id op-time)
+              (:ir/remove-def op-data) (ir/remove-def db op-data sid op-id op-time)
+              (:ir/remove-ns op-data) (ir/remove-ns db op-data sid op-id op-time)
+              (:ir/prepend-leaf op-data) (ir/prepend-leaf db op-data sid op-id op-time)
+              (:ir/append-leaf op-data) (ir/append-leaf db op-data sid op-id op-time)
+              (:ir/delete-node op-data) (ir/delete-node db op-data sid op-id op-time)
+              (:ir/leaf-after op-data) (ir/leaf-after db op-data sid op-id op-time)
+              (:ir/leaf-before op-data) (ir/leaf-before db op-data sid op-id op-time)
+              (:ir/swap-left) (ir/swap-left db sid op-id op-time)
+              (:ir/expr-before op-data) (ir/expr-before db op-data sid op-id op-time)
+              (:ir/expr-after op-data) (ir/expr-after db op-data sid op-id op-time)
+              (:ir/expr-replace op-data) (ir/expr-replace db op-data sid op-id op-time)
+              (:ir/indent) (ir/indent db sid op-id op-time)
+              (:ir/unindent) (ir/unindent db sid op-id op-time)
+              (:ir/unindent-leaf) (ir/unindent-leaf db sid op-id op-time)
+              (:ir/update-leaf op-data) (ir/update-leaf db op-data sid op-id op-time)
+              (:ir/duplicate op-data) (ir/duplicate db op-data sid op-id op-time)
+              (:ir/rename op-data) (ir/rename db op-data sid op-id op-time)
+              (:ir/cp-ns op-data) (ir/cp-ns db op-data sid op-id op-time)
+              (:ir/mv-ns op-data) (ir/mv-ns db op-data sid op-id op-time)
+              (:ir/delete-entry op-data) (ir/delete-entry db op-data sid op-id op-time)
+              (:ir/reset-files) (ir/reset-files db sid op-id op-time)
+              (:ir/reset-at op-data) (ir/reset-at db op-data sid op-id op-time)
+              (:ir/reset-ns op-data) (ir/reset-ns db op-data sid op-id op-time)
+              (:ir/draft-expr op-data) (ir/draft-expr db op-data sid op-id op-time)
+              (:ir/replace-file op-data) (ir/replace-file db op-data sid op-id op-time)
+              (:ir/file-config op-data) (ir/file-config db op-data sid op-id op-time)
+              (:ir/clone-ns op-data) (ir/clone-ns db op-data sid op-id op-time)
+              (:ir/toggle-comment) (ir/toggle-comment db sid op-id op-time)
+              (:ir/fold-to-end) (ir/fold-to-end db sid op-id op-time)
+              (:notify/push-message op-data) (notify/push-message db op-data sid op-id op-time)
+              (:notify/clear op-data) (notify/clear db op-data sid op-id op-time)
+              (:notify/broadcast op-data) (notify/broadcast db op-data sid op-id op-time)
+              (:analyze/goto-def op-data) (analyze/goto-def db op-data sid op-id op-time)
+              (:analyze/abstract-def op-data) (analyze/abstract-def db op-data sid op-id op-time)
+              (:analyze/peek-def op-data) (analyze/peek-def db op-data sid op-id op-time)
+              (:analyze/refresh-usages-dict) (analyze/refresh-usages-dict db sid op-id op-time)
+              (:analyze/use-import-def target) (analyze/use-import-def db target sid op-id op-time)
+              (:watcher/file-change op-data) (watcher/file-change db op-data sid op-id op-time)
+              (:ping) db
+              (:configs/update op-data) (configs/update-configs db op-data sid op-id op-time)
+              (:configs/update-entries op-data) (configs/update-entries db op-data sid op-id op-time)
+              _ $ do (eprintln "|Unknown op:" op) db
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :features $ #{} :js-ffi
+            :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.updater $ :require (app.updater.session :as session) (app.updater.user :as user) (app.updater.router :as router) (app.updater.ir :as ir) (app.updater.writer :as writer) (app.updater.notify :as notify) (app.updater.analyze :as analyze) (app.updater.watcher :as watcher) (app.updater.configs :as configs)
+        :code $ quote $ ns app.updater
+          :require (app.updater.session :as session) (app.updater.user :as user) (app.updater.router :as router) (app.updater.ir :as ir) (app.updater.writer :as writer) (app.updater.notify :as notify) (app.updater.analyze :as analyze) (app.updater.watcher :as watcher) (app.updater.configs :as configs)
     'app.updater.analyze $ %{} 'FileEntry
       :defs $ {}
         'abstract-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn abstract-def (db op-data sid op-id op-time)
-              let
-                  writer $ to-writer db sid
-                  files $ get db :files
-                  bookmark $ to-bookmark writer
-                  ns-text $ nth bookmark 1
-                  def-text op-data
-                  def-existed? $ option:some?
-                    get-in files $ [] ns-text :defs def-text
-                  user-id $ get-in db ([] :sessions sid :user-id)
-                  new-bookmark $ :: :def ns-text def-text ([])
-                if def-existed?
-                  -> db
-                    update-in ([] :sessions sid :notifications)
-                      push-warning op-id op-time $ str def-text "| already defined!"
-                    update-in ([] :sessions sid :writer) (push-bookmark new-bookmark)
-                  let
-                      target-path $ ->
+          :code $ quote $ defn abstract-def (db op-data sid op-id op-time)
+            let
+                writer $ to-writer db sid
+                files $ get db :files
+                bookmark $ to-bookmark writer
+                ns-text $ nth bookmark 1
+                def-text op-data
+                def-existed? $ option:some? $ get-in files ([] ns-text :defs def-text)
+                user-id $ get-in db $ [] :sessions sid :user-id
+                new-bookmark $ :: :def ns-text def-text $ []
+              if def-existed?
+                -> db
+                  update-in ([] :sessions sid :notifications)
+                    push-warning op-id op-time $ str def-text "| already defined!"
+                  update-in ([] :sessions sid :writer)
+                    push-bookmark (assert-type new-bookmark 'app.bookmark/%bookmark) false
+                let
+                    target-path $ ->
+                      assert-type
                         option:unwrap-or (nth bookmark 3) ([])
-                        mapcat $ fn (x) ([] :data x)
-                      target-expr $ -> files
-                        get-in $ [] ns-text :defs (nth bookmark 2) :code
-                        get-in target-path
-                    -> db
-                      update-in ([] :files ns-text :defs)
-                        fn (defs)
-                          ; println target-path (prepend target-path def-text) (tree->cirru target-expr) (keys defs)
-                          -> (option:unwrap-or defs {})
-                            assoc def-text $ %{} schema/CodeEntry (:doc |)
-                              :code $ cirru->tree
-                                [] |def def-text $ tree->cirru target-expr
-                                , user-id op-time
-                              :examples $ []
-                            assoc-in
-                              prepend target-path $ nth bookmark 2
-                              cirru->tree def-text user-id op-time
-                      update-in ([] :sessions sid :writer) (push-bookmark new-bookmark)
+                        (:: 'List 'Dynamic)
+                      mapcat $ hint-fn
+                        {:args $ [] 'Dynamic :return $ :: 'List 'Dynamic}
+                        (:: fn (x) ([] :data x))
+                    target-expr $ -> files
+                      get-in $ [] ns-text :defs (nth bookmark 2) :code
+                      get-in target-path
+                  -> db
+                    update-in ([] :files ns-text :defs)
+                      fn (defs)
+                        ; println target-path (prepend target-path def-text) (tree->cirru target-expr) (keys defs)
+                        -> (option:unwrap-or defs {})
+                          assoc def-text $ %{} schema/CodeEntry (:doc |)
+                            :code $ cirru->tree
+                              [] |def def-text $ tree->cirru target-expr
+                              option:unwrap-or user-id |
+                              , op-time
+                            :examples $ []
+                          assoc-in
+                            prepend target-path $ nth bookmark 2
+                            cirru->tree def-text (option:unwrap-or user-id |) op-time
+                    update-in ([] :sessions sid :writer)
+                      push-bookmark (assert-type new-bookmark 'app.bookmark/%bookmark) false
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'goto-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn goto-def (db op-data sid op-id op-time)
-              let
-                  writer $ to-writer db sid
-                  pkg $ assert-type
-                    option:unwrap-or (get db :package) |
-                    , 'String
-                  bookmark $ to-bookmark writer
-                  ns-text $ nth bookmark 1
-                  ns-expr $ tree->cirru
-                    get-in db $ [] :files ns-text :ns :code
-                  deps-info $ parse-deps (.slice ns-expr 2)
-                  def-info $ parse-def
-                    option:unwrap-or (get op-data :text) |
-                  def-info $ assert-type def-info (:: 'Map 'Tag 'Dynamic)
-                  def-method $ assert-type
-                    option:unwrap-or (get def-info :method) :unknown
-                    , 'Tag
-                  def-key $ assert-type
-                    option:unwrap-or (get def-info :key) |
-                    , 'String
-                  def-name $ assert-type
-                    option:unwrap-or (get def-info :def) |
-                    , 'String
-                  forced? $ option:unwrap-or (get op-data :forced?) false
-                  new-bookmark $ if
-                    and (contains? deps-info def-key)
-                      = def-method $ option:unwrap-or
-                        get
-                          assert-type
-                            option:unwrap-or (get deps-info def-key) ({})
-                            :: 'Map 'Tag 'Dynamic
-                          , :method
-                        , :unknown
+          :code $ quote $ defn goto-def (db op-data sid op-id op-time)
+            let
+                writer $ to-writer db sid
+                pkg $ assert-type
+                  option:unwrap-or (get db :package) |
+                  , 'String
+                bookmark $ to-bookmark writer
+                ns-text $ nth bookmark 1
+                ns-expr $ tree->cirru $ get-in db ([] :files ns-text :ns :code)
+                deps-info $ parse-deps $ slice ns-expr 2
+                def-info $ parse-def $ option:unwrap-or (get op-data :text) |
+                def-info $ assert-type def-info $ :: 'Map 'Tag 'Dynamic
+                def-method $ assert-type
+                  option:unwrap-or (get def-info :method) :unknown
+                  , 'Tag
+                def-key $ assert-type
+                  option:unwrap-or (get def-info :key) |
+                  , 'String
+                def-name $ assert-type
+                  option:unwrap-or (get def-info :def) |
+                  , 'String
+                forced? $ option:unwrap-or (get op-data :forced?) false
+                new-bookmark $ if (contains? deps-info def-key)
+                  if
+                    = def-method $ option:unwrap-or
+                      get
+                        assert-type
+                          option:unwrap-or
+                            assert-type (&map:get deps-info def-key) (:: 'Option 'Dynamic)
+                            {}
+                          :: 'Map 'Tag 'Dynamic
+                        , :method
+                      , :unknown
                     let
                         rule $ assert-type
-                          .unwrap $ get deps-info def-key
+                          .unwrap $ assert-type (&map:get deps-info def-key) (:: 'Option 'Dynamic)
                           :: 'Map 'Tag 'Dynamic
                         rule-ns $ assert-type
                           option:unwrap-or (get rule :ns) |
                           , 'String
                       if (= :refer def-method) (:: :def rule-ns def-key []) (:: :def rule-ns def-name [])
-                    :: :def (nth bookmark 1) def-name $ []
-                  new-target-defs $ option:unwrap-or
-                    get-in db $ [] :files (nth new-bookmark 1) :defs
-                    , {}
-                  user-id $ get-in db ([] :sessions sid :user-id)
-                  warn $ fn (x)
-                    -> db $ update-in ([] :sessions sid :notifications) (push-warning op-id op-time x)
-                ; println |deps deps-info def-info new-bookmark
-                if (some? new-bookmark)
-                  if
-                    or
-                      = pkg $ assert-type (&enum:nth new-bookmark 1) 'String
-                      starts-with?
-                        assert-type (&enum:nth new-bookmark 1) 'String
-                        str pkg |.
-                    tag-match new-bookmark
-                      (:def ns' def' f)
-                        if (contains? new-target-defs def')
-                          -> db $ update-in ([] :sessions sid :writer) (push-bookmark new-bookmark true)
-                          if forced?
-                            let
-                                new-expr $ if
-                                  list? $ option:unwrap-or (get op-data :args) []
-                                  [] |defn def' $ [] &
-                                    option:unwrap-or (get op-data :args) []
-                                  [] |def def' $ []
-                                target-ns ns'
-                                target-def def'
-                                def-code $ cirru->tree new-expr user-id op-time
-                              -> db
-                                update-in ([] :files)
-                                  fn (files)
-                                    if
-                                      contains? (option:unwrap-or files {}) target-ns
-                                      assoc-in (option:unwrap-or files {}) ([] target-ns :defs target-def)
+                  :: :def (nth bookmark 1) def-name $ []
+                new-target-defs $ option:unwrap-or
+                  get-in db $ [] :files (nth new-bookmark 1) :defs
+                  , {}
+                user-id $ get-in db $ [] :sessions sid :user-id
+                warn $ fn (x)
+                  -> db $ update-in ([] :sessions sid :notifications) (push-warning op-id op-time x)
+              ; println |deps deps-info def-info new-bookmark
+              if (some? new-bookmark)
+                if
+                  or
+                    = pkg $ assert-type (&enum:nth new-bookmark 1) 'String
+                    starts-with?
+                      assert-type (&enum:nth new-bookmark 1) 'String
+                      str pkg |.
+                  match new-bookmark
+                    (:def ns' def' f)
+                      if (contains? new-target-defs def')
+                        -> db $ update-in ([] :sessions sid :writer)
+                          push-bookmark (assert-type new-bookmark 'app.bookmark/%bookmark) true
+                        if forced?
+                          let
+                              new-expr $ if
+                                list? $ option:unwrap-or (get op-data :args) []
+                                [] |defn def' $ [] & $ option:unwrap-or (get op-data :args) []
+                                [] |def def' $ []
+                              target-ns ns'
+                              target-def def'
+                              def-code $ cirru->tree new-expr (option:unwrap-or user-id |) op-time
+                            -> db
+                              update-in ([] :files)
+                                fn (files)
+                                  if
+                                    contains? (option:unwrap-or files {}) target-ns
+                                    assoc-in (option:unwrap-or files {}) ([] target-ns :defs target-def)
+                                      %{} schema/CodeEntry (:doc |) (:code def-code)
+                                        :examples $ []
+                                    assoc (option:unwrap-or files {}) target-ns $ {}
+                                      :ns $ cirru->tree ([] |ns target-ns) (option:unwrap-or user-id |) op-time
+                                      :defs $ {} $ target-def
                                         %{} schema/CodeEntry (:doc |) (:code def-code)
                                           :examples $ []
-                                      assoc (option:unwrap-or files {}) target-ns $ {}
-                                        :ns $ cirru->tree ([] |ns target-ns) user-id op-time
-                                        :defs $ {}
-                                          target-def $ %{} schema/CodeEntry (:doc |) (:code def-code)
-                                            :examples $ []
-                                update-in ([] :sessions sid :writer) (push-bookmark new-bookmark)
-                            warn $ str "|Does not exist: " new-bookmark
-                      _ $ warn (str "|handling ns: " new-bookmark)
-                    warn $ str "|From external ns: " new-bookmark
-                  warn $ str "|Cannot locate: " def-info
+                              update-in ([] :sessions sid :writer)
+                                push-bookmark (assert-type new-bookmark 'app.bookmark/%bookmark) false
+                          warn $ str "|Does not exist: " new-bookmark
+                    _ $ warn $ str "|handling ns: " new-bookmark
+                  warn $ str "|From external ns: " new-bookmark
+                warn $ str "|Cannot locate: " def-info
           :examples $ []
-          :schema $ :: 'Dynamic
-        'parse-all-deps $ %{} 'CodeEntry (:doc "|main implementation of reading files and build a usages dictionary. Slow at current, need optimizations with mutable data.\n")
-          :code $ quote
-            defn parse-all-deps (files)
-              let
-                  files $ assert-type files (:: 'Map 'String 'app.schema/FileEntry)
-                  *usages $ atom ({})
-                  *deps $ atom ({})
-                -> files &map:to-list $ each
-                  fn (pair)
-                    let
-                        this-ns $ &list:nth pair 0
-                        v $ assert-type (&list:nth pair 1) 'app.schema/FileEntry
-                        ns-expr $ tree->cirru
-                          :code $ :ns v
-                        require-rule $ &list:nth ns-expr 2
-                        ns-rules $ if (some? require-rule) (&list:slice require-rule 1) nil
-                        import-rules $ if (some? ns-rules) (parse-ns-rules ns-rules) ([])
-                      let
-                          local-defs $ keys (:defs v)
-                        -> (:defs v) &map:to-list $ each
-                          fn (pair)
-                            let
-                                this-def $ &list:nth pair 0
-                                v $ &list:nth pair 1
-                                entry $ :: :def this-ns this-def
-                                *entry-deps $ atom (#{})
-                                collect! $ fn (reference)
-                                  if (&map:contains? @*usages reference)
-                                    swap! *usages update reference $ fn (coll) (&include coll entry)
-                                    swap! *usages &map:assoc reference $ #{} entry
-                                  swap! *entry-deps include reference
-                              parse-bookmarks-collect!
-                                tree->cirru $ option:unwrap-or (get v :code) nil
-                                , local-defs import-rules this-ns this-def collect!
-                              swap! *deps assoc entry @*entry-deps
-                :: :deps @*deps @*usages
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'parse-bookmarks-collect! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn parse-bookmarks-collect! (tree local-defs import-rules this-ns this-def collect!)
-              if (list? tree)
-                each tree $ fn (item) (parse-bookmarks-collect! item local-defs import-rules this-ns this-def collect!)
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'parse-all-deps $ %{} 'CodeEntry
+          :doc "|main implementation of reading files and build a usages dictionary. Slow at current, need optimizations with mutable data.\n"
+          :code $ quote $ defn parse-all-deps (files)
+            let
+                files $ assert-type files $ :: 'Map 'String 'app.schema/FileEntry
+                *usages $ atom $ {}
+                *deps $ atom $ {}
+              -> files &map:to-list $ each $ fn (pair)
                 let
-                    sym $ if (.!startsWith tree |@) (.!slice tree 1) tree
-                  if
-                    &set:includes? local-defs $ option:unwrap-or sym |
-                    if
-                      not $ &= this-def (option:unwrap-or sym |)
-                      collect! $ :: :reference this-ns (option:unwrap-or sym |)
-                    each import-rules $ fn (x0)
-                      tag-match x0
-                        (:by-as ns-name alias)
-                          if
-                            starts-with?
-                              unsafe-coerce (option:unwrap-or sym |) 'String
-                              str alias |/
-                            collect! $ :: :reference ns-name
-                              &str:slice
-                                unsafe-coerce (option:unwrap-or sym |) 'String
-                                inc $ unsafe-coerce (.-length alias) 'Number
-                        (:by-refer ns-name def-names)
-                          if
-                            &set:includes? def-names $ option:unwrap-or sym |
-                            collect! $ :: :reference ns-name (option:unwrap-or sym |)
+                    this-ns $ &list:nth pair 0
+                    v $ assert-type (&list:nth pair 1) 'app.schema/FileEntry
+                    ns-expr $ tree->cirru $ :code (:ns v)
+                    require-rule $ &list:nth ns-expr 2
+                    ns-rules $ if (some? require-rule) (&list:slice require-rule 1) nil
+                    import-rules $ if (some? ns-rules) (parse-ns-rules ns-rules) ([])
+                  let
+                      local-defs $ keys $ :defs v
+                    -> (:defs v) &map:to-list $ each $ fn (pair)
+                      let
+                          this-def $ &list:nth pair 0
+                          v $ &list:nth pair 1
+                          entry $ :: :def this-ns this-def
+                          *entry-deps $ atom $ #{}
+                          collect! $ fn (reference)
+                            if (&map:contains? @*usages reference)
+                              swap! *usages update reference $ fn (coll) (&include coll entry)
+                              swap! *usages &map:assoc reference $ #{} entry
+                            swap! *entry-deps include reference
+                        parse-bookmarks-collect!
+                          tree->cirru $ option:unwrap-or (get v :code) nil
+                          , local-defs import-rules this-ns this-def collect!
+                        swap! *deps assoc entry @*entry-deps
+              :: :deps @*deps @*usages
           :examples $ []
-          :schema $ :: 'Dynamic
-        'parse-ns-rules $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn parse-ns-rules (rules)
-              -> rules $ mapcat
-                fn (rule)
-                  case-default
-                    option:unwrap-or (nth rule 1) |
-                    []
-                    |:as $ []
-                      :: :by-as
-                        option:unwrap-or (nth rule 0) |
-                        option:unwrap-or (nth rule 2) |
-                    |:refer $ []
-                      :: :by-refer
-                        option:unwrap-or (nth rule 0) |
-                        .to-set $ option:unwrap-or (nth rule 2) ([])
-                    |:default $ []
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'peek-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn peek-def (db op-data sid op-id op-time)
+          :schema $ :: 'Fn $ {} (:return 'Enum)
+            :args $ [] $ :: 'Map 'String 'app.schema/FileEntry
+        'parse-bookmarks-collect! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn parse-bookmarks-collect! (tree local-defs import-rules this-ns this-def collect!)
+            if (list? tree)
+              each tree $ fn (item) (parse-bookmarks-collect! item local-defs import-rules this-ns this-def collect!)
               let
-                  writer $ to-writer db sid
-                  pkg $ assert-type
-                    option:unwrap-or (get db :package) |
+                  sym $ assert-type
+                    if (.!startsWith tree |@) (.!slice tree 1) tree
                     , 'String
-                  bookmark $ to-bookmark writer
-                  ns-text $ nth bookmark 1
-                  ns-expr $ tree->cirru
-                    get-in db $ [] :files ns-text :ns :code
-                  deps-info $ parse-deps (.slice ns-expr 2)
-                  def-info $ parse-def op-data
-                  def-info $ assert-type def-info (:: 'Map 'Tag 'Dynamic)
-                  def-method $ assert-type
-                    option:unwrap-or (get def-info :method) :unknown
-                    , 'Tag
-                  def-key $ assert-type
-                    option:unwrap-or (get def-info :key) |
-                    , 'String
-                  def-name $ assert-type
-                    option:unwrap-or (get def-info :def) |
-                    , 'String
-                  new-bookmark $ if
-                    and (contains? deps-info def-key)
-                      = def-method $ option:unwrap-or
-                        get
-                          assert-type
-                            option:unwrap-or (get deps-info def-key) ({})
-                            :: 'Map 'Tag 'Dynamic
-                          , :method
-                        , :unknown
+                if (&set:includes? local-defs sym)
+                  if
+                    not $ &= this-def sym
+                    collect! $ :: :reference this-ns sym
+                  each import-rules $ fn (x0)
+                    match x0
+                      (:by-as ns-name alias)
+                        if
+                          starts-with? sym $ str alias |/
+                          collect! $ :: :reference ns-name $ &str:slice sym
+                            inc $ unsafe-coerce (.-length alias) 'Number
+                      (:by-refer ns-name def-names)
+                        if (&set:includes? def-names sym)
+                          collect! $ :: :reference ns-name sym
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic (:: 'Set 'String) (:: 'List 'Dynamic) 'String 'String $ :: 'Fn
+              {} (:return 'Dynamic)
+                :args $ [] 'Dynamic
+            :features $ #{} :js-ffi
+        'parse-ns-rules $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn parse-ns-rules (rules)
+            ->
+              assert-type rules $ :: 'List 'Dynamic
+              mapcat $ hint-fn
+                {:args $ [] 'Dynamic :return $ :: 'List 'Dynamic}
+                (:: fn (rule))
+                case-default
+                  option:unwrap-or (nth rule 1) |
+                  []
+                  |:as $ [] $ :: :by-as
+                    option:unwrap-or (nth rule 0) |
+                    option:unwrap-or (nth rule 2) |
+                  |:refer $ [] $ :: :by-refer
+                    option:unwrap-or (nth rule 0) |
+                    &list:to-set $ assert-type
+                      option:unwrap-or (nth rule 2) ([])
+                      (:: 'List 'String)
+                  |:default $ []
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'List 'Dynamic
+            :return $ :: 'List 'Dynamic
+        'peek-def $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn peek-def (db op-data sid op-id op-time)
+            let
+                writer $ to-writer db sid
+                pkg $ assert-type
+                  option:unwrap-or (get db :package) |
+                  , 'String
+                bookmark $ to-bookmark writer
+                ns-text $ nth bookmark 1
+                ns-expr $ tree->cirru $ get-in db ([] :files ns-text :ns :code)
+                deps-info $ parse-deps $ slice ns-expr 2
+                def-info $ parse-def op-data
+                def-info $ assert-type def-info $ :: 'Map 'Tag 'Dynamic
+                def-method $ assert-type
+                  option:unwrap-or (get def-info :method) :unknown
+                  , 'Tag
+                def-key $ assert-type
+                  option:unwrap-or (get def-info :key) |
+                  , 'String
+                def-name $ assert-type
+                  option:unwrap-or (get def-info :def) |
+                  , 'String
+                new-bookmark $ if (contains? deps-info def-key)
+                  if
+                    = def-method $ option:unwrap-or
+                      get
+                        assert-type
+                          option:unwrap-or
+                            assert-type (&map:get deps-info def-key) (:: 'Option 'Dynamic)
+                            {}
+                          :: 'Map 'Tag 'Dynamic
+                        , :method
+                      , :unknown
                     let
                         rule $ assert-type
-                          .unwrap $ get deps-info def-key
+                          .unwrap $ assert-type (&map:get deps-info def-key) (:: 'Option 'Dynamic)
                           :: 'Map 'Tag 'Dynamic
                         rule-ns $ assert-type
                           option:unwrap-or (get rule :ns) |
                           , 'String
                       if (= :refer def-method) (:: :def rule-ns def-key) (:: :def rule-ns def-name)
-                    :: :def (nth bookmark 1) def-name
-                  target-defs $ get-in db
-                    [] :files (nth new-bookmark 1) :defs
-                  user-id $ get-in db ([] :sessions sid :user-id)
-                  warn $ fn (x)
-                    update-in db ([] :sessions sid :notifications) (push-warning op-id op-time x)
-                ; println |deps deps-info def-info new-bookmark
-                if (some? new-bookmark)
-                  if
-                    starts-with?
-                      unsafe-coerce (nth new-bookmark 1) 'String
-                      str pkg |.
-                    tag-match new-bookmark $
-                      :def ns' def'
-                      if (contains? target-defs def')
-                        -> db $ assoc-in ([] :sessions sid :writer :peek-def)
-                          {} (:ns ns') (:def def')
-                        warn $ str "|Does not exist: " ns' "| " def'
-                    warn $ str "|External dep:" (nth new-bookmark 1)
-                  warn $ str "|Cannot locate:" def-info
+                  :: :def (nth bookmark 1) def-name
+                target-defs $ get-in db $ [] :files (nth new-bookmark 1) :defs
+                user-id $ get-in db $ [] :sessions sid :user-id
+                warn $ fn (x)
+                  update-in db ([] :sessions sid :notifications) (push-warning op-id op-time x)
+              ; println |deps deps-info def-info new-bookmark
+              if (some? new-bookmark)
+                if
+                  starts-with?
+                    assert-type (nth new-bookmark 1) 'String
+                    str pkg |.
+                  match new-bookmark $
+                    :def ns' def'
+                    if (contains? target-defs def')
+                      -> db $ assoc-in ([] :sessions sid :writer :peek-def)
+                        {} (:ns ns') (:def def')
+                      warn $ str "|Does not exist: " ns' "| " def'
+                  warn $ str "|External dep:" $ nth new-bookmark 1
+                warn $ str "|Cannot locate:" def-info
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'refresh-usages-dict $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn refresh-usages-dict (db sid op-id op-time)
-              tag-match
-                parse-all-deps $ get-in db ([] :files)
-                (:deps deps-dict usages-dict)
-                  -> db (assoc :usages-dict usages-dict) (assoc :deps-dict deps-dict)
+          :code $ quote $ defn refresh-usages-dict (db sid op-id op-time)
+            match
+              parse-all-deps $ get-in db $ [] :files
+              (:deps deps-dict usages-dict)
+                -> db (assoc :usages-dict usages-dict) (assoc :deps-dict deps-dict)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'use-import-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn use-import-def (db picked sid op-id op-time)
-              let
-                  session $ assert-type
-                    .unwrap $ get-in db ([] :sessions sid)
-                    :: 'Map 'Tag 'Dynamic
-                  writer $ assert-type
-                    option:unwrap-or (get session :writer) ({})
-                    :: 'Map 'Tag 'Dynamic
-                  bookmark $ to-bookmark writer
-                  user-id $ .unwrap (get session :user-id)
-                  to-tree $ fn (x) (cirru->tree x user-id op-time)
-                if (some? bookmark)
-                  tag-match bookmark
-                    (:ns ns' f)
-                      do (js/console.warn "|def import not working in ns rules") db
-                    (:def current-ns def' f)
-                      let
-                          ns-tree $ assert-type
-                            .unwrap $ get-in db ([] :files current-ns :ns :code)
-                            , 'app.schema/CirruExpr
-                          bookmark-path $ .to-path bookmark
-                          router-path $ [] :sessions sid :router
-                          ns-path $ [] :files current-ns :ns :code
-                        tag-match picked
-                          (:def pick-ns pick-def)
-                            if (= current-ns pick-ns)
-                              -> db
-                                assoc-in bookmark-path $ to-tree pick-def
-                                assoc-in router-path $ :: :editor
-                              let
-                                  try-ns-coord $ .find-before ns-tree (to-tree pick-ns) |:refer
-                                tag-match try-ns-coord
-                                  (:some pick-ns-coord)
-                                    let
-                                        rule-coord $ butlast pick-ns-coord
-                                        rule $ .get-in ns-tree rule-coord
-                                        def-node $ cirru->tree pick-def user-id op-time
-                                        try-def-coord $ .find rule def-node
-                                      ; js/console.log rule-coord |--- ns-tree try-def-coord
-                                      tag-match try-def-coord
-                                        (:some _c)
-                                          -> db (assoc-in bookmark-path def-node)
-                                            assoc-in router-path $ :: :editor
-                                        (:none)
-                                          -> db
-                                            update-in
-                                              concat ns-path $ mapcat rule-coord
-                                                fn (c) ([] :data c)
-                                              fn (rule-tree)
-                                                .dispatch (.unwrap rule-tree)
-                                                  [] (:: :update-last) (:: :append def-node)
-                                            assoc-in bookmark-path $ to-tree pick-def
-                                            assoc-in router-path $ :: :editor
-                                  (:none)
+          :code $ quote $ defn use-import-def (db picked sid op-id op-time)
+            let
+                session $ assert-type
+                  .unwrap $ get-in db $ [] :sessions sid
+                  :: 'Map 'Tag 'Dynamic
+                writer $ assert-type
+                  option:unwrap-or (get session :writer) ({})
+                  :: 'Map 'Tag 'Dynamic
+                bookmark $ assert-type
+                  option:unwrap $ to-bookmark $ %some writer
+                  , 'app.bookmark/%bookmark
+                user-id $ .unwrap $ get session :user-id
+                to-tree $ fn (x) (cirru->tree x user-id op-time)
+              if (some? bookmark)
+                match bookmark
+                  (:ns ns' f)
+                    do (js/console.warn "|def import not working in ns rules") db
+                  (:def current-ns def' f)
+                    let
+                        current-file $ assert-type
+                          option:unwrap $ get-in db $ [] :files current-ns
+                          , 'app.schema/FileEntry
+                        ns-entry $ :ns current-file
+                        ns-tree $ :code ns-entry
+                        bookmark-path $ app.bookmark/to-path bookmark
+                        router-path $ [] :sessions sid :router
+                        ns-path $ [] :files current-ns :ns :code
+                      match picked
+                        (:def pick-ns pick-def)
+                          if (= current-ns pick-ns)
+                            -> db
+                              assoc-in bookmark-path $ to-tree pick-def
+                              assoc-in router-path $ :: :editor
+                            let
+                                try-ns-coord $ &trait-call app.schema/CirruExprTrait :find-before ns-tree (to-tree pick-ns) |:refer
+                              match try-ns-coord
+                                (:some pick-ns-coord)
+                                  let
+                                      rule-coord $ butlast pick-ns-coord
+                                      rule-tree $ assert-type
+                                        option:unwrap $ assert-type (&trait-call app.schema/CirruExprTrait :get-in ns-tree rule-coord) (:: 'Option 'Dynamic)
+                                        , 'app.schema/CirruExprShape
+                                      def-node $ cirru->tree pick-def user-id op-time
+                                      try-def-coord $ &trait-call app.schema/CirruExprTrait :find rule-tree def-node
+                                    if (some? try-def-coord)
+                                      -> db (assoc-in bookmark-path def-node)
+                                        assoc-in router-path $ :: :editor
+                                      let
+                                          new-rule $ assert-type
+                                            &trait-call app.schema/CirruExprTrait :dispatch rule-tree $ [] (:: :update-last) (:: :append def-node)
+                                            , 'app.schema/CirruExprShape
+                                          new-ns-tree $ &trait-call app.schema/CirruExprTrait :assoc-in ns-tree rule-coord new-rule
+                                          new-file $ assoc current-file :ns $ assoc ns-entry :code new-ns-tree
+                                        -> db
+                                          assoc-in ([] :files current-ns) new-file
+                                          assoc-in bookmark-path $ to-tree pick-def
+                                          assoc-in router-path $ :: :editor
+                                (:none)
+                                  do (js/console.log "|Failed to find ns node for refer") db
+                        (:ns pick-ns)
+                          if (= current-ns pick-ns)
+                            do (js/console.log "|already in namespace" current-ns) db
+                            let
+                                try-ns-coord $ &trait-call app.schema/CirruExprTrait :find-before ns-tree (to-tree pick-ns) |:as
+                              match try-ns-coord
+                                (:some pick-ns-coord)
+                                  let
+                                      rule-coord $ butlast pick-ns-coord
+                                      rule-tree $ assert-type
+                                        option:unwrap $ assert-type (&trait-call app.schema/CirruExprTrait :get-in ns-tree rule-coord) (:: 'Option 'Dynamic)
+                                        , 'app.schema/CirruExprShape
+                                      ns-alias $ assert-type (&trait-call app.schema/CirruExprTrait :compact rule-tree) 'String
                                     -> db
-                                      update-in ns-path $ fn (ns-tree)
-                                        .dispatch (.unwrap ns-tree)
-                                          [] (:: :update-nth 2)
-                                            :: :append $ to-tree
-                                              [] pick-ns |:refer $ [] pick-def
-                                      assoc-in bookmark-path $ to-tree pick-def
+                                      assoc-in bookmark-path $ to-tree $ str ns-alias |/
                                       assoc-in router-path $ :: :editor
-                          (:ns pick-ns)
-                            if (= current-ns pick-ns)
-                              do (js/console.log "|already in namespace" current-ns) db
-                              let
-                                  try-ns-coord $ .find-before ns-tree (to-tree pick-ns) |:as
-                                tag-match try-ns-coord
-                                  (:some pick-ns-coord)
-                                    let
-                                        rule-coord $ butlast pick-ns-coord
-                                        rule $ .get-in ns-tree rule-coord
-                                        ns-alias $ last (.compact rule)
-                                      -> db
-                                        assoc-in bookmark-path $ to-tree (str ns-alias |/)
-                                        assoc-in router-path $ :: :editor
-                                  (:none)
-                                    let
-                                        ns-alias $ last (.split pick-ns |.)
-                                      -> db
-                                        update-in ns-path $ fn (ns-tree)
-                                          .dispatch (.unwrap ns-tree)
-                                            [] (:: :update-nth 2)
-                                              :: :append $ to-tree ([] pick-ns |:as ns-alias)
-                                        assoc-in bookmark-path $ to-tree (str ns-alias |/)
-                                        assoc-in router-path $ :: :editor
-                  do (js/console.warn "|no bookmark yet") db
+                                (:none)
+                                  let
+                                      ns-alias $ option:unwrap $ last
+                                        split (assert-type pick-ns 'String) |.
+                                      new-ns-tree $ assert-type
+                                        &trait-call app.schema/CirruExprTrait :dispatch ns-tree $ [] (:: :update-nth 2)
+                                          :: :append $ to-tree $ [] pick-ns |:as ns-alias
+                                        , 'app.schema/CirruExprShape
+                                      new-file $ assoc current-file :ns $ assoc ns-entry :code new-ns-tree
+                                    -> db
+                                      assoc-in ([] :files current-ns) new-file
+                                      assoc-in bookmark-path $ to-tree $ str ns-alias |/
+                                      assoc-in router-path $ :: :editor
+                do (js/console.warn "|no bookmark yet") db
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :features $ #{} :js-ffi
+            :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.updater.analyze $ :require
+        :code $ quote $ ns app.updater.analyze
+          :require
             app.util :refer $ bookmark->path to-writer to-bookmark parse-deps tree->cirru cirru->tree parse-def push-warning
             app.util.stack :refer $ push-bookmark
             app.schema :as schema
     'app.updater.configs $ %{} 'FileEntry
       :defs $ {}
         'update-configs $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn update-configs (db op-data session-id op-id op-time)
-              update db :configs $ fn (configs) (merge configs op-data)
+          :code $ quote $ defn update-configs (db op-data session-id op-id op-time)
+            update db :configs $ hint-fn
+              {:args $ [] $ :: 'Map 'Tag 'Dynamic
+                :return $ :: 'Map 'Tag 'Dynamic}
+              :: fn (configs)
+                merge configs $ assert-type op-data $ :: 'Map 'Tag 'Dynamic
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'update-entries $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn update-entries (db op-data session-id op-id op-time)
-              let
-                  operation $ option:unwrap-or (nth op-data 0) :unknown
-                  data $ .unwrap (nth op-data 1)
-                update db :entries $ fn (d)
-                  case-default operation
-                    do (eprintln "|unknown entries operation" operation) d
-                    :reset data
-                    :merge $ merge d
-                      assert-type data $ :: 'Map 'Dynamic 'Dynamic
-                    :dissoc $ dissoc d data
+          :code $ quote $ defn update-entries (db op-data session-id op-id op-time)
+            let
+                operation $ option:unwrap-or (nth op-data 0) :unknown
+                data $ .unwrap $ nth op-data 1
+              update db :entries $ fn (d)
+                case-default operation d (:reset data)
+                  :merge $ merge
+                    assert-type d $ :: 'Map 'String 'Dynamic
+                    assert-type data $ :: 'Map 'String 'Dynamic
+                  :dissoc $ dissoc d data
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote (ns app.updater.configs)
+        :code $ quote $ ns app.updater.configs
     'app.updater.ir $ %{} 'FileEntry
       :defs $ {}
         'add-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn add-def (db op-data session-id op-id op-time)
-              assert (list? op-data) "|expects op-data of [ns text]"
-              let-sugar
-                    [] ns-part def-part
-                    , op-data
-                  user-id $ get-in db ([] :sessions session-id :user-id)
-                  cirru-expr $ [] |defn def-part ([])
-                when (nil? ns-part)
-                  println $ get-in db ([] :sessions session-id :writer)
-                  raise "|Empty ns target."
-                assoc-in db ([] :files ns-part :defs def-part)
-                  %{} schema/CodeEntry (:doc |)
-                    :code $ cirru->tree cirru-expr user-id op-time
-                    :examples $ []
+          :code $ quote $ defn add-def (db op-data session-id op-id op-time)
+            assert (list? op-data) "|expects op-data of [ns text]"
+            let-sugar
+                  [] ns-part def-part
+                  , op-data
+                user-id $ get-in db $ [] :sessions session-id :user-id
+                cirru-expr $ [] |defn def-part $ []
+              when (nil? ns-part)
+                println $ get-in db $ [] :sessions session-id :writer
+                raise "|Empty ns target."
+              assoc-in db ([] :files ns-part :defs def-part)
+                %{} schema/CodeEntry (:doc |)
+                  :code $ cirru->tree cirru-expr (option:unwrap-or user-id |) op-time
+                  :examples $ []
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'add-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn add-ns (db op-data session-id op-id op-time)
-              let
-                  user-id $ get-in db ([] :sessions session-id :user-id)
-                  cirru-expr $ [] |ns op-data
-                  default-expr $ cirru->tree cirru-expr user-id op-time
-                  empty-expr $ cirru->tree ([]) user-id op-time
-                -> db
-                  assoc-in ([] :files op-data)
-                    %{} schema/FileEntry
-                      :ns $ %{} schema/CodeEntry (:doc |) (:code default-expr)
-                        :examples $ []
-                      :defs $ {}
-                  assoc-in ([] :sessions session-id :writer :selected-ns) op-data
+          :code $ quote $ defn add-ns (db op-data session-id op-id op-time)
+            let
+                user-id $ get-in db $ [] :sessions session-id :user-id
+                cirru-expr $ [] |ns op-data
+                default-expr $ cirru->tree cirru-expr (option:unwrap-or user-id |) op-time
+                empty-expr $ cirru->tree ([]) (option:unwrap-or user-id |) op-time
+              -> db
+                assoc-in ([] :files op-data)
+                  %{} schema/FileEntry
+                    :ns $ %{} schema/CodeEntry (:doc |) (:code default-expr)
+                      :examples $ []
+                    :defs $ {}
+                assoc-in ([] :sessions session-id :writer :selected-ns) op-data
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'append-leaf $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn append-leaf (db op-data session-id op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions session-id :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  stack $ assert-type
-                    option:unwrap-or (get writer :stack) ([])
-                    :: 'List 'Dynamic
-                  pointer $ assert-type
-                    option:unwrap-or (get writer :pointer) 0
-                    , 'Number
-                  bookmark $ Bookmark
-                    .unwrap $ get stack pointer
-                  focus $ .get-focus bookmark
-                  user-id $ get-in db ([] :sessions session-id :user-id)
-                  new-leaf $ %{} schema/CirruLeaf (:by user-id) (:at op-time) (:text |)
-                  expr-path $ .to-path bookmark
-                  target-expr $ assert-type
-                    .unwrap $ get-in db expr-path
-                    , 'app.schema/CirruExpr
-                  target-data $ assert-type
-                    option:unwrap-or (:data target-expr) ({})
-                    :: 'Map 'String 'Dynamic
-                  new-id $ key-append target-data
-                -> db
-                  update-in expr-path $ fn (expr)
-                    if (expr? expr)
-                      update (assert-type expr 'app.schema/CirruExpr) :data $ fn (d) (assoc d new-id new-leaf)
-                      , expr
-                  update-in ([] :sessions session-id :writer :stack pointer)
-                    fn (b)
-                      .update-focus (Bookmark b)
-                        fn (focus) (conj focus new-id)
+          :code $ quote $ defn append-leaf (db op-data session-id op-id op-time)
+            let
+                writer $ assert-type
+                  option:unwrap $ get-in db $ [] :sessions session-id :writer
+                  :: 'Map 'Tag 'Dynamic
+                stack $ assert-type
+                  option:unwrap-or (get writer :stack) ([])
+                  :: 'List 'app.bookmark/%bookmark
+                pointer $ assert-type
+                  option:unwrap-or (get writer :pointer) 0
+                  , 'Number
+                bookmark $ Bookmark $ assert-type
+                  option:unwrap $ get stack pointer
+                  , 'app.bookmark/%bookmark
+                focus $ app.bookmark/get-focus bookmark
+                user-id $ get-in db $ [] :sessions session-id :user-id
+                new-leaf $ %{} schema/CirruLeaf (:by user-id) (:at op-time) (:text |)
+                expr-path $ app.bookmark/to-path bookmark
+                target-expr $ assert-type
+                  option:unwrap $ get-in db expr-path
+                  , 'app.schema/CirruExprShape
+                target-data $ assert-type (:data target-expr) (:: 'Map 'String 'Dynamic)
+                new-id $ key-append target-data
+              -> db
+                update-in expr-path $ fn (expr)
+                  if (expr? expr)
+                    update (assert-type expr 'app.schema/CirruExprShape) :data $ hint-fn
+                      {}
+                        :args $ [] $ :: 'Map 'String 'Dynamic
+                        :return $ :: 'Map 'String 'Dynamic
+                      (:: fn (d) (assoc d new-id new-leaf))
+                    , expr
+                app.util/update-in-existing ([] :sessions session-id :writer :stack pointer)
+                  fn (b)
+                    app.bookmark/update-focus
+                      Bookmark $ assert-type b 'app.bookmark/%bookmark
+                      fn (focus) (conj focus new-id)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'call-replace-expr $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn call-replace-expr (expr from to)
-              if (expr? expr)
-                update expr :data $ fn (data)
-                  -> data (.to-list)
-                    map $ fn (pair)
-                      let[] (k v) pair $ [] k (call-replace-expr v from to)
-                    filter-not $ fn (pair)
-                      let[] (k v) pair $ and (leaf? v)
-                        blank? $ :text (assert-type v 'app.schema/CirruLeaf)
-                    pairs-map
-                cond
-                    =
-                      :text $ assert-type expr 'app.schema/CirruLeaf
-                      , from
-                    assoc expr :text to
-                  (= (:text (assert-type expr 'app.schema/CirruLeaf)) (str |@ from))
-                    assoc expr :text $ str |@ to
-                  true expr
+          :code $ quote $ defn call-replace-expr (expr from to)
+            if (expr? expr)
+              update expr :data $ hint-fn
+                {}
+                  :args $ [] $ :: 'Map 'String 'Dynamic
+                  :return $ :: 'Map 'String 'Dynamic
+                (:: fn (data) (-> data (&map:to-list) (:: map (:: fn (pair) (let[] (k v) pair ([] k (call-replace-expr v from to))))) (filter-not (:: fn (pair) (let[] (k v) pair (and (leaf? v) (blank? (:text (assert-type v 'app.schema/CirruLeafShape))))))) (pairs-map)))
+              cond
+                  =
+                    :text $ assert-type expr 'app.schema/CirruLeafShape
+                    , from
+                  assoc expr :text to
+                (= (:text (assert-type expr 'app.schema/CirruLeafShape)) (str |@ from))
+                  assoc expr :text $ str |@ to
+                true expr
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic 'String 'String
         'clone-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn clone-ns (db op-data sid op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions sid :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  selected-ns $ assert-type
-                    option:unwrap-or (get writer :selected-ns) |
-                    , 'String
-                  files $ assert-type
-                    .unwrap $ get db :files
-                    :: 'Map 'String 'app.schema/FileEntry
-                  warn $ fn (x)
-                    update-in db ([] :sessions sid :notifications) (push-warning op-id op-time x)
-                  new-ns op-data
-                cond
-                    not $ and (string? new-ns) (includes? new-ns |.)
-                    warn "|Not a valid string!"
-                  (contains? files op-data)
-                    warn $ str new-ns "| already existed!"
-                  (not (contains? files selected-ns))
-                    warn "|No selected namespace!"
-                  true $ -> db
-                    update :files $ fn (files)
-                      let
-                          files $ assert-type files (:: 'Map 'String 'app.schema/FileEntry)
-                          the-file $ assert-type
-                            .unwrap $ get files selected-ns
-                            , 'app.schema/FileEntry
-                          ns-entry $ assert-type (:ns the-file) 'app.schema/CodeEntry
-                          ns-expr $ assert-type (:code ns-entry) 'app.schema/CirruExpr
-                          ns-data $ assert-type
-                            option:unwrap-or (:data ns-expr) ({})
-                            :: 'Map 'String 'Dynamic
-                          name-field $ .unwrap (key-nth ns-data 1)
-                          name-node $ assert-type
-                            .unwrap $ get ns-data name-field
-                            , 'app.schema/CirruLeaf
-                          new-file $ update the-file :ns
-                            fn (entry)
-                              update (assert-type entry 'app.schema/CodeEntry) :code $ fn (expr)
-                                assert (str "|old namespace to change:" selected-ns "| " ns-expr)
-                                  = selected-ns $ :text name-node
-                                update (assert-type expr 'app.schema/CirruExpr) :data $ fn (data)
-                                  update data name-field $ fn (node)
-                                    assoc (assert-type node 'app.schema/CirruLeaf) :text new-ns
-                        assoc files new-ns new-file
-                    assoc-in ([] :sessions sid :writer :selected-ns) new-ns
+          :code $ quote $ defn clone-ns (db op-data sid op-id op-time)
+            let
+                writer $ assert-type
+                  option:unwrap $ get-in db $ [] :sessions sid :writer
+                  :: 'Map 'Tag 'Dynamic
+                selected-ns $ assert-type
+                  option:unwrap-or (get writer :selected-ns) |
+                  , 'String
+                files $ assert-type
+                  option:unwrap $ get db :files
+                  :: 'Map 'String 'app.schema/FileEntry
+                warn $ fn (x)
+                  update-in db ([] :sessions sid :notifications) (push-warning op-id op-time x)
+                new-ns op-data
+              cond
+                  not $ and (string? new-ns) (includes? new-ns |.)
+                  warn "|Not a valid string!"
+                (contains? files op-data)
+                  warn $ str new-ns "| already existed!"
+                (not (contains? files selected-ns))
+                  warn "|No selected namespace!"
+                true $ -> db
+                  update :files $ fn (files)
+                    let
+                        files $ assert-type files $ :: 'Map 'String 'app.schema/FileEntry
+                        the-file $ assert-type
+                          option:unwrap $ get files selected-ns
+                          , 'app.schema/FileEntry
+                        ns-entry $ assert-type (:ns the-file) 'app.schema/CodeEntry
+                        ns-expr $ assert-type (:code ns-entry) 'app.schema/CirruExprShape
+                        ns-data $ assert-type (:data ns-expr) (:: 'Map 'String 'Dynamic)
+                        name-field $ option:unwrap $ key-nth ns-data 1
+                        name-node $ assert-type
+                          option:unwrap $ get ns-data name-field
+                          , 'app.schema/CirruLeafShape
+                        new-file $ update the-file :ns $ hint-fn
+                          {}
+                            :args $ [] 'app.schema/CodeEntry
+                            :return 'app.schema/CodeEntry
+                          (:: fn (entry) (update (assert-type entry 'app.schema/CodeEntry) :code (:: fn (expr) (assert (str "|old namespace to change:" selected-ns "| " ns-expr) (= selected-ns (:text name-node))) (update (assert-type expr 'app.schema/CirruExprShape) :data (hint-fn ({} (:args ([] (:: 'Map 'String 'Dynamic))) (:return (:: 'Map 'String 'Dynamic))) ((:: fn (data) (update data name-field (:: fn (node) (assoc (assert-type node 'app.schema/CirruLeafShape) :text new-ns))))))))))
+                      assoc files new-ns new-file
+                  assoc-in ([] :sessions sid :writer :selected-ns) new-ns
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'cp-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn cp-ns (db op-data session-id op-id op-time)
-              update db :files $ fn (files)
-                -> files $ assoc
+          :code $ quote $ defn cp-ns (db op-data session-id op-id op-time)
+            update db :files $ fn (files)
+              -> files $ assoc
+                option:unwrap-or (get op-data :to) nil
+                option:unwrap-or
+                  get files $ option:unwrap-or (get op-data :from) nil
+                  , nil
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'delete-entry $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn delete-entry (db op-data session-id op-id op-time) (; println |delete op-data)
+            match op-data
+              (:def ns' def' f)
+                -> db
+                  update-in ([] :files ns' :defs)
+                    fn (defs-option)
+                      hint-fn $ {}
+                        :args $ [] $ :: 'Option 'Dynamic
+                        :return 'Dynamic
+                      dissoc
+                        assert-type
+                          option:unwrap-or defs-option $ {}
+                          :: 'Map 'String 'app.schema/CodeEntry
+                        , def'
+                  update-in ([] :sessions session-id :writer)
+                    fn (writer-option)
+                      hint-fn $ {}
+                        :args $ [] $ :: 'Option 'Dynamic
+                        :return 'Dynamic
+                      let
+                          writer $ assert-type
+                            option:unwrap-or writer-option $ {}
+                            :: 'Map 'Tag 'Dynamic
+                          pointer $ assert-type
+                            option:unwrap-or (get writer :pointer) 0
+                            , 'Number
+                          stack $ assert-type
+                            option:unwrap-or (get writer :stack) ([])
+                            :: 'List 'app.bookmark/%bookmark
+                        -> writer
+                          assoc :stack $ dissoc-idx stack pointer
+                          assoc :pointer $ dec pointer
+              (:ns ns' f)
+                -> db
+                  update :files $ fn (files)
+                    hint-fn $ {}
+                      :args $ [] 'Dynamic
+                      :return 'Dynamic
+                    dissoc
+                      assert-type files $ :: 'Map 'String 'app.schema/FileEntry
+                      , ns'
+                  update-in ([] :sessions session-id :writer)
+                    fn (writer-option)
+                      hint-fn $ {}
+                        :args $ [] $ :: 'Option 'Dynamic
+                        :return 'Dynamic
+                      let
+                          writer $ assert-type
+                            option:unwrap-or writer-option $ {}
+                            :: 'Map 'Tag 'Dynamic
+                          pointer $ assert-type
+                            option:unwrap-or (get writer :pointer) 0
+                            , 'Number
+                          stack $ assert-type
+                            option:unwrap-or (get writer :stack) ([])
+                            :: 'List 'app.bookmark/%bookmark
+                        -> writer
+                          assoc :stack $ dissoc-idx stack pointer
+                          assoc :pointer $ dec pointer
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'delete-node $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn delete-node (db op-data session-id op-id op-time)
+            let
+                writer $ assert-type
+                  option:unwrap $ get-in db $ [] :sessions session-id :writer
+                  :: 'Map 'Tag 'Dynamic
+                stack $ assert-type
+                  option:unwrap-or (get writer :stack) ([])
+                  :: 'List 'app.bookmark/%bookmark
+                pointer $ assert-type
+                  option:unwrap-or (get writer :pointer) 0
+                  , 'Number
+                bookmark $ Bookmark $ assert-type
+                  option:unwrap $ get stack pointer
+                  , 'app.bookmark/%bookmark
+              if
+                empty? $ app.bookmark/get-focus bookmark
+                -> db $ update-in ([] :sessions session-id :notifications) (push-warning op-id op-time "|cannot delete from root")
+                let
+                    parent-bookmark $ app.bookmark/update-focus bookmark butlast
+                    data-path $ app.bookmark/to-path parent-bookmark
+                    child-data $ assert-type
+                      option:unwrap-or
+                        get-in db $ conj data-path :data
+                        {}
+                      :: 'Map 'String 'Dynamic
+                    child-keys $ sort $ &set:to-list (keys child-data)
+                    deleted-key $ option:unwrap $ last (app.bookmark/get-focus bookmark)
+                    idx $ option:unwrap-or (index-of child-keys deleted-key) 0
+                  -> db
+                    app.util/update-in-existing data-path $ fn (expr)
+                      update (assert-type expr 'app.schema/CirruExprShape) :data $ hint-fn
+                        {}
+                          :args $ [] $ :: 'Map 'String 'Dynamic
+                          :return $ :: 'Map 'String 'Dynamic
+                        (:: fn (children) (dissoc children deleted-key))
+                    app.util/update-in-existing ([] :sessions session-id :writer :stack pointer)
+                      fn (b)
+                        app.bookmark/update-focus
+                          Bookmark $ assert-type b 'app.bookmark/%bookmark
+                          fn (focus)
+                            if (= 0 idx) (butlast focus)
+                              assoc focus
+                                dec $ count focus
+                                option:unwrap $ get child-keys $ dec idx
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'draft-expr $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn draft-expr (db op-data session-id op-id op-time)
+            let
+                writer $ assert-type
+                  option:unwrap $ get-in db $ [] :sessions session-id :writer
+                  :: 'Map 'Tag 'Dynamic
+                stack $ assert-type
+                  option:unwrap-or (get writer :stack) ([])
+                  :: 'List 'app.bookmark/%bookmark
+                pointer $ assert-type
+                  option:unwrap-or (get writer :pointer) 0
+                  , 'Number
+                bookmark $ assert-type
+                  option:unwrap $ get stack pointer
+                  , 'app.bookmark/%bookmark
+                data-path $ bookmark->path bookmark
+                user-id $ assert-type
+                  get-in db $ [] :sessions session-id :user-id
+                  , 'String
+                data op-data
+              -> db $ update-in data-path $ fn (expr) (cirru->tree data user-id op-time)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'duplicate $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn duplicate (db op-data session-id op-id op-time)
+            let
+                writer $ to-writer db session-id
+                bookmark $ assert-type
+                  option:unwrap $ to-bookmark writer
+                  , 'app.bookmark/%bookmark
+                target-expr $ option:unwrap $ get-in db (app.bookmark/to-path bookmark)
+                parent-path $ app.bookmark/to-path $ app.bookmark/update-focus bookmark butlast
+                parent-expr $ assert-type
+                  option:unwrap $ get-in db parent-path
+                  , 'app.schema/CirruExprShape
+                parent-data $ assert-type (:data parent-expr) (:: 'Map 'String 'Dynamic)
+                next-id $ key-after parent-data $ option:unwrap
+                  last $ app.bookmark/get-focus bookmark
+              -> db
+                app.util/update-in-existing parent-path $ fn (expr)
+                  update (assert-type expr 'app.schema/CirruExprShape) :data $ hint-fn
+                    {}
+                      :args $ [] $ :: 'Map 'String 'Dynamic
+                      :return $ :: 'Map 'String 'Dynamic
+                    (:: fn (data) (assoc data next-id target-expr))
+                app.util/update-in-existing
+                  [] :sessions session-id :writer :stack $ option:unwrap-or
+                    get
+                      assert-type (option:unwrap writer) (:: 'Map 'Tag 'Dynamic)
+                      , :pointer
+                    , 0
+                  fn (b)
+                    app.bookmark/update-focus
+                      Bookmark $ assert-type b 'app.bookmark/%bookmark
+                      fn (focus)
+                        conj (butlast focus) next-id
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'expr-after $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn expr-after (db op-data session-id op-id op-time)
+            let
+                writer $ to-writer db session-id
+                bookmark $ assert-type
+                  option:unwrap $ to-bookmark writer
+                  , 'app.bookmark/%bookmark
+                parent-bookmark $ app.bookmark/update-focus bookmark butlast
+                data-path $ app.bookmark/to-path parent-bookmark
+                target-expr $ assert-type
+                  option:unwrap $ get-in db data-path
+                  , 'app.schema/CirruExprShape
+                target-data $ assert-type (:data target-expr) (:: 'Map 'String 'Dynamic)
+                next-id $ key-after target-data $ option:unwrap
+                  last $ app.bookmark/get-focus bookmark
+                user-id $ get-in db $ [] :sessions session-id :user-id
+                new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
+                new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id)
+                  :data $ {} $ bisection/mid-id new-leaf
+              -> db
+                app.util/update-in-existing data-path $ fn (expr)
+                  update (assert-type expr 'app.schema/CirruExprShape) :data $ hint-fn
+                    {}
+                      :args $ [] $ :: 'Map 'String 'Dynamic
+                      :return $ :: 'Map 'String 'Dynamic
+                    (:: fn (d) (assoc d next-id new-expr))
+                app.util/update-in-existing
+                  [] :sessions session-id :writer :stack $ option:unwrap-or
+                    get
+                      assert-type (option:unwrap writer) (:: 'Map 'Tag 'Dynamic)
+                      , :pointer
+                    , 0
+                  fn (b)
+                    app.bookmark/update-focus
+                      Bookmark $ assert-type b 'app.bookmark/%bookmark
+                      fn (focus)
+                        -> (butlast focus) (conj next-id) (conj bisection/mid-id)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'expr-before $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn expr-before (db op-data session-id op-id op-time)
+            let
+                writer $ to-writer db session-id
+                bookmark $ assert-type
+                  option:unwrap $ to-bookmark writer
+                  , 'app.bookmark/%bookmark
+                parent-bookmark $ app.bookmark/update-focus bookmark butlast
+                data-path $ app.bookmark/to-path parent-bookmark
+                target-expr $ assert-type
+                  option:unwrap $ get-in db data-path
+                  , 'app.schema/CirruExprShape
+                target-data $ assert-type (:data target-expr) (:: 'Map 'String 'Dynamic)
+                next-id $ key-before target-data $ option:unwrap
+                  last $ app.bookmark/get-focus bookmark
+                user-id $ get-in db $ [] :sessions session-id :user-id
+                new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
+                new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id)
+                  :data $ {} $ bisection/mid-id new-leaf
+              -> db
+                app.util/update-in-existing data-path $ fn (expr)
+                  update (assert-type expr 'app.schema/CirruExprShape) :data $ hint-fn
+                    {}
+                      :args $ [] $ :: 'Map 'String 'Dynamic
+                      :return $ :: 'Map 'String 'Dynamic
+                    (:: fn (d) (assoc d next-id new-expr))
+                app.util/update-in-existing
+                  [] :sessions session-id :writer :stack $ option:unwrap-or
+                    get
+                      assert-type (option:unwrap writer) (:: 'Map 'Tag 'Dynamic)
+                      , :pointer
+                    , 0
+                  fn (b)
+                    app.bookmark/update-focus
+                      Bookmark $ assert-type b 'app.bookmark/%bookmark
+                      fn (focus)
+                        -> (butlast focus) (conj next-id) (conj bisection/mid-id)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'expr-replace $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn expr-replace (db op-data session-id op-id op-time)
+            let
+                from $ assert-type
+                  option:unwrap $ get
+                    assert-type op-data $ :: 'Map 'Tag 'Dynamic
+                    , :from
+                  , 'String
+                to $ assert-type
+                  option:unwrap $ get
+                    assert-type op-data $ :: 'Map 'Tag 'Dynamic
+                    , :to
+                  , 'String
+                bookmark $ assert-type
+                  option:unwrap $ get
+                    assert-type op-data $ :: 'Map 'Tag 'Dynamic
+                    , :bookmark
+                  , 'app.bookmark/%bookmark
+                data-path $ bookmark->path bookmark
+              update-in db data-path $ fn (expr) (call-replace-expr expr from to)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'file-config $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn file-config (db op-data sid op-id op-time)
+            let
+                ns-text $ get-in db $ [] :sessions sid :writer :selected-ns
+              if-let (v ns-text)
+                app.util/update-in-existing db ([] :files v :configs)
+                  fn (configs)
+                    merge
+                      assert-type configs $ :: 'Map 'Tag 'Dynamic
+                      assert-type op-data $ :: 'Map 'Tag 'Dynamic
+                , db
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'fold-to-end $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn fold-to-end (db session-id op-id op-time)
+            let
+                writer $ assert-type
+                  option:unwrap $ get-in db $ [] :sessions session-id :writer
+                  :: 'Map 'Tag 'Dynamic
+                stack $ assert-type
+                  option:unwrap-or (get writer :stack) ([])
+                  :: 'List 'app.bookmark/%bookmark
+                pointer $ assert-type
+                  option:unwrap-or (get writer :pointer) 0
+                  , 'Number
+                bookmark $ assert-type
+                  option:unwrap $ get stack pointer
+                  , 'app.bookmark/%bookmark
+                focus $ app.bookmark/get-focus bookmark
+                parent-option $ app.bookmark/get-parent bookmark
+                user-id $ assert-type
+                  get-in db $ [] :sessions session-id :user-id
+                  , 'String
+              match parent-option
+                (:none)
+                  do (eprintln "|does not work on root element") db
+                (:some parent-bookmark)
+                  let
+                      data-path $ app.bookmark/to-path parent-bookmark
+                      end-key $ assert-type
+                        option:unwrap $ last focus
+                        , 'String
+                    update-in db data-path $ fn (parent-option)
+                      hint-fn $ {}
+                        :args $ [] $ :: 'Option 'Dynamic
+                        :return 'Dynamic
+                      let
+                          parent-node $ assert-type (option:unwrap parent-option) 'app.schema/CirruExprShape
+                          parent-data $ assert-type (:data parent-node) (:: 'Map 'String 'Dynamic)
+                          prior-data $ filter-map-kv parent-data $ fn (k v)
+                            hint-fn $ {}
+                              :args $ [] 'String 'Dynamic
+                              :return $ :: 'MapEntryDecision 'String 'Dynamic
+                            if
+                              < (&str:compare k end-key) 0
+                              :: :keep k v
+                              :: :drop
+                          boxed-data $ filter-map-kv parent-data $ fn (k v)
+                            hint-fn $ {}
+                              :args $ [] 'String 'Dynamic
+                              :return $ :: 'MapEntryDecision 'String 'Dynamic
+                            if
+                              >= (&str:compare k end-key) 0
+                              :: :keep k v
+                              :: :drop
+                          new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id) (:data boxed-data)
+                        assoc parent-node :data $ assoc prior-data end-key new-expr
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'indent $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn indent (db session-id op-id op-time)
+            let
+                writer $ assert-type
+                  option:unwrap $ get-in db $ [] :sessions session-id :writer
+                  :: 'Map 'Tag 'Dynamic
+                stack $ assert-type
+                  option:unwrap-or (get writer :stack) ([])
+                  :: 'List 'app.bookmark/%bookmark
+                pointer $ assert-type
+                  option:unwrap-or (get writer :pointer) 0
+                  , 'Number
+                bookmark $ Bookmark $ assert-type
+                  option:unwrap $ get stack pointer
+                  , 'app.bookmark/%bookmark
+                data-path $ app.bookmark/to-path bookmark
+                user-id $ get-in db $ [] :sessions session-id :user-id
+                new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id)
+                  :data $ {}
+              -> db
+                update-in data-path $ fn (node)
+                  update new-expr :data $ fn (data)
+                    assoc data bisection/mid-id $ option:unwrap-or node {}
+                app.util/update-in-existing ([] :sessions session-id :writer :stack pointer)
+                  fn (b)
+                    app.bookmark/update-focus
+                      Bookmark $ assert-type b 'app.bookmark/%bookmark
+                      fn (focus)
+                        if (empty? focus) ([] bisection/mid-id)
+                          concat (butlast focus)
+                            [] (last focus) bisection/mid-id
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'leaf-after $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn leaf-after (db op-data session-id op-id op-time)
+            let
+                writer $ assert-type
+                  option:unwrap $ get-in db $ [] :sessions session-id :writer
+                  :: 'Map 'Tag 'Dynamic
+                stack $ assert-type
+                  option:unwrap-or (get writer :stack) ([])
+                  :: 'List 'app.bookmark/%bookmark
+                pointer $ assert-type
+                  option:unwrap-or (get writer :pointer) 0
+                  , 'Number
+                bookmark $ Bookmark $ assert-type
+                  option:unwrap $ get stack pointer
+                  , 'app.bookmark/%bookmark
+                user-id $ get-in db $ [] :sessions session-id :user-id
+                focus $ app.bookmark/get-focus bookmark
+              if (empty? focus)
+                let
+                    data-path $ app.bookmark/to-path bookmark
+                    target-expr $ assert-type
+                      option:unwrap $ get-in db data-path
+                      , 'app.schema/CirruExprShape
+                    target-data $ assert-type (:data target-expr) (:: 'Map 'String 'Dynamic)
+                    next-id $ key-append target-data
+                    new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
+                  ; "|append new leaf at tail, this case is special"
+                  -> db
+                    app.util/update-in-existing data-path $ fn (expr)
+                      update (assert-type expr 'app.schema/CirruExprShape) :data $ hint-fn
+                        {}
+                          :args $ [] $ :: 'Map 'String 'Dynamic
+                          :return $ :: 'Map 'String 'Dynamic
+                        :: fn (d) (assoc d next-id new-leaf)
+                    app.util/update-in-existing ([] :sessions session-id :writer :stack pointer)
+                      fn (b)
+                        app.bookmark/update-focus
+                          Bookmark $ assert-type b 'app.bookmark/%bookmark
+                          fn (f) ([] next-id)
+                let
+                    parent-bookmark $ app.bookmark/update-focus bookmark butlast
+                    data-path $ app.bookmark/to-path parent-bookmark
+                    target-expr $ assert-type
+                      option:unwrap $ get-in db data-path
+                      , 'app.schema/CirruExprShape
+                    target-data $ assert-type (:data target-expr) (:: 'Map 'String 'Dynamic)
+                    next-id $ key-after target-data $ option:unwrap (last focus)
+                    new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
+                  -> db
+                    app.util/update-in-existing data-path $ fn (expr)
+                      update (assert-type expr 'app.schema/CirruExprShape) :data $ hint-fn
+                        {}
+                          :args $ [] $ :: 'Map 'String 'Dynamic
+                          :return $ :: 'Map 'String 'Dynamic
+                        :: fn (d) (assoc d next-id new-leaf)
+                    app.util/update-in-existing ([] :sessions session-id :writer :stack pointer)
+                      fn (b)
+                        app.bookmark/update-focus
+                          Bookmark $ assert-type b 'app.bookmark/%bookmark
+                          fn (f)
+                            conj (butlast f) next-id
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'leaf-before $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn leaf-before (db op-data session-id op-id op-time)
+            let
+                writer $ to-writer db session-id
+                bookmark $ assert-type
+                  option:unwrap $ to-bookmark writer
+                  , 'app.bookmark/%bookmark
+                parent-bookmark $ app.bookmark/update-focus bookmark butlast
+                data-path $ app.bookmark/to-path parent-bookmark
+                target-expr $ assert-type
+                  option:unwrap $ get-in db data-path
+                  , 'app.schema/CirruExprShape
+                target-data $ assert-type (:data target-expr) (:: 'Map 'String 'Dynamic)
+                next-id $ key-before target-data $ option:unwrap
+                  last $ app.bookmark/get-focus bookmark
+                user-id $ get-in db $ [] :sessions session-id :user-id
+                new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
+              -> db
+                app.util/update-in-existing data-path $ fn (expr)
+                  update (assert-type expr 'app.schema/CirruExprShape) :data $ hint-fn
+                    {}
+                      :args $ [] $ :: 'Map 'String 'Dynamic
+                      :return $ :: 'Map 'String 'Dynamic
+                    :: fn (d) (assoc d next-id new-leaf)
+                app.util/update-in-existing
+                  [] :sessions session-id :writer :stack $ option:unwrap-or
+                    get
+                      assert-type (option:unwrap writer) (:: 'Map 'Tag 'Dynamic)
+                      , :pointer
+                    , 0
+                  fn (b)
+                    app.bookmark/update-focus
+                      Bookmark $ assert-type b 'app.bookmark/%bookmark
+                      fn (focus)
+                        conj (butlast focus) next-id
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'mv-ns $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn mv-ns (db op-data session-id op-id op-time)
+            update db :files $ fn (files)
+              -> files
+                dissoc $ option:unwrap-or (get op-data :from) nil
+                assoc
                   option:unwrap-or (get op-data :to) nil
                   option:unwrap-or
                     get files $ option:unwrap-or (get op-data :from) nil
                     , nil
           :examples $ []
-          :schema $ :: 'Dynamic
-        'delete-entry $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn delete-entry (db op-data session-id op-id op-time) (; println |delete op-data)
-              tag-match op-data
-                (:def ns' def' f)
-                  -> db
-                    update-in ([] :files ns' :defs)
-                      fn (defs)
-                        dissoc (option:unwrap-or defs {}) def'
-                    update-in ([] :sessions session-id :writer)
-                      fn (writer)
-                        -> (option:unwrap-or writer {})
-                          update :stack $ fn (stack)
-                            dissoc-idx stack $ option:unwrap-or
-                              get (option:unwrap-or writer {}) :pointer
-                              , 0
-                          update :pointer dec
-                (:ns ns' f)
-                  -> db
-                    update :files $ fn (files) (dissoc files ns')
-                    update-in ([] :sessions session-id :writer)
-                      fn (writer)
-                        -> (option:unwrap-or writer {})
-                          update :stack $ fn (stack)
-                            dissoc-idx stack $ option:unwrap-or
-                              get (option:unwrap-or writer {}) :pointer
-                              , 0
-                          update :pointer dec
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'delete-node $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn delete-node (db op-data session-id op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions session-id :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  stack $ assert-type
-                    option:unwrap-or (get writer :stack) ([])
-                    :: 'List 'Dynamic
-                  pointer $ assert-type
-                    option:unwrap-or (get writer :pointer) 0
-                    , 'Number
-                  bookmark $ Bookmark
-                    .unwrap $ get stack pointer
-                if
-                  empty? $ .get-focus bookmark
-                  -> db $ update-in ([] :sessions session-id :notifications) (push-warning op-id op-time "|cannot delete from root")
-                  let
-                      parent-bookmark $ .update-focus bookmark butlast
-                      data-path $ .to-path parent-bookmark
-                      child-data $ assert-type
-                        option:unwrap-or
-                          get-in db $ conj data-path :data
-                          {}
-                        :: 'Map 'String 'Dynamic
-                      child-keys $ sort
-                        .to-list $ keys child-data
-                      deleted-key $ .unwrap
-                        last $ .get-focus bookmark
-                      idx $ option:unwrap-or (.index-of child-keys deleted-key) 0
-                    -> db
-                      update-in data-path $ fn (expr)
-                        update (assert-type expr 'app.schema/CirruExpr) :data $ fn (children) (dissoc children deleted-key)
-                      update-in ([] :sessions session-id :writer :stack pointer)
-                        fn (b)
-                          .update-focus (Bookmark b)
-                            fn (focus)
-                              if (= 0 idx) (butlast focus)
-                                assoc focus
-                                  dec $ count focus
-                                  .unwrap $ get child-keys (dec idx)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'draft-expr $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn draft-expr (db op-data session-id op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions session-id :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  stack $ assert-type
-                    option:unwrap-or (get writer :stack) ([])
-                    :: 'List 'Dynamic
-                  pointer $ assert-type
-                    option:unwrap-or (get writer :pointer) 0
-                    , 'Number
-                  bookmark $ .unwrap (get stack pointer)
-                  data-path $ bookmark->path bookmark
-                  user-id $ get-in db ([] :sessions session-id :user-id)
-                  data $ if (option:some? op-data) (.unwrap op-data) op-data
-                -> db $ update-in data-path
-                  fn (expr) (cirru->tree data user-id op-time)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'duplicate $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn duplicate (db op-data session-id op-id op-time)
-              let
-                  writer $ to-writer db session-id
-                  bookmark $ to-bookmark writer
-                  target-expr $ .unwrap
-                    get-in db $ .to-path bookmark
-                  parent-path $ .to-path (.update-focus bookmark butlast)
-                  parent-expr $ assert-type
-                    .unwrap $ get-in db parent-path
-                    , 'app.schema/CirruExpr
-                  parent-data $ assert-type
-                    option:unwrap-or (:data parent-expr) ({})
-                    :: 'Map 'String 'Dynamic
-                  next-id $ key-after parent-data
-                    .unwrap $ last (.get-focus bookmark)
-                -> db
-                  update-in parent-path $ fn (expr)
-                    update (assert-type expr 'app.schema/CirruExpr) :data $ fn (data) (assoc data next-id target-expr)
-                  update-in
-                    [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
-                    fn (b)
-                      .update-focus (Bookmark b)
-                        fn (focus)
-                          conj (butlast focus) next-id
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'expr-after $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn expr-after (db op-data session-id op-id op-time)
-              let
-                  writer $ to-writer db session-id
-                  bookmark $ to-bookmark writer
-                  parent-bookmark $ .update-focus bookmark butlast
-                  data-path $ .to-path parent-bookmark
-                  target-expr $ assert-type
-                    .unwrap $ get-in db data-path
-                    , 'app.schema/CirruExpr
-                  target-data $ assert-type
-                    option:unwrap-or (:data target-expr) ({})
-                    :: 'Map 'String 'Dynamic
-                  next-id $ key-after target-data
-                    .unwrap $ last (.get-focus bookmark)
-                  user-id $ get-in db ([] :sessions session-id :user-id)
-                  new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
-                  new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id)
-                    :data $ {} (bisection/mid-id new-leaf)
-                -> db
-                  update-in data-path $ fn (expr)
-                    update (assert-type expr 'app.schema/CirruExpr) :data $ fn (d) (assoc d next-id new-expr)
-                  update-in
-                    [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
-                    fn (b)
-                      .update-focus (Bookmark b)
-                        fn (focus)
-                          -> (butlast focus) (conj next-id) (conj bisection/mid-id)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'expr-before $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn expr-before (db op-data session-id op-id op-time)
-              let
-                  writer $ to-writer db session-id
-                  bookmark $ to-bookmark writer
-                  parent-bookmark $ .update-focus bookmark butlast
-                  data-path $ .to-path parent-bookmark
-                  target-expr $ assert-type
-                    .unwrap $ get-in db data-path
-                    , 'app.schema/CirruExpr
-                  target-data $ assert-type
-                    option:unwrap-or (:data target-expr) ({})
-                    :: 'Map 'String 'Dynamic
-                  next-id $ key-before target-data
-                    .unwrap $ last (.get-focus bookmark)
-                  user-id $ get-in db ([] :sessions session-id :user-id)
-                  new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
-                  new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id)
-                    :data $ {} (bisection/mid-id new-leaf)
-                -> db
-                  update-in data-path $ fn (expr)
-                    update (assert-type expr 'app.schema/CirruExpr) :data $ fn (d) (assoc d next-id new-expr)
-                  update-in
-                    [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
-                    fn (b)
-                      .update-focus (Bookmark b)
-                        fn (focus)
-                          -> (butlast focus) (conj next-id) (conj bisection/mid-id)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'expr-replace $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn expr-replace (db op-data session-id op-id op-time)
-              let
-                  from $ option:unwrap-or (get op-data :from) nil
-                  to $ option:unwrap-or (get op-data :to) nil
-                  bookmark $ option:unwrap-or (get op-data :bookmark) nil
-                  data-path $ bookmark->path bookmark
-                update-in db data-path $ fn (expr) (call-replace-expr expr from to)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'file-config $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn file-config (db op-data sid op-id op-time)
-              let
-                  ns-text $ get-in db ([] :sessions sid :writer :selected-ns)
-                if-let (v ns-text)
-                  update-in db ([] :files v :configs)
-                    fn (configs)
-                      merge
-                        assert-type
-                          option:unwrap-or configs $ {}
-                          , 'Map
-                        assert-type op-data 'Map
-                  , db
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'fold-to-end $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn fold-to-end (db session-id op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions session-id :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  stack $ assert-type
-                    option:unwrap-or (get writer :stack) ([])
-                    :: 'List 'Dynamic
-                  pointer $ assert-type
-                    option:unwrap-or (get writer :pointer) 0
-                    , 'Number
-                  bookmark $ Bookmark
-                    .unwrap $ get stack pointer
-                  focus $ .get-focus bookmark
-                  parent-bookmark $ .get-parent bookmark
-                  user-id $ get-in db ([] :sessions session-id :user-id)
-                if (nil? parent-bookmark)
-                  do (eprintln "|does not work on root element") db
-                  let
-                      data-path $ .to-path parent-bookmark
-                      end-key $ .unwrap (last focus)
-                    update-in db data-path $ fn (parent-node)
-                      let
-                          prior-data $ ->
-                            .unwrap $ get (option:unwrap-or parent-node {}) :data
-                            .filter-kv $ fn (k v) (< k end-key)
-                          boxed-data $ ->
-                            .unwrap $ get (option:unwrap-or parent-node {}) :data
-                            .filter-kv $ fn (k v) (>= k end-key)
-                          new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id) (:data boxed-data)
-                          new-parent-data $ -> prior-data (assoc end-key new-expr)
-                        %{} schema/CirruExpr (:at op-time) (:by user-id) (:data new-parent-data)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'indent $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn indent (db session-id op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions session-id :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  stack $ assert-type
-                    option:unwrap-or (get writer :stack) ([])
-                    :: 'List 'Dynamic
-                  pointer $ assert-type
-                    option:unwrap-or (get writer :pointer) 0
-                    , 'Number
-                  bookmark $ Bookmark
-                    .unwrap $ get stack pointer
-                  data-path $ .to-path bookmark
-                  user-id $ get-in db ([] :sessions session-id :user-id)
-                  new-expr $ %{} schema/CirruExpr (:at op-time) (:by user-id)
-                    :data $ {}
-                -> db
-                  update-in data-path $ fn (node)
-                    update new-expr :data $ fn (data)
-                      assoc data bisection/mid-id $ option:unwrap-or node {}
-                  update-in ([] :sessions session-id :writer :stack pointer)
-                    fn (b)
-                      .update-focus (Bookmark b)
-                        fn (focus)
-                          if (empty? focus) ([] bisection/mid-id)
-                            concat (butlast focus)
-                              [] (last focus) bisection/mid-id
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'leaf-after $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn leaf-after (db op-data session-id op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions session-id :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  stack $ assert-type
-                    option:unwrap-or (get writer :stack) ([])
-                    :: 'List 'Dynamic
-                  pointer $ assert-type
-                    option:unwrap-or (get writer :pointer) 0
-                    , 'Number
-                  bookmark $ Bookmark
-                    .unwrap $ get stack pointer
-                  user-id $ get-in db ([] :sessions session-id :user-id)
-                  focus $ .get-focus bookmark
-                if (empty? focus)
-                  let
-                      data-path $ .to-path bookmark
-                      target-expr $ assert-type
-                        .unwrap $ get-in db data-path
-                        , 'app.schema/CirruExpr
-                      target-data $ assert-type
-                        option:unwrap-or (:data target-expr) ({})
-                        :: 'Map 'String 'Dynamic
-                      next-id $ key-append target-data
-                      new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
-                    ; "|append new leaf at tail, this case is special"
-                    -> db
-                      update-in data-path $ fn (expr)
-                        update (assert-type expr 'app.schema/CirruExpr) :data $ fn (d) (assoc d next-id new-leaf)
-                      update-in ([] :sessions session-id :writer :stack pointer)
-                        fn (b)
-                          .update-focus (Bookmark b)
-                            fn (f) ([] next-id)
-                  let
-                      parent-bookmark $ .update-focus bookmark butlast
-                      data-path $ .to-path parent-bookmark
-                      target-expr $ assert-type
-                        .unwrap $ get-in db data-path
-                        , 'app.schema/CirruExpr
-                      target-data $ assert-type
-                        option:unwrap-or (:data target-expr) ({})
-                        :: 'Map 'String 'Dynamic
-                      next-id $ key-after target-data
-                        .unwrap $ last focus
-                      new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
-                    -> db
-                      update-in data-path $ fn (expr)
-                        update (assert-type expr 'app.schema/CirruExpr) :data $ fn (d) (assoc d next-id new-leaf)
-                      update-in ([] :sessions session-id :writer :stack pointer)
-                        fn (b)
-                          .update-focus (Bookmark b)
-                            fn (f)
-                              conj (butlast f) next-id
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'leaf-before $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn leaf-before (db op-data session-id op-id op-time)
-              let
-                  writer $ to-writer db session-id
-                  bookmark $ to-bookmark writer
-                  parent-bookmark $ .update-focus bookmark butlast
-                  data-path $ .to-path parent-bookmark
-                  target-expr $ assert-type
-                    .unwrap $ get-in db data-path
-                    , 'app.schema/CirruExpr
-                  target-data $ assert-type
-                    option:unwrap-or (:data target-expr) ({})
-                    :: 'Map 'String 'Dynamic
-                  next-id $ key-before target-data
-                    .unwrap $ last (.get-focus bookmark)
-                  user-id $ get-in db ([] :sessions session-id :user-id)
-                  new-leaf $ %{} schema/CirruLeaf (:at op-time) (:by user-id) (:text |)
-                -> db
-                  update-in data-path $ fn (expr)
-                    update (assert-type expr 'app.schema/CirruExpr) :data $ fn (d) (assoc d next-id new-leaf)
-                  update-in
-                    [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
-                    fn (b)
-                      .update-focus (Bookmark b)
-                        fn (focus)
-                          conj (butlast focus) next-id
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'mv-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn mv-ns (db op-data session-id op-id op-time)
-              update db :files $ fn (files)
-                -> files
-                  dissoc $ option:unwrap-or (get op-data :from) nil
-                  assoc
-                    option:unwrap-or (get op-data :to) nil
-                    option:unwrap-or
-                      get files $ option:unwrap-or (get op-data :from) nil
-                      , nil
-          :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'prepend-leaf $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn prepend-leaf (db op-data session-id op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions session-id :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  stack $ assert-type
-                    option:unwrap-or (get writer :stack) ([])
-                    :: 'List 'Dynamic
-                  pointer $ assert-type
-                    option:unwrap-or (get writer :pointer) 0
-                    , 'Number
-                  bookmark $ Bookmark
-                    .unwrap $ get stack pointer
-                  focus $ .get-focus bookmark
-                  user-id $ get-in db ([] :sessions session-id :user-id)
-                  new-leaf $ %{} schema/CirruLeaf (:by user-id) (:at op-time) (:text |)
-                  expr-path $ .to-path bookmark
-                  target-expr $ assert-type
-                    .unwrap $ get-in db expr-path
-                    , 'app.schema/CirruExpr
-                  target-data $ assert-type
-                    option:unwrap-or (:data target-expr) ({})
-                    :: 'Map 'String 'Dynamic
-                  new-id $ key-prepend target-data
-                -> db
-                  update-in expr-path $ fn (expr)
-                    if (expr? expr)
-                      update (assert-type expr 'app.schema/CirruExpr) :data $ fn (d) (assoc d new-id new-leaf)
-                      , expr
-                  update-in ([] :sessions session-id :writer :stack pointer)
-                    fn (b)
-                      .update-focus (Bookmark b)
-                        fn (focus) (conj focus new-id)
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'remove-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn remove-def (db op-data session-id op-id op-time)
-              let
-                  selected-ns $ get-in db ([] :sessions session-id :writer :selected-ns)
-                update-in db ([] :files selected-ns :defs)
-                  fn (defs)
-                    dissoc (option:unwrap-or defs {}) op-data
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'remove-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn remove-ns (db op-data session-id op-id op-time)
+          :code $ quote $ defn prepend-leaf (db op-data session-id op-id op-time)
+            let
+                writer $ assert-type
+                  option:unwrap $ get-in db $ [] :sessions session-id :writer
+                  :: 'Map 'Tag 'Dynamic
+                stack $ assert-type
+                  option:unwrap-or (get writer :stack) ([])
+                  :: 'List 'app.bookmark/%bookmark
+                pointer $ assert-type
+                  option:unwrap-or (get writer :pointer) 0
+                  , 'Number
+                bookmark $ Bookmark $ assert-type
+                  option:unwrap $ get stack pointer
+                  , 'app.bookmark/%bookmark
+                focus $ app.bookmark/get-focus bookmark
+                user-id $ get-in db $ [] :sessions session-id :user-id
+                new-leaf $ %{} schema/CirruLeaf (:by user-id) (:at op-time) (:text |)
+                expr-path $ app.bookmark/to-path bookmark
+                target-expr $ assert-type
+                  option:unwrap $ get-in db expr-path
+                  , 'app.schema/CirruExprShape
+                target-data $ assert-type (:data target-expr) (:: 'Map 'String 'Dynamic)
+                new-id $ key-prepend target-data
               -> db
-                update :files $ fn (files) (dissoc files op-data)
-                update-in ([] :sessions session-id :writer :selected-ns)
-                  fn (x)
-                    if
-                      = (option:unwrap-or x nil) op-data
-                      , nil x
+                update-in expr-path $ fn (expr)
+                  if (expr? expr)
+                    update (assert-type expr 'app.schema/CirruExprShape) :data $ hint-fn
+                      {}
+                        :args $ [] $ :: 'Map 'String 'Dynamic
+                        :return $ :: 'Map 'String 'Dynamic
+                      (:: fn (d) (assoc d new-id new-leaf))
+                    , expr
+                app.util/update-in-existing ([] :sessions session-id :writer :stack pointer)
+                  fn (b)
+                    app.bookmark/update-focus
+                      Bookmark $ assert-type b 'app.bookmark/%bookmark
+                      fn (focus) (conj focus new-id)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'remove-def $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn remove-def (db op-data session-id op-id op-time)
+            let
+                selected-ns $ get-in db $ [] :sessions session-id :writer :selected-ns
+              update-in db ([] :files selected-ns :defs)
+                fn (defs)
+                  dissoc (option:unwrap-or defs {}) op-data
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'remove-ns $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn remove-ns (db op-data session-id op-id op-time)
+            -> db
+              update :files $ fn (files) (dissoc files op-data)
+              update-in ([] :sessions session-id :writer :selected-ns)
+                fn (x)
+                  if
+                    = (option:unwrap-or x nil) op-data
+                    , nil x
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'rename $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn rename (db op-data session-id op-id op-time)
-              let
-                  kind $ assert-type
-                    option:unwrap-or (get op-data :kind) :unknown
-                    , 'Tag
-                  ns-info $ option:unwrap-or (get op-data :ns) nil
-                  extra-info $ option:unwrap-or (get op-data :extra) nil
-                  idx $ option:unwrap-or
-                    get-in db $ [] :sessions session-id :writer :pointer
-                    , 0
-                  user-id $ get-in db ([] :sessions session-id :user-id)
-                cond
-                    = :ns kind
-                    let
-                        ns-info $ assert-type ns-info (:: 'Map 'Tag 'String)
-                        old-ns $ .unwrap (get ns-info :from)
-                        new-ns $ .unwrap (get ns-info :to)
-                        expr $ assert-type
-                          .unwrap $ get-in db ([] :files old-ns :ns :code)
-                          , 'app.schema/CirruExpr
-                        expr-data $ assert-type
-                          option:unwrap-or (:data expr) ({})
-                          :: 'Map 'String 'Dynamic
-                        next-id $ .unwrap (key-nth expr-data 1)
+          :code $ quote $ defn rename (db op-data session-id op-id op-time)
+            let
+                kind $ assert-type
+                  option:unwrap-or (get op-data :kind) :unknown
+                  , 'Tag
+                ns-info $ option:unwrap-or (get op-data :ns) nil
+                extra-info $ option:unwrap-or (get op-data :extra) nil
+                idx $ option:unwrap-or
+                  get-in db $ [] :sessions session-id :writer :pointer
+                  , 0
+                user-id $ get-in db $ [] :sessions session-id :user-id
+              cond
+                  = :ns kind
+                  let
+                      ns-info $ assert-type ns-info $ :: 'Map 'Tag 'String
+                      old-ns $ option:unwrap $ get ns-info :from
+                      new-ns $ option:unwrap $ get ns-info :to
+                      expr $ assert-type
+                        option:unwrap $ get-in db $ [] :files old-ns :ns :code
+                        , 'app.schema/CirruExprShape
+                      expr-data $ assert-type (:data expr) (:: 'Map 'String 'Dynamic)
+                      next-id $ option:unwrap $ key-nth expr-data 1
+                    -> db
+                      update :files $ fn (files)
+                        -> files (dissoc old-ns)
+                          assoc new-ns $ option:unwrap-or (get files old-ns) nil
+                      update-in ([] :sessions session-id :writer :stack idx)
+                        fn (bookmark-option)
+                          hint-fn $ {}
+                            :args $ [] $ :: 'Option 'Dynamic
+                            :return 'Dynamic
+                          match
+                            assert-type (option:unwrap bookmark-option) 'app.bookmark/%bookmark
+                            (:ns _ focus) (%:: %bookmark :ns new-ns focus)
+                            (:def _ def-name focus) (%:: %bookmark :def new-ns def-name focus)
+                      update-in ([] :files new-ns :ns :code)
+                        fn (code-entry)
+                          update (option:unwrap-or code-entry {}) :data $ fn (data)
+                            assoc-in data ([] next-id :text) new-ns
+                (= :def kind)
+                  let
+                      ns-info $ assert-type ns-info $ :: 'Map 'Tag 'String
+                      extra-info $ assert-type extra-info $ :: 'Map 'Tag 'String
+                      old-ns $ option:unwrap $ get ns-info :from
+                      new-ns $ option:unwrap $ get ns-info :to
+                      old-def $ option:unwrap $ get extra-info :from
+                      new-def $ option:unwrap $ get extra-info :to
+                      expr $ assert-type
+                        option:unwrap $ get-in db $ [] :files old-ns :defs old-def :code
+                        , 'app.schema/CirruExprShape
+                      expr-data $ assert-type (:data expr) (:: 'Map 'String 'Dynamic)
+                      next-id $ option:unwrap $ key-nth expr-data 1
+                      files $ assert-type
+                        option:unwrap $ get db :files
+                        :: 'Map 'String 'app.schema/FileEntry
+                    if (contains? files new-ns)
                       -> db
                         update :files $ fn (files)
-                          -> files (dissoc old-ns)
-                            assoc new-ns $ option:unwrap-or (get files old-ns) nil
-                        update-in ([] :sessions session-id :writer :stack idx)
-                          fn (b)
-                            assoc (option:unwrap-or b {}) 1 new-ns
-                        update-in ([] :files new-ns :ns :code)
-                          fn (code-entry)
-                            update (option:unwrap-or code-entry {}) :data $ fn (data)
-                              assoc-in data ([] next-id :text) new-ns
-                  (= :def kind)
-                    let
-                        ns-info $ assert-type ns-info (:: 'Map 'Tag 'String)
-                        extra-info $ assert-type extra-info (:: 'Map 'Tag 'String)
-                        old-ns $ .unwrap (get ns-info :from)
-                        new-ns $ .unwrap (get ns-info :to)
-                        old-def $ .unwrap (get extra-info :from)
-                        new-def $ .unwrap (get extra-info :to)
-                        expr $ assert-type
-                          .unwrap $ get-in db ([] :files old-ns :defs old-def :code)
-                          , 'app.schema/CirruExpr
-                        expr-data $ assert-type
-                          option:unwrap-or (:data expr) ({})
-                          :: 'Map 'String 'Dynamic
-                        next-id $ .unwrap (key-nth expr-data 1)
-                        files $ assert-type
-                          .unwrap $ get db :files
-                          :: 'Map 'String 'app.schema/FileEntry
-                      if (contains? files new-ns)
-                        -> db
-                          update :files $ fn (files)
-                            -> files
-                              update-in ([] old-ns :defs)
-                                fn (file)
-                                  dissoc (option:unwrap-or file {}) old-def
-                              assoc-in ([] new-ns :defs new-def)
-                                option:unwrap-or
-                                  get-in files $ [] old-ns :defs old-def
+                          hint-fn $ {}
+                            :args $ [] 'Dynamic
+                            :return 'Dynamic
+                          let
+                              old-ns $ assert-type old-ns 'String
+                              old-def $ assert-type old-def 'String
+                              new-ns $ assert-type new-ns 'String
+                              new-def $ assert-type new-def 'String
+                              files-map $ assert-type files $ :: 'Map 'String 'app.schema/FileEntry
+                              old-file $ assert-type
+                                option:unwrap $ get files-map old-ns
+                                , 'app.schema/FileEntry
+                              moved-entry $ assert-type
+                                option:unwrap $ get (:defs old-file) old-def
+                                , 'app.schema/CodeEntry
+                              files2 $ assoc files-map old-ns $ assoc old-file :defs
+                                dissoc (:defs old-file) old-def
+                              target-file $ assert-type
+                                option:unwrap $ get files2 new-ns
+                                , 'app.schema/FileEntry
+                              new-file $ assoc target-file :defs $ assoc (:defs target-file) new-def moved-entry
+                            assoc files2 new-ns new-file
+                        app.util/update-in-existing ([] :sessions session-id :writer :stack idx)
+                          fn (bookmark)
+                            if
+                              = :def $ &enum:nth bookmark 0
+                              :: :def new-ns new-def $ &enum:nth bookmark 3
+                              , bookmark
+                        app.util/update-in-existing ([] :files new-ns :defs new-def :code :data)
+                          fn (def-data)
+                            let
+                                def-data $ assert-type def-data $ :: 'Map 'String 'Dynamic
+                                try-1 $ option:unwrap-or
+                                  get
+                                    option:unwrap-or (val-nth def-data 1) {}
+                                    , :text
                                   , nil
-                          update-in ([] :sessions session-id :writer :stack idx)
-                            fn (bookmark)
                               if
-                                = :def $ &enum:nth bookmark 0
-                                :: :def new-ns new-def $ &enum:nth bookmark 3
-                                , bookmark
-                          update-in ([] :files new-ns :defs new-def :code :data)
-                            fn (def-data)
-                              let
-                                  def-data $ assert-type
-                                    option:unwrap-or def-data $ {}
-                                    :: 'Map 'String 'Dynamic
-                                  try-1 $ option:unwrap-or
-                                    get
-                                      option:unwrap-or (val-nth def-data 1) {}
-                                      , :text
-                                    , nil
-                                if
-                                  and (string? try-1)
-                                    = |^ $ option:unwrap-or (first try-1) |
-                                  assoc-nth def-data 2 $ cirru->tree new-def user-id op-time
-                                  assoc-nth def-data 1 $ cirru->tree new-def user-id op-time
-                        -> db $ update-in ([] :sessions session-id :notifications)
-                          push-warning op-id op-time $ str "|no namespace: " new-ns
-                  true $ do (println "|Unexpected kind:" kind) db
+                                and (string? try-1)
+                                  = |^ $ option:unwrap-or (first try-1) |
+                                assoc-nth def-data 2 $ cirru->tree new-def (option:unwrap-or user-id |) op-time
+                                assoc-nth def-data 1 $ cirru->tree new-def (option:unwrap-or user-id |) op-time
+                      -> db $ update-in ([] :sessions session-id :notifications)
+                        push-warning op-id op-time $ str "|no namespace: " new-ns
+                true $ do (println "|Unexpected kind:" kind) db
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'replace-file $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn replace-file (db op-data sid op-id op-time)
-              let
-                  user-id $ .unwrap
-                    get-in db $ [] :sessions sid :user-id
-                  ns-text $ get-in db ([] :sessions sid :writer :draft-ns)
-                if-let (v ns-text)
-                  assoc-in db ([] :files v) (cirru->file op-data user-id op-time)
-                  do (println "|undefined draft-ns") db
+          :code $ quote $ defn replace-file (db op-data sid op-id op-time)
+            let
+                user-id $ option:unwrap $ get-in db ([] :sessions sid :user-id)
+                ns-text $ get-in db $ [] :sessions sid :writer :draft-ns
+              if-let (v ns-text)
+                assoc-in db ([] :files v) (cirru->file op-data user-id op-time)
+                do (println "|undefined draft-ns") db
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'reset-at $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn reset-at (db op-data session-id op-id op-time)
-              let
-                  saved-files $ option:unwrap-or (get db :saved-files) {}
-                  old-file $ option:unwrap-or
-                    get saved-files $ option:unwrap-or (nth op-data 1) nil
-                    , {}
-                update-in db
-                  [] :files $ nth op-data 1
-                  fn (file)
-                    if
-                      = :ns $ &enum:nth op-data 0
-                      assoc (option:unwrap-or file {}) :ns $ option:unwrap-or (get old-file :ns) nil
-                      assoc-in (option:unwrap-or file {})
-                        [] :defs $ &enum:nth op-data 2
-                        option:unwrap-or
-                          get-in old-file $ [] :defs (&enum:nth op-data 2)
-                          , nil
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'reset-files $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn reset-files (db session-id op-id op-time)
-              assoc db :files $ option:unwrap-or (get db :saved-files) {}
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'reset-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn reset-ns (db op-data session-id op-id op-time)
-              let
-                  ns-text op-data
-                assoc-in db ([] :files ns-text)
-                  option:unwrap-or
-                    get-in db $ [] :saved-files ns-text
-                    , {}
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'swap-left $ %{} 'CodeEntry (:doc "|say we have `a b`, focus at `b`, `:swap-left` moves `b` to left, gets `b a`, and focus at `a` now. internally, path to `a` is maintained.")
-          :code $ quote
-            defn swap-left (db session-id op-id op-time)
-              let
-                  writer $ to-writer db session-id
-                  bookmark $ to-bookmark writer
-                  parent-bookmark $ .update-focus bookmark butlast
-                  data-path $ .to-path parent-bookmark
-                  target-expr $ assert-type
-                    .unwrap $ get-in db data-path
-                    , 'app.schema/CirruExpr
-                  target-data $ assert-type
-                    option:unwrap-or (:data target-expr) ({})
-                    :: 'Map 'String 'Dynamic
-                  leading-key $ key-nth target-data 0
-                  operating-key $ .unwrap
-                    last $ .get-focus bookmark
-                if
-                  and (.some? leading-key)
-                    not= (.unwrap leading-key) operating-key
-                  let
-                      ks $ .sort-by
-                        .to-list $ keys target-data
-                        , identity
-                      n $ .unwrap (.index-of ks operating-key)
-                      left-key $ .unwrap
-                        key-nth target-data $ dec n
-                    -> db
-                      update-in data-path $ fn (expr)
-                        update (assert-type expr 'app.schema/CirruExpr) :data $ fn (expr-data)
-                          -> (assert-type expr-data 'Map) (dissoc operating-key)
-                            assoc-before left-key $ option:unwrap-or (get expr-data operating-key) nil
-                      update-in
-                        [] :sessions session-id :writer :stack $ option:unwrap-or (get writer :pointer) 0
-                        fn (b)
-                          .update-focus (Bookmark b)
-                            fn (focus)
-                              conj (butlast focus) left-key
-                  , db
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'toggle-comment $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn toggle-comment (db sid op-id op-time)
-              let
-                  writer $ to-writer db sid
-                  bookmark $ to-bookmark writer
-                  data-path $ bookmark->path bookmark
-                  user-id $ get-in db ([] :sessions sid :user-id)
-                update-in db data-path $ fn (node)
-                  if (expr? node)
-                    update (assert-type node 'app.schema/CirruExpr) :data $ fn (data)
-                      let
-                          k0 $ get-min-key data
-                        if
-                          and (some? k0)
-                            = |; $ if-let (k k0)
-                              let
-                                  first-node $ .unwrap (get data k)
-                                if (leaf? first-node)
-                                  :text $ assert-type first-node 'app.schema/CirruLeaf
-                                  , |
-                              , |
-                          dissoc data k0
-                          assoc-prepend data $ cirru->tree |; user-id op-time
-                    do (println "|Toggle comment at wrong place," node) node
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'unindent $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn unindent (db session-id op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions session-id :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  stack $ assert-type
-                    option:unwrap-or (get writer :stack) ([])
-                    :: 'List 'Dynamic
-                  pointer $ assert-type
-                    option:unwrap-or (get writer :pointer) 0
-                    , 'Number
-                  bookmark $ Bookmark
-                    .unwrap $ get stack pointer
-                  parent-bookmark $ .update-focus bookmark butlast
-                  parent-path $ .to-path parent-bookmark
-                if
-                  empty? $ .get-focus bookmark
-                  -> db $ update-in (.to-path bookmark)
-                    fn (expr)
-                      let
-                          expr $ assert-type expr 'app.schema/CirruExpr
-                          expr-data $ assert-type
-                            option:unwrap-or (:data expr) ({})
-                            :: 'Map 'String 'Dynamic
-                        if
-                          = 1 $ count expr-data
-                          .unwrap $ first (vals expr-data)
-                          , expr
-                  let
-                      last-coord $ .unwrap
-                        last $ .get-focus bookmark
-                    -> db
-                      ; update-in ([] :sessions session-id :writer :stack pointer)
-                        fn (b)
-                          .update-focus (Bookmark b) butlast
-                      update-in parent-path $ fn (base-expr)
-                        let
-                            base-expr $ assert-type base-expr 'app.schema/CirruExpr
-                            base-data $ assert-type
-                              option:unwrap-or (:data base-expr) ({})
-                              :: 'Map 'String 'Dynamic
-                            expr $ assert-type
-                              .unwrap $ get base-data last-coord
-                              , 'app.schema/CirruExpr
-                            child-keys $ sort
-                              .to-list $ keys base-data
-                            children $ ->
-                              assert-type
-                                option:unwrap-or (:data expr) ({})
-                                :: 'Map 'String 'Dynamic
-                              .to-list
-                              .sort-by first
-                              map last
-                            idx $ option:unwrap-or (.index-of child-keys last-coord) 0
-                            limit-id $ if
-                              = idx $ dec (count child-keys)
-                              , bisection/max-id
-                                .unwrap $ get child-keys (inc idx)
-                          loop
-                              result base-expr
-                              xs children
-                              next-id last-coord
-                            if (empty? xs) result $ recur
-                              update result :data $ fn (data)
-                                assoc data next-id $ .unwrap (first xs)
-                              rest xs
-                              bisection/bisect next-id limit-id
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'unindent-leaf $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn unindent-leaf (db session-id op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions session-id :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  stack $ assert-type
-                    option:unwrap-or (get writer :stack) ([])
-                    :: 'List 'Dynamic
-                  pointer $ assert-type
-                    option:unwrap-or (get writer :pointer) 0
-                    , 'Number
-                  bookmark $ Bookmark
-                    .unwrap $ get stack pointer
-                  parent-bookmark $ .update-focus bookmark butlast
-                  parent-path $ .to-path parent-bookmark
-                  parent-expr $ assert-type
-                    .unwrap $ get-in db parent-path
-                    , 'app.schema/CirruExpr
-                  parent-data $ assert-type
-                    option:unwrap-or (:data parent-expr) ({})
-                    :: 'Map 'String 'Dynamic
-                if
-                  = 1 $ count parent-data
-                  -> db
-                    update-in parent-path $ fn (expr)
+          :code $ quote $ defn reset-at (db op-data session-id op-id op-time)
+            let
+                saved-files $ option:unwrap-or (get db :saved-files) {}
+                old-file $ option:unwrap-or
+                  get saved-files $ option:unwrap-or (nth op-data 1) nil
+                  , {}
+              update-in db
+                [] :files $ nth op-data 1
+                fn (file)
+                  if
+                    = :ns $ &enum:nth op-data 0
+                    assoc (option:unwrap-or file {}) :ns $ option:unwrap-or (get old-file :ns) nil
+                    assoc-in (option:unwrap-or file {})
+                      [] :defs $ &enum:nth op-data 2
                       option:unwrap-or
-                        first $ vals
-                          assert-type
-                            option:unwrap-or
-                                :data $ assert-type expr 'app.schema/CirruExpr
-                              {}
-                            :: 'Map 'String 'Dynamic
-                        , expr
-                    update-in ([] :sessions session-id :writer :stack pointer)
+                        get-in old-file $ [] :defs $ &enum:nth op-data 2
+                        , nil
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'reset-files $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn reset-files (db session-id op-id op-time)
+            assoc db :files $ option:unwrap-or (get db :saved-files) {}
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'reset-ns $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn reset-ns (db op-data session-id op-id op-time)
+            let
+                ns-text op-data
+              assoc-in db ([] :files ns-text)
+                option:unwrap-or
+                  get-in db $ [] :saved-files ns-text
+                  , {}
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'swap-left $ %{} 'CodeEntry
+          :doc "|say we have `a b`, focus at `b`, `:swap-left` moves `b` to left, gets `b a`, and focus at `a` now. internally, path to `a` is maintained."
+          :code $ quote $ defn swap-left (db session-id op-id op-time)
+            let
+                writer $ to-writer db session-id
+                bookmark $ assert-type
+                  option:unwrap $ to-bookmark writer
+                  , 'app.bookmark/%bookmark
+                parent-bookmark $ app.bookmark/update-focus bookmark butlast
+                data-path $ app.bookmark/to-path parent-bookmark
+                target-expr $ assert-type
+                  option:unwrap $ get-in db data-path
+                  , 'app.schema/CirruExprShape
+                target-data $ assert-type (:data target-expr) (:: 'Map 'String 'Dynamic)
+                leading-key $ key-nth target-data 0
+                operating-key $ option:unwrap $ last (app.bookmark/get-focus bookmark)
+              if
+                and (option:some? leading-key)
+                  not= (option:unwrap leading-key) operating-key
+                let
+                    ks $ assert-type
+                      &list:sort-by
+                        &set:to-list $ keys target-data
+                        , identity
+                      :: 'List 'String
+                    n $ option:unwrap $ index-of ks operating-key
+                    left-key $ option:unwrap $ key-nth target-data (dec n)
+                  -> db
+                    app.util/update-in-existing data-path $ fn (expr)
+                      update (assert-type expr 'app.schema/CirruExprShape) :data $ hint-fn
+                        {}
+                          :args $ [] $ :: 'Map 'String 'Dynamic
+                          :return $ :: 'Map 'String 'Dynamic
+                        (:: fn (expr-data) (assoc-before (assert-type (dissoc (assert-type expr-data (:: 'Map 'String 'Dynamic)) operating-key) (:: 'Map 'String 'Dynamic)) left-key (option:unwrap-or (get expr-data operating-key) nil)))
+                    app.util/update-in-existing
+                      [] :sessions session-id :writer :stack $ option:unwrap-or
+                        get
+                          assert-type (option:unwrap writer) (:: 'Map 'Tag 'Dynamic)
+                          , :pointer
+                        , 0
                       fn (b)
-                        .update-focus (Bookmark b) butlast
-                  , db
+                        app.bookmark/update-focus
+                          Bookmark $ assert-type b 'app.bookmark/%bookmark
+                          fn (focus)
+                            conj (butlast focus) left-key
+                , db
           :examples $ []
-          :schema $ :: 'Dynamic
-        'update-leaf $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn update-leaf (db op-data session-id op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions session-id :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  stack $ assert-type
-                    option:unwrap-or (get writer :stack) ([])
-                    :: 'List 'Dynamic
-                  pointer $ assert-type
-                    option:unwrap-or (get writer :pointer) 0
-                    , 'Number
-                  bookmark $ .unwrap (get stack pointer)
-                  data-path $ bookmark->path bookmark
-                  user-id $ get-in db ([] :sessions session-id :user-id)
-                -> db $ update-in data-path
-                  fn (leaf)
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'toggle-comment $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn toggle-comment (db sid op-id op-time)
+            let
+                writer $ to-writer db sid
+                bookmark $ assert-type
+                  option:unwrap $ to-bookmark writer
+                  , 'app.bookmark/%bookmark
+                data-path $ bookmark->path bookmark
+                user-id $ get-in db $ [] :sessions sid :user-id
+              update-in db data-path $ fn (node)
+                if (expr? node)
+                  update (assert-type node 'app.schema/CirruExprShape) :data $ hint-fn
+                    {}
+                      :args $ [] $ :: 'Map 'String 'Dynamic
+                      :return $ :: 'Map 'String 'Dynamic
+                    (:: fn (data) (let ((k0 (get-min-key data))) (if (and (some? k0) (= |; (if-let (k k0) (let ((first-node (option:unwrap (get data k)))) (if (leaf? first-node) (:text (assert-type first-node 'app.schema/CirruLeafShape)) |)) |))) (dissoc data k0) (assoc-prepend data (cirru->tree |; (option:unwrap-or user-id |) op-time)))))
+                  do (println "|Toggle comment at wrong place," node) node
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'unindent $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn unindent (db session-id op-id op-time)
+            let
+                writer $ assert-type
+                  option:unwrap $ get-in db $ [] :sessions session-id :writer
+                  :: 'Map 'Tag 'Dynamic
+                stack $ assert-type
+                  option:unwrap-or (get writer :stack) ([])
+                  :: 'List 'app.bookmark/%bookmark
+                pointer $ assert-type
+                  option:unwrap-or (get writer :pointer) 0
+                  , 'Number
+                bookmark $ Bookmark $ assert-type
+                  option:unwrap $ get stack pointer
+                  , 'app.bookmark/%bookmark
+                parent-bookmark $ app.bookmark/update-focus bookmark butlast
+                parent-path $ app.bookmark/to-path parent-bookmark
+              if
+                empty? $ app.bookmark/get-focus bookmark
+                -> db $ update-in (app.bookmark/to-path bookmark)
+                  fn (expr)
                     let
-                        leaf-at $ :at (assert-type leaf 'app.schema/CirruLeaf)
-                        op-at $ get op-data :at
-                        op-text $ get op-data :text
+                        expr $ assert-type (option:unwrap expr) 'app.schema/CirruExprShape
+                        expr-data $ assert-type (:data expr) (:: 'Map 'String 'Dynamic)
                       if
-                        and (option:some? op-at) (option:some? op-text)
-                          > (option:unwrap-or op-at 0) leaf-at
-                        %{} schema/CirruLeaf
-                          :text $ option:unwrap-or op-text |
-                          :at $ option:unwrap-or op-at 0
-                          :by user-id
-                        do (println "|invalid updata op:" op-data) leaf
+                        = 1 $ count expr-data
+                        option:unwrap $ first $ &set:to-list (vals expr-data)
+                        , expr
+                let
+                    last-coord $ assert-type
+                      option:unwrap $ last $ app.bookmark/get-focus bookmark
+                      , 'String
+                  -> db
+                    ; update-in ([] :sessions session-id :writer :stack pointer)
+                      fn (b)
+                        app.bookmark/update-focus
+                          Bookmark $ assert-type (option:unwrap b) 'app.bookmark/%bookmark
+                          , butlast
+                    update-in parent-path $ fn (base-expr)
+                      let
+                          base-expr $ assert-type base-expr 'app.schema/CirruExprShape
+                          base-data $ assert-type (:data base-expr) (:: 'Map 'String 'Dynamic)
+                          expr $ assert-type
+                            option:unwrap $ get base-data last-coord
+                            , 'app.schema/CirruExprShape
+                          child-keys $ sort $ &set:to-list (keys base-data)
+                          children $ ->
+                            assert-type (:data expr) (:: 'Map 'String 'Dynamic)
+                            &map:to-list
+                            &list:sort-by first
+                            map last
+                          idx $ option:unwrap-or (index-of child-keys last-coord) 0
+                          limit-id $ if
+                            = idx $ dec $ count child-keys
+                            , bisection/max-id $ option:unwrap
+                              get child-keys $ inc idx
+                        loop
+                            result base-expr
+                            xs children
+                            next-id last-coord
+                          if (empty? xs) result $ recur
+                            update result :data $ fn (data)
+                              assoc data next-id $ option:unwrap $ first xs
+                            rest xs
+                            bisection/bisect next-id limit-id
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'unindent-leaf $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn unindent-leaf (db session-id op-id op-time)
+            let
+                writer $ assert-type
+                  option:unwrap $ get-in db $ [] :sessions session-id :writer
+                  :: 'Map 'Tag 'Dynamic
+                stack $ assert-type
+                  option:unwrap-or (get writer :stack) ([])
+                  :: 'List 'app.bookmark/%bookmark
+                pointer $ assert-type
+                  option:unwrap-or (get writer :pointer) 0
+                  , 'Number
+                bookmark $ Bookmark $ assert-type
+                  option:unwrap $ get stack pointer
+                  , 'app.bookmark/%bookmark
+                parent-bookmark $ app.bookmark/update-focus bookmark butlast
+                parent-path $ app.bookmark/to-path parent-bookmark
+                parent-expr $ assert-type
+                  option:unwrap $ get-in db parent-path
+                  , 'app.schema/CirruExprShape
+                parent-data $ assert-type (:data parent-expr) (:: 'Map 'String 'Dynamic)
+              if
+                = 1 $ count parent-data
+                -> db
+                  update-in parent-path $ fn (expr-option)
+                    hint-fn $ {}
+                      :args $ [] $ :: 'Option 'Dynamic
+                      :return 'Dynamic
+                    let
+                        expr $ assert-type (option:unwrap expr-option) 'app.schema/CirruExprShape
+                        data $ assert-type (:data expr) (:: 'Map 'String 'Dynamic)
+                      match
+                        first $ &set:to-list $ vals data
+                        (:some child) child
+                        (:none) expr
+                  app.util/update-in-existing ([] :sessions session-id :writer :stack pointer)
+                    fn (b)
+                      app.bookmark/update-focus
+                        Bookmark $ assert-type b 'app.bookmark/%bookmark
+                        , butlast
+                , db
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'update-leaf $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn update-leaf (db op-data session-id op-id op-time)
+            let
+                writer $ assert-type
+                  option:unwrap $ get-in db $ [] :sessions session-id :writer
+                  :: 'Map 'Tag 'Dynamic
+                stack $ assert-type
+                  option:unwrap-or (get writer :stack) ([])
+                  :: 'List 'app.bookmark/%bookmark
+                pointer $ assert-type
+                  option:unwrap-or (get writer :pointer) 0
+                  , 'Number
+                bookmark $ assert-type
+                  option:unwrap $ get stack pointer
+                  , 'app.bookmark/%bookmark
+                data-path $ bookmark->path bookmark
+                user-id $ assert-type
+                  get-in db $ [] :sessions session-id :user-id
+                  , 'String
+              -> db $ app.util/update-in-existing data-path $ fn (leaf)
+                let
+                    leaf-at $ :at $ assert-type leaf 'app.schema/CirruLeafShape
+                    op-at $ get op-data :at
+                    op-text $ get op-data :text
+                  if
+                    and (option:some? op-at) (option:some? op-text)
+                      > (option:unwrap-or op-at 0) leaf-at
+                    %{} schema/CirruLeaf
+                      :text $ option:unwrap-or op-text |
+                      :at $ option:unwrap-or op-at 0
+                      :by user-id
+                    do (println "|invalid updata op:" op-data) leaf
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.updater.ir $ :require (app.schema :as schema) (bisection-key.core :as bisection)
+        :code $ quote $ ns app.updater.ir
+          :require (app.schema :as schema) (bisection-key.core :as bisection)
             app.util.list :refer $ dissoc-idx
             bisection-key.util :refer $ key-before key-after key-prepend key-append assoc-prepend key-nth assoc-nth val-nth get-min-key assoc-before
             app.bookmark :refer $ Bookmark %bookmark
@@ -6905,600 +7606,797 @@
     'app.updater.notify $ %{} 'FileEntry
       :defs $ {}
         'broadcast $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn broadcast (db op-data sid op-id op-time)
-              let
-                  user-id $ get-in db ([] :sessions sid :user-id)
-                  user-name $ get-in db ([] :users user-id :name)
-                update db :sessions $ fn (sessions)
-                  -> sessions $ map-kv
-                    fn (k session)
-                      [] k $ update session :notifications
-                        push-info op-id op-time $ str user-name "|: " op-data
+          :code $ quote $ defn broadcast (db op-data sid op-id op-time)
+            let
+                user-id $ assert-type
+                  get-in db $ [] :sessions sid :user-id
+                  , 'String
+                user-name $ assert-type
+                  get-in db $ [] :users user-id :name
+                  , 'String
+                message $ str user-name "|: " op-data
+              update db :sessions $ fn (sessions)
+                hint-fn $ {}
+                  :args $ [] 'Dynamic
+                  :return 'Dynamic
+                filter-map-kv
+                  assert-type sessions $ :: 'Map 'String $ :: 'Map 'Tag 'Dynamic
+                  fn (k session)
+                    hint-fn $ {}
+                      :args $ [] 'String $ :: 'Map 'Tag 'Dynamic
+                      :return $ :: 'MapEntryDecision 'String $ :: 'Map 'Tag 'Dynamic
+                    :: :keep k $ assoc session :notifications $
+                      push-info op-id op-time message
+                      get session :notifications
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'clear $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn clear (db op-data session-id op-id op-time)
-              assoc-in db ([] :sessions session-id :notifications) ([])
+          :code $ quote $ defn clear (db op-data session-id op-id op-time)
+            assoc-in db ([] :sessions session-id :notifications) ([])
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'push-message $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn push-message (db op-data sid op-id op-time)
-              let
-                  kind $ option:unwrap-or (nth op-data 0) nil
-                  text $ option:unwrap-or (nth op-data 1) nil
-                update-in db ([] :sessions sid :notifications)
-                  fn (xs)
-                    conj (option:unwrap-or xs [])
-                      {} (:id op-id) (:kind kind) (:text text) (:time op-time)
+          :code $ quote $ defn push-message (db op-data sid op-id op-time)
+            let
+                items $ assert-type op-data $ :: 'List 'Dynamic
+                kind $ assert-type
+                  option:unwrap $ nth items 0
+                  , 'Tag
+                text $ assert-type
+                  option:unwrap $ nth items 1
+                  , 'String
+              update-in db ([] :sessions sid :notifications)
+                fn (notifications-option)
+                  hint-fn $ {}
+                    :args $ [] $ :: 'Option 'Dynamic
+                    :return 'Dynamic
+                  conj
+                    assert-type
+                      option:unwrap-or notifications-option $ []
+                      :: 'List $ :: 'Map 'Tag 'Dynamic
+                    {} (:id op-id) (:kind kind) (:text text) (:time op-time)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.updater.notify $ :require
-            app.util :refer $ push-info
+        :code $ quote $ ns app.updater.notify
+          :require $ app.util :refer $ push-info
     'app.updater.router $ %{} 'FileEntry
-      :defs $ {}
-        'change $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn change (db op-data session-id op-id op-time)
-              assoc-in db ([] :sessions session-id :router) op-data
+      :defs $ {} $ 'change
+        %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn change (db op-data session-id op-id op-time)
+            assoc-in db ([] :sessions session-id :router) op-data
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Enum 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote (ns app.updater.router)
+        :code $ quote $ ns app.updater.router
     'app.updater.session $ %{} 'FileEntry
       :defs $ {}
         'connect $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn connect (db session-id op-id op-time)
-              assoc-in db ([] :sessions session-id)
-                merge schema/session $ {} (:id session-id)
+          :code $ quote $ defn connect (db session-id op-id op-time)
+            assoc-in db ([] :sessions session-id)
+              merge schema/session $ {} $ :id session-id
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'disconnect $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn disconnect (db session-id op-id op-time)
-              update db :sessions $ fn (session) (dissoc session session-id)
+          :code $ quote $ defn disconnect (db session-id op-id op-time)
+            update db :sessions $ fn (session) (dissoc session session-id)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'select-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn select-ns (db op-data session-id op-id op-time)
-              assoc-in db ([] :sessions session-id :writer :selected-ns) op-data
+          :code $ quote $ defn select-ns (db op-data session-id op-id op-time)
+            assoc-in db ([] :sessions session-id :writer :selected-ns) op-data
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.updater.session $ :require (app.schema :as schema)
+        :code $ quote $ ns app.updater.session
+          :require $ app.schema :as schema
     'app.updater.user $ %{} 'FileEntry
       :defs $ {}
         'change-theme $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn change-theme (db op-data sid op-id op-time)
-              let
-                  user-id $ get-in db ([] :sessions sid :user-id)
-                -> db
-                  assoc-in ([] :users user-id :theme) op-data
-                  assoc-in ([] :sessions sid :theme) op-data
+          :code $ quote $ defn change-theme (db op-data sid op-id op-time)
+            let
+                user-id $ get-in db $ [] :sessions sid :user-id
+              -> db
+                assoc-in ([] :users user-id :theme) op-data
+                assoc-in ([] :sessions sid :theme) op-data
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Tag 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'log-in $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn log-in (db op-data session-id op-id op-time)
-              let-sugar
-                    [] username password
-                    , op-data
-                  users $ option:unwrap-or (get db :users) ({})
-                  maybe-user $ find-first
-                    fn (user)
+          :code $ quote $ defn log-in (db op-data session-id op-id op-time)
+            let-sugar
+                  [] username password
+                  , op-data
+                users $ assert-type
+                  option:unwrap-or (get db :users) ({})
+                  :: 'Map 'String $ :: 'Map 'Tag 'Dynamic
+                maybe-user $ find-first
+                  hint-fn
+                    {}
+                      :args $ [] $ :: 'Map 'Tag 'Dynamic
+                      :return 'Bool
+                    :: fn (user)
                       = username $ option:unwrap-or (get user :name) |
-                    .to-list $ vals users
-                update-in db ([] :sessions session-id)
-                  fn (session)
+                  &set:to-list $ vals users
+              app.util/update-in-map db ([] :sessions session-id)
+                fn (session)
+                  assert-type
                     if-let (user maybe-user)
                       if
                         = (md5 password)
                           option:unwrap-or (get user :password) |
-                        ->
-                          option:unwrap-or session $ {}
-                          assoc :user-id $ option:unwrap-or (get user :id) |
-                        update
-                          option:unwrap-or session $ {}
-                          , :notifications $ push-warning op-id op-time (str "|Wrong password for " username)
-                      update
-                        option:unwrap-or session $ {}
-                        , :notifications $ push-warning op-id op-time (str "|No user named: " username)
+                        -> session $ assoc :user-id $ option:unwrap-or (get user :id) |
+                        update-in session ([] :notifications)
+                          push-warning op-id op-time $ str "|Wrong password for " username
+                      update-in session ([] :notifications)
+                        push-warning op-id op-time $ str "|No user named: " username
+                    :: 'Map 'Tag 'Dynamic
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'String) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'log-out $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn log-out (db op-data session-id op-id op-time)
-              assoc-in db ([] :sessions session-id :user-id) nil
+          :code $ quote $ defn log-out (db op-data session-id op-id op-time)
+            assoc-in db ([] :sessions session-id :user-id) nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Unit 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'nickname $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn nickname (db op-data sid op-id op-time)
-              let
-                  user-id $ get-in db ([] :sessions sid :user-id)
-                assoc-in db ([] :users user-id :nickname)
-                  if (blank? op-data) |Someone op-data
+          :code $ quote $ defn nickname (db op-data sid op-id op-time)
+            let
+                user-id $ get-in db $ [] :sessions sid :user-id
+              assoc-in db ([] :users user-id :nickname)
+                if (blank? op-data) |Someone op-data
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'sign-up $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn sign-up (db op-data session-id op-id op-time)
-              let-sugar
-                    [] username password
-                    , op-data
-                  users $ option:unwrap-or (get db :users) ({})
-                  maybe-user $ find-first
-                    fn (user)
+          :code $ quote $ defn sign-up (db op-data session-id op-id op-time)
+            let-sugar
+                  [] username password
+                  , op-data
+                users $ assert-type
+                  option:unwrap-or (get db :users) ({})
+                  :: 'Map 'String $ :: 'Map 'Tag 'Dynamic
+                maybe-user $ find-first
+                  hint-fn
+                    {}
+                      :args $ [] $ :: 'Map 'Tag 'Dynamic
+                      :return 'Bool
+                    :: fn (user)
                       = username $ option:unwrap-or (get user :name) |
-                    .to-list $ vals users
-                  new-user-id $ str |u (count users)
-                if (some? maybe-user)
-                  update-in db ([] :sessions session-id :notifications)
-                    push-warning op-id op-time $ str "|Name is taken: " username
-                  -> db
-                    assoc-in ([] :sessions session-id :user-id) new-user-id
-                    assoc-in ([] :users new-user-id)
-                      merge schema/user $ {} (:id new-user-id) (:name username) (:nickname username)
-                        :password $ md5 password
+                  &set:to-list $ vals users
+                new-user-id $ str |u $ count users
+              if (some? maybe-user)
+                update-in db ([] :sessions session-id :notifications)
+                  push-warning op-id op-time $ str "|Name is taken: " username
+                -> db
+                  assoc-in ([] :sessions session-id :user-id) new-user-id
+                  assoc-in ([] :users new-user-id)
+                    merge schema/user $ {} (:id new-user-id) (:name username) (:nickname username)
+                      :password $ md5 password
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'String) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.updater.user $ :require
+        :code $ quote $ ns app.updater.user
+          :require
             app.util :refer $ find-first push-warning
             app.util.compile :refer $ md5
             app.schema :as schema
     'app.updater.watcher $ %{} 'FileEntry
-      :defs $ {}
-        'file-change $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn file-change (db op-data _ op-id op-time)
-              let
-                  new-files $ assert-type
-                    .unwrap $ get op-data :files
-                    :: 'Map 'String 'app.schema/FileEntry
-                if
-                  =
-                    option:unwrap-or (get db :files) {}
-                    option:unwrap-or (get db :saved-files) {}
-                  -> db (assoc :saved-files new-files) (assoc :files new-files)
-                  update db :saved-files $ fn (old-files)
-                    let
-                        old-files $ assert-type
-                          option:unwrap-or old-files $ {}
-                          :: 'Map 'String 'app.schema/FileEntry
-                      -> new-files $ map-kv
-                        fn (ns-text file)
-                          let
-                              old-file $ option:unwrap-or (get old-files ns-text) file
-                              old-defs $ :defs old-file
-                            [] ns-text $ if (= file old-file) old-file
-                              -> file
-                                update :ns $ fn (expr)
-                                  let
-                                      old-expr $ :ns old-file
-                                    if (= expr old-expr) old-expr expr
-                                update :defs $ fn (defs)
-                                  -> defs $ map-kv
-                                    fn (def-text expr)
-                                      let
-                                          old-expr $ option:unwrap-or (get old-defs def-text) expr
-                                        [] def-text $ if (= expr old-expr) old-expr expr
+      :defs $ {} $ 'file-change
+        %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn file-change (db op-data _ op-id op-time)
+            let
+                new-files $ option:unwrap $ assert-type (get op-data :files)
+                  :: 'Option $ :: 'Map 'String 'app.schema/FileEntry
+              if
+                =
+                  option:unwrap-or
+                    assert-type (get db :files)
+                      :: 'Option $ :: 'Map 'String 'app.schema/FileEntry
+                    assert-type ({}) (:: 'Map 'String 'app.schema/FileEntry)
+                  option:unwrap-or
+                    assert-type (get db :saved-files)
+                      :: 'Option $ :: 'Map 'String 'app.schema/FileEntry
+                    assert-type ({}) (:: 'Map 'String 'app.schema/FileEntry)
+                -> db (assoc :saved-files new-files) (assoc :files new-files)
+                update db :saved-files $ hint-fn
+                  {}
+                    :args $ [] $ :: 'Option (:: 'Map 'String 'app.schema/FileEntry)
+                    :return $ :: 'Map 'String 'app.schema/FileEntry
+                  (:: fn (old-files))
+                  let
+                      old-files $ option:unwrap-or
+                        assert-type old-files $ :: 'Option $ :: 'Map 'String 'app.schema/FileEntry
+                        assert-type ({}) (:: 'Map 'String 'app.schema/FileEntry)
+                    -> new-files $ map-kv $ :: fn (ns-text file)
+                      let
+                          old-file $ option:unwrap-or
+                              assert-type (get old-files ns-text) (:: 'Option 'app.schema/FileEntry)
+                            file
+                          old-defs $ :defs old-file
+                        [] ns-text $ if (= file old-file) old-file $ -> file
+                          update :ns $ :: fn (expr)
+                            let
+                                old-expr $ :ns old-file
+                              if (= expr old-expr) old-expr expr
+                          update :defs $ :: fn (defs)
+                            -> defs $ map-kv $ :: fn (def-text expr)
+                              let
+                                  old-expr $ option:unwrap-or
+                                      assert-type (get old-defs def-text) (:: 'Option 'app.schema/CodeEntry)
+                                    expr
+                                [] def-text $ if (= expr old-expr) old-expr expr
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote (ns app.updater.watcher)
+        :code $ quote $ ns app.updater.watcher
     'app.updater.writer $ %{} 'FileEntry
       :defs $ {}
         'collapse $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn collapse (db op-data session-id op-id op-time)
-              -> db $ update-in ([] :sessions session-id :writer)
-                fn (writer)
-                  let
-                      writer $ option:unwrap-or writer {}
-                    -> writer
-                      update :stack $ fn (stack) (.slice stack op-data)
-                      assoc :pointer 0
+          :code $ quote $ defn collapse (db op-data session-id op-id op-time)
+            -> db $ update-in ([] :sessions session-id :writer)
+              fn (writer)
+                let
+                    writer $ option:unwrap-or writer {}
+                  -> writer
+                    update :stack $ hint-fn
+                      {}
+                        :args $ [] $ :: 'List 'app.bookmark/%bookmark
+                        :return $ :: 'List 'app.bookmark/%bookmark
+                      (:: fn (stack) (slice stack op-data))
+                    assoc :pointer 0
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'doc-set $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn doc-set (db path docstring sid op-id op-time)
-              if
-                = :ns $ &enum:nth path 0
-                assoc-in db
-                  [] :files (&enum:nth path 1) :ns :doc
-                  , docstring
-                assoc-in db
-                  [] :files (&enum:nth path 1) :defs (&enum:nth path 2) :doc
-                  , docstring
+          :code $ quote $ defn doc-set (db path docstring sid op-id op-time)
+            if
+              = :ns $ &enum:nth path 0
+              assoc-in db
+                [] :files (&enum:nth path 1) :ns :doc
+                , docstring
+              assoc-in db
+                [] :files (&enum:nth path 1) :defs (&enum:nth path 2) :doc
+                , docstring
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'String) 'String 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'draft-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn draft-ns (db op-data sid op-id op-time)
-              -> db $ update-in ([] :sessions sid :writer)
-                fn (writer)
-                  assoc (option:unwrap-or writer {}) :draft-ns op-data
+          :code $ quote $ defn draft-ns (db op-data sid op-id op-time)
+            -> db $ update-in ([] :sessions sid :writer)
+              fn (writer)
+                assoc (option:unwrap-or writer {}) :draft-ns op-data
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'edit $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn edit (db op-data session-id op-id op-time)
-              let
-                  bookmark $ if
-                    = :ns $ &enum:nth op-data 0
-                    %:: %bookmark :ns (&enum:nth op-data 1) ([])
-                    %:: %bookmark :def (&enum:nth op-data 1) (&enum:nth op-data 2) ([])
-                -> db
-                  update-in ([] :sessions session-id :writer) (push-bookmark bookmark)
-                  assoc-in ([] :sessions session-id :router) (:: :editor)
+          :code $ quote $ defn edit (db op-data session-id op-id op-time)
+            let
+                bookmark $ if
+                  = :ns $ &enum:nth op-data 0
+                  %:: %bookmark :ns (&enum:nth op-data 1) ([])
+                  %:: %bookmark :def (&enum:nth op-data 1) (&enum:nth op-data 2) ([])
+              -> db
+                update-in ([] :sessions session-id :writer)
+                  push-bookmark (assert-type bookmark 'app.bookmark/%bookmark) false
+                assoc-in ([] :sessions session-id :router) (:: :editor)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'edit-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn edit-ns (db sid op-id op-time)
-              let
-                  writer $ to-writer db sid
-                  bookmark $ to-bookmark writer
-                if (not= bookmark nil)
-                  let
-                      ns' $ &enum:nth bookmark 1
-                    -> db $ update-in ([] :sessions sid :writer)
-                      push-bookmark $ :: :ns ns' ([])
-                  , db
+          :code $ quote $ defn edit-ns (db sid op-id op-time)
+            let
+                writer $ to-writer db sid
+                bookmark $ to-bookmark writer
+              if (not= bookmark nil)
+                let
+                    ns' $ &enum:nth bookmark 1
+                  -> db $ update-in ([] :sessions sid :writer)
+                    push-bookmark
+                      assert-type
+                        :: :ns ns' $ []
+                        , 'app.bookmark/%bookmark
+                      , false
+                , db
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'finish $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn finish (db sid op-id op-time)
-              -> db $ update-in ([] :sessions sid :writer)
-                fn (writer)
-                  let
-                      pointer $ option:unwrap-or
-                        get (option:unwrap-or writer {}) :pointer
-                        , 0
-                    -> (option:unwrap-or writer {})
-                      update :stack $ fn (stack)
-                        if
-                          > (count stack) pointer
-                          dissoc-idx stack pointer
-                          , stack
-                      assoc :pointer $ if (> pointer 0) (dec pointer) pointer
+          :code $ quote $ defn finish (db sid op-id op-time)
+            update-in db ([] :sessions sid :writer)
+              fn (writer)
+                hint-fn $ {}
+                  :args $ [] $ :: 'Option 'Dynamic
+                  :return 'Dynamic
+                let
+                    writer-map $ assert-type
+                      option:unwrap-or writer $ {}
+                      :: 'Map 'Tag 'Dynamic
+                    pointer $ assert-type
+                      option:unwrap-or (get writer-map :pointer) 0
+                      , 'Number
+                    stack $ assert-type
+                      option:unwrap-or (get writer-map :stack) ([])
+                      :: 'List 'app.bookmark/%bookmark
+                    next-stack $ if
+                      > (count stack) pointer
+                      dissoc-idx stack pointer
+                      , stack
+                  -> writer-map (assoc :stack next-stack)
+                    assoc :pointer $ if (> pointer 0) (dec pointer) pointer
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'focus $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn focus (db op-data session-id op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions session-id :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  pointer $ assert-type
-                    option:unwrap-or (get writer :pointer) 0
-                    , 'Number
-                update-in db ([] :sessions session-id :writer :stack pointer)
-                  fn (b)
-                    if
-                      = :def $ &enum:nth b 0
-                      :: :def (&enum:nth b 1) (&enum:nth b 2) op-data
-                      :: :ns (&enum:nth b 1) op-data
+          :code $ quote $ defn focus (db op-data session-id op-id op-time)
+            let
+                writer $ assert-type
+                  .unwrap $ get-in db $ [] :sessions session-id :writer
+                  :: 'Map 'Tag 'Dynamic
+                pointer $ assert-type
+                  option:unwrap-or (get writer :pointer) 0
+                  , 'Number
+              app.util/update-in-existing db ([] :sessions session-id :writer :stack pointer)
+                fn (b)
+                  if
+                    = :def $ &enum:nth b 0
+                    :: :def (&enum:nth b 1) (&enum:nth b 2) op-data
+                    :: :ns (&enum:nth b 1) op-data
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'go-down $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn go-down (db op-data session-id op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions session-id :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  tail? $ option:unwrap-or (get op-data :tail?) false
-                  stack $ assert-type
-                    option:unwrap-or (get writer :stack) ([])
-                    :: 'List 'Dynamic
-                  pointer $ assert-type
-                    option:unwrap-or (get writer :pointer) 0
-                    , 'Number
-                  bookmark $ Bookmark
-                    .unwrap $ get stack pointer
-                  target-expr $ assert-type
-                    .unwrap $ get-in db (.to-path bookmark)
-                    , 'app.schema/CirruExpr
-                  target-data $ assert-type
-                    option:unwrap-or (:data target-expr) ({})
-                    :: 'Map 'String 'Dynamic
-                if
-                  = 0 $ count target-data
-                  , db $ -> db
-                    update-in ([] :sessions session-id :writer :stack pointer)
-                      fn (b)
-                        .update-focus (Bookmark b)
-                          fn (focus)
-                            conj focus $ if tail?
-                              .unwrap $ get-max-key target-data
-                              .unwrap $ get-min-key target-data
+          :code $ quote $ defn go-down (db op-data session-id op-id op-time)
+            let
+                writer $ assert-type
+                  .unwrap $ get-in db $ [] :sessions session-id :writer
+                  :: 'Map 'Tag 'Dynamic
+                tail? $ option:unwrap-or (get op-data :tail?) false
+                stack $ assert-type
+                  option:unwrap-or (get writer :stack) ([])
+                  :: 'List 'app.bookmark/%bookmark
+                pointer $ assert-type
+                  option:unwrap-or (get writer :pointer) 0
+                  , 'Number
+                bookmark $ Bookmark $ assert-type
+                  .unwrap $ get stack pointer
+                  , 'app.bookmark/%bookmark
+                target-expr $ assert-type
+                  .unwrap $ get-in db $ app.bookmark/to-path bookmark
+                  , 'app.schema/CirruExprShape
+                target-data $ assert-type (:data target-expr) (:: 'Map 'String 'Dynamic)
+              if
+                = 0 $ count target-data
+                , db $ -> db $ update-in ([] :sessions session-id :writer :stack pointer)
+                  fn (b)
+                    hint-fn $ {}
+                      :args $ [] $ :: 'Option 'Dynamic
+                      :return 'Dynamic
+                    app.bookmark/update-focus
+                      Bookmark $ assert-type (option:unwrap b) 'app.bookmark/%bookmark
+                      fn (focus)
+                        hint-fn $ {}
+                          :args $ [] $ :: 'List 'String
+                          :return $ :: 'List 'String
+                        conj focus $ if tail?
+                          .unwrap $ get-max-key target-data
+                          .unwrap $ get-min-key target-data
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'go-left $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn go-left (db session-id op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions session-id :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  stack $ assert-type
-                    option:unwrap-or (get writer :stack) ([])
-                    :: 'List 'Dynamic
-                  pointer $ assert-type
-                    option:unwrap-or (get writer :pointer) 0
-                    , 'Number
-                  bookmark $ Bookmark
-                    .unwrap $ get stack pointer
-                if
-                  empty? $ .get-focus bookmark
-                  , db $ let
-                      parent-bookmark $ .update-focus bookmark butlast
-                      parent-path $ .to-path parent-bookmark
-                      last-coord $ .unwrap
-                        last $ .get-focus bookmark
-                      base-expr $ assert-type
-                        .unwrap $ get-in db parent-path
-                        , 'app.schema/CirruExpr
-                      base-data $ assert-type
-                        option:unwrap-or (:data base-expr) ({})
-                        :: 'Map 'String 'Dynamic
-                      child-keys $ sort
-                        .to-list $ keys base-data
-                      idx $ option:unwrap-or (.index-of child-keys last-coord) 0
-                    -> db $ update-in ([] :sessions session-id :writer :stack pointer)
-                      fn (b)
-                        .update-focus (Bookmark b)
-                          fn (focus)
-                            conj (butlast focus)
-                              if (= 0 idx) last-coord $ .unwrap
-                                get child-keys $ dec idx
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'go-right $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn go-right (db session-id op-id op-time)
-              let
-                  writer $ assert-type
-                    .unwrap $ get-in db ([] :sessions session-id :writer)
-                    :: 'Map 'Tag 'Dynamic
-                  stack $ assert-type
-                    option:unwrap-or (get writer :stack) ([])
-                    :: 'List 'Dynamic
-                  pointer $ assert-type
-                    option:unwrap-or (get writer :pointer) 0
-                    , 'Number
-                  bookmark $ Bookmark
-                    .unwrap $ get stack pointer
-                if
-                  empty? $ .get-focus bookmark
-                  , db $ let
-                      parent-bookmark $ .update-focus bookmark butlast
-                      parent-path $ .to-path parent-bookmark
-                      last-coord $ .unwrap
-                        last $ .get-focus bookmark
-                      base-expr $ assert-type
-                        .unwrap $ get-in db parent-path
-                        , 'app.schema/CirruExpr
-                      base-data $ assert-type
-                        option:unwrap-or (:data base-expr) ({})
-                        :: 'Map 'String 'Dynamic
-                      child-keys $ sort
-                        .to-list $ keys base-data
-                      idx $ option:unwrap-or (.index-of child-keys last-coord) 0
-                    -> db $ update-in ([] :sessions session-id :writer :stack pointer)
-                      fn (b)
-                        .update-focus (Bookmark b)
-                          fn (focus)
-                            conj (butlast focus)
-                              if
-                                = idx $ dec (count child-keys)
-                                , last-coord $ .unwrap
-                                  get child-keys $ inc idx
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'go-up $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn go-up (db session-id op-id op-time)
-              -> db $ update-in ([] :sessions session-id :writer)
-                fn (writer)
-                  update-in (option:unwrap-or writer {})
-                    [] :stack $ option:unwrap-or
-                      get (option:unwrap-or writer {}) :pointer
-                      , 0
+          :code $ quote $ defn go-left (db session-id op-id op-time)
+            let
+                writer $ assert-type
+                  .unwrap $ get-in db $ [] :sessions session-id :writer
+                  :: 'Map 'Tag 'Dynamic
+                stack $ assert-type
+                  option:unwrap-or (get writer :stack) ([])
+                  :: 'List 'app.bookmark/%bookmark
+                pointer $ assert-type
+                  option:unwrap-or (get writer :pointer) 0
+                  , 'Number
+                bookmark $ Bookmark $ assert-type
+                  .unwrap $ get stack pointer
+                  , 'app.bookmark/%bookmark
+              if
+                empty? $ app.bookmark/get-focus bookmark
+                , db $ let
+                    parent-bookmark $ app.bookmark/update-focus bookmark butlast
+                    parent-path $ app.bookmark/to-path parent-bookmark
+                    last-coord $ .unwrap $ last (app.bookmark/get-focus bookmark)
+                    base-expr $ assert-type
+                      .unwrap $ get-in db parent-path
+                      , 'app.schema/CirruExprShape
+                    base-data $ assert-type (:data base-expr) (:: 'Map 'String 'Dynamic)
+                    child-keys $ sort $ &set:to-list (keys base-data)
+                    idx $ option:unwrap-or (index-of child-keys last-coord) 0
+                  -> db $ update-in ([] :sessions session-id :writer :stack pointer)
                     fn (b)
-                      .update-focus (Bookmark b)
+                      hint-fn $ {}
+                        :args $ [] $ :: 'Option 'Dynamic
+                        :return 'Dynamic
+                      app.bookmark/update-focus
+                        Bookmark $ assert-type (option:unwrap b) 'app.bookmark/%bookmark
                         fn (focus)
+                          hint-fn $ {}
+                            :args $ [] $ :: 'List 'String
+                            :return $ :: 'List 'String
+                          conj (butlast focus)
+                            if (= 0 idx) last-coord $ .unwrap $ get child-keys (dec idx)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'go-right $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn go-right (db session-id op-id op-time)
+            let
+                writer $ assert-type
+                  .unwrap $ get-in db $ [] :sessions session-id :writer
+                  :: 'Map 'Tag 'Dynamic
+                stack $ assert-type
+                  option:unwrap-or (get writer :stack) ([])
+                  :: 'List 'app.bookmark/%bookmark
+                pointer $ assert-type
+                  option:unwrap-or (get writer :pointer) 0
+                  , 'Number
+                bookmark $ Bookmark $ assert-type
+                  .unwrap $ get stack pointer
+                  , 'app.bookmark/%bookmark
+              if
+                empty? $ app.bookmark/get-focus bookmark
+                , db $ let
+                    parent-bookmark $ app.bookmark/update-focus bookmark butlast
+                    parent-path $ app.bookmark/to-path parent-bookmark
+                    last-coord $ .unwrap $ last (app.bookmark/get-focus bookmark)
+                    base-expr $ assert-type
+                      .unwrap $ get-in db parent-path
+                      , 'app.schema/CirruExprShape
+                    base-data $ assert-type (:data base-expr) (:: 'Map 'String 'Dynamic)
+                    child-keys $ sort $ &set:to-list (keys base-data)
+                    idx $ option:unwrap-or (index-of child-keys last-coord) 0
+                  -> db $ update-in ([] :sessions session-id :writer :stack pointer)
+                    fn (b)
+                      hint-fn $ {}
+                        :args $ [] $ :: 'Option 'Dynamic
+                        :return 'Dynamic
+                      app.bookmark/update-focus
+                        Bookmark $ assert-type (option:unwrap b) 'app.bookmark/%bookmark
+                        fn (focus)
+                          hint-fn $ {}
+                            :args $ [] $ :: 'List 'String
+                            :return $ :: 'List 'String
+                          conj (butlast focus)
+                            if
+                              = idx $ dec $ count child-keys
+                              , last-coord $ .unwrap $ get child-keys (inc idx)
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'go-up $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn go-up (db session-id op-id op-time)
+            -> db $ update-in ([] :sessions session-id :writer)
+              fn (writer)
+                hint-fn $ {}
+                  :args $ [] $ :: 'Option 'Dynamic
+                  :return 'Dynamic
+                let
+                    writer-data $ assert-type
+                      option:unwrap-or writer $ {}
+                      :: 'Map 'Tag 'Dynamic
+                    pointer $ assert-type
+                      option:unwrap-or (get writer-data :pointer) 0
+                      , 'Number
+                  update-in writer-data ([] :stack pointer)
+                    fn (bookmark)
+                      hint-fn $ {}
+                        :args $ [] $ :: 'Option 'Dynamic
+                        :return 'Dynamic
+                      app.bookmark/update-focus
+                        Bookmark $ assert-type (option:unwrap bookmark) 'app.bookmark/%bookmark
+                        fn (focus)
+                          hint-fn $ {}
+                            :args $ [] $ :: 'List 'String
+                            :return $ :: 'List 'String
                           if (empty? focus) focus $ butlast focus
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'hide-peek $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn hide-peek (db op-data sid op-id op-time)
-              assoc-in db ([] :sessions sid :writer :peek-def) nil
+          :code $ quote $ defn hide-peek (db op-data sid op-id op-time)
+            assoc-in db ([] :sessions sid :writer :peek-def) nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'move-next $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn move-next (db sid op-id op-time)
-              -> db $ update-in ([] :sessions sid :writer)
-                fn (writer)
-                  let
-                      pointer $ option:unwrap-or
-                        get (option:unwrap-or writer {}) :pointer
-                        , 0
-                    assoc (option:unwrap-or writer {}) :pointer $ if
-                      >= pointer $ dec
-                        option:unwrap-or
-                          get (option:unwrap-or writer {}) :stack
-                          , []
-                      , pointer (inc pointer)
+          :code $ quote $ defn move-next (db sid op-id op-time)
+            -> db $ update-in ([] :sessions sid :writer)
+              fn (writer)
+                hint-fn $ {}
+                  :args $ [] $ :: 'Option 'Dynamic
+                  :return 'Dynamic
+                let
+                    writer-map $ assert-type
+                      option:unwrap-or writer $ {}
+                      :: 'Map 'Tag 'Dynamic
+                    pointer $ assert-type
+                      option:unwrap-or (get writer-map :pointer) 0
+                      , 'Number
+                    stack $ assert-type
+                      option:unwrap-or (get writer-map :stack) ([])
+                      :: 'List 'app.bookmark/%bookmark
+                  assoc writer-map :pointer $ if
+                    >= pointer $ dec $ count stack
+                    , pointer $ inc pointer
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'move-order $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn move-order (db op-data sid op-id op-time)
-              -> db $ update-in ([] :sessions sid :writer)
+          :code $ quote $ defn move-order (db op-data sid op-id op-time)
+            let
+                op-map $ assert-type op-data $ :: 'Map 'Tag 'Number
+                from-idx $ assert-type
+                  option:unwrap-or (get op-map :from) 0
+                  , 'Number
+                to-idx $ assert-type
+                  option:unwrap-or (get op-map :to) 0
+                  , 'Number
+              update-in db ([] :sessions sid :writer)
                 fn (writer)
+                  hint-fn $ {}
+                    :args $ [] $ :: 'Option 'Dynamic
+                    :return 'Dynamic
                   let
-                      from-idx $ option:unwrap-or (get op-data :from) 0
-                      to-idx $ option:unwrap-or (get op-data :to) 0
-                    -> (option:unwrap-or writer {})
-                      update :pointer $ fn (pointer)
-                        cond
-                            = pointer from-idx
-                            , to-idx
-                          (or (< pointer (.unwrap (min ([] from-idx to-idx)))) (> pointer (.unwrap (max ([] from-idx to-idx)))))
-                            , pointer
-                          true $ if (> from-idx to-idx) (inc pointer) (dec pointer)
-                      update :stack $ fn (stack)
-                        if (< from-idx to-idx)
-                          concat (.slice stack 0 from-idx)
-                            .slice stack (inc from-idx) (inc to-idx)
-                            [] $ get stack from-idx
-                            .slice stack $ inc to-idx
-                          concat (.slice stack 0 to-idx)
-                            [] $ get stack from-idx
-                            .slice stack to-idx from-idx
+                      writer-map $ assert-type
+                        option:unwrap-or writer $ {}
+                        :: 'Map 'Tag 'Dynamic
+                      pointer $ assert-type
+                        option:unwrap-or (get writer-map :pointer) 0
+                        , 'Number
+                      stack $ assert-type
+                        option:unwrap-or (get writer-map :stack) ([])
+                        :: 'List 'app.bookmark/%bookmark
+                      next-pointer $ cond
+                          = pointer from-idx
+                          , to-idx
+                        (or (< pointer (option:unwrap-or (min ([] from-idx to-idx)) 0)) (> pointer (option:unwrap-or (max ([] from-idx to-idx)) 0)))
+                          , pointer
+                        true $ if (> from-idx to-idx) (inc pointer) (dec pointer)
+                      moved $ assert-type
+                        option:unwrap $ get stack from-idx
+                        , 'app.bookmark/%bookmark
+                      next-stack $ if (< from-idx to-idx)
+                        concat
+                          assert-type (slice stack 0 from-idx) (:: 'List 'app.bookmark/%bookmark)
+                          assert-type
+                            slice stack (inc from-idx) (inc to-idx)
+                            :: 'List 'app.bookmark/%bookmark
+                          assert-type ([] moved) (:: 'List 'app.bookmark/%bookmark)
+                          assert-type
+                            slice stack $ inc to-idx
+                            :: 'List 'app.bookmark/%bookmark
+                        concat
+                          assert-type (slice stack 0 to-idx) (:: 'List 'app.bookmark/%bookmark)
+                          assert-type ([] moved) (:: 'List 'app.bookmark/%bookmark)
+                          assert-type (slice stack to-idx from-idx) (:: 'List 'app.bookmark/%bookmark)
+                          assert-type
                             if
                               >= (inc from-idx) (count stack)
                               []
-                              .slice stack $ inc from-idx
+                              assert-type
+                                slice stack $ inc from-idx
+                                :: 'List 'app.bookmark/%bookmark
+                            :: 'List 'app.bookmark/%bookmark
+                    -> writer-map (assoc :pointer next-pointer) (assoc :stack next-stack)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'move-previous $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn move-previous (db sid op-id op-time)
-              -> db $ update-in ([] :sessions sid :writer)
-                fn (writer)
-                  let
-                      pointer $ option:unwrap-or
-                        get (option:unwrap-or writer {}) :pointer
-                        , 0
-                    assoc (option:unwrap-or writer {}) :pointer $ if (> pointer 0) (dec pointer) 0
+          :code $ quote $ defn move-previous (db sid op-id op-time)
+            -> db $ update-in ([] :sessions sid :writer)
+              fn (writer)
+                hint-fn $ {}
+                  :args $ [] $ :: 'Option 'Dynamic
+                  :return 'Dynamic
+                let
+                    writer-map $ assert-type
+                      option:unwrap-or writer $ {}
+                      :: 'Map 'Tag 'Dynamic
+                    pointer $ assert-type
+                      option:unwrap-or (get writer-map :pointer) 0
+                      , 'Number
+                  assoc writer-map :pointer $ if (> pointer 0) (dec pointer) 0
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'paste $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn paste (db op-data sid op-id op-time)
-              let
-                  writer $ to-writer db sid
-                  bookmark $ to-bookmark writer
-                  data-path $ bookmark->path bookmark
-                  user-id $ get-in db ([] :sessions sid :user-id)
-                if (list? op-data)
-                  -> db $ assoc-in data-path (cirru->tree op-data user-id op-time)
-                  , db
+          :code $ quote $ defn paste (db op-data sid op-id op-time)
+            let
+                writer $ to-writer db sid
+                bookmark $ assert-type
+                  option:unwrap $ to-bookmark writer
+                  , 'app.bookmark/%bookmark
+                data-path $ bookmark->path bookmark
+                user-id $ get-in db $ [] :sessions sid :user-id
+              if (list? op-data)
+                -> db $ assoc-in data-path $ cirru->tree op-data (option:unwrap-or user-id |) op-time
+                , db
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'pick-node $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn pick-node (db op-data sid op-id op-time)
-              let
-                  user-id $ get-in db ([] :sessions sid :user-id)
-                  writer $ get-in db ([] :sessions sid :writer)
-                  bookmark $ option:unwrap-or
-                    get (option:unwrap-or writer {}) :picker-mode
-                    , nil
-                  data-path $ bookmark->path bookmark
-                  data $ if (option:some? op-data) (.unwrap op-data) op-data
-                -> db
-                  assoc-in data-path $ cirru->tree data user-id op-time
-                  update-in ([] :sessions sid :writer)
-                    fn (writer)
-                      assoc (option:unwrap-or writer {}) :picker-mode nil
-                  update-in ([] :sessions sid :notifications)
-                    push-info op-id op-time $ str "|picked "
-                      if (string? data) data $ let
-                          code $ stringify-s-expr data
-                        if
-                          > (count code) 40
-                          str (.slice code 0 40) |...
-                          , code
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'picker-mode $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn picker-mode (db session-id op-id op-time)
-              update-in db ([] :sessions session-id :writer)
-                fn (writer)
-                  if
-                    option:some? $ get (option:unwrap-or writer {}) :picker-mode
-                    dissoc (option:unwrap-or writer {}) :picker-mode
-                    assoc (option:unwrap-or writer {}) :picker-mode $ to-bookmark (option:unwrap-or writer {})
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'point-to $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn point-to (db op-data session-id op-id op-time)
-              assoc-in db ([] :sessions session-id :writer :pointer) op-data
-          :examples $ []
-          :schema $ :: 'Dynamic
-        'remove-idx $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn remove-idx (db op-data session-id op-id op-time)
-              -> db $ update-in ([] :sessions session-id :writer)
-                fn (writer)
-                  -> (option:unwrap-or writer {})
-                    update :stack $ fn (stack) (dissoc-idx stack op-data)
-                    update :pointer $ fn (pointer)
+          :code $ quote $ defn pick-node (db op-data sid op-id op-time)
+            let
+                user-id $ assert-type
+                  get-in db $ [] :sessions sid :user-id
+                  , 'String
+                writer $ to-writer db sid
+                bookmark $ assert-type
+                  option:unwrap $ get
+                    assert-type
+                      option:unwrap-or writer $ {}
+                      :: 'Map 'Tag 'Dynamic
+                    , :picker-mode
+                  , 'app.bookmark/%bookmark
+                data-path $ bookmark->path bookmark
+                data op-data
+              -> db
+                assoc-in data-path $ cirru->tree data user-id op-time
+                update-in ([] :sessions sid :writer)
+                  fn (writer)
+                    hint-fn $ {}
+                      :args $ [] $ :: 'Option 'Dynamic
+                      :return 'Dynamic
+                    dissoc
+                      assert-type
+                        option:unwrap-or writer $ {}
+                        :: 'Map 'Tag 'Dynamic
+                      , :picker-mode
+                update-in ([] :sessions sid :notifications)
+                  push-info op-id op-time $ str "|picked " $ if (string? data) data
+                    let
+                        code $ stringify-s-expr data
                       if
-                        and (> pointer 0) (<= op-data pointer)
-                        dec pointer
-                        , pointer
+                        > (count code) 40
+                        str (slice code 0 40) |...
+                        , code
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'picker-mode $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn picker-mode (db session-id op-id op-time)
+            update-in db ([] :sessions session-id :writer)
+              fn (writer)
+                hint-fn $ {}
+                  :args $ [] $ :: 'Option 'Dynamic
+                  :return 'Dynamic
+                let
+                    writer-map $ assert-type
+                      option:unwrap-or writer $ {}
+                      :: 'Map 'Tag 'Dynamic
+                  if
+                    option:some? $ get writer-map :picker-mode
+                    dissoc writer-map :picker-mode
+                    match (to-bookmark writer)
+                      (:some bookmark) (assoc writer-map :picker-mode bookmark)
+                      (:none) writer-map
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'point-to $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn point-to (db op-data session-id op-id op-time)
+            assoc-in db ([] :sessions session-id :writer :pointer) op-data
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
+        'remove-idx $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn remove-idx (db op-data session-id op-id op-time)
+            -> db $ update-in ([] :sessions session-id :writer)
+              fn (writer)
+                -> (option:unwrap-or writer {})
+                  update :stack $ hint-fn
+                    {}
+                      :args $ [] $ :: 'List 'app.bookmark/%bookmark
+                      :return $ :: 'List 'app.bookmark/%bookmark
+                    (:: fn (stack) (dissoc-idx stack op-data))
+                  update :pointer $ hint-fn
+                    {}
+                      :args $ [] 'Number
+                      :return 'Number
+                    (:: fn (pointer) (if (and (> pointer 0) (<= op-data pointer)) (dec pointer) pointer))
+          :examples $ []
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'save-files $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn save-files (db op-data sid op-id op-time)
-              let
-                  user-id $ get-in db ([] :sessions sid :user-id)
-                  user-name $ get-in db ([] :users user-id :name)
-                -> db
-                  update :saved-files $ fn (saved-files)
-                    if (some? op-data)
-                      let
-                          target $ get-in db ([] :files op-data)
-                        if (some? target) (assoc saved-files op-data target) (dissoc saved-files op-data)
-                      get db :files
-                  update :sessions $ fn (sessions)
-                    -> sessions $ map-kv
-                      fn (k session)
-                        [] k $ update session :notifications
-                          push-info op-id op-time $ str user-name
-                            if (some? op-data) (str "| modified ns " op-data |!) "| saved files!"
-                  dissoc :ir
+          :code $ quote $ defn save-files (db op-data sid op-id op-time)
+            let
+                user-id $ get-in db $ [] :sessions sid :user-id
+                user-name $ get-in db $ [] :users user-id :name
+              -> db
+                update :saved-files $ fn (saved-files)
+                  if (some? op-data)
+                    let
+                        target $ get-in db $ [] :files op-data
+                      if (some? target) (assoc saved-files op-data target) (dissoc saved-files op-data)
+                    get db :files
+                update :sessions $ fn (sessions)
+                  hint-fn $ {}
+                    :args $ [] 'Dynamic
+                    :return 'Dynamic
+                  filter-map-kv
+                    assert-type sessions $ :: 'Map 'String $ :: 'Map 'Tag 'Dynamic
+                    fn (k session)
+                      hint-fn $ {}
+                        :args $ [] 'String $ :: 'Map 'Tag 'Dynamic
+                        :return $ :: 'MapEntryDecision 'String $ :: 'Map 'Tag 'Dynamic
+                      :: :keep k $ assoc session :notifications $
+                        push-info op-id op-time $ str user-name $ if (some? op-data) (str "| modified ns " op-data |!) "| saved files!"
+                        get session :notifications
+                dissoc :ir
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
         'select $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn select (db op-data session-id op-id op-time)
-              let
-                  bookmark $ if
-                    = :def $ &enum:nth op-data 0
-                    %:: %bookmark :def (&enum:nth op-data 1) (&enum:nth op-data 2) ([])
-                    %:: %bookmark :ns (&enum:nth op-data 1) ([])
-                -> db
-                  update-in ([] :sessions session-id :writer) (push-bookmark bookmark)
-                  assoc-in ([] :sessions session-id :router) (:: :editor)
+          :code $ quote $ defn select (db op-data session-id op-id op-time)
+            let
+                bookmark $ if
+                  = :def $ &enum:nth op-data 0
+                  %:: %bookmark :def (&enum:nth op-data 1) (&enum:nth op-data 2) ([])
+                  %:: %bookmark :ns (&enum:nth op-data 1) ([])
+              -> db
+                update-in ([] :sessions session-id :writer)
+                  push-bookmark (assert-type bookmark 'app.bookmark/%bookmark) false
+                assoc-in ([] :sessions session-id :router) (:: :editor)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Dynamic 'String 'String 'Number
+            :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.updater.writer $ :require
+        :code $ quote $ ns app.updater.writer
+          :require
             app.util.stack :refer $ push-bookmark
             app.util.list :refer $ dissoc-idx
             app.schema :as schema
@@ -7508,501 +8406,586 @@
     'app.util $ %{} 'FileEntry
       :defs $ {}
         'bookmark->path $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn bookmark->path (bookmark)
-              tag-match bookmark
-                (:def ns' def' f)
-                  concat ([] :files ns' :defs def' :code)
-                    mapcat
-                      or f $ []
-                      , prepend-data
-                (:ns ns' f)
-                  concat ([] :files ns' :ns :code)
-                    mapcat
-                      or f $ []
-                      , prepend-data
+          :code $ quote $ defn bookmark->path (bookmark) (app.bookmark/to-path bookmark)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'app.bookmark/%bookmark
+            :return $ :: 'List 'Dynamic
         'bookmark-full-str $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn bookmark-full-str (bookmark)
-              tag-match bookmark
-                (:def ns' def' f) (str ns' |/ def')
-                (:ns ns' f) (str ns' |/)
+          :code $ quote $ defn bookmark-full-str (bookmark)
+            match bookmark
+              (:def ns' def' f) (str ns' |/ def')
+              (:ns ns' f) (str ns' |/)
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'String)
-              :args $ [] 'app.bookmark/%bookmark0
+          :schema $ :: 'Fn $ {} (:return 'String)
+            :args $ [] 'app.bookmark/%bookmark0
         'cirru->file $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn cirru->file (file author timestamp)
-              -> file
-                update :ns $ fn (entry)
-                  update entry :code $ \ cirru->tree % author timestamp
-                update :defs $ fn (defs)
-                  -> defs $ map-kv
-                    fn (k entry)
-                      [] k $ update entry :code
-                        fn (xs) (cirru->tree xs author timestamp)
+          :code $ quote $ defn cirru->file (file author timestamp)
+            -> file
+              update :ns $ hint-fn
+                {}
+                  :args $ [] 'app.schema/CodeEntry
+                  :return 'app.schema/CodeEntry
+                :: fn (entry)
+                  update entry :code $ hint-fn
+                    {}
+                      :args $ [] 'Dynamic
+                      :return 'Dynamic
+                    :: fn (xs) (cirru->tree xs author timestamp)
+              update :defs $ hint-fn
+                {}
+                  :args $ [] $ :: 'Map 'String 'app.schema/CodeEntry
+                  :return $ :: 'Map 'String 'app.schema/CodeEntry
+                :: fn (defs)
+                  filter-map-kv defs $ hint-fn
+                    {}
+                      :args $ [] 'String 'app.schema/CodeEntry
+                      :return 'MapEntryDecision
+                    :: fn (k entry)
+                      :: :keep k $ update entry :code $ hint-fn
+                        {}
+                          :args $ [] 'Dynamic
+                          :return 'Dynamic
+                        :: fn (xs) (cirru->tree xs author timestamp)
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'app.schema/FileEntry)
-              :args $ [] 'app.schema/FileEntry 'String 'Number
+          :schema $ :: 'Fn $ {} (:return 'app.schema/FileEntry)
+            :args $ [] 'app.schema/FileEntry 'String 'Number
         'cirru->tree $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn cirru->tree (xs author timestamp)
-              cond
-                  enum? xs
-                  if
-                    = 'quote $ option:unwrap-or (nth xs 0) nil
+          :code $ quote $ defn cirru->tree (xs author timestamp)
+            cond
+                enum? xs
+                if
+                  = 'quote $ option:unwrap-or (nth xs 0) nil
+                  cirru->tree (nth xs 1) author timestamp
+                  do (eprintln "|unknown tuple from cirru:" xs)
                     cirru->tree (nth xs 1) author timestamp
-                    do (eprintln "|unknown tuple from cirru:" xs)
-                      cirru->tree (nth xs 1) author timestamp
-                (= (type-of xs) :cirru-quote)
-                  cirru->tree (&cirru-quote:to-list xs) author timestamp
-                (list? xs)
-                  %{} schema/CirruExpr (:at timestamp) (:by author)
-                    :data $ loop
-                        result $ {}
-                        ys xs
-                        next-id bisection/mid-id
-                      if (empty? ys) result $ let
-                          y $ first ys
-                        recur
-                          assoc result next-id $ cirru->tree y author timestamp
-                          rest ys
-                          bisection/bisect next-id bisection/max-id
-                (string? xs)
-                  %{} schema/CirruLeaf (:at timestamp) (:by author) (:text xs)
-                true $ do (eprintln "|unknown data for cirru converting:" xs) nil
+              (= (type-of xs) :cirru-quote)
+                cirru->tree (&cirru-quote:to-list xs) author timestamp
+              (list? xs)
+                %{} schema/CirruExpr (:at timestamp) (:by author)
+                  :data $ loop
+                      result $ {}
+                      ys xs
+                      next-id bisection/mid-id
+                    if (empty? ys) result $ let
+                        y $ first ys
+                      recur
+                        assoc result next-id $ cirru->tree y author timestamp
+                        rest ys
+                        bisection/bisect next-id bisection/max-id
+              (string? xs)
+                %{} schema/CirruLeaf (:at timestamp) (:by author) (:text xs)
+              true $ do (eprintln "|unknown data for cirru converting:" xs) nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic 'String 'Number
         'db->string $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn db->string (db)
-              format-cirru-edn $ -> db (dissoc :sessions) (dissoc :saved-files) (dissoc :usages-dict) (dissoc :deps-dict)
+          :code $ quote $ defn db->string (db)
+            format-cirru-edn $ -> db (dissoc :sessions) (dissoc :saved-files) (dissoc :usages-dict) (dissoc :deps-dict)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'String)
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
         'expr? $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn expr? (x)
-              and (struct? x)
-                = :Expr $ &struct:get-name x
+          :code $ quote $ defn expr? (x)
+            and (struct? x)
+              = :Expr $ &struct:get-name x
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Bool)
-              :args $ [] 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] 'Dynamic
         'extract-examples-code $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn extract-examples-code (xs)
-              if
-                &= |with-examples $ &list:nth xs 0
-                let
-                    examples $ &list:nth xs 1
-                  assert= 3 $ &list:count xs
-                  if
-                    not= |do $ &list:nth examples 0
-                    eprintln "|expect examples start with `do`:" examples
-                  :: :exp-code (rest examples) (&list:nth xs 2)
-                :: :exp-code ([]) xs
+          :code $ quote $ defn extract-examples-code (xs)
+            if
+              &= |with-examples $ &list:nth xs 0
+              let
+                  examples $ &list:nth xs 1
+                assert= 3 $ &list:count xs
+                if
+                  not= |do $ &list:nth examples 0
+                  eprintln "|expect examples start with `do`:" examples
+                :: :exp-code (rest examples) (&list:nth xs 2)
+              :: :exp-code ([]) xs
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic
         'file->cirru $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn file->cirru (file compact?)
-              %{} schema/FileEntry
-                :ns $ -> (:ns file)
-                  update :code $ fn (code)
-                    :: 'quote $ tree->cirru code
-                :defs $ -> (:defs file)
-                  map-kv $ fn (k xs)
-                    if (some? xs)
-                      [] k $ let
-                          extracted $ extract-examples-code
-                            option:unwrap-or (get xs :code) nil
-                        tag-match extracted $
-                          :exp-code examples code
-                          if
-                            and compact? $ nil?
-                              option:unwrap-or (get xs :code) nil
-                            %{} schema/CodeEntryCompact
-                              option:unwrap-or (get xs :doc) nil
-                              :code $ :: 'quote code
-                              :examples $ map examples
-                                fn (e) (:: 'quote e)
-                            %{} schema/CodeEntry
-                              option:unwrap-or (get xs :doc) nil
-                              :code $ :: 'quote code
-                              :examples $ option:unwrap-or (get xs :examples) []
-                      , nil
+          :code $ quote $ defn file->cirru (file compact?)
+            %{} schema/FileEntry
+              :ns $ -> (:ns file)
+                update :code $ fn (code)
+                  :: 'quote $ tree->cirru code
+              :defs $ -> (:defs file)
+                filter-map-kv $ hint-fn
+                  {}
+                    :args $ [] 'String 'app.schema/CodeEntry
+                    :return 'MapEntryDecision
+                  :: fn (k xs)
+                    :: :keep k $ let
+                      extracted $ extract-examples-code $ :code xs
+                      match extracted $
+                        :exp-code examples code
+                        if
+                          and compact? $ nil? $ :code xs
+                          %{} schema/CodeEntryCompact (:doc xs)
+                            :code $ :: 'quote code
+                            :examples $ :: map examples $ :: fn ('e) (:: 'quote 'e)
+                          %{} schema/CodeEntry (:doc xs)
+                            :code $ :: 'quote code
+                            :examples $ :examples xs
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'app.schema/FileEntry)
-              :args $ [] 'app.schema/FileEntry 'Bool
+          :schema $ :: 'Fn $ {} (:return 'app.schema/FileEntry)
+            :args $ [] 'app.schema/FileEntry 'Bool
         'file-tree->cirru $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn file-tree->cirru (file)
-              -> file (update :ns tree->cirru)
-                update :defs $ fn (defs)
-                  -> defs $ map-kv
-                    fn (def-text def-tree)
-                      [] def-text $ tree->cirru def-tree
+          :code $ quote $ defn file-tree->cirru (file)
+            -> file (update :ns tree->cirru)
+              update :defs $ fn (defs)
+                -> defs $ map-kv $ fn (def-text def-tree)
+                  [] def-text $ tree->cirru def-tree
           :examples $ []
           :schema $ :: 'Dynamic
         'find-first $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn find-first (f xs)
-              find xs $ fn (x) (f x)
+          :code $ quote $ defn find-first (f xs)
+            find xs $ fn (x) (f x)
           :examples $ []
-          :schema $ :: 'Fn
-            {}
-              :args $ []
-                :: 'Fn $ {} (:return 'Bool)
-                  :args $ [] 'T
-                :: 'List 'T
-              :generics $ [] 'T
-              :return $ :: 'Option 'T
+          :schema $ :: 'Fn $ {}
+            :args $ []
+              :: 'Fn $ {} (:return 'Bool)
+                :args $ [] 'T
+              :: 'List 'T
+            :generics $ [] 'T
+            :return $ :: 'Option 'T
         'hide-empty-fields $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn hide-empty-fields (x)
-              -> x (.to-list)
-                filter-not $ fn (pair)
-                  let[] (k v) pair $ nil? v
-                pairs-map
+          :code $ quote $ defn hide-empty-fields (x)
+            filter-map-kv x $ hint-fn
+              {}
+                :args $ [] 'K 'V
+                :return 'MapEntryDecision
+              :: fn (k v)
+                if (nil? v) (:: :drop) (:: :keep k v)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'Map 'K 'V
+            :generics $ [] 'K 'V
+            :return $ :: 'Map 'K 'V
         'kinds $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def kinds $ #{} :ns :def
+          :code $ quote $ def kinds (#{} :ns :def)
           :examples $ []
           :schema $ :: 'Dynamic
         'leaf? $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn leaf? (x)
-              and (struct? x)
-                = :Leaf $ &struct:get-name x
+          :code $ quote $ defn leaf? (x)
+            and (struct? x)
+              = :Leaf $ &struct:get-name x
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Bool)
-              :args $ [] 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] 'Dynamic
         'now! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn now! () $ unsafe-coerce (js/Date.now) 'Number
+          :code $ quote $ defn now! ()
+            unsafe-coerce (js/Date.now) 'Number
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Number)
-              :args $ []
+          :schema $ :: 'Fn $ {} (:return 'Number)
+            :args $ []
+            :features $ #{} :js-ffi
         'parse-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn parse-def (text)
-              let
-                  clean-text $ -> text (.replace |@ |)
-                if (.includes? clean-text |/)
-                  let-sugar
-                        [] ns-text def-text
-                        split clean-text |/
-                    {} (:method :as) (:key ns-text) (:def def-text)
-                  let
-                      try-dot $ option:unwrap-or (.index-of clean-text |.) -1
-                    if (&>= try-dot 0)
-                      let
-                          obj $ clean-text.slice 0 try-dot
-                        {} (:method :refer) (:key obj) (:def obj)
-                      {} (:method :refer) (:key clean-text) (:def clean-text)
+          :code $ quote $ defn parse-def (text)
+            let
+                clean-text $ &str:replace text |@ |
+              if (&str:includes? clean-text |/)
+                let-sugar
+                      [] ns-text def-text
+                      split clean-text |/
+                  {} (:method :as) (:key ns-text) (:def def-text)
+                let
+                    try-dot $ option:unwrap-or (str-find-index clean-text |.) -1
+                  if (&>= try-dot 0)
+                    let
+                        obj $ &str:slice clean-text 0 try-dot
+                      {} (:method :refer) (:key obj) (:def obj)
+                    {} (:method :refer) (:key clean-text) (:def clean-text)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'String
+            :return $ :: 'Map 'Tag 'Dynamic
         'parse-deps $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn parse-deps (require-exprs)
-              if-let
-                require-rules $ -> require-exprs
-                  find $ fn (xs)
-                    = |:require $ option:unwrap-or (first xs) |
+          :code $ quote $ defn parse-deps (require-exprs)
+            match
+              find require-exprs $ hint-fn
+                {}
+                  :args $ [] $ :: 'List 'Dynamic
+                  :return 'Bool
+                :: fn (xs)
+                  = |:require $ option:unwrap-or (first xs) |
+              (:some require-rules)
                 loop
                     result $ {}
                     xs $ rest require-rules
-                  ; println |loop result xs
                   if (empty? xs) result $ let
-                      rule $ first xs
+                      rule $ assert-type
+                        option:unwrap $ first xs
+                        :: 'List 'Dynamic
                     recur
-                      merge result $ parse-require
-                        if
+                      merge
+                        assert-type result $ :: 'Map 'String 'Dynamic
+                        parse-require $ if
                           = |[] $ option:unwrap-or (first rule) |
                           rest rule
                           , rule
                       rest xs
+              (:none) ({})
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'List (:: 'List 'Dynamic)
+            :return $ :: 'Map 'String 'Dynamic
         'parse-require $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn parse-require (piece)
-              let[] (ns-text method extra) piece $ case-default method
-                do (println "|Unknown referring:" piece) nil
-                |:as $ {}
-                  extra $ {} (:method :as) (:ns ns-text)
-                |:refer $ -> extra
-                  filter $ fn (def-text) (not= def-text |[])
-                  map $ fn (def-text)
-                    [] def-text $ {} (:method :refer) (:ns ns-text) (:def def-text)
-                  pairs-map
-                |:default $ {}
-                  extra $ {} (:method :refer) (:ns ns-text) (:def extra)
+          :code $ quote $ defn parse-require (piece)
+            let[] (ns-text method extra) piece $ case-default method
+              do (println "|Unknown referring:" piece) ({})
+              |:as $ {} $ extra
+                {} (:method :as) (:ns ns-text)
+              |:refer $ -> extra
+                filter $ fn (def-text) (not= def-text |[])
+                map $ fn (def-text)
+                  [] def-text $ {} (:method :refer) (:ns ns-text) (:def def-text)
+                pairs-map
+              |:default $ {} $ extra
+                {} (:method :refer) (:ns ns-text) (:def extra)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'List 'Dynamic
+            :return $ :: 'Map 'String $ :: 'Map 'Tag 'Dynamic
         'prepend-data $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn prepend-data (x) ([] :data x)
+          :code $ quote $ defn prepend-data (x) ([] :data x)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'Number
+            :return $ :: 'List 'Dynamic
         'push-info $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn push-info (op-id op-time text)
-              fn (xs)
-                conj xs $ merge schema/notification
-                  {} (:id op-id) (:kind :info) (:text text) (:time op-time)
+          :code $ quote $ defn push-info (op-id op-time text)
+            fn (xs)
+              hint-fn $ {}
+                :args $ [] $ :: 'Option 'Dynamic
+                :return 'Dynamic
+              conj
+                assert-type
+                  option:unwrap-or xs $ []
+                  :: 'List $ :: 'Map 'Tag 'Dynamic
+                merge schema/notification $ {} (:id op-id) (:kind :info) (:text text) (:time op-time)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'String 'Number 'String
+            :return $ :: 'Fn $ {} (:return 'Dynamic)
+              :args $ [] $ :: 'Option 'Dynamic
         'push-warning $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn push-warning (op-id op-time text)
-              fn (xs)
-                conj xs $ merge schema/notification
-                  {} (:id op-id) (:kind :warning) (:text text) (:time op-time)
+          :code $ quote $ defn push-warning (op-id op-time text)
+            fn (xs)
+              hint-fn $ {}
+                :args $ [] $ :: 'Option 'Dynamic
+                :return 'Dynamic
+              conj
+                assert-type
+                  option:unwrap-or xs $ []
+                  :: 'List $ :: 'Map 'Tag 'Dynamic
+                merge schema/notification $ {} (:id op-id) (:kind :warning) (:text text) (:time op-time)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'String 'Number 'String
+            :return $ :: 'Fn $ {} (:return 'Dynamic)
+              :args $ [] $ :: 'Option 'Dynamic
         'stringify-s-expr $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn stringify-s-expr (x)
-              if (list? x)
-                str "|("
-                  -> x
-                    map $ fn (y)
-                      if (list? y) (stringify-s-expr y)
-                        if (.includes? y "| ") (to-lispy-string y) y
-                    join-str "| "
-                  , "|)"
+          :code $ quote $ defn stringify-s-expr (x)
+            str "|("
+              -> x
+                map $ fn (y)
+                  if (list? y) (stringify-s-expr y)
+                    let
+                        y-text $ assert-type y 'String
+                      if (includes? y-text "| ") (to-lispy-string y-text) y-text
+                join-str "| "
+              , "|)"
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'String)
+            :args $ [] $ :: 'List 'Dynamic
         'to-bookmark $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn to-bookmark (writer)
-              let
-                  stack $ option:unwrap-or (get writer :stack) []
-                if (empty? stack) nil $ Bookmark
-                  get stack $ option:unwrap-or (get writer :pointer) 0
+          :code $ quote $ defn to-bookmark (writer)
+            let
+                writer-data $ assert-type
+                  option:unwrap-or writer $ {}
+                  :: 'Map 'Tag 'Dynamic
+                stack $ assert-type
+                  option:unwrap-or (get writer-data :stack) ([])
+                  :: 'List 'app.bookmark/%bookmark
+                pointer $ assert-type
+                  option:unwrap-or (get writer-data :pointer) 0
+                  , 'Number
+              if (empty? stack) (%none) (get stack pointer)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'Option 'Dynamic
+            :return $ :: 'Option 'app.bookmark/%bookmark
         'to-keys $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn to-keys (target-expr)
-              sort $ .to-list
-                keys $ :data target-expr
+          :code $ quote $ defn to-keys (target-expr)
+            sort $ .to-list $ keys (:data target-expr)
           :examples $ []
-          :schema $ :: 'Fn
-            {}
-              :args $ [] 'app.schema/CirruExpr
-              :return $ :: 'List 'Number
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'app.schema/CirruExpr
+            :return $ :: 'List 'Number
         'to-writer $ %{} 'CodeEntry (:doc "|get writer from db, with current session")
-          :code $ quote
-            defn to-writer (db session-id)
-              get-in db $ [] :sessions session-id :writer
+          :code $ quote $ defn to-writer (db session-id)
+            get-in db $ [] :sessions session-id :writer
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String
+            :return $ :: 'Option 'Dynamic
         'tree->cirru $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn tree->cirru (x)
-              if (leaf? x)
-                :text $ assert-type x 'app.schema/CirruLeaf
-                ->
-                  :data $ assert-type x 'app.schema/CirruExpr
-                  &map:to-list
-                  &list:sort-by first
-                  map $ fn (entry)
-                    tree->cirru $ &list:nth entry 1
+          :code $ quote $ defn tree->cirru (x)
+            if (leaf? x)
+              :text $ assert-type x 'app.schema/CirruLeafShape
+              ->
+                :data $ assert-type x 'app.schema/CirruExprShape
+                &map:to-list
+                &list:sort-by first
+                map $ fn (entry)
+                  tree->cirru $ &list:nth entry 1
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic
+        'update-in-existing $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn update-in-existing (data path f)
+            assoc-in data path $ f $ option:unwrap (get-in data path)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic (:: 'List 'Dynamic)
+              :: 'Fn $ {} (:return 'Dynamic)
+                :args $ [] 'Dynamic
+        'update-in-map $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn update-in-map (data path f)
+            assoc-in data path $ f $ assert-type
+              option:unwrap-or (get-in data path) ({})
+              :: 'Map 'Tag 'Dynamic
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic (:: 'List 'Dynamic)
+              :: 'Fn $ {}
+                :args $ [] $ :: 'Map 'Tag 'Dynamic
+                :return $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.util $ :require (app.schema :as schema) (bisection-key.core :as bisection)
+        :code $ quote $ ns app.util
+          :require (app.schema :as schema) (bisection-key.core :as bisection)
             app.bookmark :refer $ Bookmark
     'app.util.compile $ %{} 'FileEntry
       :defs $ {}
-        'handle-calcit-files! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn handle-calcit-files! (pkg old-files latest-files added-names removed-names changed-names configs entries filter-ns)
-              let
-                  new-files $ if (some? filter-ns)
-                    let
-                        target $ get latest-files filter-ns
-                      if (some? target) (assoc old-files filter-ns target) (dissoc old-files filter-ns)
-                    , latest-files
-                  calcit-data $ {} (:package pkg) (:about "|file is generated - never edit directly; learn calcit edit/tree workflows before changing")
-                    :configs $ {}
-                      :init-fn $ option:unwrap-or (get configs :init-fn) nil
-                      :reload-fn $ option:unwrap-or (get configs :reload-fn) nil
-                      :modules $ option:unwrap-or (get configs :modules) nil
-                      :version $ option:unwrap-or (get configs :version) nil
-                    :entries entries
-                    :files $ -> new-files
-                      map-kv $ fn (k v)
-                        [] k $ file->cirru (assert-type v 'app.schema/FileEntry) true
-                  inc-data $ hide-empty-fields
-                    {} (:removed removed-names)
-                      :added $ -> added-names
-                        map $ fn (ns-text)
-                          [] ns-text $ file->cirru
-                            assert-type
-                              option:unwrap-or (get new-files ns-text) {}
-                              , 'app.schema/FileEntry
-                            , true
-                        pairs-map
-                      :changed $ -> changed-names
-                        map $ fn (ns-text)
-                          [] ns-text $ let
-                              old-file $ assert-type
-                                .unwrap $ get old-files ns-text
-                                , 'app.schema/FileEntry
-                              new-file $ assert-type
-                                .unwrap $ get new-files ns-text
-                                , 'app.schema/FileEntry
-                              old-defs $ :defs old-file
-                              new-defs $ :defs new-file
-                              old-def-names $ keys old-defs
-                              new-def-names $ keys new-defs
-                              added-defs $ difference new-def-names old-def-names
-                              removed-defs $ difference old-def-names new-def-names
-                              changed-defs $ -> (intersection old-def-names new-def-names)
-                                filter $ fn (x)
-                                  not= (get old-defs x) (get new-defs x)
-                            hide-empty-fields $ {}
-                              :ns $ if
-                                = (:ns old-file) (:ns new-file)
-                                , nil
-                                  :: 'quote $ tree->cirru
-                                    :code $ :ns new-file
-                              :removed-defs removed-defs
-                              :added-defs $ -> added-defs
-                                map $ fn (x)
-                                  [] x $ let
-                                      extracted $ extract-examples-code
-                                        tree->cirru $ :code
-                                          .unwrap $ get new-defs x
-                                    tag-match extracted $
-                                      :exp-code _e code
-                                      :: 'quote code
-                                hide-empty-fields
-                              :changed-defs $ -> changed-defs
-                                map $ fn (x)
-                                  [] x $ let
-                                      extracted $ extract-examples-code
-                                        tree->cirru $ :code
-                                          .unwrap $ get new-defs x
-                                    tag-match extracted $
-                                      :exp-code _e code
-                                      :: 'quote code
-                                hide-empty-fields
-                        pairs-map
-                fs/writeFile |calcit.cirru (format-cirru-edn calcit-data)
-                  fn (err)
-                    if (some? err) (js/console.log "|Failed to write!" err)
-                fs/writeFile |.compact-inc.cirru (format-cirru-edn inc-data)
-                  fn (err)
-                    if (some? err) (js/console.log "|Failed to write!" err)
+        'CryptoModuleHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait CryptoModuleHost
+            .create-hash $ :: 'Fn $ {}
+              :args $ [] 'app.util.compile/CryptoModuleHost 'String
+              :return 'app.util.compile/HashHost
           :examples $ []
-          :schema $ :: 'Dynamic
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
+            :names $ {} $ :create-hash |createHash
+          :schema $ :: 'Trait
+        'HashHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait HashHost
+            .update $ :: 'Fn $ {}
+              :args $ [] 'app.util.compile/HashHost 'String
+              :return 'app.util.compile/HashHost
+            .digest $ :: 'Fn $ {}
+              :args $ [] 'app.util.compile/HashHost 'String
+              :return 'String
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
+          :schema $ :: 'Trait
+        'handle-calcit-files! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn handle-calcit-files!
+            pkg old-files latest-files added-names removed-names changed-names configs entries filter-ns
+            let
+                new-files $ assert-type
+                  match filter-ns
+                    (:some ns-text)
+                      match (get latest-files ns-text)
+                        (:some target)
+                          assoc old-files ns-text $ assert-type target 'app.schema/FileEntry
+                        (:none) (dissoc old-files ns-text)
+                    (:none) latest-files
+                  :: 'Map 'String 'app.schema/FileEntry
+                calcit-data $ {} (:package pkg)
+                  :about "|file is generated - never edit directly; learn calcit edit/tree workflows before changing"
+                  :configs $ {}
+                    :init-fn $ option:unwrap-or (get configs :init-fn) nil
+                    :reload-fn $ option:unwrap-or (get configs :reload-fn) nil
+                    :modules $ option:unwrap-or (get configs :modules) nil
+                    :version $ option:unwrap-or (get configs :version) nil
+                  :entries entries
+                  :files $ -> new-files $ filter-map-kv
+                    hint-fn
+                      {}
+                        :args $ [] 'String 'app.schema/FileEntry
+                        :return 'MapEntryDecision
+                      :: fn (k v)
+                        :: :keep k $ file->cirru v true
+                inc-data $ hide-empty-fields $ {} (:removed removed-names)
+                  :added $ -> added-names &set:to-list
+                    map $ fn (ns-text)
+                      [] ns-text $ file->cirru
+                        assert-type
+                          option:unwrap-or (get new-files ns-text) {}
+                          , 'app.schema/FileEntry
+                        , true
+                    pairs-map
+                  :changed $ -> changed-names &set:to-list
+                    map $ fn (ns-text)
+                      [] ns-text $ let
+                          old-file $ assert-type
+                            .unwrap $ get old-files ns-text
+                            , 'app.schema/FileEntry
+                          new-file $ assert-type
+                            .unwrap $ get new-files ns-text
+                            , 'app.schema/FileEntry
+                          old-defs $ :defs old-file
+                          new-defs $ :defs new-file
+                          old-def-names $ keys old-defs
+                          new-def-names $ keys new-defs
+                          added-defs $ difference new-def-names old-def-names
+                          removed-defs $ difference old-def-names new-def-names
+                          changed-defs $ -> (intersection old-def-names new-def-names)
+                            filter $ fn (x)
+                              not= (get old-defs x) (get new-defs x)
+                        hide-empty-fields $ {}
+                          :ns $ if
+                            = (:ns old-file) (:ns new-file)
+                            , nil $ :: 'quote
+                              tree->cirru $ :code $ :ns new-file
+                          :removed-defs removed-defs
+                          :added-defs $ -> added-defs &set:to-list
+                            map $ fn (x)
+                              [] x $ let
+                                  extracted $ extract-examples-code $ tree->cirru
+                                    :code $ assert-type
+                                      .unwrap $ get new-defs x
+                                      , 'app.schema/CodeEntry
+                                match extracted $
+                                  :exp-code _e code
+                                  :: 'quote code
+                            , pairs-map $ hide-empty-fields
+                          :changed-defs $ -> changed-defs &set:to-list
+                            map $ fn (x)
+                              [] x $ let
+                                  extracted $ extract-examples-code $ tree->cirru
+                                    :code $ assert-type
+                                      .unwrap $ get new-defs x
+                                      , 'app.schema/CodeEntry
+                                match extracted $
+                                  :exp-code _e code
+                                  :: 'quote code
+                            , pairs-map $ hide-empty-fields
+                    pairs-map
+              node/write-text! |calcit.cirru $ format-cirru-edn calcit-data
+              node/write-text! |.compact-inc.cirru $ format-cirru-edn inc-data
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'String (:: 'Map 'String 'app.schema/FileEntry) (:: 'Map 'String 'app.schema/FileEntry) (:: 'Set 'String) (:: 'Set 'String) (:: 'Set 'String) (:: 'Map 'Tag 'Dynamic) 'Dynamic $ :: 'Option 'String
+            :features $ #{} :js-ffi
         'handle-files! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn handle-files! (db *calcit-md5 configs dispatch! save-ir? filter-ns)
-              try
-                let
-                    new-files $ option:unwrap-or (get db :files) ({})
-                    old-files $ option:unwrap-or (get db :saved-files) ({})
-                    new-names $ keys new-files
-                    old-names $ keys old-files
-                    filter-by-ns $ fn (xs)
-                      if (some? filter-ns)
-                        if (contains? xs filter-ns) ([] filter-ns) nil
-                        , xs
-                    added-names $ filter-by-ns (difference new-names old-names)
-                    removed-names $ filter-by-ns (difference old-names new-names)
-                    changed-names $ -> (intersection new-names old-names)
-                      filter $ fn (ns-text)
-                        not= (get new-files ns-text) (get old-files ns-text)
-                      filter-by-ns
-                  handle-calcit-files! (get db :package) old-files new-files added-names removed-names changed-names
-                    option:unwrap-or (get db :configs) nil
+          :code $ quote $ defn handle-files! (db *calcit-md5 configs dispatch! save-ir? filter-ns)
+            try
+              let
+                  new-files $ assert-type
+                    option:unwrap-or (get db :files) ({})
+                    :: 'Map 'String 'app.schema/FileEntry
+                  old-files $ assert-type
+                    option:unwrap-or (get db :saved-files) ({})
+                    :: 'Map 'String 'app.schema/FileEntry
+                  new-names $ keys new-files
+                  old-names $ keys old-files
+                  filter-by-ns $ hint-fn
+                    {}
+                      :args $ [] $ :: 'Set 'String
+                      :return $ :: 'Set 'String
+                    :: fn (xs)
+                      match filter-ns
+                        (:some ns-text)
+                          if (contains? xs ns-text) (#{} ns-text) (#{})
+                        (:none) xs
+                  added-names $ filter-by-ns $ difference new-names old-names
+                  removed-names $ filter-by-ns $ difference old-names new-names
+                  changed-names $ -> (intersection new-names old-names)
+                    filter $ fn (ns-text)
+                      not= (get new-files ns-text) (get old-files ns-text)
+                    filter-by-ns
+                handle-calcit-files!
+                  assert-type
+                    option:unwrap $ get db :package
+                    , 'String
+                  , old-files new-files added-names removed-names changed-names
+                    assert-type
+                      option:unwrap $ get db :configs
+                      :: 'Map 'Tag 'Dynamic
                     option:unwrap-or (get db :entries) nil
                     , filter-ns
-                  dispatch! $ :: :writer/save-files filter-ns
-                  if save-ir? $ js/setTimeout
-                    fn () $ let
-                        db-content $ db->string db
-                        started-time $ unsafe-coerce (js/Date.now) 'Number
-                      reset! *calcit-md5 $ md5 db-content
-                      persist-async!
-                        option:unwrap-or (get config/site :storage-file) |calcit.cirru
-                        , db-content started-time
-                fn (e)
-                  do
-                    eprintln $ .!red chalk e
-                    js/console.error e
-                    dispatch! $ :: :notify/push-message
-                      [] :error $ aget e |message
+                dispatch! $ :: :writer/save-files filter-ns
+                if save-ir? $ js/setTimeout $ fn ()
+                  let
+                      db-content $ db->string db
+                      started-time $ unsafe-coerce (js/Date.now) 'Number
+                    reset! *calcit-md5 $ %some $ md5 db-content
+                    persist-async!
+                      option:unwrap-or (get config/site :storage-file) |calcit.cirru
+                      , db-content started-time
+              fn (e)
+                let
+                    error $ shared/normalize-error e
+                  eprintln error
+                  dispatch! $ :: :notify/push-message $ [] :error (:message error)
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic 'Dynamic 'Dynamic
-              :features $ #{} :js-ffi
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] (:: 'Map 'Tag 'Dynamic)
+              :: 'Ref $ :: 'Option 'String
+              :: 'Map 'Tag 'Dynamic
+              :: 'Fn $ {} (:return 'Dynamic)
+                :args $ [] 'Dynamic
+              , 'Bool $ :: 'Option 'String
+            :features $ #{} :js-ffi
         'md5 $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn md5 (s)
-              -> crypto (.!createHash |md5) (.update s) (.digest |hex)
+          :code $ quote $ defn md5 (s)
+            let
+                host $ unsafe-coerce crypto 'app.util.compile/CryptoModuleHost
+                hash $ host .create-hash |md5
+                updated $ hash .update s
+              updated .digest |hex
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'String)
-              :args $ [] 'String
+          :schema $ :: 'Fn $ {} (:return 'String)
+            :args $ [] 'String
+            :features $ #{} :js-ffi
         'path $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def path $ js/require |path
+          :code $ quote $ def path (js/require |path)
           :examples $ []
           :schema $ :: 'Dynamic
         'persist! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn persist! (storage-path db-str started-time) (fs/writeFileSync storage-path db-str)
-              println $ .!gray chalk
-                str "|took "
-                  -
-                    unsafe-coerce (js/Date.now) 'Number
-                    , started-time
-                  , "|ms to wrote calcit.cirru"
+          :code $ quote $ defn persist! (storage-path db-str started-time)
+            do (node/write-text! storage-path db-str)
+              println $ str |took:
+                - (shared/now-ms) started-time
+                , |ms-to-write-calcit.cirru
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'String 'String 'Number
         'persist-async! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn persist-async! (storage-path db-str started-time)
-              fs/writeFile storage-path db-str $ fn (err)
-                if (some? err)
-                  js/console.log $ .!red chalk "|Failed to write storage!" err
-                  println $ .!gray chalk
-                    str "|took "
-                      -
-                        unsafe-coerce (js/Date.now) 'Number
-                        , started-time
-                      , "|ms to wrote calcit.cirru"
+          :code $ quote $ defn persist-async! (storage-path db-str started-time)
+            do (node/write-text! storage-path db-str)
+              println $ str |took:
+                - (shared/now-ms) started-time
+                , |ms-to-write-calcit.cirru
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'String 'String 'Number
         'remove-file! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn remove-file! (file-path output-dir)
-              let
-                  project-path $ path/join output-dir file-path
-                cp/execSync $ str "|rm -rfv " project-path
-                println $ .!red chalk (str "|removed " project-path)
+          :code $ quote $ defn remove-file! (file-path output-dir)
+            let
+                project-path $ path/join output-dir file-path
+              cp/execSync $ str "|rm -rfv " project-path
+              println $ .!red chalk $ str "|removed " project-path
           :examples $ []
           :schema $ :: 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.util.compile $ :require
+        :code $ quote $ ns app.util.compile
+          :require
             app.util :refer $ file->cirru db->string tree->cirru now! hide-empty-fields extract-examples-code
             |chalk :default chalk
             |path :as path
@@ -8011,321 +8994,447 @@
             app.config :as config
             cirru-edn.core :as cirru-edn
             |crypto :default crypto
+            js-ffi.node :as node
+            js-ffi.shared :as shared
     'app.util.detect $ %{} 'FileEntry
       :defs $ {}
-        'port-taken? $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn port-taken? (port next-fn)
-              let
-                  tester $ net/createServer
-                -> (unsafe-coerce tester JsObject)
-                  .once |error $ fn (err)
-                    let
-                        error-code $ unsafe-coerce (.-code err) 'String
-                      if (not= error-code |EADDRINUSE) (next-fn err false) (next-fn nil true)
-                  .once |listening $ fn ()
-                    -> (unsafe-coerce tester JsObject)
-                      .once |close $ fn () (next-fn nil false)
-                      .close
-                  .listen port |0.0.0.0
+        'ServerHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait ServerHost
+            .once $ :: 'Fn $ {}
+              :args $ [] 'app.util.detect/ServerHost 'String 'Dynamic
+              :return 'app.util.detect/ServerHost
+            .listen $ :: 'Fn $ {}
+              :args $ [] 'app.util.detect/ServerHost 'Number 'String
+              :return 'app.util.detect/ServerHost
+            .close $ :: 'Fn $ {}
+              :args $ [] 'app.util.detect/ServerHost
+              :return 'Unit
           :examples $ []
-          :schema $ :: 'Dynamic
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
+          :schema $ :: 'Trait
+        'port-taken? $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn port-taken? (port next-fn)
+            let
+                create-server $ unsafe-coerce net/createServer $ :: 'Fn
+                  {}
+                    :args $ []
+                    :return 'app.util.detect/ServerHost
+                tester $ create-server
+              tester .once |error $ fn (err)
+                let
+                    error-code $ unsafe-coerce (aget err |code) 'String
+                  if (not= error-code |EADDRINUSE)
+                    next-fn
+                      %some $ shared/normalize-error err
+                      , false
+                    next-fn (%none) true
+              tester .once |listening $ fn ()
+                tester .once |close $ fn () $ next-fn (%none) false
+                tester .close
+              tester .listen port |0.0.0.0
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Number $ :: 'Fn
+              {} (:return 'Dynamic)
+                :args $ [] (:: 'Option 'js-ffi.shared/JsError) 'Bool
+            :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.util.detect $ :require (|net :as net)
+        :code $ quote $ ns app.util.detect
+          :require (|net :as net) (js-ffi.shared :as shared)
     'app.util.dom $ %{} 'FileEntry
       :defs $ {}
+        'ClipboardHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait ClipboardHost
+            .write-text $ :: 'Fn $ {}
+              :args $ [] 'app.util.dom/ClipboardHost 'String
+              :return 'app.util.dom/ClipboardPromiseHost
+            .read-text $ :: 'Fn $ {}
+              :args $ [] 'app.util.dom/ClipboardHost
+              :return 'app.util.dom/ClipboardPromiseHost
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} (:read-text |readText) (:write-text |writeText)
+          :schema $ :: 'Trait
+        'ClipboardPromiseHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait ClipboardPromiseHost
+            .then-text $ :: 'Fn $ {}
+              :args $ [] 'app.util.dom/ClipboardPromiseHost $ :: 'Fn
+                {}
+                  :args $ [] 'String
+                  :return 'Unit
+              :return 'app.util.dom/ClipboardPromiseHost
+            .catch-error $ :: 'Fn $ {}
+              :args $ [] 'app.util.dom/ClipboardPromiseHost $ :: 'Fn
+                {}
+                  :args $ [] 'Dynamic
+                  :return 'Unit
+              :return 'app.util.dom/ClipboardPromiseHost
+            .then-value $ :: 'Fn $ {}
+              :args $ [] 'app.util.dom/ClipboardPromiseHost $ :: 'Fn
+                {}
+                  :args $ [] 'Dynamic
+                  :return 'Unit
+              :return 'app.util.dom/ClipboardPromiseHost
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} (:catch-error |catch) (:then-text |then) (:then-value |then)
+          :schema $ :: 'Trait
+        'EventHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait EventHost
+            .prevent-default! $ :: 'Fn $ {}
+              :args $ [] 'app.util.dom/EventHost
+              :return 'Unit
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} $ :prevent-default! |preventDefault
+          :schema $ :: 'Trait
+        'NavigatorHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait NavigatorHost (:clipboard 'app.util.dom/ClipboardHost)
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object)
+          :schema $ :: 'Trait
         'copy-silently! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn copy-silently! (x)
-              let
-                  clipboard $ unsafe-coerce
-                    .-clipboard $ unsafe-coerce js/navigator JsObject
-                    , JsObject
-                  promise $ unsafe-coerce (.!writeText clipboard x) JsObject
-                  result $ unsafe-coerce
-                    .!then promise $ fn (e) (println |Copied.)
-                    , JsObject
-                .!catch result $ fn (error) (js/console.error "|Failed to copy:" error)
+          :code $ quote $ defn copy-silently! (x)
+            let
+                navigator $ unsafe-coerce js/navigator 'app.util.dom/NavigatorHost
+                clipboard $ .-clipboard navigator
+                promise $ .write-text clipboard x
+                handled $ .then-value promise $ hint-fn
+                  {}
+                    :args $ [] 'Dynamic
+                    :return 'Unit
+                  :: fn (_) (println |Copied.) &unit
+              .catch-error handled $ hint-fn
+                {}
+                  :args $ [] 'Dynamic
+                  :return 'Unit
+                :: fn (error) (js/console.error "|Failed to copy:" error) &unit
+              , &unit
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'String
+            :features $ #{} :js-ffi
         'do-copy-logics! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn do-copy-logics! (d! x message)
-              let
-                  clipboard $ unsafe-coerce
-                    .-clipboard $ unsafe-coerce js/navigator JsObject
-                    , JsObject
-                  promise $ unsafe-coerce (.!writeText clipboard x) JsObject
-                  result $ unsafe-coerce
-                    .!then promise $ fn (? v)
-                      d! :notify/push-message $ [] :info message
-                    , JsObject
-                .!catch result $ fn (error) (js/console.error "|Failed to copy:" error)
-                  d! :notify/push-message $ [] :error (str "|Failed to copy! " error)
+          :code $ quote $ defn do-copy-logics! (d! x message)
+            let
+                navigator $ unsafe-coerce js/navigator 'app.util.dom/NavigatorHost
+                clipboard $ .-clipboard navigator
+                promise $ .write-text clipboard x
+                handled $ .then-value promise $ hint-fn
+                  {}
+                    :args $ [] 'Dynamic
+                    :return 'Unit
+                  :: fn (_)
+                    d! :notify/push-message $ [] :info message
+                    , &unit
+              .catch-error handled $ hint-fn
+                {}
+                  :args $ [] 'Dynamic
+                  :return 'Unit
+                :: fn (error) (js/console.error "|Failed to copy:" error)
+                  d! :notify/push-message $ [] :error $ str "|Failed to copy! " error
+                  , &unit
+              , &unit
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+              :: 'Fn $ {} (:return 'Unit)
+                :args $ [] 'Dynamic 'Dynamic
+              , 'String 'String
+            :features $ #{} :js-ffi
         'focus! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn focus! () $ js/requestAnimationFrame
-              fn (timestamp)
-                let
-                    current-focused $ unsafe-coerce
-                      .-activeElement $ unsafe-coerce js/document JsObject
-                      , JsObject
-                    cirru-focused $ js/document.querySelector |.cirru-focused
-                  if (js-present? cirru-focused)
-                    if
-                      not $ identical? current-focused cirru-focused
-                      .!focus $ unsafe-coerce cirru-focused JsObject
-                    println "|[Editor] .cirru-focused not found" cirru-focused
+          :code $ quote $ defn focus! ()
+            do
+              js-ffi.browser/request-animation-frame! $ fn (timestamp)
+                match (js-ffi.browser/query-selector |.cirru-focused)
+                  (:some target) (js-ffi.browser/element-focus! target)
+                  (:none) (println "|[Editor] .cirru-focused not found")
+              , &unit
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+            :features $ #{} :js-ffi
         'focus-search! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn focus-search! () $ flipped js/setTimeout 200
-              fn () $ let
-                  target $ js/document.querySelector |.search-input
-                if (js-present? target)
-                  .!focus $ unsafe-coerce target JsObject
+          :code $ quote $ defn focus-search! ()
+            do
+              flipped js/setTimeout 200 $ fn () $ match (js-ffi.browser/query-selector |.search-input)
+                (:some target) (js-ffi.browser/element-focus! target)
+                (:none) &unit
+              , &unit
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+            :features $ #{} :js-ffi
+        'prevent-default! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn prevent-default! (raw-event)
+            let
+                event $ unsafe-coerce raw-event 'app.util.dom/EventHost
+              .prevent-default! event
+              , &unit
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Dynamic
+            :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.util.dom $ :require
+        :code $ quote $ ns app.util.dom
+          :require
             respo.core :refer $ style
             respo.render.html :refer $ style->html
     'app.util.env $ %{} 'FileEntry
       :defs $ {}
         'check-version! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn check-version! () $ let
-                __dirname $ path/dirname (url/fileURLToPath js/import.meta.url)
-                pkg $ js/JSON.parse
-                  fs/readFileSync $ path/join __dirname |../package.json
-                version $ aget (unsafe-coerce pkg JsObject) |version|
-                pkg-name $ aget (unsafe-coerce pkg JsObject) |name|
+          :code $ quote $ defn check-version! ()
+            let
+                __dirname $ path/dirname $ url/fileURLToPath js/import.meta.url
+                pkg $ js/JSON.parse $ fs/readFileSync (path/join __dirname |../package.json)
+                version-key |version|
+                name-key |name|
+                version $ aget (unsafe-coerce pkg JsObject) version-key
+                pkg-name $ aget (unsafe-coerce pkg JsObject) name-key
               -> (latest-version pkg-name)
                 .!then $ fn (npm-version)
                   println $ if (= version npm-version) (str "|Running latest version " version)
-                    .!yellow chalk $ str "|Update is available tagged " npm-version "|, current one is " version
+                    .!yellow (unsafe-coerce chalk ChalkHost) (str "|Update is available tagged " npm-version "|, current one is " version)
                 .catch $ fn (e)
-                  js/console.error $ .!yellow chalk "|Failed to request version:" (.-message e)
+                  js/console.error $ .!yellow (unsafe-coerce chalk ChalkHost) "|Failed to request version:" $ .-message e
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ []
-              :features $ #{} :js-ffi
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ []
+            :features $ #{} :js-ffi
         'get-cli-configs! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn get-cli-configs! () $ {} (:op js/process.env.op)
+          :code $ quote $ defn get-cli-configs! ()
+            {} $ :op $ node/env-or |op |
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ []
+            :return $ :: 'Map 'Tag 'Dynamic
         'pick-http-port! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn pick-http-port! (port next-fn)
-              port-taken? port $ fn (err taken?)
-                if (some? err)
-                  do (js/console.error err) (js/process.exit 1)
-                  if taken?
-                    do
-                      println $ str "|port " port "| in use."
-                      pick-http-port! (inc port) next-fn
+          :code $ quote $ defn pick-http-port! (port next-fn)
+            port-taken? port $ fn (err taken?)
+              if (option:some? err)
+                raise $ :message $ option:unwrap err
+                if taken?
+                  do
+                    println $ str |port: port |in-use
+                    pick-http-port! (inc port) next-fn
+                  next-fn port
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Number $ :: 'Fn
+              {} (:return 'Dynamic)
+                :args $ [] 'Number
+        'pick-port! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn pick-port! (port next-fn)
+            port-taken? port $ fn (err taken?)
+              if (option:some? err)
+                raise $ :message $ option:unwrap err
+                if taken?
+                  do
+                    println $ str |port: port |in-use
+                    pick-port! (inc port) next-fn
+                  do
+                    println $ str |port: port |ok-edit-on: $ str |http://editor.calcit-lang.org?port= port
                     next-fn port
           :examples $ []
-          :schema $ :: 'Dynamic
-        'pick-port! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn pick-port! (port next-fn)
-              port-taken? port $ fn (err taken?)
-                if (some? err)
-                  do (js/console.error err) (js/process.exit 1)
-                  if taken?
-                    do
-                      println $ str "|port " port "| in use."
-                      pick-port! (inc port) next-fn
-                    do
-                      let
-                          link $ .!blue chalk (str |http://editor.calcit-lang.org?port= port)
-                        println $ str "|port " port "| ok, please edit on " link
-                      next-fn port
-          :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Number $ :: 'Fn
+              {} (:return 'Dynamic)
+                :args $ [] 'Number
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.util.env $ :require (|chalk :default chalk)
+        :code $ quote $ ns app.util.env
+          :require (|chalk :default chalk)
             app.util.detect :refer $ port-taken?
             |latest-version :default latest-version
             |path :as path
             |url :as url
             |fs :as fs
+            js-ffi.node :as node
     'app.util.list $ %{} 'FileEntry
       :defs $ {}
         'cirru-form? $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn cirru-form? (x)
-              if (string? x) true $ if (list? x) (map x cirru-form?) false
+          :code $ quote $ defn cirru-form? (x)
+            if (string? x) true $ if (list? x) (map x cirru-form?) false
           :examples $ []
           :schema $ :: 'Dynamic
         'compare-entry $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn compare-entry (new-x old-x)
-              cond
-                  and (nil? old-x) (some? new-x)
-                  , :add
-                (and (some? old-x) (nil? new-x))
-                  , :remove
-                (and (some? old-x) (some? new-x) (not (identical? old-x new-x)))
-                  , :changed
-                true :same
+          :code $ quote $ defn compare-entry (new-x old-x)
+            match new-x
+              (:none)
+                match old-x
+                  (:none) :same
+                  (:some _) :remove
+              (:some new-value)
+                match old-x
+                  (:none) :add
+                  (:some old-value)
+                    if (identical? old-value new-value) :same :changed
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Tag)
+            :args $ [] (:: 'Option 'T) (:: 'Option 'T)
+            :generics $ [] 'T
         'dissoc-idx $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn dissoc-idx (xs idx)
-              if
-                or (< idx 0)
-                  > idx $ dec (count xs)
-                raise "|Index out of bound!"
-              cond
-                  = 0 idx
-                  .slice xs 1
-                (= idx (dec (count xs)))
-                  butlast xs
-                true $ concat (take xs idx)
-                  drop xs $ inc idx
+          :code $ quote $ defn dissoc-idx (xs idx)
+            if
+              or (< idx 0)
+                > idx $ dec $ count xs
+              raise "|Index out of bound!"
+            cond
+                = 0 idx
+                slice xs 1
+              (= idx (dec (count xs)))
+                butlast xs
+              true $ concat (take xs idx)
+                drop xs $ inc idx
           :examples $ []
-          :schema $ :: 'Fn
-            {}
-              :args $ [] (:: 'List 'T) 'Number
-              :generics $ [] 'T
-              :return $ :: 'List 'T
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'List 'T) 'Number
+            :generics $ [] 'T
+            :return $ :: 'List 'T
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote (ns app.util.list)
+        :code $ quote $ ns app.util.list
     'app.util.shortcuts $ %{} 'FileEntry
       :defs $ {}
         'on-paste! $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-paste! (d!)
-              let
-                  clipboard $ unsafe-coerce
-                    .-clipboard $ unsafe-coerce js/navigator JsObject
-                    , JsObject
-                  promise $ unsafe-coerce (.!readText clipboard) JsObject
-                  result $ unsafe-coerce
-                    .!then promise $ fn (text) (println "|read from text...")
-                      let
-                          cirru-code $ parse-cirru-list text
-                        if (cirru-form? cirru-code)
-                          d! :writer/paste $ first cirru-code
-                          d! :notify/push-message $ [] :error "|Not valid code"
-                    , JsObject
-                .!catch result $ fn (error) (js/console.error "|Not able to read from paste:" error)
+          :code $ quote $ defn on-paste! (d!)
+            let
+                navigator $ unsafe-coerce js/navigator 'app.util.dom/NavigatorHost
+                clipboard $ .-clipboard navigator
+                promise $ .read-text clipboard
+                handled $ .then-text promise $ hint-fn
+                  {}
+                    :args $ [] 'String
+                    :return 'Unit
+                  :: fn (text) (println "|read from text...")
+                    let
+                        cirru-code $ parse-cirru-list text
+                      if (cirru-form? cirru-code)
+                        d! :writer/paste $ first cirru-code
+                        d! :notify/push-message $ [] :error "|Not valid code"
+                    , &unit
+              .catch-error handled $ hint-fn
+                {}
+                  :args $ [] 'Dynamic
+                  :return 'Unit
+                :: fn (error) (js/console.error "|Not able to read from paste:" error)
                   d! :notify/push-message $ [] :error "|Failed to paste!"
+                  , &unit
+              , &unit
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ [] 'Dynamic
-              :features $ #{} :js-ffi
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] $ :: 'Fn
+              {} (:return 'Unit)
+                :args $ [] 'Dynamic 'Dynamic
+            :features $ #{} :js-ffi
         'on-window-keydown $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn on-window-keydown (event dispatch! router)
-              if (some? router)
-                let
-                    meta? $ or
-                      unsafe-coerce (.-metaKey event) Bool
-                      unsafe-coerce (.-ctrlKey event) Bool
-                    shift? $ unsafe-coerce (.-shiftKey event) Bool
-                    code $ unsafe-coerce (.-keyCode event) Number
-                  cond
-                      and meta? $ or (= code keycode/p) (= code keycode/o)
-                      do
-                        dispatch! $ :: :router/change (:: :search)
-                        focus-search!
-                        .!preventDefault event
-                    (and meta? (= code keycode/e))
-                      dispatch! $ :: :writer/edit-ns
-                    (and meta? (not shift?) (= code keycode/j))
-                      do (.!preventDefault event)
-                        dispatch! $ :: :writer/move-next
-                    (and meta? (not shift?) (= code keycode/i))
-                      do $ dispatch! (:: :writer/move-previous)
-                    (and meta? (= code keycode/k))
-                      do $ dispatch! (:: :writer/finish)
-                    (and meta? (= code keycode/s))
-                      do (.!preventDefault event)
-                        dispatch! $ :: :effect/save-files
-                        dispatch! $ :: :analyze/refresh-usages-dict
-                    (and meta? shift? (= code keycode/f))
-                      dispatch! $ :: :router/change (:: :files)
-                    (and meta? (not shift?) (= code keycode/period))
-                      dispatch! $ :: :writer/picker-mode
-                    true nil
+          :code $ quote $ defn on-window-keydown (event dispatch! router)
+            if (some? router)
+              let
+                  meta? $ or
+                    unsafe-coerce (.-metaKey event) Bool
+                    unsafe-coerce (.-ctrlKey event) Bool
+                  shift? $ unsafe-coerce (.-shiftKey event) Bool
+                  code $ unsafe-coerce (.-keyCode event) Number
+                cond
+                    and meta? $ or (= code keycode/p) (= code keycode/o)
+                    do
+                      dispatch! $ :: :router/change $ :: :search
+                      focus-search!
+                      .!preventDefault event
+                  (and meta? (= code keycode/e))
+                    dispatch! $ :: :writer/edit-ns
+                  (and meta? (not shift?) (= code keycode/j))
+                    do (.!preventDefault event)
+                      dispatch! $ :: :writer/move-next
+                  (and meta? (not shift?) (= code keycode/i))
+                    do $ dispatch! $ :: :writer/move-previous
+                  (and meta? (= code keycode/k))
+                    do $ dispatch! $ :: :writer/finish
+                  (and meta? (= code keycode/s))
+                    do (.!preventDefault event)
+                      dispatch! $ :: :effect/save-files
+                      dispatch! $ :: :analyze/refresh-usages-dict
+                  (and meta? shift? (= code keycode/f))
+                    dispatch! $ :: :router/change $ :: :files
+                  (and meta? (not shift?) (= code keycode/period))
+                    dispatch! $ :: :writer/picker-mode
+                  true nil
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ [] 'Dynamic 'Dynamic 'Dynamic
-              :features $ #{} :js-ffi
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic 'Dynamic 'Dynamic
+            :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote
-          ns app.util.shortcuts $ :require (app.keycode :as keycode)
+        :code $ quote $ ns app.util.shortcuts
+          :require (app.keycode :as keycode)
             app.util.dom :refer $ focus-search!
             app.util.list :refer $ cirru-form?
     'app.util.stack $ %{} 'FileEntry
       :defs $ {}
         '=bookmark? $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn =bookmark? (a b)
-              tag-match a
-                (:def a-ns a-def a-f)
-                  tag-match b
-                    (:def b-ns b-def b-f)
-                      and (= a-ns b-ns) (= a-def b-def)
-                    (:ns b-ns b-f) false
-                (:ns a-ns a-f)
-                  tag-match b
-                    (:def b-ns b-def b-f) false
-                    (:ns b-ns b-f) (= a-ns b-ns)
+          :code $ quote $ defn =bookmark? (a b)
+            match a
+              (:def a-ns a-def a-f)
+                match b
+                  (:def b-ns b-def b-f)
+                    and (= a-ns b-ns) (= a-def b-def)
+                  (:ns b-ns b-f) false
+              (:ns a-ns a-f)
+                match b
+                  (:def b-ns b-def b-f) false
+                  (:ns b-ns b-f) (= a-ns b-ns)
           :examples $ []
-          :schema $ :: 'Fn
-            {} (:return 'Bool)
-              :args $ [] 'app.bookmark/%bookmark0 'app.bookmark/%bookmark0
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] 'app.bookmark/%bookmark 'app.bookmark/%bookmark
         'index-of-bookmark $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn index-of-bookmark (stack bookmark ? idx)
-              if (empty? stack) -1 $ let
-                  idx $ or idx 0
-                  first-bookmark $ .unwrap (first stack)
-                if (=bookmark? bookmark first-bookmark) idx $ recur (rest stack) bookmark (inc idx)
+          :code $ quote $ defn index-of-bookmark (stack bookmark idx)
+            if (empty? stack) -1 $ let
+                first-bookmark $ assert-type
+                  .unwrap $ first stack
+                  , 'app.bookmark/%bookmark
+              if (=bookmark? bookmark first-bookmark) idx $ recur (rest stack) bookmark $ inc idx
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Number)
+            :args $ [] (:: 'List 'app.bookmark/%bookmark) 'app.bookmark/%bookmark 'Number
         'push-bookmark $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            defn push-bookmark (bookmark ? forced?)
-              fn (writer)
-                let-sugar
-                      {} pointer stack
-                      , writer
-                    idx $ index-of-bookmark stack bookmark
-                  if
-                    or forced? $ < idx 0
-                    -> writer
-                      update :stack $ fn (stack)
-                        cond
-                            empty? stack
-                            [] bookmark
-                          (= pointer (dec (count stack)))
-                            conj stack bookmark
-                          (=bookmark? bookmark (.unwrap (get stack (inc pointer))))
-                            , stack
-                          true $ concat
-                            take stack $ inc pointer
-                            [] bookmark
-                            drop stack $ inc pointer
-                      update :pointer $ fn (p)
-                        if (empty? stack) 0 $ inc p
-                    -> writer $ assoc :pointer idx
+          :code $ quote $ defn push-bookmark (bookmark forced?)
+            fn (writer)
+              hint-fn $ {}
+                :args $ [] $ :: 'Option 'Dynamic
+                :return 'Dynamic
+              let-sugar
+                    {} pointer stack
+                    assert-type
+                      option:unwrap-or writer $ {}
+                      :: 'Map 'Tag 'Dynamic
+                  pointer $ assert-type pointer 'Number
+                  stack $ assert-type stack $ :: 'List 'app.bookmark/%bookmark
+                  idx $ index-of-bookmark stack bookmark 0
+                if
+                  or forced? $ < idx 0
+                  ->
+                    assert-type
+                      option:unwrap-or writer $ {}
+                      :: 'Map 'Tag 'Dynamic
+                    assoc :stack $ cond
+                        empty? stack
+                        [] bookmark
+                      (= pointer (dec (count stack)))
+                        conj stack bookmark
+                      (=bookmark? bookmark (assert-type (.unwrap (get stack (inc pointer))) 'app.bookmark/%bookmark))
+                        , stack
+                      true $ concat
+                        take stack $ inc pointer
+                        [] bookmark
+                        drop stack $ inc pointer
+                    assoc :pointer $ if (empty? stack) 0 $ inc pointer
+                  ->
+                    assert-type
+                      option:unwrap-or writer $ {}
+                      :: 'Map 'Tag 'Dynamic
+                    assoc :pointer idx
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'app.bookmark/%bookmark 'Bool
+            :return $ :: 'Fn $ {} (:return 'Dynamic)
+              :args $ [] $ :: 'Option 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote (ns app.util.stack)
+        :code $ quote $ ns app.util.stack
