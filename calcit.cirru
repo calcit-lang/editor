@@ -1542,7 +1542,7 @@
           :examples $ []
           :schema $ :: 'Impl
         'GenCodeBoxActionTrait $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait GenCodeBoxActionTrait (:render :fn) (:open :fn) (:reset-state :fn)
+          :code $ quote $ deftrait GenCodeBoxActionTrait (.render :fn) (.open :fn) (.reset-state :fn)
           :examples $ []
           :schema $ :: 'Trait
         'open-gen-code-box! $ %{} 'CodeEntry (:doc |)
@@ -3619,7 +3619,7 @@
           :examples $ []
           :schema $ :: 'Impl
         'RenamePluginTrait $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait RenamePluginTrait (:render :fn) (:show :fn) (:close :fn)
+          :code $ quote $ deftrait RenamePluginTrait (.render :fn) (.show :fn) (.close :fn)
           :examples $ []
           :schema $ :: 'Trait
         'ReplaceInputHost $ %{} 'CodeEntry (:doc |)
