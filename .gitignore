@@ -20,3 +20,5 @@ out-page/
 .yarn/
 
 .calcit
+.pnp.cjs
+.pnp.loader.mjs
