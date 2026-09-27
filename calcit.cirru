@@ -1062,7 +1062,7 @@
                             , d
                         (:files d)
                           comp-page-files (>> states :files)
-                            option:unwrap-or (get writer :selected-ns) nil
+                            assert-type (get writer :selected-ns) (:: 'Option 'String)
                             , d
                         (:graph d)
                           comp-deps-graph (>> states :graph)
@@ -3101,12 +3101,12 @@
                           ns-text $ option:unwrap-or (nth pair 0) |
                         [] ns-text $ comp-ns-entry (>> states ns-text) ns-text
                           option:unwrap-or (nth pair 1) |
-                          = selected-ns ns-text
+                          = selected-ns $ %some ns-text
                           , ns-highlights
                 .render plugin-add-ns
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'Map 'String 'Dynamic) 'String $ :: 'Set 'String
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'Map 'String 'Dynamic) (:: 'Option 'String) (:: 'Set 'String)
         'comp-ns-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-ns-entry (states ns-text ns-doc selected? ns-highlights)
             let
@@ -3159,8 +3159,10 @@
                   option:unwrap-or (get router-data :ns-dict) {}
                   , selected-ns ns-highlights
                 =< 24 nil
-                if (some? selected-ns)
-                  comp-file (>> states selected-ns) selected-ns
+                if (option:some? selected-ns)
+                  comp-file
+                    >> states $ option:unwrap selected-ns
+                    option:unwrap selected-ns
                     option:unwrap-or (get router-data :defs-dict) {}
                     , highlights $ option:unwrap-or (get router-data :file-configs) {}
                   render-empty
@@ -3176,7 +3178,7 @@
                       , app.schema/FileEntry
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
-            :args $ [] (:: 'Map 'Tag 'Dynamic) 'String $ :: 'Map 'Tag 'Dynamic
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'Option 'String) (:: 'Map 'Tag 'Dynamic)
         'css-file $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-file
             {} $ |$0 $ {} (:width 360) (:overflow :auto) (:padding-top 24)
