@@ -4982,15 +4982,6 @@
             app.bookmark :as bookmark
     'app.config $ %{} 'FileEntry
       :defs $ {}
-        'cdn? $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def cdn?
-            cond
-                exists? js/window
-                , false
-              (exists? js/process) (= |true js/process.env.cdn)
-              :else false
-          :examples $ []
-          :schema $ quote Bool
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
             = |dev $ option:unwrap-or (get-env |mode) |release
@@ -5468,12 +5459,6 @@
           :code $ quote $ def CodeEntry
             defstruct :CodeEntry (:doc String) (:code Dynamic) (:examples List)
               :source-entry $ Option String
-          :examples $ []
-          :schema $ quote StructDef
-        'CodeEntryCompact $ %{} 'CodeEntry
-          :doc "|another record for CodeEntry which only used in writing compact file"
-          :code $ quote $ def CodeEntryCompact
-            defstruct :CodeEntry (:doc String) (:code Dynamic) (:examples List)
           :examples $ []
           :schema $ quote StructDef
         'DispatchOp $ %{} 'CodeEntry
@@ -7645,9 +7630,7 @@
             -> $ Map Tag Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.twig.page-files
-          :require
-            app.util :refer $ file->cirru
-            app.util.list :refer $ compare-entry
+          :require $ app.util.list :refer $ compare-entry
     'app.twig.page-members $ %{} 'FileEntry
       :defs $ {} $ 'twig-page-members
         %{} 'CodeEntry (:doc |)
@@ -9151,7 +9134,7 @@
             app.util.list :refer $ dissoc-idx
             bisection-key.util :refer $ key-before key-after key-prepend key-append assoc-prepend key-nth assoc-nth val-nth get-min-key assoc-before
             app.bookmark :refer $ Bookmark %bookmark
-            app.util :refer $ expr? leaf? bookmark->path to-writer to-bookmark to-keys cirru->tree cirru->file push-warning
+            app.util :refer $ expr? leaf? bookmark->path to-writer to-bookmark cirru->tree push-warning
     'app.updater.notify $ %{} 'FileEntry
       :defs $ {}
         'broadcast $ %{} 'CodeEntry (:doc |)
@@ -10098,24 +10081,6 @@
               (:ns ns' f) (str ns' |/)
           :examples $ []
           :schema $ quote $ Fn app.bookmark/%bookmark (-> String)
-        'cirru->file $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn cirru->file (file author timestamp)
-            -> file
-              update :ns $ fn (entry)
-                hint-fn $ Fn app.schema/CodeEntry $ -> app.schema/CodeEntry
-                update entry :code $ fn (xs)
-                  hint-fn $ Fn Dynamic $ -> Dynamic
-                  cirru->tree xs author timestamp
-              update :defs $ fn (defs)
-                hint-fn $ Fn (Map String app.schema/CodeEntry)
-                  -> $ Map String app.schema/CodeEntry
-                filter-map-kv defs $ fn (k entry)
-                  hint-fn $ Fn String app.schema/CodeEntry $ -> MapEntryDecision
-                  :: :keep k $ update entry :code $ fn (xs)
-                    hint-fn $ Fn Dynamic $ -> Dynamic
-                    cirru->tree xs author timestamp
-          :examples $ []
-          :schema $ quote $ Fn app.schema/FileEntry String Number (-> app.schema/FileEntry)
         'cirru->tree $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn cirru->tree (xs author timestamp)
             schema/syntax->node (normalize-cirru xs) author timestamp
@@ -10127,53 +10092,6 @@
               = :Expr $ &struct:get-name x
           :examples $ []
           :schema $ quote $ Fn Dynamic (-> Bool)
-        'extract-examples-code $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn extract-examples-code (xs)
-            if
-              &= |with-examples $ &list:nth xs 0
-              let
-                  examples $ &list:nth xs 1
-                assert= 3 $ &list:count xs
-                if
-                  not= |do $ &list:nth examples 0
-                  eprintln "|expect examples start with `do`:" examples
-                :: :exp-code (rest examples) (&list:nth xs 2)
-              :: :exp-code ([]) xs
-          :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Dynamic)
-        'file->cirru $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn file->cirru (file compact?)
-            %{} schema/FileEntry
-              :ns $ -> (:ns file)
-                update :code $ fn (code)
-                  :: 'quote $ tree->cirru code
-              :defs $ -> (:defs file)
-                filter-map-kv $ fn (k xs)
-                  hint-fn $ Fn String app.schema/CodeEntry $ -> MapEntryDecision
-                  :: :keep k $ let
-                    extracted $ extract-examples-code $ :code xs
-                    match extracted $
-                      :exp-code examples code
-                      if
-                        and compact? $ nil? $ :code xs
-                        %{} schema/CodeEntryCompact (:doc xs)
-                          :code $ :: 'quote code
-                          :examples $ :: map examples $ :: fn ('e) (:: 'quote 'e)
-                        %{} schema/CodeEntry (:doc xs)
-                          :code $ :: 'quote code
-                          :examples $ :examples xs
-                          :source-entry $ Option :none
-              :source-view $ Option :none
-          :examples $ []
-          :schema $ quote $ Fn app.schema/FileEntry Bool (-> app.schema/FileEntry)
-        'file-tree->cirru $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn file-tree->cirru (file)
-            -> file (update :ns tree->cirru)
-              update :defs $ fn (defs)
-                -> defs $ map-kv $ fn (def-text def-tree)
-                  [] def-text $ tree->cirru def-tree
-          :examples $ []
-          :schema $ quote Dynamic
         'find-first $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn find-first (f xs)
             find xs $ fn (x) (f x)
@@ -10430,12 +10348,6 @@
               assert= (Option :none)
                 to-bookmark $ Option :some $ parse-cirru-edn (format-cirru-edn writer)
             :tags $ #{} :unit
-        'to-keys $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn to-keys (target-expr)
-            sort $ .to-list $ keys (:data target-expr)
-          :examples $ []
-          :schema $ quote $ Fn app.schema/CirruExpr
-            -> $ List Number
         'to-writer $ %{} 'CodeEntry
           :doc "|Read an optional session writer: missing is None; malformed intermediate shapes and non-map writers fail explicitly."
           :code $ quote $ defn to-writer (db session-id)
