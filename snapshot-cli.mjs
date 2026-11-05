@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, constants, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
@@ -350,16 +350,75 @@ export function editorArchivePath(snapshot) {
   return join(dirname(resolve(snapshot)), ".calcit", "editor-state.cirru");
 }
 
-/** Atomically replace only the editor-owned archive, retaining its saved baselines. */
+const archiveRevisions = new Map();
+
+function checkArchiveDirectory(directory) {
+  const info = lstatSync(directory, { throwIfNoEntry: false });
+  if (info && !info.isDirectory()) {
+    throw new Error("Editor archive requires a real .calcit directory.");
+  }
+}
+
+function archiveContents(archive) {
+  checkArchiveDirectory(dirname(archive));
+  const info = lstatSync(archive, { throwIfNoEntry: false });
+  if (!info) return null;
+  if (!info.isFile()) throw new Error("Editor archive must be a regular file.");
+  const fd = openSync(archive, constants.O_RDONLY | constants.O_NOFOLLOW);
+  try {
+    return readFileSync(fd, "utf8");
+  } finally {
+    closeSync(fd);
+  }
+}
+
+function archiveRevision(contents) {
+  return contents === null ? null : createHash("sha256").update(contents).digest("hex");
+}
+
+/** Load the private archive and record the version this process can replace. */
+export function readEditorArchive(snapshot) {
+  const archive = editorArchivePath(snapshot);
+  const contents = archiveContents(archive);
+  archiveRevisions.set(archive, archiveRevision(contents));
+  return contents;
+}
+
+function archiveConflict(directory, contents) {
+  const recovery = join(directory, `editor-state-recovery-${randomUUID()}.cirru`);
+  writeFileSync(recovery, contents, { encoding: "utf8", flag: "wx", mode: 0o600 });
+  const error = new Error(`Another editor session owns or updated the archive. Pending edits were saved to ${recovery}.`);
+  error.name = "EditorArchiveConflict";
+  return error;
+}
+
+/** Replace the archive only while it still matches the version this process loaded. */
 export function writeEditorArchive(snapshot, contents) {
   if (typeof contents !== "string") throw new TypeError("Expected serialized editor state.");
   const archive = editorArchivePath(snapshot);
-  mkdirSync(dirname(archive), { recursive: true, mode: 0o700 });
-  const staging = join(dirname(archive), `.editor-state-${randomUUID()}.tmp`);
+  const directory = dirname(archive);
+  checkArchiveDirectory(directory);
+  mkdirSync(directory, { recursive: true, mode: 0o700 });
+  checkArchiveDirectory(directory);
+  const lock = join(directory, "editor-state.lock");
+  let fd;
   try {
+    fd = openSync(lock, "wx", 0o600);
+  } catch (error) {
+    if (error.code === "EEXIST") throw archiveConflict(directory, contents);
+    throw error;
+  }
+  const staging = join(directory, `.editor-state-${randomUUID()}.tmp`);
+  try {
+    if (archiveRevision(archiveContents(archive)) !== (archiveRevisions.get(archive) ?? null)) {
+      throw archiveConflict(directory, contents);
+    }
     writeFileSync(staging, contents, { encoding: "utf8", flag: "wx", mode: 0o600 });
     renameSync(staging, archive);
+    archiveRevisions.set(archive, archiveRevision(contents));
   } finally {
+    closeSync(fd);
+    rmSync(lock, { force: true });
     rmSync(staging, { force: true });
   }
 }

@@ -6027,8 +6027,7 @@
           :examples $ []
           :schema $ quote $ Fn Number (-> Dynamic) (:features :js-ffi)
         'initial-db $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def initial-db
-            storage/load-project-state! storage-file $ storage/project-archive-path storage-file
+          :code $ quote $ def initial-db (storage/load-project-state! storage-file)
           :examples $ []
           :schema $ quote $ Map Tag Dynamic
         'main! $ %{} 'CodeEntry (:doc |)
@@ -6633,22 +6632,17 @@
     'app.storage $ %{} 'FileEntry
       :defs $ {}
         'load-project-state! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn load-project-state! (snapshot archive-file)
+          :code $ quote $ defn load-project-state! (snapshot)
             let
                 project $ read-source-project! snapshot
-                archive $ if (node/file-exists? archive-file)
-                  Option :some $ parse-cirru-edn $ node/read-text! archive-file
-                  Option :none
+                contents $ readEditorArchive snapshot
+                archive $ if (nil? contents) (Option :none)
+                  Option :some $ parse-cirru-edn $ js-ffi.contract/expect-string |editor-state contents
               source/restore-editor-state project archive
           :examples $ []
-          :schema $ quote $ Fn String String
+          :schema $ quote $ Fn String
             -> $ Map Tag Dynamic
             :features :js-ffi
-        'project-archive-path $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn project-archive-path (snapshot)
-            decode-map-as (editorArchivePath snapshot) 'String
-          :examples $ []
-          :schema $ quote $ Fn String (-> String) (:features :js-ffi)
         'read-source-project! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-source-project! (snapshot)
             source/import-cli-project
@@ -6707,8 +6701,8 @@
             :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.storage
-          :require (js-ffi.node :as node) (app.source :as source)
-            |../snapshot-cli.mjs :refer $ readSnapshotEdn writeSnapshotChangesEdn writeProjectChangesEdn editorArchivePath writeEditorArchive
+          :require (app.source :as source)
+            |../snapshot-cli.mjs :refer $ readSnapshotEdn writeSnapshotChangesEdn writeProjectChangesEdn readEditorArchive writeEditorArchive
     'app.style $ %{} 'FileEntry
       :defs $ {}
         'button $ %{} 'CodeEntry (:doc |)
