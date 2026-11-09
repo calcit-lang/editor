@@ -7913,7 +7913,10 @@
               (:writer/edit-ns) (writer/edit-ns db sid op-id op-time)
               (:writer/select op-data) (writer/select db op-data sid op-id op-time)
               (:writer/point-to op-data) (writer/point-to db op-data sid op-id op-time)
-              (:writer/focus op-data) (writer/focus db op-data sid op-id op-time)
+              (:writer/focus op-data)
+                writer/focus db
+                  decode-map-as op-data $ List String
+                  , sid op-id op-time
               (:writer/go-up) (writer/go-up db sid op-id op-time)
               (:writer/go-down op-data)
                 writer/go-down db
@@ -7921,7 +7924,8 @@
                   , sid op-id op-time
               (:writer/go-left) (writer/go-left db sid op-id op-time)
               (:writer/go-right) (writer/go-right db sid op-id op-time)
-              (:writer/remove-idx op-data) (writer/remove-idx db op-data sid op-id op-time)
+              (:writer/remove-idx op-data)
+                writer/remove-idx db (decode-map-as op-data Number) sid op-id op-time
               (:writer/paste op-data) (writer/paste db op-data sid op-id op-time)
               (:writer/save-files op-data)
                 writer/save-files db
@@ -7931,10 +7935,14 @@
                     (:none) (Option :none)
                     _ $ raise |Expected-optional-save-namespace
                   , sid op-id op-time
-              (:writer/collapse op-data) (writer/collapse db op-data sid op-id op-time)
+              (:writer/collapse op-data)
+                writer/collapse db (decode-map-as op-data Number) sid op-id op-time
               (:writer/move-next) (writer/move-next db sid op-id op-time)
               (:writer/move-previous) (writer/move-previous db sid op-id op-time)
-              (:writer/move-order op-data) (writer/move-order db op-data sid op-id op-time)
+              (:writer/move-order op-data)
+                writer/move-order db
+                  decode-map-as op-data $ Map Tag Number
+                  , sid op-id op-time
               (:writer/finish) (writer/finish db sid op-id op-time)
               (:writer/draft-ns op-data) (writer/draft-ns db op-data sid op-id op-time)
               (:writer/hide-peek op-data) (writer/hide-peek db op-data sid op-id op-time)
@@ -9784,25 +9792,23 @@
                   , :text
             :tags $ #{} :unit
         'collapse $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn collapse (db op-data session-id op-id op-time)
-            let
-                idx $ decode-map-as op-data Number
-              decode-map-as
-                update-in db ([] :sessions session-id :writer)
-                  fn (writer)
-                    hint-fn $ Fn (Option Dynamic)
-                      -> $ Map Tag Dynamic
-                    let
-                        fields $ decode-map-as
-                          .unwrap-or writer $ {}
-                          Map Tag Dynamic
-                        stack $ app.bookmark/read-bookmarks $ .unwrap (get fields :stack)
-                      assoc
-                        assoc fields :stack $ slice stack idx
-                        , :pointer 0
-                Map Tag Dynamic
+          :code $ quote $ defn collapse (db idx session-id op-id op-time)
+            decode-map-as
+              update-in db ([] :sessions session-id :writer)
+                fn (writer)
+                  hint-fn $ Fn (Option Dynamic)
+                    -> $ Map Tag Dynamic
+                  let
+                      fields $ decode-map-as
+                        .unwrap-or writer $ {}
+                        Map Tag Dynamic
+                      stack $ app.bookmark/read-bookmarks $ .unwrap (get fields :stack)
+                    assoc
+                      assoc fields :stack $ slice stack idx
+                      , :pointer 0
+              Map Tag Dynamic
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
+          :schema $ quote $ Fn (Map Tag Dynamic) Number String String Number
             -> $ Map Tag Dynamic
         'doc-set $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn doc-set (db bookmark docstring sid op-id op-time)
@@ -9867,13 +9873,12 @@
           :schema $ quote $ Fn (Map Tag Dynamic) String String Number
             -> $ Map Tag Dynamic
         'focus $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn focus (db op-data session-id op-id op-time)
+          :code $ quote $ defn focus (db next-focus session-id op-id op-time)
             let
                 writer $ .unwrap $ app.util/to-writer db session-id
                 pointer $ decode-map-as
                   option:unwrap-or (get writer :pointer) 0
                   , Number
-                next-focus $ decode-map-as op-data $ List String
               decode-map-as
                 app.util/update-in-existing db ([] :sessions session-id :writer :stack pointer)
                   fn (raw-bookmark)
@@ -9884,7 +9889,7 @@
                         (:ns namespace _focus) (%bookmark :ns namespace next-focus)
                 Map Tag Dynamic
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
+          :schema $ quote $ Fn (Map Tag Dynamic) (List String) String String Number
             -> $ Map Tag Dynamic
         'go-down $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn go-down (db op-data session-id op-id op-time)
@@ -10010,9 +10015,8 @@
           :schema $ quote $ Fn (Map Tag Dynamic) String String Number
             -> $ Map Tag Dynamic
         'move-order $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn move-order (db op-data sid op-id op-time)
+          :code $ quote $ defn move-order (db op-map sid op-id op-time)
             let
-                op-map $ decode-map-as op-data $ Map Tag Number
                 from-idx $ option:unwrap-or (get op-map :from) 0
                 to-idx $ option:unwrap-or (get op-map :to) 0
               decode-map-as
@@ -10053,7 +10057,7 @@
                       -> writer-map (assoc :pointer next-pointer) (assoc :stack next-stack)
                 Map Tag Dynamic
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
+          :schema $ quote $ Fn (Map Tag Dynamic) (Map Tag Number) String String Number
             -> $ Map Tag Dynamic
         'move-previous $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn move-previous (db sid op-id op-time)
@@ -10188,31 +10192,29 @@
           :examples $ []
           :schema $ quote $ Fn Dynamic (-> app.bookmark/%bookmark)
         'remove-idx $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn remove-idx (db op-data session-id op-id op-time)
-            let
-                idx $ decode-map-as op-data Number
-              decode-map-as
-                update-in db ([] :sessions session-id :writer)
-                  fn (writer)
-                    hint-fn $ Fn (Option Dynamic)
-                      -> $ Map Tag Dynamic
-                    let
-                        fields $ decode-map-as
-                          .unwrap-or writer $ {}
-                          Map Tag Dynamic
-                        stack $ app.bookmark/read-bookmarks $ .unwrap (get fields :stack)
-                        pointer $ decode-map-as
-                          .unwrap $ get fields :pointer
-                          , Number
-                      assoc
-                        assoc fields :stack $ dissoc-idx stack idx
-                        , :pointer $ if
-                          and (> pointer 0) (<= idx pointer)
-                          dec pointer
-                          , pointer
-                Map Tag Dynamic
+          :code $ quote $ defn remove-idx (db idx session-id op-id op-time)
+            decode-map-as
+              update-in db ([] :sessions session-id :writer)
+                fn (writer)
+                  hint-fn $ Fn (Option Dynamic)
+                    -> $ Map Tag Dynamic
+                  let
+                      fields $ decode-map-as
+                        .unwrap-or writer $ {}
+                        Map Tag Dynamic
+                      stack $ app.bookmark/read-bookmarks $ .unwrap (get fields :stack)
+                      pointer $ decode-map-as
+                        .unwrap $ get fields :pointer
+                        , Number
+                    assoc
+                      assoc fields :stack $ dissoc-idx stack idx
+                      , :pointer $ if
+                        and (> pointer 0) (<= idx pointer)
+                        dec pointer
+                        , pointer
+              Map Tag Dynamic
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
+          :schema $ quote $ Fn (Map Tag Dynamic) Number String String Number
             -> $ Map Tag Dynamic
         'save-files $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-files (db selected sid op-id op-time)
