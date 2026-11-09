@@ -22,7 +22,7 @@ jobs:
           corepack prepare yarn@4.18.0 --activate
           yarn --version
 
-      - uses: calcit-lang/setup-calcit@ca701be5a471759e442aa053cd100720bbe1f09f # v1.5.0
+      - uses: calcit-lang/setup-calcit@4a5130ea981278fd4f624f2c2cf64e6776742c01 # v1.5.1
 
       - run: caps --strict --ci && yarn install --immutable && caps verify --toolchain && yarn compile-server && yarn compile-page && yarn release-page
 
