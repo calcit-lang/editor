@@ -6,7 +6,7 @@
     :client $ {} (:description |) (:init-fn 'app.client/main!) (:mode :js) (:reload-fn 'app.client/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/ |gen-code/ |js-ffi/
-      :type-slots $ {} $ :dispatch-op |app.schema/DispatchOp
+      :type-slots $ {} $ :dispatch-op 'app.schema/DispatchOp
     :default $ {} (:description |) (:init-fn 'app.server/main!) (:mode :js) (:reload-fn 'app.server/reload!) (:target :node)
       :feature-policy $ {}
       :modules $ [] |recollect/ |cumulo-util.calcit/ |ws-edn.calcit/ |bisection-key/ |respo-markdown.calcit/ |js-ffi/
@@ -237,30 +237,38 @@
           :examples $ []
           :schema $ quote $ Ref (Map Tag Dynamic)
         '*store $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defref *store nil
+          :code $ quote $ defref *store (Option :none)
           :examples $ []
-          :schema $ quote $ Ref Dynamic
+          :schema $ quote $ Ref
+            Option $ Map Tag Dynamic
         'connect! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn connect! () (js/console.info |Connecting...) (reset! *connecting? true)
             do
               ws-connect! (ws-host)
                 {}
                   :on-open $ fn (event) (simulate-login!) (detect-watching!) (heartbeat!)
-                  :on-close $ fn (event) (reset! *store nil) (reset! *connecting? false) (js/console.error "|Lost connection!")
-                    dispatch! $ :: :states/clear
+                  :on-close $ fn (event)
+                    reset! *store $ Option :none
+                    reset! *connecting? false
+                    js/console.error "|Lost connection!"
+                    dispatch! $ app.client-updater/UiStateOp :states/clear
                   :on-data $ fn (data)
                     match data
                       (:patch changes)
                         do
                           when config/dev? $ js/console.log |Changes changes
-                          match
-                            recollect.patch/try-patch-twig @*store $ recollect.schema/decode-changes changes
-                            (:ok next)
-                              do
-                                reset! *store $ decode-map-as next $ Map Tag Dynamic
-                                , &unit
-                            (:err error)
-                              do (eprintln |Rejected-Editor-patch: error) &unit
+                          let
+                              patches $ recollect.schema/decode-changes changes
+                            match
+                              match @*store
+                                (:some current) (recollect.patch/try-patch-twig current patches)
+                                (:none) (recollect.patch/try-patch-twig nil patches)
+                              (:ok next)
+                                do
+                                  reset! *store $ Option :some $ decode-map-as next (Map Tag Dynamic)
+                                  , &unit
+                              (:err error)
+                                do (eprintln |Rejected-Editor-patch: error) &unit
                       _ $ eprintln "|Unknown op:" data
                   :class-mapper $ {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf)
               , &unit
@@ -269,12 +277,11 @@
         'detect-watching! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn detect-watching! ()
             do
-              let
-                  query $ parse-query!
-                when
-                  option:some? $ get query |watching
-                  dispatch! $ :: :router/change $ :: :watching
-                    option:unwrap-or (get query |watching) |
+              match
+                get (parse-query!) |watching
+                (:none) &unit
+                (:some raw)
+                  dispatch! $ app.updater.router/route-op $ app.updater.router/Route :watching (decode-map-as raw String)
               , &unit
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
@@ -283,52 +290,17 @@
             when
               and config/dev? $ not= (&enum:nth op 0) :states
               js/console.info |Dispatch op
-            match op
-              (:states cursor new-state)
-                reset! *states $ decode-map-as
-                  assoc-in @*states
-                    conj
-                      decode-map-as cursor $ List Dynamic
-                      , :data
-                    , new-state
-                  Map Tag Dynamic
-              (:states-merge cursor state0 changes)
-                reset! *states $ decode-map-as
-                  option:unwrap-or
-                    get
-                      update-states-merge (&{} :states @*states)
-                        decode-map-as cursor $ List Dynamic
-                        , state0 changes
-                      , :states
-                    , {}
-                  Map Tag Dynamic
-              (:states/clear)
-                reset! *states $ {} $ :states
-                  {} $ :cursor $ []
-              (:manual-state/abstract)
-                reset! *states $ updater/abstract @*states
-              (:manual-state/draft-box)
-                reset! *states $ updater/draft-box @*states
-              (:effect/save-files)
+            match (updater/read-ui-state-op op)
+              (:some action) (swap! *states updater/apply-ui-state action)
+              (:none)
                 do
-                  reset! *states $ updater/clear-editor @*states
+                  when
+                    contains? (#{} :effect/save-files :ir/indent :ir/unindent :ir/reset-files) (&enum:nth op 0)
+                    reset! *states $ updater/clear-editor @*states
                   send-op! op
-              (:ir/indent)
-                do
-                  reset! *states $ updater/clear-editor @*states
-                  send-op! op
-              (:ir/unindent)
-                do
-                  reset! *states $ updater/clear-editor @*states
-                  send-op! op
-              (:ir/reset-files)
-                do
-                  reset! *states $ updater/clear-editor @*states
-                  send-op! op
-              _ $ send-op! op
             , &unit
           :examples $ []
-          :schema $ quote $ Fn Enum (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi)
         'heartbeat! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn heartbeat! ()
             do
@@ -352,14 +324,10 @@
             add-watch! *store :changes on-store-change!
             add-watch! *states :changes $ fn (states prev) (render-app!)
             js/window.addEventListener |keydown $ fn (event)
-              let
-                  store @*store
-                when (non-nil? store)
-                  on-window-keydown event dispatch! $ .unwrap-or
-                    get
-                      decode-map-as store $ Map Tag Dynamic
-                      , :router
-                    {}
+              match @*store
+                (:some store)
+                  on-window-keydown event dispatch! $ .unwrap-or (get store :router) ({})
+                (:none) &unit
             js/window.addEventListener |focus $ fn (event) (retry-connect!)
             js/window.addEventListener |visibilitychange $ fn (_event)
               match (js-ffi.browser/visibility-state)
@@ -367,8 +335,9 @@
                   do (retry-connect!) &unit
                 _ &unit
             println "|App started!"
+            , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mount-target ()
             .query-selector (unsafe-coerce js/document 'respo.dom/DomDocument) |.app
@@ -378,17 +347,23 @@
             :features :js-ffi
         'on-store-change! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-store-change! (store _previous) (render-app!)
-            when (non-nil? store)
-              let
-                  fields $ decode-map-as store $ Map Tag Dynamic
-                  router $ .unwrap-or (get fields :router) nil
-                when (enum? router)
-                  when
-                    = :editor $ decode-map-as (&enum:nth router 0) Tag
-                    focus!
+            match store
+              (:some fields)
+                match (get fields :router)
+                  (:some router)
+                    when
+                      and (enum? router)
+                        = :editor $ decode-map-as (&enum:nth router 0) Tag
+                      focus!
+                  (:none) &unit
+              (:none) &unit
             , &unit
           :examples $ []
-          :schema $ quote $ Fn Dynamic Dynamic (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn
+            Option $ Map Tag Dynamic
+            Option $ Map Tag Dynamic
+            -> Unit
+            :features :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -398,8 +373,9 @@
                 println "|Code updated."
                 tip! |ok~ nil
               tip! |error build-errors
+            , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             respo.core/render-with! (mount-target)
@@ -412,14 +388,15 @@
         'retry-connect! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn retry-connect! ()
             if
-              and (nil? @*store) (not @*connecting?)
+              and (.none? @*store) (not @*connecting?)
               connect!
+            , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'send-op! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn send-op! (op) (ws-send! op)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Unit)
+          :schema $ quote $ Fn AnyEnum (-> Unit)
         'simulate-login! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn simulate-login! ()
             let
@@ -437,7 +414,6 @@
         :code $ quote $ ns app.client
           :require
             respo.core :refer $ render! clear-cache! *changes-logger
-            respo.cursor :refer $ update-states-merge
             app.comp.container :refer $ comp-container
             app.client-util :refer $ ws-host parse-query!
             app.util.dom :refer $ focus!
@@ -452,11 +428,44 @@
             |@calcit/procs :refer $ disable-list-structure-check!
     'app.client-updater $ %{} 'FileEntry
       :defs $ {}
+        'UiStateOp $ %{} 'CodeEntry
+          :doc "|Local Respo state changes. Widget data stays open, while cursor keys and merge patch structure are checked."
+          :code $ quote $ defenum UiStateOp
+            :states (List respo.schema/CoordKey) Dynamic
+            :states-merge (List respo.schema/CoordKey) Dynamic $ Map Tag Dynamic
+            :states/clear
+            :manual-state/abstract
+            :manual-state/draft-box
+          :examples $ []
+          :schema $ quote EnumDef
         'abstract $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn abstract (states)
             assoc-in states ([] :editor :data :abstract?) true
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic)
+            -> $ Map Tag Dynamic
+        'apply-ui-state $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn apply-ui-state (states op)
+            match op
+              (:states cursor value)
+                decode-map-as
+                  assoc-in states (conj cursor :data) value
+                  Map Tag Dynamic
+              (:states-merge cursor initial changes)
+                decode-map-as
+                  .unwrap-or
+                    get
+                      respo.cursor/update-states-merge (&{} :states states) cursor initial changes
+                      , :states
+                    {}
+                  Map Tag Dynamic
+              (:states/clear)
+                {} $ :states $ {}
+                  :cursor $ []
+              (:manual-state/abstract) (abstract states)
+              (:manual-state/draft-box) (draft-box states)
+          :examples $ []
+          :schema $ quote $ Fn (Map Tag Dynamic) app.client-updater/UiStateOp
             -> $ Map Tag Dynamic
         'clear-editor $ %{} 'CodeEntry
           :doc "|Clear per-bookmark String/Number state branches after checking the actual CoordKey map. Preserve Tag-scoped editor/plugin payloads, including false; absent editor scope is a no-op."
@@ -495,12 +504,60 @@
                   states $ {} $ :other |untouched
                 assert= states $ clear-editor states
             :tags $ #{} :unit
+        'dispatch-ui! $ %{} 'CodeEntry
+          :doc "|Send a typed client-state operation through the Respo dispatcher, which also accepts legacy wire events."
+          :code $ quote $ defn dispatch-ui! (dispatch! op) (dispatch! op)
+          :examples $ []
+          :schema $ quote $ Fn
+            Fn AnyEnum $ -> Unit
+            , app.client-updater/UiStateOp (-> Unit)
         'draft-box $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn draft-box (states)
             assoc-in states ([] :editor :data :draft-box?) true
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic)
             -> $ Map Tag Dynamic
+        'read-ui-state-op $ %{} 'CodeEntry
+          :doc "|Adapt the anonymous state events still emitted by Respo plugins."
+          :code $ quote $ defn read-ui-state-op (op)
+            if
+              = (enum-definition op) (Option :some UiStateOp)
+              Option :some $ decode-map-as op 'app.client-updater/UiStateOp
+              match op
+                (:states cursor value)
+                  Option :some $ UiStateOp :states
+                    decode-map-as cursor $ List respo.schema/CoordKey
+                    , value
+                (:states-merge cursor initial changes)
+                  Option :some $ UiStateOp :states-merge
+                    decode-map-as cursor $ List respo.schema/CoordKey
+                    , initial $ decode-map-as changes (Map Tag Dynamic)
+                (:states/clear)
+                  Option :some $ UiStateOp :states/clear
+                (:manual-state/abstract)
+                  Option :some $ UiStateOp :manual-state/abstract
+                (:manual-state/draft-box)
+                  Option :some $ UiStateOp :manual-state/draft-box
+                _ $ Option :none
+          :examples $ []
+          :schema $ quote $ Fn AnyEnum
+            -> $ Option app.client-updater/UiStateOp
+          :tests $ [] $ %{} 'TestEntry (:name |typed-state-and-legacy-plugin)
+            :code $ quote $ let
+                cursor $ [] :panel 2
+                action $ UiStateOp :states cursor $ {} (:keep? false) (:text |old)
+                updated $ apply-ui-state ({}) action
+                merged $ apply-ui-state updated $ UiStateOp :states-merge cursor ({})
+                  {} $ :text |next
+              assert= (Option :some action) (read-ui-state-op action)
+              assert= (Option :some action)
+                read-ui-state-op $ :: :states cursor $ {} (:keep? false) (:text |old)
+              assert=
+                Result :ok $ {} (:keep? false) (:text |next)
+                get-in merged $ [] :panel 2 :data
+              assert= (Option :none)
+                read-ui-state-op $ :: :writer/finish
+            :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.client-updater
     'app.client-util $ %{} 'FileEntry
@@ -633,16 +690,17 @@
                 cursor $ decode-map-as
                   .unwrap-or (get states :cursor) ([])
                   List respo.schema/CoordKey
-                raw $ .unwrap-or (get states :data) nil
-                state $ if (nil? raw) | $ decode-map-as raw String
+                state $ .unwrap-or
+                  app.schema/read-optional-text $ get states :data
+                  , |
                 submit! $ fn (d!)
                   hint-fn $ Fn
-                    Fn Enum $ -> Unit
+                    Fn *dispatch-op $ -> Unit
                     -> Unit
                   when
                     not $ blank? state
                     d! $ :: :analyze/abstract-def state
-                    d! $ :: :states cursor nil
+                    app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor nil
                     close-modal! d!
                   , &unit
               div ({})
@@ -651,12 +709,12 @@
                   :value state
                   :on-input $ fn (event d!)
                     hint-fn $ Fn respo.schema/RespoEvent
-                      Fn Enum $ -> Unit
+                      Fn *dispatch-op $ -> Unit
                       -> Unit
-                    d! $ :: :states cursor $ respo.core/event-value event
+                    app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ respo.core/event-value event
                   :on-keydown $ fn (event d!)
                     hint-fn $ Fn respo.schema/RespoEvent
-                      Fn Enum $ -> Unit
+                      Fn *dispatch-op $ -> Unit
                       -> Unit
                     match
                       :key $ respo.core/keyboard-info event
@@ -667,13 +725,13 @@
                 button $ {} (:class-name style/button) (:inner-text |Submit)
                   :on-click $ fn (_event d!)
                     hint-fn $ Fn respo.schema/RespoEvent
-                      Fn Enum $ -> Unit
+                      Fn *dispatch-op $ -> Unit
                       -> Unit
                     submit! d!
           :examples $ []
           :schema $ quote $ Fn respo.schema/States
             Fn
-              Fn Enum $ -> Unit
+              Fn *dispatch-op $ -> Unit
               -> Unit
             -> respo.schema/Component
       :ns $ %{} 'NsEntry (:doc |)
@@ -713,12 +771,12 @@
                 :on-click $ on-pick bookmark idx
                 :on-dragstart $ fn (e d!)
                   hint-fn $ Fn respo.schema/RespoEvent
-                    Fn Enum $ -> Unit
+                    Fn *dispatch-op $ -> Unit
                     -> Unit
                   drag-set-data! (:event e) idx
                 :on-drop $ fn (e d!)
                   hint-fn $ Fn respo.schema/RespoEvent
-                    Fn Enum $ -> Unit
+                    Fn *dispatch-op $ -> Unit
                     -> Unit
                   match
                     drag-get-index $ :event e
@@ -729,7 +787,7 @@
                     (:none) &unit
                 :on-dragover $ fn (e d!)
                   hint-fn $ Fn respo.schema/RespoEvent
-                    Fn Enum $ -> Unit
+                    Fn *dispatch-op $ -> Unit
                     -> Unit
                   drag-prevent-default! $ :event e
               match bookmark
@@ -799,7 +857,7 @@
           :code $ quote $ defn on-pick (bookmark idx)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               let
                   event $ js-ffi.browser/mouse-event-host $ :original-event e
@@ -873,7 +931,7 @@
                   a $ {} (:inner-text |Reset) (:class-name style/button)
                     :on-click $ fn (e d!)
                       d! $ :: :ir/reset-files
-                      d! $ :: :states/clear
+                      d! $ app.client-updater/UiStateOp :states/clear
           :examples $ []
           :schema $ quote $ Fn respo.schema/States (Map String Dynamic) (-> respo.schema/Component)
         'style-column $ %{} 'CodeEntry (:doc |)
@@ -928,10 +986,10 @@
                   {} $ :class-name |is-minor
                   comp-icon :corner-up-left style-reset $ fn (e d!)
                     hint-fn $ Fn respo.schema/RespoEvent
-                      Fn Enum $ -> Unit
+                      Fn *dispatch-op $ -> Unit
                       -> Unit
                     d! $ :: :ir/reset-ns ns-text
-                    d! $ :: :states/clear
+                    app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states/clear
                 =< 24 nil
                 respo.core/show
                   not= :same $ :ns info
@@ -950,7 +1008,7 @@
                 div ({})
                   comp-icon :save style-reset $ fn (e d!)
                     hint-fn $ Fn respo.schema/RespoEvent
-                      Fn Enum $ -> Unit
+                      Fn *dispatch-op $ -> Unit
                       -> Unit
                     d! $ :: :effect/save-ns ns-text
           :examples $ []
@@ -959,7 +1017,7 @@
           :code $ quote $ defn on-preview (ns-text kind status)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               match kind
                 (Tag namespace-kind)
@@ -974,7 +1032,7 @@
           :code $ quote $ defn on-reset-def (ns-text kind)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               match kind
                 (Tag namespace-kind)
@@ -983,7 +1041,7 @@
                     raise |Unknown-change-kind
                 (String name)
                   d! $ :: :ir/reset-at $ :: :def ns-text name
-              d! $ :: :states/clear
+              app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states/clear
           :examples $ []
           :schema $ quote $ Fn String app.comp.changed-info/ChangeKind (-> respo.schema/EventHandler)
         'read-change-info $ %{} 'CodeEntry (:doc |)
@@ -1108,7 +1166,7 @@
                   span
                     {} $ :on-click $ fn (event dispatch!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show modules-plugin dispatch! $ fn (raw)
                         hint-fn $ Fn Dynamic $ -> Unit
@@ -1121,7 +1179,7 @@
                   span
                     {} $ :on-click $ fn (event dispatch!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show init-fn-plugin dispatch! $ fn (raw)
                         hint-fn $ Fn Dynamic $ -> Unit
@@ -1134,7 +1192,7 @@
                   span
                     {} $ :on-click $ fn (event dispatch!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show reload-fn-plugin dispatch! $ fn (raw)
                         hint-fn $ Fn Dynamic $ -> Unit
@@ -1173,7 +1231,7 @@
                 button $ {} (:class-name style/button) (:inner-text |Edit)
                   :on-click $ fn (event dispatch!)
                     hint-fn $ Fn respo.schema/RespoEvent
-                      Fn Enum $ -> Unit
+                      Fn *dispatch-op $ -> Unit
                       -> Unit
                     .show plugin dispatch! $ fn (raw)
                       hint-fn $ Fn Dynamic $ -> Unit
@@ -1189,9 +1247,9 @@
             :features :js-ffi
         'config-text $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn config-text (configs key)
-            let
-                raw $ .unwrap-or (get configs key) nil
-              if (nil? raw) | $ decode-map-as raw 'String
+            .unwrap-or
+              app.schema/read-optional-text $ get configs key
+              , |
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Tag (-> String)
         'parse-modules $ %{} 'CodeEntry (:doc |)
@@ -1242,110 +1300,114 @@
     'app.comp.container $ %{} 'FileEntry
       :defs $ {}
         'comp-container $ %{} 'CodeEntry (:doc "|respo UI main entry")
-          :code $ quote $ defcomp comp-container (states store)
-            let
-                state $ option:unwrap-or (get states :data) {}
-                session $ option:unwrap-or (get store :session) {}
-                writer $ option:unwrap-or (get session :writer) {}
-                raw-router $ .unwrap-or (get store :router) nil
-                router $ if (nil? raw-router) (:: :login)
-                  if (enum? raw-router) raw-router $ raise "|Expected an editor route enum"
-                theme $ match
-                  get-in store $ [] :user :theme
-                  (:ok value) (app.comp.theme-menu/read-theme value)
-                  (:err error)
-                    match error
-                      (:missing) (Option :none)
-                      (:shape message) (raise message)
-                picker-mode? $ option:some? $ get writer :picker-mode
-              if (nil? store) (comp-about)
-                div
-                  {} $ :class-name $ str-spaced css/global css/fullscreen css/column style-container
-                  if (not picker-mode?)
-                    Option :some $ comp-header (>> states :header)
-                      decode-map-as (&enum:nth router 0) Tag
-                      decode-map-as
-                        option:unwrap-or (get store :logged-in?) false
-                        , Bool
-                      decode-map-as
-                        option:unwrap-or (get store :stats) ({})
-                        Map Tag Dynamic
-                    Option :none
+          :code $ quote $ defcomp comp-container (states maybe-store)
+            match maybe-store
+              (:none) (comp-about)
+              (:some store)
+                let
+                    state $ option:unwrap-or (get states :data) {}
+                    session $ option:unwrap-or (get store :session) {}
+                    writer $ option:unwrap-or (get session :writer) {}
+                    router $ match (get store :router)
+                      (:none) (:: :login)
+                      (:some value)
+                        if (nil? value) (:: :login)
+                          if (enum? value) value $ raise "|Expected an editor route enum"
+                    theme $ match
+                      get-in store $ [] :user :theme
+                      (:ok value) (app.comp.theme-menu/read-theme value)
+                      (:err error)
+                        match error
+                          (:missing) (Option :none)
+                          (:shape message) (raise message)
+                    picker-mode? $ option:some? $ get writer :picker-mode
                   div
-                    {} $ :class-name $ str-spaced css/row css/expand
-                    if
-                      option:unwrap-or (get store :logged-in?) false
-                      match router
-                        (:profile d)
-                          comp-profile (>> states :profile)
-                            decode-map-as
-                              option:unwrap-or (get store :user) {}
-                              Map Tag Dynamic
-                            decode-map-as
-                              .unwrap $ get session :id
-                              , String
-                            decode-map-as d $ Map Tag Dynamic
-                        (:files d)
-                          comp-page-files (>> states :files)
-                            app.twig.container/optional-text $ .unwrap-or (get writer :selected-ns) nil
-                            decode-map-as d $ Map Tag Dynamic
-                        (:graph d)
-                          let
-                              fields $ decode-map-as d $ Map Tag Dynamic
-                            comp-deps-graph (>> states :graph)
+                    {} $ :class-name $ str-spaced css/global css/fullscreen css/column style-container
+                    if (not picker-mode?)
+                      Option :some $ comp-header (>> states :header)
+                        decode-map-as (&enum:nth router 0) Tag
+                        decode-map-as
+                          option:unwrap-or (get store :logged-in?) false
+                          , Bool
+                        decode-map-as
+                          option:unwrap-or (get store :stats) ({})
+                          Map Tag Dynamic
+                      Option :none
+                    div
+                      {} $ :class-name $ str-spaced css/row css/expand
+                      if
+                        option:unwrap-or (get store :logged-in?) false
+                        match router
+                          (:profile d)
+                            comp-profile (>> states :profile)
                               decode-map-as
-                                .unwrap-or (get fields :package) |
+                                option:unwrap-or (get store :user) {}
+                                Map Tag Dynamic
+                              decode-map-as
+                                .unwrap $ get session :id
                                 , String
+                              decode-map-as d $ Map Tag Dynamic
+                          (:files d)
+                            comp-page-files (>> states :files)
+                              app.schema/read-optional-text $ get writer :selected-ns
+                              decode-map-as d $ Map Tag Dynamic
+                          (:graph d)
+                            let
+                                fields $ decode-map-as d $ Map Tag Dynamic
+                              comp-deps-graph (>> states :graph)
+                                decode-map-as
+                                  .unwrap-or (get fields :package) |
+                                  , String
+                                decode-map-as
+                                  .unwrap-or (get fields :configs) ({})
+                                  Map Tag Dynamic
+                                decode-map-as
+                                  .unwrap-or (get fields :entries) ({})
+                                  Map String Dynamic
+                                app.schema/read-dependency-map $ .unwrap-or (get fields :deps-dict) ({})
+                                decode-map-as
+                                  .unwrap-or (get fields :writer) ({})
+                                  Map Tag Dynamic
+                          (:editor d)
+                            comp-page-editor (>> states :editor)
+                              app.bookmark/read-bookmarks $ option:unwrap-or (get writer :stack) []
+                              decode-map-as d $ Map Tag Dynamic
                               decode-map-as
-                                .unwrap-or (get fields :configs) ({})
+                                option:unwrap-or (get writer :pointer) 0
+                                , Number
+                              , picker-mode? theme
+                          (:search d)
+                            comp-search (>> states :search) (app.bookmark/read-bookmarks d)
+                          (:watching d)
+                            comp-watching (>> states :watching) (app.comp.watching/read-watching-frame d)
+                              app.comp.theme-menu/read-theme $ option:unwrap-or (get session :theme) :star-trail
+                          (:configs d)
+                            comp-configs (>> states :configs)
+                              decode-map-as
+                                option:unwrap-or (get d :configs) {}
                                 Map Tag Dynamic
                               decode-map-as
-                                .unwrap-or (get fields :entries) ({})
-                                Map String Dynamic
-                              decode-map-as
-                                .unwrap-or (get fields :deps-dict) ({})
-                                Map Dynamic $ Set Dynamic
-                              decode-map-as
-                                .unwrap-or (get fields :writer) ({})
-                                Map Tag Dynamic
-                        (:editor d)
-                          comp-page-editor (>> states :editor)
-                            app.bookmark/read-bookmarks $ option:unwrap-or (get writer :stack) []
-                            decode-map-as d $ Map Tag Dynamic
-                            decode-map-as
-                              option:unwrap-or (get writer :pointer) 0
-                              , Number
-                            , picker-mode? theme
-                        (:search d)
-                          comp-search (>> states :search) (app.bookmark/read-bookmarks d)
-                        (:watching d)
-                          comp-watching (>> states :watching) (app.comp.watching/read-watching-frame d)
-                            app.comp.theme-menu/read-theme $ option:unwrap-or (get session :theme) :star-trail
-                        (:configs d)
-                          comp-configs (>> states :configs)
-                            decode-map-as
-                              option:unwrap-or (get d :configs) {}
-                              Map Tag Dynamic
-                            decode-map-as
-                              option:unwrap-or (get d :entries) {}
-                              Map String $ Map Tag Dynamic
-                        _ $ div ({})
-                          <> $ str "|404 page: " $ to-lispy-string router
-                      match router
-                        (:watching d)
-                          comp-watching (>> states :watching) (app.comp.watching/read-watching-frame d)
-                            app.comp.theme-menu/read-theme $ option:unwrap-or (get session :theme) :star-trail
-                        _ $ comp-login $ >> states :login
-                  if dev?
-                    Option :some $ comp-inspect |Session store style-inspector
-                    Option :none
-                  ; when dev? $ comp-inspect "|Router data" states $ merge style-inspector
-                    {} $ :left 100
-                  comp-messages $ decode-map-as
-                    .unwrap-or (get session :notifications) ([])
-                    List $ Map Tag Dynamic
+                                option:unwrap-or (get d :entries) {}
+                                Map String $ Map Tag Dynamic
+                          _ $ div ({})
+                            <> $ str "|404 page: " $ to-lispy-string router
+                        match router
+                          (:watching d)
+                            comp-watching (>> states :watching) (app.comp.watching/read-watching-frame d)
+                              app.comp.theme-menu/read-theme $ option:unwrap-or (get session :theme) :star-trail
+                          _ $ comp-login $ >> states :login
+                    if dev?
+                      Option :some $ comp-inspect |Session store style-inspector
+                      Option :none
+                    ; when dev? $ comp-inspect "|Router data" states $ merge style-inspector
+                      {} $ :left 100
+                    comp-messages $ decode-map-as
+                      .unwrap-or (get session :notifications) ([])
+                      List $ Map Tag Dynamic
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Dynamic (-> respo.schema/Component)
+          :schema $ quote $ Fn (Map Tag Dynamic)
+            Option $ Map Tag Dynamic
+            -> respo.schema/Component
         'style-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-container
             {} $ |& $ {} (:background-color :black) (:color :white)
@@ -1392,9 +1454,9 @@
                 cursor $ respo.core/state-cursor states
                 close! $ fn (dispatch!)
                   hint-fn $ Fn
-                    Fn Enum $ -> Unit
+                    Fn *dispatch-op $ -> Unit
                     -> Unit
-                  dispatch! $ :: :states cursor nil
+                  app.client-updater/dispatch-ui! dispatch! $ app.client-updater/UiStateOp :states cursor nil
                   close-modal! dispatch!
                   , &unit
               comp-modal close! $ match (app.schema/node-at-path expr focus)
@@ -1402,7 +1464,7 @@
                   span $ {} (:class-name css-wrong) (:inner-text "|The selected source node no longer exists.")
                     :on-click $ fn (_event dispatch!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       close! dispatch!
                 (:some node)
@@ -1424,13 +1486,13 @@
                         :value state
                         :on-input $ fn (event dispatch!)
                           hint-fn $ Fn respo.schema/RespoEvent
-                            Fn Enum $ -> Unit
+                            Fn *dispatch-op $ -> Unit
                             -> Unit
-                          dispatch! $ :: :states cursor $ respo.core/event-value event
+                          app.client-updater/dispatch-ui! dispatch! $ app.client-updater/UiStateOp :states cursor $ respo.core/event-value event
                           , &unit
                         :on-keydown $ fn (event dispatch!)
                           hint-fn $ Fn respo.schema/RespoEvent
-                            Fn Enum $ -> Unit
+                            Fn *dispatch-op $ -> Unit
                             -> Unit
                           let
                               keyboard $ respo.core/keyboard-info event
@@ -1454,7 +1516,7 @@
           :examples $ []
           :schema $ quote $ Fn respo.schema/States app.schema/CirruNode (List String)
             Fn
-              Fn Enum $ -> Unit
+              Fn *dispatch-op $ -> Unit
               -> Unit
             -> respo.schema/Component
             :features :js-ffi
@@ -1506,14 +1568,14 @@
           :code $ quote $ defn on-submit (expression? text cursor close-modal! close?)
             fn (_event dispatch!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               submit-draft! expression? text cursor close-modal! close? dispatch!
               , &unit
           :examples $ []
           :schema $ quote $ Fn Bool String (List respo.schema/CoordKey)
             Fn
-              Fn Enum $ -> Unit
+              Fn *dispatch-op $ -> Unit
               -> Unit
             , Bool (-> respo.schema/EventHandler) (:features :js-ffi)
         'parse-draft-expression $ %{} 'CodeEntry (:doc |)
@@ -1546,9 +1608,10 @@
             :tags $ #{} :unit
         'read-draft-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-draft-state (states node)
-            let
-                raw $ .unwrap-or (get states :data) nil
-              if (nil? raw) (draft-text node) (decode-map-as raw 'String)
+            match
+              app.schema/read-optional-text $ get states :data
+              (:none) (draft-text node)
+              (:some text) text
           :examples $ []
           :schema $ quote $ Fn respo.schema/States app.schema/CirruNode (-> String)
         'style-mode $ %{} 'CodeEntry (:doc |)
@@ -1578,16 +1641,16 @@
               dispatch! $ :: :ir/update-leaf $ {} (:text text)
                 :at $ now!
             when close?
-              dispatch! $ :: :states cursor nil
+              app.client-updater/dispatch-ui! dispatch! $ app.client-updater/UiStateOp :states cursor nil
               close-modal! dispatch!
             , &unit
           :examples $ []
           :schema $ quote $ Fn Bool String (List respo.schema/CoordKey)
             Fn
-              Fn Enum $ -> Unit
+              Fn *dispatch-op $ -> Unit
               -> Unit
             , Bool
-              Fn Enum $ -> Unit
+              Fn *dispatch-op $ -> Unit
               -> Unit
               :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
@@ -1631,7 +1694,7 @@
                   :on $ if readonly?
                     {} $ :click $ fn (e d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       when picker-mode?
                         app.util.dom/prevent-default! $ :event e
@@ -1641,7 +1704,7 @@
                       :keydown $ on-keydown coord expr picker-mode?
                       :click $ fn (e d!)
                         hint-fn $ Fn respo.schema/RespoEvent
-                          Fn Enum $ -> Unit
+                          Fn *dispatch-op $ -> Unit
                           -> Unit
                         if picker-mode?
                           do
@@ -1685,7 +1748,7 @@
           :code $ quote $ defn on-keydown (coord expr picker-mode?)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               let
                   event $ js-ffi.browser/keyboard-event-host $ :original-event e
@@ -1778,7 +1841,7 @@
                             (:none)
                               d! $ :: :notify/push-message $ [] :warn "|Can not create a function!"
                         do
-                          d! $ :: :manual-state/abstract
+                          app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :manual-state/abstract
                           js/setTimeout $ fn () $ match (js-ffi.browser/query-selector |.el-abstract)
                             (:some el) (js-ffi.browser/element-focus! el)
                             (:none) &unit
@@ -1830,7 +1893,7 @@
               comp-modal
                 fn (d!)
                   hint-fn $ Fn
-                    Fn Enum $ -> Unit
+                    Fn *dispatch-op $ -> Unit
                     -> Unit
                   d! $ :: :writer/draft-ns nil
                 div
@@ -1839,9 +1902,9 @@
                     :style $ {} (:width 800) (:height 400) (:white-space :pre) (:line-height |20px)
                     :on-input $ fn (e d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
-                      d! $ :: :states cursor $ decode-map-as (:value e) 'String
+                      app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ decode-map-as (:value e) 'String
                   =< nil 8
                   div
                     {} (:class-name css/row)
@@ -1849,13 +1912,13 @@
                     button $ {} (:inner-text |Submit) (:class-name style/button)
                       :on-click $ fn (e d!)
                         hint-fn $ Fn respo.schema/RespoEvent
-                          Fn Enum $ -> Unit
+                          Fn *dispatch-op $ -> Unit
                           -> Unit
                         when (not= state initial-view)
                           let
                               imported $ app.source/import-cli-file state | 0
                             d! $ :: :ir/replace-file $ :source-view imported
-                        d! $ :: :states cursor nil
+                        app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor nil
                         d! $ :: :writer/draft-ns nil
           :examples $ []
           :schema $ quote $ Fn respo.schema/States app.schema/FileEntry (Map Tag String) (-> respo.schema/Component)
@@ -1881,10 +1944,10 @@
             defenum %gen-code-box-action0 $ :plugin
               Fn $ -> $ Option respo.schema/Component
               Fn
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               Fn
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
           :examples $ []
           :schema $ quote EnumDef
@@ -1901,14 +1964,14 @@
                 render
             .open $ fn (self d!)
               hint-fn $ Fn app.comp.gen-code-box/%gen-code-box-action0
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               match self $
                 :plugin render open reset-state
                 open d!
             .reset-state $ fn (self d!)
               hint-fn $ Fn app.comp.gen-code-box/%gen-code-box-action0
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               match self $
                 :plugin render open reset-state
@@ -1919,10 +1982,10 @@
           :code $ quote $ deftrait GenCodeBoxActionTrait
             .render $ Fn app.comp.gen-code-box/%gen-code-box-action0 $ -> (Option respo.schema/Component)
             .open $ Fn app.comp.gen-code-box/%gen-code-box-action0
-              Fn Enum $ -> Unit
+              Fn *dispatch-op $ -> Unit
               -> Unit
             .reset-state $ Fn app.comp.gen-code-box/%gen-code-box-action0
-              Fn Enum $ -> Unit
+              Fn *dispatch-op $ -> Unit
               -> Unit
           :examples $ []
           :schema $ quote Trait
@@ -1930,7 +1993,7 @@
           :code $ quote $ defn open-gen-code-box! (plugin d!) (.open plugin d!)
           :examples $ []
           :schema $ quote $ Fn app.comp.gen-code-box/%gen-code-box-action
-            Fn Enum $ -> Unit
+            Fn *dispatch-op $ -> Unit
             -> Unit
         'render-gen-code-box $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-gen-code-box (plugin) (.render plugin)
@@ -1941,7 +2004,7 @@
           :code $ quote $ defn reset-gen-code-box! (plugin d!) (.reset-state plugin d!)
           :examples $ []
           :schema $ quote $ Fn app.comp.gen-code-box/%gen-code-box-action
-            Fn Enum $ -> Unit
+            Fn *dispatch-op $ -> Unit
             -> Unit
         'style-panel $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-panel
@@ -1964,9 +2027,9 @@
                 selected $ app.schema/node-at-path (app.schema/read-node expr) focus
                 close-modal! $ fn (d!)
                   hint-fn $ Fn
-                    Fn Enum $ -> Unit
+                    Fn *dispatch-op $ -> Unit
                     -> Unit
-                  d! $ :: :states cursor $ assoc state :show? false
+                  app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? false
                 plugin-code-gen $ use-gen-code (>> states :gen-code)
                   fn ()
                     hint-fn $ Fn $ -> String
@@ -1976,7 +2039,7 @@
                       (:none) |
                   fn (code d!)
                     hint-fn $ Fn String
-                      Fn Enum $ -> Unit
+                      Fn *dispatch-op $ -> Unit
                       -> Unit
                     match
                       first $ parse-cirru-list code
@@ -1992,7 +2055,7 @@
                     Option :some $ comp-modal
                       fn (d!)
                         hint-fn $ Fn
-                          Fn Enum $ -> Unit
+                          Fn *dispatch-op $ -> Unit
                           -> Unit
                         .reset-state plugin-code-gen d!
                         close-modal! d!
@@ -2001,7 +2064,7 @@
                           span $ {} (:class-name |) (:inner-text "|Does not edit expression!")
                             :on-click $ fn (_event d!)
                               hint-fn $ Fn respo.schema/RespoEvent
-                                Fn Enum $ -> Unit
+                                Fn *dispatch-op $ -> Unit
                                 -> Unit
                               close-modal! d!
                         (:some _node)
@@ -2011,12 +2074,12 @@
                     Option :none
                 fn (d!)
                   hint-fn $ Fn
-                    Fn Enum $ -> Unit
+                    Fn *dispatch-op $ -> Unit
                     -> Unit
-                  d! $ :: :states cursor $ assoc state :show? true
+                  app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? true
                 fn (d!)
                   hint-fn $ Fn
-                    Fn Enum $ -> Unit
+                    Fn *dispatch-op $ -> Unit
                     -> Unit
                   .reset-state plugin-code-gen d!
           :examples $ []
@@ -2055,13 +2118,15 @@
         'comp-deps-graph $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-deps-graph (states pkg configs entries deps-dict writer)
             let
-                init-fn $ option:unwrap-or (get configs :init-fn) |
-                pair $ split (decode-map-as init-fn String) |/
+                init-fn $ .unwrap-or
+                  app.schema/read-optional-text $ get configs :init-fn
+                  , |
+                pair $ split init-fn |/
                 that-ns $ .unwrap-or (.get pair 0) |
                 that-def $ .unwrap-or (.get pair 1) |
                 cursor $ decode-map-as
                   .unwrap $ get states :cursor
-                  List Dynamic
+                  List respo.schema/CoordKey
                 state $ decode-map-as
                   either
                     option:unwrap-or (get states :data) {}
@@ -2099,7 +2164,7 @@
                       match
                         option:unwrap $ nth result 1
                         (:def a-ns a-def)
-                          d! $ :: :states cursor $ {} (:ns a-ns) (:def a-def)
+                          d! $ app.client-updater/UiStateOp :states cursor $ {} (:ns a-ns) (:def a-def)
                 bookmark $ app.util/to-bookmark $ Option :some writer
               [] (effect-navigate bookmark)
                 div
@@ -2110,7 +2175,7 @@
                       :inner-text $ str selected-ns |/ selected-def
                       :on-click $ fn (e d!)
                         hint-fn $ Fn respo.schema/RespoEvent
-                          Fn Enum $ -> Unit
+                          Fn *dispatch-op $ -> Unit
                           -> Unit
                         .show plugin-entries d!
                       :class-name style-def-entry
@@ -2118,27 +2183,28 @@
                   comp-entry-deps selected-ns selected-def deps-dict pkg $ []
           :examples $ []
           :schema $ quote $ Fn respo.schema/States String (Map Tag Dynamic) (Map String Dynamic)
-            Map Dynamic $ Set Dynamic
+            Map app.schema/DependencyKey $ Set app.schema/DependencyKey
             Map Tag Dynamic
             -> respo.schema/Component
         'comp-entry-deps $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-entry-deps (that-ns that-def deps-dict pkg footprints)
             let
-                entry $ :: :def that-ns that-def
+                entry $ app.schema/DependencyKey :def that-ns that-def
                 this-deps $ option:unwrap-or (get deps-dict entry) (#{})
                 internal-deps $ -> this-deps (&set:to-list)
                   filter $ fn (item)
                     match item
                       (:reference child-ns child-def)
-                        starts-with? (decode-map-as child-ns String) (str pkg |.)
+                        starts-with? child-ns $ str pkg |.
                       _ false
                 root? $ empty? footprints
                 show-ns? $ and (not root?)
-                  not= that-ns $ option:unwrap-or
-                    get
-                      option:unwrap-or (last footprints) []
-                      , 1
-                    , |
+                  match (last footprints)
+                    (:none) false
+                    (:some parent)
+                      match parent
+                        (:def namespace _name) (not= that-ns namespace)
+                        (:reference namespace _name) (not= that-ns namespace)
                 has-children? $ not $ empty? internal-deps
               div
                 {} $ :class-name $ str-spaced css/row-middle style-entry
@@ -2160,20 +2226,23 @@
                   div ({})
                     <> |Recur $ str-spaced css/font-fancy style-recur
                   if has-children?
-                    Option :some $ list->
+                    Option :some $ keyed->
                       {} $ :class-name style-deps-area
-                      -> internal-deps $ map $ fn (item)
-                        [] (str item)
-                          match item
-                            (:reference child-ns child-def)
+                      .map internal-deps $ fn (item)
+                        hint-fn $ Fn app.schema/DependencyKey $ -> respo.schema/ChildPair
+                        match item
+                          (:reference child-ns child-def)
+                            keyed-component (str item)
                               memo-comp-by (str child-ns |/ child-def) comp-entry-deps child-ns child-def deps-dict pkg $ conj footprints entry
-                            _ $ div ({})
-                              <> $ str "|Unknown data: " item
+                          (:def _namespace _name)
+                            keyed-element (str item)
+                              div ({})
+                                <> $ str "|Unknown data: " item
                     Option :none
           :examples $ []
           :schema $ quote $ Fn String String
-            Map Dynamic $ Set Dynamic
-            , String (List Dynamic) (-> respo.schema/Element)
+            Map app.schema/DependencyKey $ Set app.schema/DependencyKey
+            , String (List app.schema/DependencyKey) (-> respo.schema/Element)
         'effect-navigate $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-navigate (bookmark) (action el at?)
             if (= action :mount)
@@ -2205,7 +2274,7 @@
                 (:none) &unit
               , &unit
           :examples $ []
-          :schema $ quote $ Fn (Option app.bookmark/%bookmark) (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn (Option app.bookmark/%bookmark) (-> respo.schema/Effect) (:features :js-ffi)
         'gen-def-id $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn gen-def-id (that-ns that-def)
             -> (str |def__ that-ns |__ that-def) (&str:replace |. |_DOT_) (&str:replace |! |_EXP_) (&str:replace |# |_SHA_) (&str:replace |* |_STAR_) (&str:replace |? |_QUE_) (&str:replace |% |_PCT_)
@@ -2290,7 +2359,7 @@
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
-            respo.core :refer $ defcomp >> <> div span create-element list-> defeffect memo-comp-by
+            respo.core :refer $ defcomp >> <> div span create-element keyed-> keyed-component keyed-element defeffect memo-comp-by
             respo.css :refer $ defstyle
             respo.comp.inspect :refer $ comp-inspect
             respo.comp.space :refer $ =<
@@ -2308,16 +2377,16 @@
                 div
                   {} $ :class-name css/row-center
                   render-entry |Files :files router-name $ fn (e d!)
-                    d! $ :: :router/change $ :: :files
+                    d! $ app.updater.router/route-op $ app.updater.router/Route :files
                   render-entry |Graph :graph router-name $ fn (e d!)
-                    d! $ :: :router/change $ :: :graph
+                    d! $ app.updater.router/route-op $ app.updater.router/Route :graph
                   render-entry |Editor :editor router-name $ fn (e d!)
-                    d! $ :: :router/change $ :: :editor
+                    d! $ app.updater.router/route-op $ app.updater.router/Route :editor
                   render-entry |Search :search router-name $ fn (e d!)
-                    d! $ :: :router/change $ :: :search
+                    d! $ app.updater.router/route-op $ app.updater.router/Route :search
                     focus-search!
                   render-entry |Configs :configs router-name $ fn (e d!)
-                    d! $ :: :router/change $ :: :configs
+                    d! $ app.updater.router/route-op $ app.updater.router/Route :configs
                   a
                     {}
                       :href |https://github.com/Cirru/calcit-editor/wiki/Keyboard-Shortcuts
@@ -2333,7 +2402,7 @@
                       :cursor :pointer
                     fn (e d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show broadcast-plugin d! $ fn (result)
                         hint-fn $ Fn String $ -> Unit
@@ -2344,7 +2413,7 @@
                       str |Profile: $ option:unwrap-or (get stats :members-count) 0
                       , |Guest
                     , :profile router-name $ fn (e d!)
-                      d! $ :: :router/change $ :: :profile
+                      d! $ app.updater.router/route-op $ app.updater.router/Route :profile
                 .render broadcast-plugin
           :examples $ []
           :schema $ quote $ Fn respo.schema/States Tag Bool (Map Tag Dynamic) (-> respo.schema/Component)
@@ -2445,7 +2514,7 @@
           :code $ quote $ defn on-focus (leaf coord picker-mode?)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               if picker-mode?
                 do
@@ -2458,13 +2527,13 @@
           :code $ quote $ defn on-input (state coord cursor)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               let
                   now $ util/now!
                   text $ decode-map-as (:value e) 'String
                 d! $ :: :ir/update-leaf $ {} (:text text) (:at now)
-                d! $ :: :states cursor $ -> state (assoc :text text) (assoc :at now)
+                app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ -> state (assoc :text text) (assoc :at now)
               , &unit
           :examples $ []
           :schema $ quote $ Fn app.comp.leaf/LeafState (List String) (List respo.schema/CoordKey) (-> respo.schema/EventHandler) (:features :js-ffi)
@@ -2472,7 +2541,7 @@
           :code $ quote $ defn on-keydown (state leaf coord picker-mode?)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               let
                   event $ js-ffi.browser/keyboard-event-host $ :original-event e
@@ -2551,7 +2620,7 @@
                           any? $ fn (x)
                             starts-with? (:text leaf) x
                         do
-                          d! $ :: :manual-state/draft-box
+                          app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :manual-state/draft-box
                           js/setTimeout $ fn () $ match (js-ffi.browser/query-selector |.el-draft-box)
                             (:some el) (js-ffi.browser/element-focus! el)
                             (:none) &unit
@@ -2592,8 +2661,10 @@
                 cursor $ decode-map-as
                   .unwrap-or (get states :cursor) ([])
                   List respo.schema/CoordKey
-                raw-state $ .unwrap-or (get states :data) nil
-                state $ if (nil? raw-state) initial-state $ decode-map-as raw-state (Map Tag String)
+                state $ match (get states :data)
+                  (:none) initial-state
+                  (:some raw)
+                    if (nil? raw) initial-state $ decode-map-as raw $ Map Tag String
               div
                 {} (:class-name css/column) (:style style-login)
                 div
@@ -2634,16 +2705,16 @@
           :code $ quote $ defn on-input (state cursor k)
             fn (e dispatch!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
-              dispatch! $ :: :states cursor $ assoc state k (respo.core/event-value e)
+              app.client-updater/dispatch-ui! dispatch! $ app.client-updater/UiStateOp :states cursor $ assoc state k (respo.core/event-value e)
           :examples $ []
           :schema $ quote $ Fn (Map Tag String) (List respo.schema/CoordKey) Tag (-> respo.schema/EventHandler)
         'on-submit $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-submit (username password signup?)
             fn (e dispatch!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               dispatch! $ if signup?
                 :: :user/sign-up $ [] username password
@@ -2711,7 +2782,7 @@
                             _ $ hsl 120 80 80
                         :on-click $ fn (_event d!)
                           hint-fn $ Fn respo.schema/RespoEvent
-                            Fn Enum $ -> Unit
+                            Fn *dispatch-op $ -> Unit
                             -> Unit
                           d! $ :: :notify/clear nil
                       span $ {}
@@ -2758,21 +2829,21 @@
                 :class-name $ str-spaced css/center style-backdrop
                 :on-click $ fn (e d!)
                   hint-fn $ Fn respo.schema/RespoEvent
-                    Fn Enum $ -> Unit
+                    Fn *dispatch-op $ -> Unit
                     -> Unit
                   close-modal! d!
                   , &unit
               div
                 {} $ :on-click $ fn (e d!)
                   hint-fn $ Fn respo.schema/RespoEvent
-                    Fn Enum $ -> Unit
+                    Fn *dispatch-op $ -> Unit
                     -> Unit
                   , &unit
                 , inner-tree
           :examples $ []
           :schema $ quote $ Fn
             Fn
-              Fn Enum $ -> Unit
+              Fn *dispatch-op $ -> Unit
               -> Unit
             , respo.schema/Element (-> respo.schema/Component)
         'style-backdrop $ %{} 'CodeEntry (:doc |)
@@ -2824,14 +2895,15 @@
                     :class-name $ str-spaced style-doc $ if no-doc? style-doc-empty |
                     :on-click $ fn (_event dispatch!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
-                      .show plugin dispatch! $ fn (raw)
+                      .show plugin dispatch! $ fn (doc-text)
+                        hint-fn $ Fn String $ -> Unit
                         dispatch! $ :: :writer/doc-set
                           match bookmark
                             (:def namespace name _focus) (:: :def namespace name)
                             (:ns namespace _focus) (:: :ns namespace)
-                          decode-map-as raw 'String
+                          , doc-text
                         , &unit
                       , &unit
                   if no-doc? (<> "|no doc")
@@ -2898,15 +2970,15 @@
                 readonly? false
                 close-draft-box! $ fn (d!)
                   hint-fn $ Fn
-                    Fn Enum $ -> Unit
+                    Fn *dispatch-op $ -> Unit
                     -> Unit
-                  d! $ :: :states cursor $ assoc state :draft-box? false
+                  app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :draft-box? false
                   , &unit
                 close-abstract! $ fn (d!)
                   hint-fn $ Fn
-                    Fn Enum $ -> Unit
+                    Fn *dispatch-op $ -> Unit
                     -> Unit
-                  d! $ :: :states cursor $ assoc state :abstract? false
+                  app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :abstract? false
                   , &unit
                 plugin-gen-code-box $ use-gen-code-box (>> states :gen-code-plugin) expr focus
               div
@@ -2951,13 +3023,15 @@
                             :class-name $ str-spaced css/row-parted
                             :style $ {} $ :margin-top 66
                           span $ {}
-                          comp-usages $ match
-                            nil->option $ .unwrap-or (get router-data :usages) nil
+                          comp-usages $ match (get router-data :usages)
                             (:none) (Option :none)
                             (:some raw)
-                              Option :some $ decode-map-as raw $ Set Dynamic
+                              if (nil? raw) (Option :none)
+                                Option :some $ app.schema/read-dependency-set raw
                         if-let
-                          locals $ read-preview-locals $ .unwrap-or (get router-data :preview-locals) nil
+                          locals $ match (get router-data :preview-locals)
+                            (:none) (Option :none)
+                            (:some raw) (read-preview-locals raw)
                           list->
                             {}
                               :class-name $ str-spaced css/row css/gap8
@@ -2978,7 +3052,7 @@
                           span $ {}
                     comp-status-bar cursor state states router-data bookmark theme $ fn (d!)
                       hint-fn $ Fn
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       reset-gen-code-box! plugin-gen-code-box d!
                       open-gen-code-box! plugin-gen-code-box d!
@@ -3037,7 +3111,7 @@
                 replace-plugin $ use-replace-name-modal (>> states :replace)
                   fn (from to d!)
                     hint-fn $ Fn String String
-                      Fn Enum $ -> Unit
+                      Fn *dispatch-op $ -> Unit
                       -> Unit
                     d! $ :: :ir/expr-replace $ {} (:bookmark bookmark) (:from from) (:to to)
                 others $ decode-map-as
@@ -3054,7 +3128,7 @@
                     :class-name $ str-spaced css/font-fancy style-link
                     :on-click $ fn (_event d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show add-plugin d! $ fn (result)
                         hint-fn $ Fn String $ -> Unit
@@ -3070,7 +3144,9 @@
                   if
                     = :same $ option:unwrap-or (get router-data :changed) :unknown
                     <>
-                      str $ option:unwrap-or (get router-data :changed) nil
+                      match (get router-data :changed)
+                        (:none) (str nil)
+                        (:some value) (str value)
                       {} (:font-family ui/font-fancy) (:margin "|0 8px")
                         :color $ hsl 260 60 70
                     span $ {}
@@ -3078,7 +3154,7 @@
                       :inner-text |Reset
                       :on-click $ fn (_event d!)
                         hint-fn $ Fn respo.schema/RespoEvent
-                          Fn Enum $ -> Unit
+                          Fn *dispatch-op $ -> Unit
                           -> Unit
                         .show confirm-reset-plugin d! $ fn ()
                           hint-fn $ Fn $ -> Unit
@@ -3089,7 +3165,7 @@
                     :class-name $ str-spaced css/font-fancy style-link
                     :on-click $ fn (_event d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       d! $ :: :writer/picker-mode
                       , &unit
@@ -3097,7 +3173,7 @@
                     :class-name $ str-spaced css/font-fancy style-link
                     :on-click $ fn (_event d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show confirm-delete-plugin d! $ fn ()
                         hint-fn $ Fn $ -> Unit
@@ -3108,7 +3184,7 @@
                     :class-name $ str-spaced css/font-fancy style-link
                     :on-click $ fn (_event d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show rename-plugin d! $ fn (result)
                         hint-fn $ Fn String $ -> Unit
@@ -3119,7 +3195,7 @@
                     :class-name $ str-spaced css/font-fancy style-link
                     :on-click $ fn (_event d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       show-replace-plugin! replace-plugin d!
                       , &unit
@@ -3130,7 +3206,7 @@
                     :class-name $ str-spaced css/font-fancy style-link
                     :on-click $ fn (_event d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       open-gen-code-box d!
                       , &unit
@@ -3153,9 +3229,9 @@
                           Tuple String $ Map Tag Dynamic
                           -> $ List Dynamic
                         let[] (sid member) entry $ [] sid $ <>
-                          let
-                              nickname $ .unwrap-or (get member :nickname) nil
-                            if (nil? nickname) | $ decode-map-as nickname String
+                          .unwrap-or
+                            app.schema/read-optional-text $ get member :nickname
+                            , |
                           , style-watcher
                   <>
                     str "|Watchers(" (count watchers) "|)"
@@ -3168,9 +3244,9 @@
                           Tuple String $ Map Tag Dynamic
                           -> $ List Dynamic
                         let[] (sid member) entry $ [] sid $ <>
-                          let
-                              nickname $ .unwrap-or (get member :nickname) nil
-                            if (nil? nickname) | $ decode-map-as nickname String
+                          .unwrap-or
+                            app.schema/read-optional-text $ get member :nickname
+                            , |
                           , style-watcher
                 .render confirm-delete-plugin
                 .render confirm-reset-plugin
@@ -3180,7 +3256,7 @@
           :examples $ []
           :schema $ quote $ Fn (List respo.schema/CoordKey) (Map Tag Dynamic) respo.schema/States (Map Tag Dynamic) app.bookmark/%bookmark (Option Dynamic)
             Fn
-              Fn Enum $ -> Unit
+              Fn *dispatch-op $ -> Unit
               -> Unit
             -> respo.schema/Component
             :features :js-ffi
@@ -3190,29 +3266,28 @@
               (:none)
                 span $ {} (:class-name style-placeholder) (:inner-text |orphin)
               (:some entries)
-                list->
+                keyed->
                   {} $ :class-name $ str-spaced css/row style-usages
                   map (&set:to-list entries)
                     fn (usage)
-                      match usage $
-                        :def raw-ns raw-name
-                        let
-                            namespace $ decode-map-as raw-ns String
-                            name $ decode-map-as raw-name String
-                          [] (str namespace |/ name)
+                      hint-fn $ Fn app.schema/DependencyKey $ -> respo.schema/ChildPair
+                      match usage
+                        (:def namespace name)
+                          keyed-element (str namespace |/ name)
                             div
                               {}
                                 :class-name $ str-spaced css/column style-usage
                                 :on-click $ fn (_event d!)
                                   hint-fn $ Fn respo.schema/RespoEvent
-                                    Fn Enum $ -> Unit
+                                    Fn *dispatch-op $ -> Unit
                                     -> Unit
                                   d! $ :: :writer/select $ :: :def namespace name
                               span $ {} (:class-name style-usage-def) (:inner-text name)
                               span $ {} (:class-name style-tiny) (:inner-text namespace)
+                        (:reference _namespace _name) (raise "|Expected a dependency usage definition")
           :examples $ []
           :schema $ quote $ Fn
-            Option $ Set Dynamic
+            Option $ Set app.schema/DependencyKey
             -> respo.schema/Component
         'css-area $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-area
@@ -3272,9 +3347,9 @@
           :code $ quote $ defn on-draft-box (state cursor)
             fn (_event dispatch!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
-              dispatch! $ :: :states cursor $ assoc state :draft-box?
+              app.client-updater/dispatch-ui! dispatch! $ app.client-updater/UiStateOp :states cursor $ assoc state :draft-box?
                 not $ decode-map-as
                   .unwrap-or (get state :draft-box?) false
                   , 'Bool
@@ -3290,7 +3365,7 @@
           :code $ quote $ defn on-path-gen! (bookmark)
             fn (_event d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               match bookmark
                 (:def ns' def' f)
@@ -3321,17 +3396,17 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn String app.bookmark/%bookmark
-            Fn Enum $ -> Unit
+            Fn *dispatch-op $ -> Unit
             -> Unit
         'on-reset-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-reset-expr (bookmark d!)
             d! $ :: :ir/reset-at $ match bookmark
               (:ns ns' f) (:: :ns ns')
               (:def ns' def' f) (:: :def ns' def')
-            d! $ :: :states/clear
+            app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states/clear
           :examples $ []
           :schema $ quote $ Fn app.bookmark/%bookmark
-            Fn Enum $ -> Unit
+            Fn *dispatch-op $ -> Unit
             -> Unit
         'read-preview-locals $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-preview-locals (raw)
@@ -3465,7 +3540,7 @@
             respo.util.format :refer $ hsl
             respo-ui.core :as ui
             respo-ui.css :as css
-            respo.core :refer $ defcomp defeffect list-> >> <> span div a pre
+            respo.core :refer $ defcomp defeffect list-> >> <> span div a pre keyed-> keyed-element
             respo.css :refer $ defstyle
             respo.comp.space :refer $ =<
             respo.comp.inspect :refer $ comp-inspect
@@ -3504,14 +3579,14 @@
                   span $ {} (:inner-text |Draft) (:class-name style/button)
                     :on-click $ fn (e d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       d! $ :: :writer/draft-ns selected-ns
                       , &unit
                   span $ {} (:inner-text |Clone) (:class-name style/button)
                     :on-click $ fn (e d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show duplicate-plugin d! $ fn (raw-result)
                         hint-fn $ Fn Dynamic $ -> Unit
@@ -3527,7 +3602,7 @@
                   span $ {} (:inner-text selected-ns) (:style style-link)
                     :on-click $ fn (e d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       d! $ :: :writer/edit $ :: :ns selected-ns
                       , &unit
@@ -3538,7 +3613,7 @@
                       :cursor :pointer
                     fn (e d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show add-plugin d! $ fn (raw-result)
                         hint-fn $ Fn Dynamic $ -> Unit
@@ -3557,9 +3632,9 @@
                     :style style-input
                     :on-input $ fn (e d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
-                      d! $ :: :states cursor $ assoc state :def-text (:value e)
+                      d! $ app.client-updater/UiStateOp :states cursor $ assoc state :def-text (:value e)
                       , &unit
                 =< nil 8
                 list->
@@ -3590,7 +3665,7 @@
                               {}
                             :on-click $ fn (e d!)
                               hint-fn $ Fn respo.schema/RespoEvent
-                                Fn Enum $ -> Unit
+                                Fn *dispatch-op $ -> Unit
                                 -> Unit
                               d! $ :: :writer/edit $ :: :def selected-ns def-text
                               , &unit
@@ -3609,7 +3684,7 @@
                               :class-name $ str-spaced |is-minor style-remove
                               :on-click $ fn (e d!)
                                 hint-fn $ Fn respo.schema/RespoEvent
-                                  Fn Enum $ -> Unit
+                                  Fn *dispatch-op $ -> Unit
                                   -> Unit
                                 .show confirm-remove-plugin d! $ fn () $ d! (:: :ir/remove-def def-text)
                                 , &unit
@@ -3642,7 +3717,7 @@
                       :style $ {} $ :cursor :pointer
                     fn (e d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show plugin-add-ns d! $ fn (result)
                         hint-fn $ Fn Dynamic $ -> Unit
@@ -3681,7 +3756,7 @@
                     {}
                   :on-click $ fn (e d!)
                     hint-fn $ Fn respo.schema/RespoEvent
-                      Fn Enum $ -> Unit
+                      Fn *dispatch-op $ -> Unit
                       -> Unit
                     d! $ :: :session/select-ns ns-text
                     , &unit
@@ -3701,7 +3776,7 @@
                     :class-name $ str-spaced |is-minor style-remove
                     :on-click $ fn (e d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       .prevent-default! $ js-ffi.browser/mouse-event-host $ :original-event e
                       .show plugin-rm-ns d! $ fn () $ d! (:: :ir/remove-ns ns-text)
@@ -3921,8 +3996,9 @@
                         user $ decode-map-as
                           .unwrap-or (get member :user) ({})
                           Map Tag Dynamic
-                        raw-name $ .unwrap-or (get user :nickname) nil
-                        name $ if (nil? raw-name) |Guest $ decode-map-as raw-name 'String
+                        name $ .unwrap-or
+                          app.schema/read-optional-text $ get user :nickname
+                          , |Guest
                         bookmark $ app.bookmark/read-optional-bookmark $ .unwrap-or (get member :bookmark) (Option :none)
                         page $ decode-map-as
                           .unwrap-or (get member :page) :unknown
@@ -3955,13 +4031,13 @@
           :code $ quote $ defn on-watch (session-id)
             fn (event dispatch!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
-              dispatch! $ :: :router/change $ :: :watching session-id
+              dispatch! $ app.updater.router/route-op $ app.updater.router/Route :watching session-id
           :examples $ []
           :schema $ quote $ Fn String
             -> $ Fn respo.schema/RespoEvent
-              Fn Enum $ -> Unit
+              Fn *dispatch-op $ -> Unit
               -> Unit
         'style-bookmark $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-bookmark
@@ -4081,7 +4157,7 @@
                   span $ {} (:inner-text text) (:class-name css-name-code)
                     :on-click $ fn (e d!)
                       hint-fn $ Fn respo.schema/RespoEvent
-                        Fn Enum $ -> Unit
+                        Fn *dispatch-op $ -> Unit
                         -> Unit
                       d! $ :: :writer/pick-node text
                 hint $ match target-node
@@ -4104,7 +4180,7 @@
                     :style $ {} (:cursor :pointer) (:position :absolute) (:top 4) (:right 4)
                   fn (e d!)
                     hint-fn $ Fn respo.schema/RespoEvent
-                      Fn Enum $ -> Unit
+                      Fn *dispatch-op $ -> Unit
                       -> Unit
                     d! $ :: :writer/picker-mode
                 respo.core/data-list->
@@ -4217,7 +4293,7 @@
                         :cursor :pointer
                       fn (e d!)
                         hint-fn $ Fn respo.schema/RespoEvent
-                          Fn Enum $ -> Unit
+                          Fn *dispatch-op $ -> Unit
                           -> Unit
                         .show rename-plugin d! $ fn (raw-result)
                           hint-fn $ Fn Dynamic $ -> Unit
@@ -4254,7 +4330,7 @@
               , &unit
           :examples $ []
           :schema $ quote $ Fn respo.schema/RespoEvent
-            Fn Enum $ -> Unit
+            Fn *dispatch-op $ -> Unit
             -> Unit
             :features :js-ffi
         'style-greet $ %{} 'CodeEntry (:doc |)
@@ -4304,12 +4380,12 @@
                 , node
             .show $ fn (self d!)
               hint-fn $ Fn app.comp.replace-name/%rename-plugin0
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               match self $
                 :rename-plugin node cursor state
                 do
-                  d! $ :: :states cursor $ assoc
+                  app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc
                     assoc (assoc state :old-name |) :new-name |
                     , :show? true
                   js-ffi.browser/set-timeout!
@@ -4320,21 +4396,21 @@
                   , &unit
             .close $ fn (self d!)
               hint-fn $ Fn app.comp.replace-name/%rename-plugin0
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               match self $
                 :rename-plugin node cursor state
-                d! $ :: :states cursor $ assoc state :show? false
+                app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? false
           :examples $ []
           :schema $ quote Impl
         'RenamePluginTrait $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait RenamePluginTrait
             .render $ Fn app.comp.replace-name/%rename-plugin0 $ -> respo.schema/Component
             .show $ Fn app.comp.replace-name/%rename-plugin0
-              Fn Enum $ -> Unit
+              Fn *dispatch-op $ -> Unit
               -> Unit
             .close $ Fn app.comp.replace-name/%rename-plugin0
-              Fn Enum $ -> Unit
+              Fn *dispatch-op $ -> Unit
               -> Unit
           :examples $ []
           :schema $ quote Trait
@@ -4365,7 +4441,7 @@
           :code $ quote $ defn show-replace-plugin! (plugin d!) (.show plugin d!)
           :examples $ []
           :schema $ quote $ Fn app.comp.replace-name/%rename-plugin
-            Fn Enum $ -> Unit
+            Fn *dispatch-op $ -> Unit
             -> Unit
         'use-replace-name-modal $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn use-replace-name-modal (states on-replace)
@@ -4376,18 +4452,20 @@
                 state $ decode-map-as
                   merge
                     {} (:old-name |) (:new-name |) (:show? false)
-                    app.schema/open-state-fields $ option:unwrap-or (get states :data) nil
+                    match (get states :data)
+                      (:none) ({})
+                      (:some raw) (app.schema/open-state-fields raw)
                   , RenameState
                 on-submit $ fn (d!)
                   hint-fn $ Fn
-                    Fn Enum $ -> Unit
+                    Fn *dispatch-op $ -> Unit
                     -> Unit
                   when
                     and
                       not $ blank? $ :old-name state
                       not $ = (:new-name state) |
                     on-replace (:old-name state) (:new-name state) d!
-                    d! $ :: :states cursor $ assoc state :show? false
+                    app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? false
                   , &unit
                 node $ comp-modal
                   {} (:title "|Replace variable")
@@ -4396,7 +4474,7 @@
                     :render-body $ fn (on-close)
                       hint-fn $ Fn
                         Fn
-                          Fn Enum $ -> Unit
+                          Fn *dispatch-op $ -> Unit
                           -> Unit
                         -> respo.schema/Element
                       div
@@ -4410,22 +4488,22 @@
                             :id |replace-input
                             :on-input $ fn (e d!)
                               hint-fn $ Fn respo.schema/RespoEvent
-                                Fn Enum $ -> Unit
+                                Fn *dispatch-op $ -> Unit
                                 -> Unit
-                              d! $ :: :states cursor $ assoc state :old-name (respo.core/event-value e)
+                              app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :old-name (respo.core/event-value e)
                         respo.comp.space/space-y 8
                         div ({})
                           input $ {} (:placeholder |to...)
                             :style $ merge ui/input $ {} (:font-family ui/font-code)
                             :on-input $ fn (e d!)
                               hint-fn $ Fn respo.schema/RespoEvent
-                                Fn Enum $ -> Unit
+                                Fn *dispatch-op $ -> Unit
                                 -> Unit
-                              d! $ :: :states cursor $ assoc state :new-name (respo.core/event-value e)
+                              app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :new-name (respo.core/event-value e)
                             :value $ :new-name state
                             :on-keydown $ fn (e d!)
                               hint-fn $ Fn respo.schema/RespoEvent
-                                Fn Enum $ -> Unit
+                                Fn *dispatch-op $ -> Unit
                                 -> Unit
                               when
                                 = |Enter $ :key $ respo.core/keyboard-info e
@@ -4438,20 +4516,20 @@
                           button $ {} (:style ui/button) (:inner-text |Replace)
                             :on-click $ fn (e d!)
                               hint-fn $ Fn respo.schema/RespoEvent
-                                Fn Enum $ -> Unit
+                                Fn *dispatch-op $ -> Unit
                                 -> Unit
                               on-submit d!
                   :show? state
                   fn (d!)
                     hint-fn $ Fn
-                      Fn Enum $ -> Unit
+                      Fn *dispatch-op $ -> Unit
                       -> Unit
-                    d! $ :: :states cursor $ assoc state :show? false
+                    app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? false
               %:: %rename-plugin :rename-plugin node cursor state
           :examples $ []
           :schema $ quote $ Fn respo.schema/States
             Fn String String
-              Fn Enum $ -> Unit
+              Fn *dispatch-op $ -> Unit
               -> Unit
             -> app.comp.replace-name/%rename-plugin
             :features :js-ffi
@@ -4568,7 +4646,7 @@
                                 span $ {} (:inner-text |import) (:class-name style-use-ns)
                                   :on-click $ fn (e d!)
                                     d! $ :: :analyze/use-import-def bookmark
-                                    d! $ :: :states cursor initial-state
+                                    d! $ app.client-updater/UiStateOp :states cursor initial-state
                           (:def _namespace _name _focus) (raise |Expected-namespace-search-candidate)
                 div $ {} $ :class-name css/flex
                 div
@@ -4596,9 +4674,9 @@
           :code $ quote $ defn on-input (state cursor)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
-              d! $ :: :states cursor $ -> state
+              app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ -> state
                 assoc :query $ decode-map-as (:value e) 'String
                 assoc :selection 0
           :examples $ []
@@ -4607,7 +4685,7 @@
           :code $ quote $ defn on-keydown (state candidates cursor)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               let
                   keyboard $ js-ffi.browser/keyboard-event-host $ :original-event e
@@ -4621,27 +4699,27 @@
                           if (.-shift-key? keyboard)
                             d! $ :: :analyze/use-import-def selected-target
                             d! $ :: :writer/select selected-target
-                          d! $ :: :states cursor initial-state
+                          app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor initial-state
                       (:none) &unit
                   (= keycode/up code)
                     do (.prevent-default! keyboard)
                       when
                         > (search-selection state) 0
-                        d! $ :: :states cursor $ assoc state :selection
+                        app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :selection
                           dec $ search-selection state
                   (= keycode/escape code)
                     do
-                      d! $ :: :router/change $ :: :editor
-                      d! $ :: :states cursor initial-state
+                      d! $ app.updater.router/route-op $ app.updater.router/Route :editor
+                      app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor initial-state
                   (= keycode/down code)
                     do (.prevent-default! keyboard)
                       when
                         < (search-selection state)
                           dec $ .len candidates
-                        d! $ :: :states cursor $ assoc state :selection
+                        app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :selection
                           inc $ search-selection state
                   (and (.-meta-key? keyboard) (= keycode/b code))
-                    d! $ :: :states cursor $ assoc state :mode
+                    app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :mode
                       if
                         = (:mode state) :ns
                         , :def :ns
@@ -4653,10 +4731,10 @@
           :code $ quote $ defn on-select (bookmark cursor)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn Enum $ -> Unit
+                Fn *dispatch-op $ -> Unit
                 -> Unit
               d! $ :: :writer/select bookmark
-              d! $ :: :states cursor initial-state
+              app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor initial-state
           :examples $ []
           :schema $ quote $ Fn app.bookmark/%bookmark (List respo.schema/CoordKey) (-> respo.schema/EventHandler)
         'query-length $ %{} 'CodeEntry (:doc |)
@@ -4777,7 +4855,9 @@
         'comp-theme-menu $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-theme-menu (states theme)
             let
-                cursor $ .unwrap-or (get states :cursor) ([])
+                cursor $ decode-map-as
+                  .unwrap-or (get states :cursor) ([])
+                  List respo.schema/CoordKey
                 raw-state $ .unwrap-or (get states :data) false
                 state $ if (nil? raw-state) false $ decode-map-as raw-state 'Bool
                 label $ match theme
@@ -4787,7 +4867,7 @@
                 {}
                   :class-name $ str-spaced css/font-fancy style-theme-menu
                   :on-click $ fn (_event dispatch!)
-                    dispatch! $ :: :states cursor $ not state
+                    dispatch! $ app.client-updater/UiStateOp :states cursor $ not state
                     , &unit
                 <> label
                 if state
@@ -4807,7 +4887,7 @@
                               :class-name style-menu-item
                               :on-click $ fn (_event dispatch!)
                                 dispatch! $ :: :user/change-theme name
-                                dispatch! $ :: :states cursor false
+                                dispatch! $ app.client-updater/UiStateOp :states cursor false
                                 , &unit
                             <> $ str name
                   span $ {}
@@ -4889,8 +4969,9 @@
                 member $ decode-map-as
                   .unwrap-or (get frame :member) ({})
                   Map Tag Dynamic
-                raw-name $ .unwrap-or (get member :nickname) nil
-                member-name $ if (nil? raw-name) |Someone $ decode-map-as raw-name 'String
+                member-name $ .unwrap-or
+                  app.schema/read-optional-text $ get member :nickname
+                  , |Someone
                 bookmark $ app.bookmark/read-optional-bookmark $ .unwrap-or (get frame :bookmark) (Option :none)
                 entry $ app.schema/read-optional-code-entry $ .unwrap-or (get frame :expr) (Option :none)
                 focus $ decode-map-as
@@ -5461,11 +5542,15 @@
               :source-entry $ Option String
           :examples $ []
           :schema $ quote StructDef
+        'DependencyKey $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defenum DependencyKey (:def String String) (:reference String String)
+          :examples $ []
+          :schema $ quote EnumDef
         'DispatchOp $ %{} 'CodeEntry
-          :doc "|Framework slot representative for the existing Enum dispatch boundary; this sentinel is never sent."
+          :doc "|Framework slot representative for the legacy enum dispatch boundary. This sentinel is never sent."
           :code $ quote $ def DispatchOp (:: :unhandled)
           :examples $ []
-          :schema $ quote Enum
+          :schema $ quote AnyEnum
         'FileEntry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def FileEntry
             defstruct :FileEntry (:ns app.schema/CodeEntry)
@@ -5691,7 +5776,7 @@
             %{} 'TestEntry (:name |reject-invalid-legacy-child)
               :code $ quote $ let
                   foreign-shape $ defstruct :Expr (:at Number) (:by String)
-                    :data $ quote $ Map String Number
+                    :data $ Map String Number
                   raw $ %{} foreign-shape (:at 1) (:by |author)
                     :data $ {} $ |a 42
                   rejected $ ref false
@@ -5755,6 +5840,38 @@
                 :source-entry $ read-source-option $ .unwrap-or (get fields :source-entry) (Option :none)
           :examples $ []
           :schema $ quote $ Fn Dynamic (-> app.schema/CodeEntry)
+        'read-dependency-key $ %{} 'CodeEntry
+          :doc "|Read an anonymous dependency key from the editor protocol."
+          :code $ quote $ defn read-dependency-key (raw)
+            match raw
+              (:def namespace name)
+                DependencyKey :def (decode-map-as namespace String) (decode-map-as name String)
+              (:reference namespace name)
+                DependencyKey :reference (decode-map-as namespace String) (decode-map-as name String)
+              _ $ raise "|Expected a dependency definition or reference"
+          :examples $ []
+          :schema $ quote $ Fn T (-> app.schema/DependencyKey) (:generics T)
+        'read-dependency-map $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn read-dependency-map (raw)
+            filter-map-kv
+              decode-map-as raw $ Map Dynamic $ Set Dynamic
+              fn (key links)
+                hint-fn $ Fn Dynamic (Set Dynamic)
+                  -> $ MapEntryDecision app.schema/DependencyKey $ Set app.schema/DependencyKey
+                MapEntryDecision :keep (read-dependency-key key) (.map links read-dependency-key)
+          :examples $ []
+          :schema $ quote $ Fn T
+            -> $ Map app.schema/DependencyKey $ Set app.schema/DependencyKey
+            :generics T
+        'read-dependency-set $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn read-dependency-set (raw)
+            .map
+              decode-map-as raw $ Set Dynamic
+              , read-dependency-key
+          :examples $ []
+          :schema $ quote $ Fn T
+            -> $ Set app.schema/DependencyKey
+            :generics T
         'read-expr $ %{} 'CodeEntry
           :doc "|Recover a checked CirruNode at the raw state boundary, then narrow the existing union to an expression; reject leaves without weakening the node model."
           :code $ quote $ defn read-expr (raw)
@@ -5877,6 +5994,18 @@
               assert= (Option :some file)
                 read-optional-file-entry $ parse-cirru-edn $ format-cirru-edn (Option :some file)
             :tags $ #{} :unit
+        'read-optional-text $ %{} 'CodeEntry
+          :doc "|Decode a legacy text field, treating both missing and explicit nil as absent."
+          :code $ quote $ defn read-optional-text (field)
+            match field
+              (:none) (Option :none)
+              (:some value)
+                if (nil? value) (Option :none)
+                  Option :some $ decode-map-as value String
+          :examples $ []
+          :schema $ quote $ Fn (Option T)
+            -> $ Option String
+            :generics T
         'read-source-option $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-source-option (raw)
             if (enum? raw)
@@ -6038,13 +6167,14 @@
                   option:unwrap-or (get initial-db :configs) {}
                   Map Tag Dynamic
                 cli-configs $ get-cli-configs!
-              match
-                option:unwrap-or (get cli-configs :op) nil
-                |compile $ compile-all-files! configs
-                _ $ do (start-server! configs) (check-version!)
+              if
+                = (get cli-configs :op) (Option :some |compile)
+                compile-all-files! configs
+                do (start-server! configs) (check-version!)
                   dispatch! (:: :analyze/refresh-usages-dict) |system
+            , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'make-file-response $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn make-file-response (res)
             fn (err content)
@@ -6088,13 +6218,28 @@
                   , &unit
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+        'read-config-port $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn read-config-port (configured key)
+            let
+                fallback $ fn ()
+                  hint-fn $ Fn $ -> Number
+                  decode-map-as
+                    .unwrap $ get schema/configs key
+                    , Number
+              match configured
+                (:none) (fallback)
+                (:some value)
+                  if (nil? value) (fallback) (decode-map-as value Number)
+          :examples $ []
+          :schema $ quote $ Fn (Option T) Tag (-> Number) (:generics T)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             println $ .gray (unsafe-coerce chalk 'app.server/ChalkHost) "|code updated."
             clear-twig-caches!
             sync-clients! @*reader-db
+            , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'render-loop! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-loop! ()
             if (not= @*reader-db @*writer-db)
@@ -6149,20 +6294,12 @@
         'start-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn start-server! (configs)
             pick-port!
-              decode-map-as
-                either
-                  option:unwrap-or (get configs :port) nil
-                  option:unwrap-or (get schema/configs :port) nil
-                , Number
+              read-config-port (get configs :port) :port
               fn (unoccupied-port)
                 hint-fn $ Fn Number $ -> Dynamic
                 run-server! dispatch! unoccupied-port
             pick-http-port!
-              decode-map-as
-                either
-                  option:unwrap-or (get configs :expose-port) nil
-                  option:unwrap-or (get schema/configs :expose-port) nil
-                , Number
+              read-config-port (get configs :expose-port) :expose-port
               fn (unoccupied-port)
                 hint-fn $ Fn Number $ -> Dynamic
                 expose-files! unoccupied-port
@@ -6209,8 +6346,9 @@
                     wss-send! sid $ :: :patch changes
                     swap! *client-caches assoc sid new-store
               , &unit
+            , &unit
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn (Map Tag Dynamic) (-> Unit) (:features :js-ffi)
         'watch-file! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn watch-file! ()
             gaze
@@ -6387,7 +6525,7 @@
                     .unwrap $ get
                       &struct:to-map $ parse-cirru-edn view
                       , :defs
-                    quote $ Map Symbol Dynamic
+                    Map Symbol Dynamic
                   , 'keep
                 parse-cirru-edn $ .unwrap $ :source-entry entry
               assert= (:source-entry entry)
@@ -6404,7 +6542,7 @@
                           .unwrap $ get
                             entry-fields (parse-cirru-edn view) :FileEntry
                             , :defs
-                          quote $ Map Symbol Dynamic
+                          Map Symbol Dynamic
                         , 'keep
                   exported $ export-cli-file file templates
                   restored $ schema/read-file-entry $ parse-cirru-edn (format-cirru-edn file)
@@ -7001,18 +7139,11 @@
             app.style :as style
             respo.css :refer $ defstyle
     'app.twig.container $ %{} 'FileEntry
-      :defs $ {}
-        'optional-text $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn optional-text (raw)
-            if (nil? raw) (Option :none)
-              Option :some $ decode-map-as raw 'String
-          :examples $ []
-          :schema $ quote $ Fn Dynamic
-            -> $ Option String
-        'twig-container $ %{} 'CodeEntry (:doc |)
+      :defs $ {} $ 'twig-container
+        %{} 'CodeEntry (:doc |)
           :code $ quote $ defn twig-container (db session)
             let
-                user-id $ optional-text $ .unwrap-or (get session :user-id) nil
+                user-id $ app.schema/read-optional-text $ get session :user-id
                 logged-in? $ .some? user-id
                 route $ app.updater.router/read-route $ .unwrap-or (get session :router) (:: :files)
                 watching? $ match route
@@ -7044,9 +7175,9 @@
                   :router $ match route
                     (:files)
                       :: :files $ twig-page-files files
-                        optional-text $ .unwrap-or (get writer :selected-ns) nil
+                        app.schema/read-optional-text $ get writer :selected-ns
                         , old-files
-                          optional-text $ .unwrap-or (get writer :draft-ns) nil
+                          app.schema/read-optional-text $ get writer :draft-ns
                           , sessions sid $ decode-map-as
                             .unwrap-or (get db :source-templates) ({})
                             Map Tag String
@@ -7120,7 +7251,7 @@
                 get
                   decode-map-as
                     .unwrap $ get public :member
-                    quote $ Map Tag Dynamic
+                    Map Tag Dynamic
                   , :password
               assert= true $ .some? $ app.comp.watching/read-watching-frame public
               assert= (Option :none) (app.comp.watching/read-watching-frame nil)
@@ -7144,11 +7275,14 @@
                 page $ if (enum? router)
                   decode-map-as (&enum:nth router 0) 'Tag
                   raise |Expected-session-router
-              {}
-                :user $ app.twig.user/twig-user user
-                :nickname $ .unwrap-or (get session :nickname) nil
-                :bookmark $ app.util/to-bookmark $ get session :writer
-                :page page
+              let
+                  member $ {}
+                    :user $ app.twig.user/twig-user user
+                    :bookmark $ app.util/to-bookmark $ get session :writer
+                    :page page
+                match (get session :nickname)
+                  (:none) (assoc member :nickname nil)
+                  (:some value) (assoc member :nickname value)
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) (Map Tag Dynamic)
             -> $ Map Tag Dynamic
@@ -7164,7 +7298,7 @@
                 member $ twig-member session user
                 public-user $ decode-map-as
                   .unwrap $ get member :user
-                  quote $ Map Tag Dynamic
+                  Map Tag Dynamic
               assert= false $ contains? public-user :password
               assert= (Option :some "|合成成员") (get public-user :nickname)
               assert= (Option :some :editor) (get member :page)
@@ -7204,10 +7338,11 @@
                         if (= candidate bookmark)
                           let
                               user $ app.twig.user/session-user users session
-                              raw-name $ .unwrap-or (get user :nickname) nil
                             MapEntryDecision :keep sid $ {}
                               :focus $ app.bookmark/get-focus candidate
-                              :nickname $ if (nil? raw-name) |Someone $ decode-map-as raw-name 'String
+                              :nickname $ .unwrap-or
+                                app.schema/read-optional-text $ get user :nickname
+                                , |Someone
                               :session-id sid
                           MapEntryDecision :drop
                       (:none) (MapEntryDecision :drop)
@@ -7256,21 +7391,22 @@
             -> $ Option $ Set String
         'peek-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn peek-entry (files writer)
-            let
-                raw $ .unwrap-or (get writer :peek-def) nil
-              if (nil? raw) (Option :none)
-                let
-                    fields $ decode-map-as raw $ Map Tag Dynamic
-                    namespace $ decode-map-as
-                      .unwrap $ get fields :ns
-                      , 'String
-                    name $ decode-map-as
-                      .unwrap $ get fields :def
-                      , 'String
-                  match (get files namespace)
-                    (:none) (Option :none)
-                    (:some file)
-                      get (:defs file) name
+            match (get writer :peek-def)
+              (:none) (Option :none)
+              (:some raw)
+                if (nil? raw) (Option :none)
+                  let
+                      fields $ decode-map-as raw $ Map Tag Dynamic
+                      namespace $ decode-map-as
+                        .unwrap $ get fields :ns
+                        , 'String
+                      name $ decode-map-as
+                        .unwrap $ get fields :def
+                        , 'String
+                    match (get files namespace)
+                      (:none) (Option :none)
+                      (:some file)
+                        get (:defs file) name
           :examples $ []
           :schema $ quote $ Fn (Map String app.schema/FileEntry) (Map Tag Dynamic)
             -> $ Option app.schema/CodeEntry
@@ -7354,7 +7490,9 @@
                 let
                     namespace $ app.bookmark/get-namespace bookmark
                     choices $ if
-                      non-nil? $ .unwrap-or (get writer :picker-mode) nil
+                      match (get writer :picker-mode)
+                        (:none) false
+                        (:some value) (non-nil? value)
                       option:map (get files namespace)
                         fn (file)
                           hint-fn $ Fn app.schema/FileEntry $ -> (Map Tag Dynamic)
@@ -7364,16 +7502,19 @@
                       (:def namespace name _focus)
                         get usages-dict $ :: :reference namespace name
                       (:ns _namespace _focus) (Option :none)
-                  {}
-                    :focus $ app.bookmark/get-focus bookmark
-                    :others $ collaborators sessions users bookmark session-id
-                    :watchers $ watchers sessions users session-id
-                    :expr $ bookmark-entry files bookmark
-                    :peek-def $ peek-entry files writer
-                    :preview-locals $ namespace-locals files bookmark
-                    :picker-choices $ .unwrap-or choices $ {}
-                    :changed $ compare-entry (bookmark-entry files bookmark) (bookmark-entry old-files bookmark)
-                    :usages $ .unwrap-or usages nil
+                  let
+                      response $ {}
+                        :focus $ app.bookmark/get-focus bookmark
+                        :others $ collaborators sessions users bookmark session-id
+                        :watchers $ watchers sessions users session-id
+                        :expr $ bookmark-entry files bookmark
+                        :peek-def $ peek-entry files writer
+                        :preview-locals $ namespace-locals files bookmark
+                        :picker-choices $ .unwrap-or choices $ {}
+                        :changed $ compare-entry (bookmark-entry files bookmark) (bookmark-entry old-files bookmark)
+                    match usages
+                      (:none) (assoc response :usages nil)
+                      (:some value) (assoc response :usages value)
           :examples $ []
           :schema $ quote $ Fn (Map String app.schema/FileEntry) (Map String app.schema/FileEntry)
             Map String $ Map Tag Dynamic
@@ -7437,16 +7578,16 @@
               assert= (#{} |peer)
                 keys $ decode-map-as
                   .unwrap $ get frame :others
-                  quote $ Map String $ Map Tag Dynamic
+                  Map String $ Map Tag Dynamic
               assert= (#{} |viewer)
                 keys $ decode-map-as
                   .unwrap $ get frame :watchers
-                  quote $ Map String $ Map Tag Dynamic
+                  Map String $ Map Tag Dynamic
               assert= (Option :none)
                 get
                   decode-map-as
                     .unwrap $ get watching :member
-                    quote $ Map Tag Dynamic
+                    Map Tag Dynamic
                   , :password
               assert= (Option :some def-entry)
                 .unwrap $ get watching :expr
@@ -7632,13 +7773,7 @@
             filter-map-kv sessions $ fn (session-id session)
               hint-fn $ Fn String (Map Tag Dynamic)
                 -> $ MapEntryDecision String $ Map Tag Dynamic
-              let
-                  raw-user-id $ .unwrap-or (get session :user-id) nil
-                  user $ if (nil? raw-user-id) ({})
-                    .unwrap-or
-                      get users $ decode-map-as raw-user-id 'String
-                      {}
-                MapEntryDecision :keep session-id $ twig-member session user
+              MapEntryDecision :keep session-id $ twig-member session $ app.twig.user/lookup-session-user users session
           :examples $ []
           :schema $ quote $ Fn
             Map String $ Map Tag Dynamic
@@ -7690,15 +7825,22 @@
           :require $ app.bookmark :as bookmark
     'app.twig.user $ %{} 'FileEntry
       :defs $ {}
+        'lookup-session-user $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn lookup-session-user (users session)
+            match
+              app.schema/read-optional-text $ get session :user-id
+              (:none) ({})
+              (:some id)
+                .unwrap-or (get users id) ({})
+          :examples $ []
+          :schema $ quote $ Fn
+            Map String $ Map Tag V
+            Map Tag K
+            -> $ Map Tag V
+            :generics K V
         'session-user $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn session-user (users session)
-            let
-                raw-id $ .unwrap-or (get session :user-id) nil
-                user $ if (nil? raw-id) ({})
-                  .unwrap-or
-                    get users $ decode-map-as raw-id 'String
-                    {}
-              twig-user user
+            twig-user $ lookup-session-user users session
           :examples $ []
           :schema $ quote $ Fn
             Map String $ Map Tag Dynamic
@@ -7819,8 +7961,8 @@
               (:ir/update-leaf op-data) (ir/update-leaf db op-data sid op-id op-time)
               (:ir/duplicate op-data) (ir/duplicate db op-data sid op-id op-time)
               (:ir/rename op-data) (ir/rename db op-data sid op-id op-time)
-              (:ir/cp-ns op-data) (ir/cp-ns db op-data sid op-id op-time)
-              (:ir/mv-ns op-data) (ir/mv-ns db op-data sid op-id op-time)
+              (:ir/cp-ns op-data) (ir/transfer-namespace db op-data false)
+              (:ir/mv-ns op-data) (ir/transfer-namespace db op-data true)
               (:ir/delete-entry op-data) (ir/delete-entry db op-data sid op-id op-time)
               (:ir/reset-files) (ir/reset-files db sid op-id op-time)
               (:ir/reset-at op-data) (ir/reset-at db op-data sid op-id op-time)
@@ -7857,6 +7999,12 @@
           :require (app.updater.session :as session) (app.updater.user :as user) (app.updater.router :as router) (app.updater.ir :as ir) (app.updater.writer :as writer) (app.updater.notify :as notify) (app.updater.analyze :as analyze) (app.updater.watcher :as watcher) (app.updater.configs :as configs)
     'app.updater.analyze $ %{} 'FileEntry
       :defs $ {}
+        'DependencyGraph $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct DependencyGraph
+            :dependencies $ Map app.schema/DependencyKey $ Set app.schema/DependencyKey
+            :usages $ Map app.schema/DependencyKey $ Set app.schema/DependencyKey
+          :examples $ []
+          :schema $ quote StructDef
         'DependencyImport $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def DependencyImport
             defenum DependencyImport (:by-as String String)
@@ -7902,6 +8050,14 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
+        'dependency-key->wire $ %{} 'CodeEntry
+          :doc "|Keep the legacy keys in dependency maps sent to the client."
+          :code $ quote $ defn dependency-key->wire (key)
+            match key
+              (:def namespace name) (:: :def namespace name)
+              (:reference namespace name) (:: :reference namespace name)
+          :examples $ []
+          :schema $ quote $ Fn app.schema/DependencyKey (-> AnyEnum)
         'goto-def $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn goto-def (db op-data sid op-id op-time)
             let
@@ -7982,9 +8138,9 @@
           :code $ quote $ defn parse-all-deps (files)
             let
                 *usages $ ref $ assert-type ({})
-                  Map Enum $ Set Enum
+                  Map app.schema/DependencyKey $ Set app.schema/DependencyKey
                 *deps $ ref $ assert-type ({})
-                  Map Enum $ Set Enum
+                  Map app.schema/DependencyKey $ Set app.schema/DependencyKey
               each (&map:to-list files)
                 fn (pair)
                   hint-fn $ Fn (Tuple String app.schema/FileEntry) (-> Unit)
@@ -7998,10 +8154,10 @@
                       fn (pair)
                         hint-fn $ Fn (Tuple String app.schema/CodeEntry) (-> Unit)
                         let[] (definition entry) pair $ let
-                            key $ :: :def namespace definition
-                            *entry-deps $ ref $ assert-type (#{}) (Set Enum)
+                            key $ schema/DependencyKey :def namespace definition
+                            *entry-deps $ ref $ assert-type (#{}) (Set app.schema/DependencyKey)
                             collect! $ fn (reference)
-                              hint-fn $ Fn Enum $ -> Unit
+                              hint-fn $ Fn app.schema/DependencyKey $ -> Unit
                               let
                                   entries $ .unwrap-or (get @*usages reference) (#{})
                                 swap! *usages assoc reference $ include entries key
@@ -8012,9 +8168,9 @@
                             , local-defs import-rules namespace definition collect!
                           swap! *deps assoc key @*entry-deps
                           , &unit
-              :: :deps @*deps @*usages
+              DependencyGraph :dependencies @*deps :usages @*usages
           :examples $ []
-          :schema $ quote $ Fn (Map String app.schema/FileEntry) (-> Enum)
+          :schema $ quote $ Fn (Map String app.schema/FileEntry) (-> app.updater.analyze/DependencyGraph)
         'parse-bookmarks-collect! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-bookmarks-collect! (tree local-defs import-rules this-ns this-def collect!)
             match tree
@@ -8029,7 +8185,7 @@
                       , leaf
                   if (contains? local-defs sym)
                     when (not= this-def sym)
-                      collect! $ :: :reference this-ns sym
+                      collect! $ schema/DependencyKey :reference this-ns sym
                     each import-rules $ fn (rule)
                       hint-fn $ Fn app.updater.analyze/DependencyImport $ -> Unit
                       match rule
@@ -8037,15 +8193,15 @@
                           let
                               prefix $ str alias |/
                             when (starts-with? sym prefix)
-                              collect! $ :: :reference namespace $ &str:slice sym (.len prefix) (.len sym)
+                              collect! $ schema/DependencyKey :reference namespace $ &str:slice sym (.len prefix) (.len sym)
                         (:by-refer namespace definitions)
                           when (contains? definitions sym)
-                            collect! $ :: :reference namespace sym
+                            collect! $ schema/DependencyKey :reference namespace sym
                       , &unit
             , &unit
           :examples $ []
           :schema $ quote $ Fn app.schema/CirruSyntax (Set String) (List app.updater.analyze/DependencyImport) String String
-            Fn Enum $ -> Unit
+            Fn app.schema/DependencyKey $ -> Unit
             -> Unit
         'parse-ns-rules $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-ns-rules (form)
@@ -8132,15 +8288,56 @@
             -> $ Map Tag Dynamic
         'refresh-usages-dict $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn refresh-usages-dict (db sid op-id op-time)
-            match
-              parse-all-deps $ decode-map-as
-                .unwrap $ get db :files
-                Map String app.schema/FileEntry
-              (:deps deps-dict usages-dict)
-                -> db (assoc :usages-dict usages-dict) (assoc :deps-dict deps-dict)
+            let
+                graph $ parse-all-deps $ decode-map-as
+                  .unwrap $ get db :files
+                  Map String app.schema/FileEntry
+              -> db
+                assoc :usages-dict $ wire-dependency-map $ :usages graph
+                assoc :deps-dict $ wire-dependency-map $ :dependencies graph
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) String String Number
             -> $ Map Tag Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |typed-graph-preserves-anonymous-wire-keys)
+            :code $ quote $ let
+                make-entry $ fn (form)
+                  hint-fn $ Fn app.schema/CirruSyntax $ -> app.schema/CodeEntry
+                  %{} schema/CodeEntry (:doc |)
+                    :code $ cirru->tree form |fixture 1
+                    :examples $ []
+                    :source-entry $ Option :none
+                file $ %{} schema/FileEntry
+                  :ns $ make-entry $ [] |ns |demo.main
+                  :defs $ {}
+                    |first $ make-entry $ [] |def |first |1
+                    |second $ make-entry $ [] |def |second |first
+                  :source-view $ Option :none
+                db $ refresh-usages-dict
+                  {} $ :files $ {} (|demo.main file)
+                  , |fixture |edit 1
+                first-ref $ :: :reference |demo.main |first
+                first-def $ :: :def |demo.main |first
+                second-def $ :: :def |demo.main |second
+              assert=
+                {}
+                  first-def $ #{}
+                  second-def $ #{} first-ref
+                .unwrap $ get db :deps-dict
+              assert=
+                {} $ first-ref $ #{} second-def
+                .unwrap $ get db :usages-dict
+              assert=
+                Option :some $ #{} $ schema/DependencyKey :reference |demo.main |first
+                get
+                  schema/read-dependency-map $ parse-cirru-edn $ format-cirru-edn
+                    .unwrap $ get db :deps-dict
+                  schema/DependencyKey :def |demo.main |second
+              assert=
+                #{} $ schema/DependencyKey :def |demo.main |second
+                schema/read-dependency-set $ .unwrap $ get
+                  .unwrap $ get db :usages-dict
+                  , first-ref
+            :tags $ #{} :unit
         'resolve-definition $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resolve-definition (db sid reference)
             match
@@ -8258,6 +8455,16 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
+        'wire-dependency-map $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn wire-dependency-map (relations)
+            filter-map-kv relations $ fn (key linked)
+              hint-fn $ Fn app.schema/DependencyKey (Set app.schema/DependencyKey)
+                -> $ MapEntryDecision AnyEnum $ Set AnyEnum
+              MapEntryDecision :keep (dependency-key->wire key) (.map linked dependency-key->wire)
+          :examples $ []
+          :schema $ quote $ Fn
+            Map app.schema/DependencyKey $ Set app.schema/DependencyKey
+            -> $ Map AnyEnum $ Set AnyEnum
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater.analyze
           :require
@@ -8353,6 +8560,10 @@
         :code $ quote $ ns app.updater.configs
     'app.updater.ir $ %{} 'FileEntry
       :defs $ {}
+        'NamespaceTransfer $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct NamespaceTransfer (:from String) (:to String)
+          :examples $ []
+          :schema $ quote StructDef
         'SiblingEdit $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def SiblingEdit
             defenum SiblingEdit (:leaf-before) (:leaf-after) (:expr-before) (:expr-after)
@@ -8438,7 +8649,7 @@
             let
                 writer $ .unwrap $ to-writer db sid
                 selected-ns $ .unwrap-or
-                  app.twig.container/optional-text $ .unwrap-or (get writer :selected-ns) nil
+                  app.schema/read-optional-text $ get writer :selected-ns
                   , |
                 files $ decode-map-as
                   .unwrap $ get db :files
@@ -8479,17 +8690,6 @@
                           , new-ns
                         Map Tag Dynamic
                 warn "|Not a valid string!"
-          :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
-            -> $ Map Tag Dynamic
-        'cp-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn cp-ns (db op-data session-id op-id op-time)
-            update db :files $ fn (files)
-              -> files $ assoc
-                option:unwrap-or (get op-data :to) nil
-                option:unwrap-or
-                  get files $ option:unwrap-or (get op-data :from) nil
-                  , nil
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
@@ -8743,19 +8943,6 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
-        'mv-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn mv-ns (db op-data session-id op-id op-time)
-            update db :files $ fn (files)
-              -> files
-                dissoc $ option:unwrap-or (get op-data :from) nil
-                assoc
-                  option:unwrap-or (get op-data :to) nil
-                  option:unwrap-or
-                    get files $ option:unwrap-or (get op-data :from) nil
-                    , nil
-          :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
-            -> $ Map Tag Dynamic
         'prepend-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn prepend-leaf (db op-data session-id op-id op-time) (insert-empty-leaf db session-id op-id op-time false)
           :examples $ []
@@ -8772,14 +8959,18 @@
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
         'remove-ns $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn remove-ns (db op-data session-id op-id op-time)
-            -> db
-              update :files $ fn (files) (dissoc files op-data)
-              update-in ([] :sessions session-id :writer :selected-ns)
-                fn (x)
-                  if
-                    = (option:unwrap-or x nil) op-data
-                    , nil x
+          :code $ quote $ defn remove-ns (db op-data session-id _op-id _op-time)
+            let
+                namespace $ decode-map-as op-data String
+                selected-path $ [] :sessions session-id :writer :selected-ns
+                files $ decode-map-as
+                  .unwrap $ get db :files
+                  Map String app.schema/FileEntry
+                next-db $ assoc db :files $ dissoc files namespace
+              if
+                = (get-in db selected-path) (Result :ok namespace)
+                decode-map-as (assoc-in next-db selected-path nil) (Map Tag Dynamic)
+                , next-db
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
@@ -9037,6 +9228,55 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) String String Number
             -> $ Map Tag Dynamic
+        'transfer-namespace $ %{} 'CodeEntry
+          :doc "|Validate both names and the source entry before altering the file map."
+          :code $ quote $ defn transfer-namespace (db op-data move?)
+            let
+                transfer $ decode-map-as op-data 'app.updater.ir/NamespaceTransfer
+                files $ decode-map-as
+                  .unwrap $ get db :files
+                  Map String app.schema/FileEntry
+                source $ .unwrap $ get files (:from transfer)
+                next $ if move?
+                  dissoc files $ :from transfer
+                  , files
+              assoc db :files $ assoc next (:to transfer) source
+          :examples $ []
+          :schema $ quote $ Fn (Map Tag Dynamic) T Bool
+            -> $ Map Tag Dynamic
+            :generics T
+          :tests $ [] $ %{} 'TestEntry (:name |checked-namespace-transfer-and-selection)
+            :code $ quote $ let
+                entry $ %{} app.schema/CodeEntry (:doc |)
+                  :code $ app.util/cirru->tree ([] |ns |demo.source) |fixture 1
+                  :examples $ []
+                  :source-entry $ Option :none
+                file $ %{} app.schema/FileEntry (:ns entry)
+                  :defs $ {}
+                  :source-view $ Option :none
+                path $ [] :sessions |sid :writer :selected-ns
+                db $ {}
+                  :files $ {} $ |demo.source file
+                  :sessions $ {} $ |sid
+                    {} $ :writer $ {} (:selected-ns |demo.source)
+                names $ {} (:from |demo.source) (:to |demo.copy)
+                copied $ transfer-namespace db names false
+                moved $ transfer-namespace db names true
+              assert= (Result :ok file)
+                get-in copied $ [] :files |demo.copy
+              assert= (Result :ok file)
+                get-in copied $ [] :files |demo.source
+              assert= (Result :ok file)
+                get-in moved $ [] :files |demo.copy
+              assert=
+                Option :some $ {} $ |demo.copy file
+                get moved :files
+              assert= (Result :ok |demo.source)
+                get-in (remove-ns copied |demo.copy |sid |edit 1) path
+              assert=
+                Result :err $ PathError :missing
+                get-in (remove-ns copied |demo.source |sid |edit 1) path
+            :tags $ #{} :unit
         'unindent $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn unindent (db session-id op-id op-time)
             let
@@ -9213,7 +9453,8 @@
               _ $ raise |Unknown-editor-route
           :examples $ []
           :schema $ quote $ Fn Dynamic (-> app.updater.router/Route)
-        'route->wire $ %{} 'CodeEntry (:doc |)
+        'route->wire $ %{} 'CodeEntry
+          :doc "|Encode a typed route as the original anonymous WebSocket enum."
           :code $ quote $ defn route->wire (route)
             match route
               (:files) (:: :files)
@@ -9224,7 +9465,7 @@
               (:configs) (:: :configs)
               (:watching sid) (:: :watching sid)
           :examples $ []
-          :schema $ quote $ Fn app.updater.router/Route (-> Enum)
+          :schema $ quote $ Fn app.updater.router/Route (-> AnyEnum)
           :tests $ [] $ %{} 'TestEntry
             :name |checked-local-routes-retain-anonymous-wire-protocol
             :code $ quote $ do
@@ -9232,12 +9473,21 @@
                 route->wire $ read-route $ :: :files
               assert= (:: :watching |peer)
                 route->wire $ read-route $ :: :watching |peer
+              assert=
+                :: :router/change $ :: :watching |peer
+                route-op $ Route :watching |peer
               assert= true $ try
                 do
                   read-route $ :: :unknown
                   , false
                 fn (_error) true
             :tags $ #{} :unit
+        'route-op $ %{} 'CodeEntry
+          :doc "|Encode a typed navigation request using the existing WebSocket action format."
+          :code $ quote $ defn route-op (route)
+            :: :router/change $ route->wire route
+          :examples $ []
+          :schema $ quote $ Fn app.updater.router/Route (-> AnyEnum)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater.router
     'app.updater.session $ %{} 'FileEntry
@@ -9508,13 +9758,13 @@
                 partial $ accept-source-save db (app.source/SourceSave :saved |new) (Option :some |demo.main) |session |op 42
                 baseline $ decode-map-as
                   .unwrap $ get partial :saved-files
-                  quote $ Map String app.schema/FileEntry
+                  Map String app.schema/FileEntry
                 removed $ accept-source-save partial (app.source/SourceSave :saved |next) (Option :some |demo.removed) |session |op2 43
                 all-saved $ accept-source-save removed (app.source/SourceSave :unchanged |next) (Option :none) |session |op3 44
                 messages $ match
                   get-in partial $ [] :sessions |session :notifications
                   (:ok value)
-                    decode-map-as value $ quote $ List (Map Tag Dynamic)
+                    decode-map-as value $ List $ Map Tag Dynamic
                   (:err _error) (raise |Missing-save-notification)
               assert= (Option :some |new) (get partial :source-revision)
               assert= (Option :some changed) (get baseline |demo.main)
@@ -9523,7 +9773,7 @@
                 get
                   decode-map-as
                     .unwrap $ get removed :saved-files
-                    quote $ Map String app.schema/FileEntry
+                    Map String app.schema/FileEntry
                   , |demo.removed
               assert= (get all-saved :files) (get all-saved :saved-files)
               assert= (Option :some |next) (get all-saved :source-revision)
@@ -9989,8 +10239,9 @@
                         user $ .unwrap-or
                           get users $ decode-map-as raw-id 'String
                           {}
-                        raw-name $ .unwrap-or (get user :name) nil
-                      if (nil? raw-name) |Guest $ decode-map-as raw-name 'String
+                      .unwrap-or
+                        app.schema/read-optional-text $ get user :name
+                        , |Guest
                   (:err _error) |Guest
                 description $ match selected
                   (:none) "| saved files!"
@@ -10510,7 +10761,7 @@
               , &unit
           :examples $ []
           :schema $ quote $ Fn
-            Fn Enum $ -> Unit
+            Fn *dispatch-op $ -> Unit
             , String String (-> Unit) (:features :js-ffi)
         'focus! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn focus! ()
@@ -10685,7 +10936,7 @@
               , &unit
           :examples $ []
           :schema $ quote $ Fn
-            Fn Enum $ -> Unit
+            Fn *dispatch-op $ -> Unit
             -> Unit
             :features :js-ffi
         'on-window-keydown $ %{} 'CodeEntry (:doc |)
@@ -10699,7 +10950,7 @@
                 cond
                     and meta? $ or (= code keycode/p) (= code keycode/o)
                     do
-                      dispatch! $ :: :router/change $ :: :search
+                      dispatch! $ app.updater.router/route-op $ app.updater.router/Route :search
                       focus-search!
                       .prevent-default! keyboard
                   (and meta? (= code keycode/e))
@@ -10716,14 +10967,14 @@
                       dispatch! $ :: :effect/save-files
                       dispatch! $ :: :analyze/refresh-usages-dict
                   (and meta? shift? (= code keycode/f))
-                    dispatch! $ :: :router/change $ :: :files
+                    dispatch! $ app.updater.router/route-op $ app.updater.router/Route :files
                   (and meta? (not shift?) (= code keycode/period))
                     dispatch! $ :: :writer/picker-mode
                   true nil
             , &unit
           :examples $ []
           :schema $ quote $ Fn Dynamic
-            Fn Enum $ -> Unit
+            Fn *dispatch-op $ -> Unit
             , Dynamic (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.util.shortcuts

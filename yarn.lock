@@ -9,7 +9,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@calcit/editor@workspace:."
   dependencies:
-    "@calcit/procs": "npm:0.35.1"
+    "@calcit/procs": "npm:0.38.0"
     "@google/genai": "npm:^1.37.0"
     bottom-tip: "npm:^0.1.5"
     chalk: "npm:^5.6.2"
@@ -35,15 +35,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@calcit/procs@npm:0.35.1":
-  version: 0.35.1
-  resolution: "@calcit/procs@npm:0.35.1"
+"@calcit/procs@npm:0.38.0":
+  version: 0.38.0
+  resolution: "@calcit/procs@npm:0.38.0"
   dependencies:
     "@calcit/finger-vec": "npm:0.1.1"
     "@calcit/ternary-tree": "npm:0.0.26"
     "@cirru/parser.ts": "npm:0.0.10"
     "@cirru/writer.ts": "npm:^0.1.9"
-  checksum: 10c0/c39ab807cdda677cfd9fa9f6ae8adbb468347d5dd85ac38355a27a048cc9a1b7301d4f9c73f3bbf815269ecc7a59d824f61c8c46a9d56ae6a67f3b5cb21be3de
+  checksum: 10c0/8d1910cc739b1b23b5d5b549fb519053b2a578ab05f11814d28c09fbf4c18be5d3a14f52ff3b9bea4c9a3a42ab79d56a59021cd533d68ecc5e26e61da1e347ba
   languageName: node
   linkType: hard
 
