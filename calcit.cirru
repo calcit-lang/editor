@@ -243,46 +243,44 @@
             Option $ Map Tag Dynamic
         'connect! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn connect! () (js/console.info |Connecting...) (reset! *connecting? true)
-            do
-              ws-connect! (ws-host)
-                {}
-                  :on-open $ fn (event) (simulate-login!) (detect-watching!) (heartbeat!)
-                  :on-close $ fn (event)
-                    reset! *store $ Option :none
-                    reset! *connecting? false
-                    js/console.error "|Lost connection!"
-                    dispatch! $ app.client-updater/UiStateOp :states/clear
-                  :on-data $ fn (data)
-                    match data
-                      (:patch changes)
-                        do
-                          when config/dev? $ js/console.log |Changes changes
-                          let
-                              patches $ recollect.schema/decode-changes changes
-                            match
-                              match @*store
-                                (:some current) (recollect.patch/try-patch-twig current patches)
-                                (:none) (recollect.patch/try-patch-twig nil patches)
-                              (:ok next)
-                                do
-                                  reset! *store $ Option :some $ decode-map-as next (Map Tag Dynamic)
-                                  , &unit
-                              (:err error)
-                                do (eprintln |Rejected-Editor-patch: error) &unit
-                      _ $ eprintln "|Unknown op:" data
-                  :class-mapper $ {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf)
-              , &unit
+            ws-connect! (ws-host)
+              {}
+                :on-open $ fn (event) (simulate-login!) (detect-watching!) (heartbeat!)
+                :on-close $ fn (event)
+                  reset! *store $ Option :none
+                  reset! *connecting? false
+                  js/console.error "|Lost connection!"
+                  dispatch! $ app.client-updater/UiStateOp :states/clear
+                :on-data $ fn (data)
+                  match data
+                    (:patch changes)
+                      do
+                        when config/dev? $ js/console.log |Changes changes
+                        let
+                            patches $ recollect.schema/decode-changes changes
+                          match
+                            match @*store
+                              (:some current) (recollect.patch/try-patch-twig current patches)
+                              (:none) (recollect.patch/try-patch-twig nil patches)
+                            (:ok next)
+                              do
+                                reset! *store $ Option :some $ decode-map-as next (Map Tag Dynamic)
+                                , &unit
+                            (:err error)
+                              do (eprintln |Rejected-Editor-patch: error) &unit
+                    _ $ eprintln "|Unknown op:" data
+                :class-mapper $ {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf)
+            , &unit
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'detect-watching! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn detect-watching! ()
-            do
-              match
-                get (parse-query!) |watching
-                (:none) &unit
-                (:some raw)
-                  dispatch! $ app.updater.router/route-op $ app.updater.router/Route :watching (decode-map-as raw String)
-              , &unit
+            match
+              get (parse-query!) |watching
+              (:none) &unit
+              (:some raw)
+                dispatch! $ app.updater.router/route-op $ app.updater.router/Route :watching (decode-map-as raw String)
+            , &unit
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'dispatch! $ %{} 'CodeEntry (:doc |)
@@ -303,15 +301,14 @@
           :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi)
         'heartbeat! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn heartbeat! ()
-            do
-              js/setTimeout
-                fn () $ if (ws-connected?)
-                  do
-                    ws-send! $ :: :ping
-                    heartbeat!
-                  println "|Disabled heartbeat since connection lost."
-                , 3000
-              , &unit
+            js/setTimeout
+              fn () $ if (ws-connected?)
+                do
+                  ws-send! $ :: :ping
+                  heartbeat!
+                println "|Disabled heartbeat since connection lost."
+              , 3000
+            , &unit
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
@@ -2628,8 +2625,8 @@
                           :text $ :text leaf
                           :forced? shift?
                   (and meta? (= code keycode/slash) (not shift?))
-                    do $ js/window.open $ str |https://apis.calcit-lang.org/?q=
-                      js/encodeURIComponent $ last $ split (:text leaf) |/
+                    js/window.open $ str |https://apis.calcit-lang.org/?q= $ js/encodeURIComponent
+                      last $ split (:text leaf) |/
                   (and picker-mode? (= code keycode/escape))
                     d! $ :: :writer/picker-mode
                   (and meta? alt? (= code keycode/num-4))
@@ -3723,10 +3720,9 @@
                         hint-fn $ Fn Dynamic $ -> Unit
                         let
                             text $ trim $ decode-map-as result 'String
-                          do
-                            when-not (blank? text)
-                              d! $ :: :ir/add-ns text
-                            , &unit
+                          when-not (blank? text)
+                            d! $ :: :ir/add-ns text
+                          , &unit
                       , &unit
                 =< nil 8
                 respo.core/data-list->
@@ -4322,12 +4318,11 @@
           :schema $ quote $ Fn respo.schema/States (Map Tag Dynamic) String (Map Tag Dynamic) (-> respo.schema/Component)
         'on-log-out $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-log-out (e dispatch!)
-            do
-              dispatch! $ :: :user/log-out nil
-              js-ffi.browser/storage-remove! $ decode-map-as
-                option:unwrap-or (get config/site :storage-key) |
-                , 'String
-              , &unit
+            dispatch! $ :: :user/log-out nil
+            js-ffi.browser/storage-remove! $ decode-map-as
+              option:unwrap-or (get config/site :storage-key) |
+              , 'String
+            , &unit
           :examples $ []
           :schema $ quote $ Fn respo.schema/RespoEvent
             Fn *dispatch-op $ -> Unit
@@ -6561,29 +6556,33 @@
                 files $ filter-map-kv namespaces $ fn (name entry)
                   hint-fn $ Fn String String $ -> (MapEntryDecision String app.schema/FileEntry)
                   MapEntryDecision :keep name $ :file $ import-cli-file entry author timestamp
-              %{} SourceProject
-                :package $ decode-map-as
+              SourceProject :package
+                decode-map-as
                   .unwrap $ get fields :package
                   , 'String
-                :files files
-                :configs $ decode-map-as
-                  .unwrap $ get fields :configs
-                  Map Tag Dynamic
-                :entries $ decode-map-as
-                  .unwrap $ get fields :entries
-                  Map String $ Map Tag Dynamic
-                :source-config $ decode-map-as
-                  .unwrap $ get fields :source-config
-                  , 'String
-                :source-revision $ decode-map-as
-                  .unwrap $ get fields :source-revision
-                  , 'String
-                :source-templates $ decode-map-as
-                  .unwrap $ get fields :source-templates
-                  Map Tag String
-                :source-manifest-revision $ decode-map-as
-                  .unwrap $ get fields :source-manifest-revision
-                  , 'String
+                , :files files :configs
+                  decode-map-as
+                    .unwrap $ get fields :configs
+                    Map Tag Dynamic
+                  , :entries
+                    decode-map-as
+                      .unwrap $ get fields :entries
+                      Map String $ Map Tag Dynamic
+                    , :source-config
+                      decode-map-as
+                        .unwrap $ get fields :source-config
+                        , 'String
+                      , :source-revision
+                        decode-map-as
+                          .unwrap $ get fields :source-revision
+                          , 'String
+                        , :source-templates
+                          decode-map-as
+                            .unwrap $ get fields :source-templates
+                            Map Tag String
+                          , :source-manifest-revision $ decode-map-as
+                            .unwrap $ get fields :source-manifest-revision
+                            , 'String
           :examples $ []
           :schema $ quote $ Fn String String Number (-> app.source/SourceProject)
         'import-entry $ %{} 'CodeEntry (:doc |)
@@ -7739,20 +7738,20 @@
         'twig-page-files $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn twig-page-files (files selected-ns saved-files draft-ns sessions sid source-templates)
             {}
-              :ns-dict $ -> files $ filter-map-kv
-                fn (k v)
-                  hint-fn $ Fn String app.schema/FileEntry $ -> (MapEntryDecision String String)
-                  %:: calcit.core/MapEntryDecision :keep k $ :doc $ :ns v
+              :ns-dict $ &map:fold-kv files ({})
+                fn (docs key value)
+                  hint-fn $ Fn (Map String String) String app.schema/FileEntry $ -> (Map String String)
+                  assoc docs key $ :doc $ :ns value
               :defs-dict $ match selected-ns
                 (:some ns-name)
                   let
                       file-entry $ assert-type
                         option:unwrap $ get files ns-name
                         , 'app.schema/FileEntry
-                    filter-map-kv (:defs file-entry)
-                      fn (k v)
-                        hint-fn $ Fn String app.schema/CodeEntry $ -> (MapEntryDecision String String)
-                        %:: calcit.core/MapEntryDecision :keep k $ :doc v
+                    &map:fold-kv (:defs file-entry) ({})
+                      fn (docs key value)
+                        hint-fn $ Fn (Map String String) String app.schema/CodeEntry $ -> (Map String String)
+                        assoc docs key $ :doc value
                 (:none) ({})
               :changed-files $ render-changed-files files saved-files
               :peeking-file $ match draft-ns
@@ -7987,7 +7986,8 @@
               (:notify/broadcast op-data) (notify/broadcast db op-data sid op-id op-time)
               (:analyze/goto-def op-data) (analyze/goto-def db op-data sid op-id op-time)
               (:analyze/abstract-def op-data) (analyze/abstract-def db op-data sid op-id op-time)
-              (:analyze/peek-def op-data) (analyze/peek-def db op-data sid op-id op-time)
+              (:analyze/peek-def op-data)
+                analyze/peek-def db (decode-map-as op-data String) sid op-id op-time
               (:analyze/refresh-usages-dict) (analyze/refresh-usages-dict db sid op-id op-time)
               (:analyze/use-import-def target) (analyze/use-import-def db target sid op-id op-time)
               (:ping) db
@@ -8254,9 +8254,8 @@
           :schema $ quote $ Fn app.schema/CirruSyntax
             -> $ List app.updater.analyze/DependencyImport
         'peek-def $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn peek-def (db op-data sid op-id op-time)
+          :code $ quote $ defn peek-def (db text sid op-id op-time)
             let
-                text $ decode-map-as op-data String
                 reference $ parse-def text
                 pkg $ decode-map-as
                   .unwrap-or (get db :package) |
@@ -8292,7 +8291,7 @@
                             warn $ str "|Does not exist: " namespace "| " name
                         warn $ str "|External dep: " namespace
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
+          :schema $ quote $ Fn (Map Tag Dynamic) String String String Number
             -> $ Map Tag Dynamic
         'refresh-usages-dict $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn refresh-usages-dict (db sid op-id op-time)
@@ -10767,23 +10766,21 @@
             , String String (-> Unit) (:features :js-ffi)
         'focus! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn focus! ()
-            do
-              js-ffi.browser/request-animation-frame! $ fn (timestamp)
-                match (js-ffi.browser/query-selector |.cirru-focused)
-                  (:some target) (js-ffi.browser/element-focus! target)
-                  (:none) (println "|[Editor] .cirru-focused not found")
-              , &unit
+            js-ffi.browser/request-animation-frame! $ fn (timestamp)
+              match (js-ffi.browser/query-selector |.cirru-focused)
+                (:some target) (js-ffi.browser/element-focus! target)
+                (:none) (println "|[Editor] .cirru-focused not found")
+            , &unit
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'focus-search! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn focus-search! ()
-            do
-              js/setTimeout
-                fn () $ match (js-ffi.browser/query-selector |.search-input)
-                  (:some target) (js-ffi.browser/element-focus! target)
-                  (:none) &unit
-                , 200
-              , &unit
+            js/setTimeout
+              fn () $ match (js-ffi.browser/query-selector |.search-input)
+                (:some target) (js-ffi.browser/element-focus! target)
+                (:none) &unit
+              , 200
+            , &unit
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'prevent-default! $ %{} 'CodeEntry (:doc |)
@@ -10961,9 +10958,9 @@
                     do (.prevent-default! keyboard)
                       dispatch! $ :: :writer/move-next
                   (and meta? (not shift?) (= code keycode/i))
-                    do $ dispatch! $ :: :writer/move-previous
+                    dispatch! $ :: :writer/move-previous
                   (and meta? (= code keycode/k))
-                    do $ dispatch! $ :: :writer/finish
+                    dispatch! $ :: :writer/finish
                   (and meta? (= code keycode/s))
                     do (.prevent-default! keyboard)
                       dispatch! $ :: :effect/save-files
