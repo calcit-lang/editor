@@ -94,11 +94,9 @@
               hint-fn $ Fn app.bookmark/%bookmark $ -> (Option app.bookmark/%bookmark)
               match self
                 (:def ns' def' f)
-                  if (empty? f) (Option :none)
-                    Option :some $ %:: %bookmark :def ns' def' $ butlast f
+                  if (empty? f) None $ Some $ %:: %bookmark :def ns' def' (butlast f)
                 (:ns ns' f)
-                  if (empty? f) (Option :none)
-                    Option :some $ %:: %bookmark :ns ns' $ butlast f
+                  if (empty? f) None $ Some $ %:: %bookmark :ns ns' (butlast f)
           :examples $ []
           :schema $ quote Impl
         'BookmarkTrait $ %{} 'CodeEntry (:doc |)
@@ -178,8 +176,8 @@
             if (enum? raw)
               match raw
                 (:some bookmark)
-                  Option :some $ read-bookmark bookmark
-                (:none) (Option :none)
+                  Some $ read-bookmark bookmark
+                (:none) None
                 _ $ raise |Expected-optional-bookmark
               raise |Expected-optional-bookmark
           :examples $ []
@@ -189,7 +187,7 @@
           :code $ quote $ defn to-path (bookmark) (.to-path bookmark)
           :examples $ []
           :schema $ quote $ Fn app.bookmark/%bookmark
-            -> $ List app.bookmark/PathSegment
+            -> $ List PathSegment
           :tests $ [] $ %{} 'TestEntry (:name |typed-paths-focus-and-parent)
             :code $ quote $ let
                 root $ %:: %bookmark :ns |demo.main $ []
@@ -198,7 +196,7 @@
               assert=
                 [] :files |demo.main :defs |keep :code :data |a :data |b
                 to-path nested
-              assert= (Option :none) (get-parent root)
+              assert= None $ get-parent root
               assert= |demo.main $ .get-ns nested
               assert= true $ .is-ns? root
               assert= true $ .is-def? nested
@@ -237,7 +235,7 @@
           :examples $ []
           :schema $ quote $ Ref (Map Tag Dynamic)
         '*store $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defref *store (Option :none)
+          :code $ quote $ defref *store None
           :examples $ []
           :schema $ quote $ Ref
             Option $ Map Tag Dynamic
@@ -246,10 +244,7 @@
             ws-connect! (ws-host)
               {}
                 :on-open $ fn (event) (simulate-login!) (detect-watching!) (heartbeat!)
-                :on-close $ fn (event)
-                  reset! *store $ Option :none
-                  reset! *connecting? false
-                  js/console.error "|Lost connection!"
+                :on-close $ fn (event) (reset! *store None) (reset! *connecting? false) (js/console.error "|Lost connection!")
                   dispatch! $ app.client-updater/UiStateOp :states/clear
                 :on-data $ fn (data)
                   match data
@@ -264,7 +259,7 @@
                               (:none) (recollect.patch/try-patch-twig nil patches)
                             (:ok next)
                               do
-                                reset! *store $ Option :some $ decode-map-as next (Map Tag Dynamic)
+                                reset! *store $ Some $ decode-map-as next (Map Tag Dynamic)
                                 , &unit
                             (:err error)
                               do (eprintln |Rejected-Editor-patch: error) &unit
@@ -462,7 +457,7 @@
               (:manual-state/abstract) (abstract states)
               (:manual-state/draft-box) (draft-box states)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.client-updater/UiStateOp
+          :schema $ quote $ Fn (Map Tag Dynamic) UiStateOp
             -> $ Map Tag Dynamic
         'clear-editor $ %{} 'CodeEntry
           :doc "|Clear per-bookmark String/Number state branches after checking the actual CoordKey map. Preserve Tag-scoped editor/plugin payloads, including false; absent editor scope is a no-op."
@@ -507,7 +502,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn AnyEnum $ -> Unit
-            , app.client-updater/UiStateOp (-> Unit) (:open :decode)
+            , UiStateOp (-> Unit) (:open :decode)
         'draft-box $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn draft-box (states)
             assoc-in states ([] :editor :data :draft-box?) true
@@ -518,27 +513,27 @@
           :doc "|Adapt the anonymous state events still emitted by Respo plugins."
           :code $ quote $ defn read-ui-state-op (op)
             if
-              = (enum-definition op) (Option :some UiStateOp)
-              Option :some $ decode-map-as op 'app.client-updater/UiStateOp
+              = (enum-definition op) (Some UiStateOp)
+              Some $ decode-map-as op 'app.client-updater/UiStateOp
               match op
                 (:states cursor value)
-                  Option :some $ UiStateOp :states
+                  Some $ UiStateOp :states
                     decode-map-as cursor $ List respo.schema/CoordKey
                     , value
                 (:states-merge cursor initial changes)
-                  Option :some $ UiStateOp :states-merge
+                  Some $ UiStateOp :states-merge
                     decode-map-as cursor $ List respo.schema/CoordKey
                     , initial $ decode-map-as changes (Map Tag Dynamic)
                 (:states/clear)
-                  Option :some $ UiStateOp :states/clear
+                  Some $ UiStateOp :states/clear
                 (:manual-state/abstract)
-                  Option :some $ UiStateOp :manual-state/abstract
+                  Some $ UiStateOp :manual-state/abstract
                 (:manual-state/draft-box)
-                  Option :some $ UiStateOp :manual-state/draft-box
-                _ $ Option :none
+                  Some $ UiStateOp :manual-state/draft-box
+                _ None
           :examples $ []
           :schema $ quote $ Fn AnyEnum
-            -> $ Option app.client-updater/UiStateOp
+            -> $ Option UiStateOp
             :open :decode
           :tests $ [] $ %{} 'TestEntry (:name |typed-state-and-legacy-plugin)
             :code $ quote $ let
@@ -547,14 +542,13 @@
                 updated $ apply-ui-state ({}) action
                 merged $ apply-ui-state updated $ UiStateOp :states-merge cursor ({})
                   {} $ :text |next
-              assert= (Option :some action) (read-ui-state-op action)
-              assert= (Option :some action)
+              assert= (Some action) (read-ui-state-op action)
+              assert= (Some action)
                 read-ui-state-op $ :: :states cursor $ {} (:keep? false) (:text |old)
               assert=
                 Result :ok $ {} (:keep? false) (:text |next)
                 get-in merged $ [] :panel 2 :data
-              assert= (Option :none)
-                read-ui-state-op $ :: :writer/finish
+              assert= None $ read-ui-state-op $ :: :writer/finish
             :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.client-updater
@@ -591,7 +585,7 @@
                         (app.schema/CirruLeafShape _child) false
                         (app.schema/CirruExprShape _child) true
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruNode Number (-> Bool)
+          :schema $ quote $ Fn schema/CirruNode Number (-> Bool)
         'expr? $ %{} 'CodeEntry
           :doc "|a function to detect expression,\nan expression is represented with a record with `CirruExpr`\n"
           :code $ quote $ defn expr? (x)
@@ -624,9 +618,9 @@
                   query $ parse-query!
                 println "|Loading from url" query
                 str |ws://
-                  option:unwrap-or (get query |host) |localhost
-                  , |: $ option:unwrap-or (get query |port)
-                    option:unwrap-or (get schema/configs :port) 6001
+                  .unwrap-or (get query |host) |localhost
+                  , |: $ .unwrap-or (get query |port)
+                    .unwrap-or (get schema/configs :port) 6001
               , |ws://localhost:6001
           :examples $ []
           :schema $ quote $ Fn (-> String) (:features :js-ffi)
@@ -827,9 +821,9 @@
                 (:ok index)
                   if
                     and (integer? index) (>= index 0)
-                    Option :some index
-                    Option :none
-                (:err _message) (Option :none)
+                    Some index
+                    , None
+                (:err _message) None
           :examples $ []
           :schema $ quote $ Fn Dynamic
             -> $ Option Number
@@ -917,7 +911,7 @@
                   map $ fn (pair)
                     hint-fn $ Fn (Tuple String Dynamic)
                       -> $ Tuple String respo.schema/Component
-                    let[] (k info) pair $ [] k $ comp-changed-info (app.comp.changed-info/read-change-info info) (assert-type k 'String)
+                    let[] (k info) pair $ [] k $ comp-changed-info (app.comp.changed-info/read-change-info info) (assert-type k String)
               if (empty? changed-files)
                 div
                   {} $ :class-name $ str-spaced css/font-fancy style-nothing
@@ -974,7 +968,7 @@
               (Tag namespace-kind)
                 if (= namespace-kind :ns) |ns $ raise |Unknown-change-kind
           :examples $ []
-          :schema $ quote $ Fn app.comp.changed-info/ChangeKind (-> String)
+          :schema $ quote $ Fn ChangeKind (-> String)
         'comp-changed-info $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-changed-info (info ns-text)
             div
@@ -1010,7 +1004,7 @@
                       -> Unit
                     d! $ :: :effect/save-ns ns-text
           :examples $ []
-          :schema $ quote $ Fn app.comp.changed-info/ChangeInfo String (-> respo.schema/Component)
+          :schema $ quote $ Fn ChangeInfo String (-> respo.schema/Component)
         'on-preview $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-preview (ns-text kind status)
             fn (e d!)
@@ -1025,7 +1019,7 @@
                 (String name)
                   d! $ :: :writer/select $ :: :def ns-text name
           :examples $ []
-          :schema $ quote $ Fn String app.comp.changed-info/ChangeKind Tag (-> respo.schema/EventHandler)
+          :schema $ quote $ Fn String ChangeKind Tag (-> respo.schema/EventHandler)
         'on-reset-def $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-reset-def (ns-text kind)
             fn (e d!)
@@ -1041,7 +1035,7 @@
                   d! $ :: :ir/reset-at $ :: :def ns-text name
               app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states/clear
           :examples $ []
-          :schema $ quote $ Fn String app.comp.changed-info/ChangeKind (-> respo.schema/EventHandler)
+          :schema $ quote $ Fn String ChangeKind (-> respo.schema/EventHandler)
         'read-change-info $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-change-info (raw)
             let
@@ -1054,7 +1048,7 @@
                   .unwrap-or (get fields :defs) ({})
                   Map String Tag
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> app.comp.changed-info/ChangeInfo)
+          :schema $ quote $ Fn Dynamic (-> ChangeInfo)
           :tests $ [] $ %{} 'TestEntry (:name |wire-changes-and-kind-union)
             :code $ quote $ let
                 source $ {} (:ns :changed)
@@ -1084,7 +1078,7 @@
                 {} $ :class-name |is-minor
                 comp-icon :corner-up-left style-reset $ on-reset-def ns-text kind
           :examples $ []
-          :schema $ quote $ Fn String app.comp.changed-info/ChangeKind Tag (-> respo.schema/Element)
+          :schema $ quote $ Fn String ChangeKind Tag (-> respo.schema/Element)
         'style-defs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-defs
             {} $ :padding-left 16
@@ -1303,9 +1297,9 @@
               (:none) (comp-about)
               (:some store)
                 let
-                    state $ option:unwrap-or (get states :data) {}
-                    session $ option:unwrap-or (get store :session) {}
-                    writer $ option:unwrap-or (get session :writer) {}
+                    state $ .unwrap-or (get states :data) {}
+                    session $ .unwrap-or (get store :session) {}
+                    writer $ .unwrap-or (get session :writer) {}
                     router $ match (get store :router)
                       (:none) (:: :login)
                       (:some value)
@@ -1316,30 +1310,30 @@
                       (:ok value) (app.comp.theme-menu/read-theme value)
                       (:err error)
                         match error
-                          (:missing) (Option :none)
+                          (:missing) None
                           (:shape message) (raise message)
-                    picker-mode? $ option:some? $ get writer :picker-mode
+                    picker-mode? $ .some? $ get writer :picker-mode
                   div
                     {} $ :class-name $ str-spaced css/global css/fullscreen css/column style-container
                     if (not picker-mode?)
-                      Option :some $ comp-header (>> states :header)
+                      Some $ comp-header (>> states :header)
                         decode-map-as (&enum:nth router 0) Tag
                         decode-map-as
-                          option:unwrap-or (get store :logged-in?) false
+                          .unwrap-or (get store :logged-in?) false
                           , Bool
                         decode-map-as
-                          option:unwrap-or (get store :stats) ({})
+                          .unwrap-or (get store :stats) ({})
                           Map Tag Dynamic
-                      Option :none
+                      , None
                     div
                       {} $ :class-name $ str-spaced css/row css/expand
                       if
-                        option:unwrap-or (get store :logged-in?) false
+                        .unwrap-or (get store :logged-in?) false
                         match router
                           (:profile d)
                             comp-profile (>> states :profile)
                               decode-map-as
-                                option:unwrap-or (get store :user) {}
+                                .unwrap-or (get store :user) {}
                                 Map Tag Dynamic
                               decode-map-as
                                 .unwrap $ get session :id
@@ -1368,35 +1362,35 @@
                                   Map Tag Dynamic
                           (:editor d)
                             comp-page-editor (>> states :editor)
-                              app.bookmark/read-bookmarks $ option:unwrap-or (get writer :stack) []
+                              app.bookmark/read-bookmarks $ .unwrap-or (get writer :stack) []
                               decode-map-as d $ Map Tag Dynamic
                               decode-map-as
-                                option:unwrap-or (get writer :pointer) 0
+                                .unwrap-or (get writer :pointer) 0
                                 , Number
                               , picker-mode? theme
                           (:search d)
                             comp-search (>> states :search) (app.bookmark/read-bookmarks d)
                           (:watching d)
                             comp-watching (>> states :watching) (app.comp.watching/read-watching-frame d)
-                              app.comp.theme-menu/read-theme $ option:unwrap-or (get session :theme) :star-trail
+                              app.comp.theme-menu/read-theme $ .unwrap-or (get session :theme) :star-trail
                           (:configs d)
                             comp-configs (>> states :configs)
                               decode-map-as
-                                option:unwrap-or (get d :configs) {}
+                                .unwrap-or (get d :configs) {}
                                 Map Tag Dynamic
                               decode-map-as
-                                option:unwrap-or (get d :entries) {}
+                                .unwrap-or (get d :entries) {}
                                 Map String $ Map Tag Dynamic
                           _ $ div ({})
                             <> $ str "|404 page: " $ to-lispy-string router
                         match router
                           (:watching d)
                             comp-watching (>> states :watching) (app.comp.watching/read-watching-frame d)
-                              app.comp.theme-menu/read-theme $ option:unwrap-or (get session :theme) :star-trail
+                              app.comp.theme-menu/read-theme $ .unwrap-or (get session :theme) :star-trail
                           _ $ comp-login $ >> states :login
                     if dev?
-                      Option :some $ comp-inspect |Session store style-inspector
-                      Option :none
+                      Some $ comp-inspect |Session store style-inspector
+                      , None
                     ; when dev? $ comp-inspect "|Router data" states $ merge style-inspector
                       {} $ :left 100
                     comp-messages $ decode-map-as
@@ -1677,11 +1671,11 @@
                   fn (a b)
                     hint-fn $ Fn (Tuple String app.schema/CirruNode) (Tuple String app.schema/CirruNode) (-> Number)
                     &compare (nth a 0) (nth b 0)
-                first-id $ option:map (first sorted-children)
+                first-id $ .map (first sorted-children)
                   fn (pair)
                     hint-fn $ Fn (Tuple String app.schema/CirruNode) (-> String)
                     nth pair 0
-                last-id $ option:map (last sorted-children)
+                last-id $ .map (last sorted-children)
                   fn (pair)
                     hint-fn $ Fn (Tuple String app.schema/CirruNode) (-> String)
                     nth pair 0
@@ -1728,11 +1722,11 @@
                         rendered $ match child
                           (app.schema/CirruLeafShape leaf)
                             comp-leaf (>> states k) leaf focus child-coord (includes? partial-others child-coord)
-                              = first-id $ Option :some k
+                              = first-id $ Some k
                               , readonly? picker-mode? theme
                           (app.schema/CirruExprShape nested)
                             comp-expr (>> states k) nested focus child-coord partial-others
-                              = last-id $ Option :some k
+                              = last-id $ Some k
                               , mode readonly? picker-mode? theme $ inc depth
                       recur
                         conj result $ assert-type ([] k rendered) (Tuple String respo.schema/Component)
@@ -1827,12 +1821,12 @@
                         let
                             tree $ app.schema/expr->syntax expr
                           match
-                            option:and-then (first tree)
-                              fn (head)
+                              first tree
+                              , .and-then $ fn (head)
                                 hint-fn $ Fn app.schema/CirruSyntax $ -> (Option String)
                                 match head
-                                  (String name) (Option :some name)
-                                  (List _children) (Option :none)
+                                  (String name) (Some name)
+                                  (List _children) None
                             (:some name)
                               d! $ :: :analyze/goto-def $ {} (:text name) (:forced? true)
                                 :args $ slice tree 1
@@ -2050,7 +2044,7 @@
                 fn ()
                   hint-fn $ Fn $ -> (Option respo.schema/Component)
                   if (:show? state)
-                    Option :some $ comp-modal
+                    Some $ comp-modal
                       fn (d!)
                         hint-fn $ Fn
                           Fn *dispatch-op $ -> Unit
@@ -2069,7 +2063,7 @@
                           div
                             {} $ :class-name $ str-spaced css/column style-panel
                             .render plugin-code-gen
-                    Option :none
+                    , None
                 fn (d!)
                   hint-fn $ Fn
                     Fn *dispatch-op $ -> Unit
@@ -2127,7 +2121,7 @@
                   List respo.schema/CoordKey
                 state $ decode-map-as
                   either
-                    option:unwrap-or (get states :data) {}
+                    .unwrap-or (get states :data) {}
                     {}
                       :ns $ .unwrap-or (.get pair 0) |
                       :def $ .unwrap-or (.get pair 1) |
@@ -2150,20 +2144,20 @@
                           let
                               pair $ split
                                 decode-map-as
-                                  option:unwrap-or (get conf :init-fn) |
+                                  .unwrap-or (get conf :init-fn) |
                                   , String
                                 , |/
                             :: :item
                               :: :def
                                 .unwrap-or (.get pair 0) |
                                 .unwrap-or (.get pair 1) |
-                              option:unwrap-or (get conf :init-fn) |
+                              .unwrap-or (get conf :init-fn) |
                     :on-result $ fn (result d!)
                       match
-                        option:unwrap $ nth result 1
+                        .unwrap $ nth result 1
                         (:def a-ns a-def)
                           d! $ app.client-updater/UiStateOp :states cursor $ {} (:ns a-ns) (:def a-def)
-                bookmark $ app.util/to-bookmark $ Option :some writer
+                bookmark $ app.util/to-bookmark $ Some writer
               [] (effect-navigate bookmark)
                 div
                   {} $ :style $ {} (:padding-right 24)
@@ -2188,7 +2182,9 @@
           :code $ quote $ defn comp-entry-deps (that-ns that-def deps-dict pkg footprints)
             let
                 entry $ app.schema/DependencyKey :def that-ns that-def
-                this-deps $ option:unwrap-or (get deps-dict entry) (#{})
+                this-deps $
+                  get deps-dict entry
+                  , .unwrap-or $ #{}
                 internal-deps $ -> this-deps (&set:to-list)
                   filter $ fn (item)
                     match item
@@ -2207,7 +2203,7 @@
               div
                 {} $ :class-name $ str-spaced css/row-middle style-entry
                 if (not root?)
-                  Option :some $ div
+                  Some $ div
                     {} $ :class-name $ str-spaced style-def-ns
                       if (and show-ns? has-children?) css/column |
                     span $ {}
@@ -2217,14 +2213,14 @@
                       :on-click $ fn (e d!)
                         d! $ :: :writer/edit $ :: :def that-ns that-def
                     if show-ns?
-                      Option :some $ <> that-ns $ str-spaced style-ns (if has-children? | style-ns-pad)
-                      Option :none
-                  Option :none
+                      Some $ <> that-ns $ str-spaced style-ns (if has-children? | style-ns-pad)
+                      , None
+                  , None
                 if (includes? footprints entry)
                   div ({})
                     <> |Recur $ str-spaced css/font-fancy style-recur
                   if has-children?
-                    Option :some $ keyed->
+                    Some $ keyed->
                       {} $ :class-name style-deps-area
                       .map internal-deps $ fn (item)
                         hint-fn $ Fn app.schema/DependencyKey $ -> respo.schema/ChildPair
@@ -2236,7 +2232,7 @@
                             keyed-element (str item)
                               div ({})
                                 <> $ str "|Unknown data: " item
-                    Option :none
+                    , None
           :examples $ []
           :schema $ quote $ Fn String String
             Map app.schema/DependencyKey $ Set app.schema/DependencyKey
@@ -2408,7 +2404,7 @@
                   respo.comp.space/space-x 12
                   render-entry
                     if logged-in?
-                      str |Profile: $ option:unwrap-or (get stats :members-count) 0
+                      str |Profile: $ .unwrap-or (get stats :members-count) 0
                       , |Guest
                     , :profile router-name $ fn (e d!)
                       d! $ app.updater.router/route-op $ app.updater.router/Route :profile
@@ -2507,7 +2503,7 @@
           :code $ quote $ def initial-state
             %{} LeafState (:text |) (:at 0)
           :examples $ []
-          :schema $ quote app.comp.leaf/LeafState
+          :schema $ quote LeafState
         'on-focus $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-focus (leaf coord picker-mode?)
             fn (e d!)
@@ -2534,7 +2530,7 @@
                 app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ -> state (assoc :text text) (assoc :at now)
               , &unit
           :examples $ []
-          :schema $ quote $ Fn app.comp.leaf/LeafState (List String) (List respo.schema/CoordKey) (-> respo.schema/EventHandler) (:features :js-ffi)
+          :schema $ quote $ Fn LeafState (List String) (List respo.schema/CoordKey) (-> respo.schema/EventHandler) (:features :js-ffi)
         'on-keydown $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-keydown (state leaf coord picker-mode?)
             fn (e d!)
@@ -2636,7 +2632,7 @@
                     on-window-keydown event d! $ {} $ :name :editor
               , &unit
           :examples $ []
-          :schema $ quote $ Fn app.comp.leaf/LeafState app.schema/CirruLeafShape (List String) Bool (-> respo.schema/EventHandler) (:features :js-ffi)
+          :schema $ quote $ Fn LeafState app.schema/CirruLeafShape (List String) Bool (-> respo.schema/EventHandler) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.leaf
           :require
@@ -2669,13 +2665,13 @@
                   {} $ :class-name css/column
                   div ({})
                     input $ {} (:placeholder |Username)
-                      :value $ option:unwrap-or (get state :username) |
+                      :value $ .unwrap-or (get state :username) |
                       :class-name style/input
                       :on-input $ on-input state cursor :username
                   respo.comp.space/space-y 8
                   div ({})
                     input $ {} (:placeholder |Password)
-                      :value $ option:unwrap-or (get state :password) |
+                      :value $ .unwrap-or (get state :password) |
                       :class-name style/input
                       :on-input $ on-input state cursor :password
                 respo.comp.space/space-y 8
@@ -2683,14 +2679,14 @@
                   {} $ :style style-control
                   button $ {} (:inner-text "|Sign up") (:class-name style/button)
                     :on-click $ on-submit
-                      option:unwrap-or (get state :username) |
-                      option:unwrap-or (get state :password) |
+                      .unwrap-or (get state :username) |
+                      .unwrap-or (get state :password) |
                       , true
                   respo.comp.space/space-x 8
                   button $ {} (:inner-text "|Log in") (:class-name style/button)
                     :on-click $ on-submit
-                      option:unwrap-or (get state :username) |
-                      option:unwrap-or (get state :password) |
+                      .unwrap-or (get state :username) |
+                      .unwrap-or (get state :password) |
                       , false
           :examples $ []
           :schema $ quote $ Fn respo.schema/States (-> respo.schema/Component)
@@ -2718,7 +2714,7 @@
                 :: :user/sign-up $ [] username password
                 :: :user/log-in $ [] username password
               js/window.localStorage.setItem
-                option:unwrap-or (get config/site :storage-key) nil
+                .unwrap-or (get config/site :storage-key) nil
                 format-cirru-edn $ [] username password
               , &unit
           :examples $ []
@@ -2931,7 +2927,7 @@
                   {} $ :style $ {} (:padding "|12px 0")
                   <> "|Nothing to edit" style-nothing
               match
-                app.schema/read-optional-code-entry $ .unwrap-or (get router-data :expr) (Option :none)
+                app.schema/read-optional-code-entry $ .unwrap-or (get router-data :expr) None
                 (:some entry)
                   match (nth stack pointer)
                     (:some bookmark)
@@ -2955,7 +2951,7 @@
                   List respo.schema/CoordKey
                 state $ decode-map-as
                   or
-                    option:unwrap-or (get states :data) initial-state
+                    .unwrap-or (get states :data) initial-state
                     , initial-state
                   Map Tag Dynamic
                 expr $ match
@@ -3014,7 +3010,7 @@
                             >> states $ bookmark-full-str bookmark
                             assert-type expr 'app.schema/CirruExprShape
                             , focus ([]) others false :inline readonly? picker-mode?
-                              decode-map-as (option:unwrap-or theme :star-trail) 'Tag
+                              decode-map-as (.unwrap-or theme :star-trail) 'Tag
                               , 0
                         div
                           {}
@@ -3022,13 +3018,12 @@
                             :style $ {} $ :margin-top 66
                           span $ {}
                           comp-usages $ match (get router-data :usages)
-                            (:none) (Option :none)
+                            (:none) None
                             (:some raw)
-                              if (nil? raw) (Option :none)
-                                Option :some $ app.schema/read-dependency-set raw
+                              if (nil? raw) None $ Some $ app.schema/read-dependency-set raw
                         if-let
                           locals $ match (get router-data :preview-locals)
-                            (:none) (Option :none)
+                            (:none) None
                             (:some raw) (read-preview-locals raw)
                           list->
                             {}
@@ -3043,7 +3038,7 @@
                                   , def-name
                           div $ {}
                     let
-                        peek-def $ app.schema/read-optional-code-entry $ .unwrap-or (get router-data :peek-def) (Option :none)
+                        peek-def $ app.schema/read-optional-code-entry $ .unwrap-or (get router-data :peek-def) None
                       match peek-def
                         (:some entry) (comp-peek-def entry)
                         (:none)
@@ -3056,12 +3051,12 @@
                       open-gen-code-box! plugin-gen-code-box d!
                       , &unit
                     if
-                      option:unwrap-or (get state :draft-box?) false
+                      .unwrap-or (get state :draft-box?) false
                       comp-draft-box (>> states :draft-box) expr focus close-draft-box!
                       span $ {}
                     render-gen-code-box plugin-gen-code-box
                     if
-                      option:unwrap-or (get state :abstract?) false
+                      .unwrap-or (get state :abstract?) false
                       comp-abstract (>> states :abstract) close-abstract!
                       span $ {}
                     ; comp-inspect |Expr router-data style/inspector
@@ -3072,7 +3067,7 @@
                   if (struct? expr)
                     app.schema/node-at-path (app.schema/read-node expr)
                       decode-map-as focus $ List String
-                    Option :none
+                    , None
           :examples $ []
           :schema $ quote $ Fn respo.schema/States (List app.bookmark/%bookmark) (Map Tag Dynamic) Number Bool (Option Dynamic) app.schema/CodeEntry app.bookmark/%bookmark (-> respo.schema/Component)
         'comp-stack $ %{} 'CodeEntry (:doc |)
@@ -3140,7 +3135,7 @@
                         , &unit
                       , &unit
                   if
-                    = :same $ option:unwrap-or (get router-data :changed) :unknown
+                    = :same $ .unwrap-or (get router-data :changed) :unknown
                     <>
                       match (get router-data :changed)
                         (:none) (str nil)
@@ -3408,14 +3403,13 @@
             -> Unit
         'read-preview-locals $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-preview-locals (raw)
-            if (nil? raw) (Option :none)
-              if (set? raw)
-                Option :some $ decode-map-as raw $ Set String
-                match raw
-                  (:some locals)
-                    Option :some $ decode-map-as locals $ Set String
-                  (:none) (Option :none)
-                  _ $ raise |Expected-optional-preview-locals
+            if (nil? raw) None $ if (set? raw)
+              Some $ decode-map-as raw $ Set String
+              match raw
+                (:some locals)
+                  Some $ decode-map-as locals $ Set String
+                (:none) None
+                _ $ raise |Expected-optional-preview-locals
           :examples $ []
           :schema $ quote $ Fn Dynamic
             -> $ Option $ Set String
@@ -3625,7 +3619,7 @@
                       , &unit
                 ; div ({})
                   input $ {}
-                    :value $ option:unwrap-or (get state :def-text) |
+                    :value $ .unwrap-or (get state :def-text) |
                     :placeholder |filter...
                     :style style-input
                     :on-input $ fn (e d!)
@@ -3640,8 +3634,8 @@
                     :style $ {} $ :padding-bottom 120
                   -> defs-dict keys (&set:to-list)
                     filter $ fn (def-text)
-                      &str:includes? (assert-type def-text 'String)
-                        option:unwrap-or (get state :def-text) |
+                      &str:includes? (assert-type def-text String)
+                        .unwrap-or (get state :def-text) |
                     sort &compare
                     map $ fn (def-text)
                       [] def-text $ let
@@ -3673,7 +3667,7 @@
                             =< 8 nil
                             <>
                               &str:replace
-                                option:unwrap-or (get defs-dict def-text) |
+                                .unwrap-or (get defs-dict def-text) |
                                 , &newline |
                               , style-def-doc
                           =< 16 nil
@@ -3734,7 +3728,7 @@
                       hint-fn $ Fn (Tuple String String)
                         -> $ Tuple String respo.schema/Component
                       let[] (ns-text ns-doc) pair $ [] ns-text $ comp-ns-entry (>> states ns-text) ns-text ns-doc
-                        = selected-ns $ Option :some ns-text
+                        = selected-ns $ Some ns-text
                         , ns-highlights
                 .render plugin-add-ns
           :examples $ []
@@ -3765,7 +3759,7 @@
                         join-string (butlast pieces) |.
                         , |.
                       {} $ :color $ if has-highlight? (hsl 0 0 76) (hsl 0 0 50)
-                    <> $ option:unwrap-or (last pieces) |
+                    <> $ .unwrap-or (last pieces) |
                     =< 8 nil
                     <> ns-doc style-ns-doc
                 span
@@ -3797,30 +3791,30 @@
                   match bookmark
                     (:ns namespace focus) namespace
                     (:def namespace definition focus) namespace
-                peeking-file $ app.schema/read-optional-file-entry $ .unwrap-or (get router-data :peeking-file) (Option :none)
+                peeking-file $ app.schema/read-optional-file-entry $ .unwrap-or (get router-data :peeking-file) None
               div
                 {} $ :class-name $ str-spaced css/flex css/row style-container
                 comp-namespace-list (>> states :ns)
                   decode-map-as
-                    option:unwrap-or (get router-data :ns-dict) {}
+                    .unwrap-or (get router-data :ns-dict) {}
                     Map String String
                   , selected-ns ns-highlights
                 =< 24 nil
-                if (option:some? selected-ns)
+                if (.some? selected-ns)
                   comp-file
-                    >> states $ option:unwrap selected-ns
-                    option:unwrap selected-ns
+                    >> states $ .unwrap selected-ns
+                    .unwrap selected-ns
                     decode-map-as
-                      option:unwrap-or (get router-data :defs-dict) {}
+                      .unwrap-or (get router-data :defs-dict) {}
                       Map String String
                     , highlights $ decode-map-as
-                      option:unwrap-or (get router-data :file-configs) {}
+                      .unwrap-or (get router-data :file-configs) {}
                       Map Tag Dynamic
                   render-empty
                 =< 32 nil
                 comp-changed-files (>> states :files)
                   decode-map-as
-                    option:unwrap-or (get router-data :changed-files) {}
+                    .unwrap-or (get router-data :changed-files) {}
                     Map String Dynamic
                 ; comp-inspect selected-ns router-data style-inspect
                 match peeking-file
@@ -3996,7 +3990,7 @@
                         name $ .unwrap-or
                           app.schema/read-optional-text $ get user :nickname
                           , |Guest
-                        bookmark $ app.bookmark/read-optional-bookmark $ .unwrap-or (get member :bookmark) (Option :none)
+                        bookmark $ app.bookmark/read-optional-bookmark $ .unwrap-or (get member :bookmark) None
                         page $ decode-map-as
                           .unwrap-or (get member :page) :unknown
                           , 'Tag
@@ -4220,7 +4214,7 @@
                         hint-fn $ Fn String $ -> (Tuple String respo.schema/Element)
                         [] text $ render-code text
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (Option app.schema/CirruNode) (-> respo.schema/Component) (:features :js-ffi)
+          :schema $ quote $ Fn (Map Tag Dynamic) (Option schema/CirruNode) (-> respo.schema/Component) (:features :js-ffi)
         'css-name-code $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-name-code
             {}
@@ -4271,7 +4265,7 @@
             let
                 rename-plugin $ use-prompt (>> states :rename)
                   {}
-                    :initial $ option:unwrap-or (get user :nickname) |
+                    :initial $ .unwrap-or (get user :nickname) |
                     :text "|Pick a nickname:"
               div
                 {}
@@ -4281,7 +4275,7 @@
                   {} $ :class-name css/flex
                   div ({})
                     <>
-                      str "|Hello! " $ option:unwrap-or (get user :nickname) |
+                      str "|Hello! " $ .unwrap-or (get user :nickname) |
                       str-spaced css/font-fancy style-greet
                     =< 4 nil
                     comp-icon :edit-2
@@ -4301,7 +4295,7 @@
                         , &unit
                     =< 8 nil
                     <>
-                      str "|id: " $ option:unwrap-or (get user :name) |
+                      str "|id: " $ .unwrap-or (get user :name) |
                       , style-id
                   =< nil 80
                   div ({})
@@ -4312,7 +4306,7 @@
                     :style $ {} $ :flex 3
                   comp-page-members
                     decode-map-as
-                      option:unwrap-or (get router-data :members) {}
+                      .unwrap-or (get router-data :members) {}
                       Map String Dynamic
                     , sid
           :examples $ []
@@ -4321,7 +4315,7 @@
           :code $ quote $ defn on-log-out (e dispatch!)
             dispatch! $ :: :user/log-out nil
             js-ffi.browser/storage-remove! $ decode-map-as
-              option:unwrap-or (get config/site :storage-key) |
+              .unwrap-or (get config/site :storage-key) |
               , 'String
             , &unit
           :examples $ []
@@ -4443,7 +4437,7 @@
           :code $ quote $ defn use-replace-name-modal (states on-replace)
             let
                 cursor $ decode-map-as
-                  option:unwrap-or (get states :cursor) ([])
+                  .unwrap-or (get states :cursor) ([])
                   List Tag
                 state $ decode-map-as
                   merge
@@ -4636,7 +4630,7 @@
                                       , |.
                                     {} $ :color $ hsl 0 0 50
                                   <>
-                                    option:unwrap-or (last pieces) |
+                                    .unwrap-or (last pieces) |
                                     , style-last-piece
                                 =< 8 nil
                                 span $ {} (:inner-text |import) (:class-name style-use-ns)
@@ -4665,7 +4659,7 @@
           :code $ quote $ def initial-state
             %{} SearchState (:query |) (:selection 0) (:mode :def)
           :examples $ []
-          :schema $ quote app.comp.search/SearchState
+          :schema $ quote SearchState
         'on-input $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-input (state cursor)
             fn (e d!)
@@ -4676,7 +4670,7 @@
                 assoc :query $ decode-map-as (:value e) 'String
                 assoc :selection 0
           :examples $ []
-          :schema $ quote $ Fn app.comp.search/SearchState (List respo.schema/CoordKey) (-> respo.schema/EventHandler)
+          :schema $ quote $ Fn SearchState (List respo.schema/CoordKey) (-> respo.schema/EventHandler)
         'on-keydown $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-keydown (state candidates cursor)
             fn (e d!)
@@ -4722,7 +4716,7 @@
                   true $ on-window-keydown (:original-event e) d! $ {} (:name :search)
               , &unit
           :examples $ []
-          :schema $ quote $ Fn app.comp.search/SearchState (List app.bookmark/%bookmark) (List respo.schema/CoordKey) (-> respo.schema/EventHandler) (:features :js-ffi)
+          :schema $ quote $ Fn SearchState (List app.bookmark/%bookmark) (List respo.schema/CoordKey) (-> respo.schema/EventHandler) (:features :js-ffi)
         'on-select $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-select (bookmark cursor)
             fn (e d!)
@@ -4789,7 +4783,7 @@
         'search-selection $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn search-selection (state) (:selection state)
           :examples $ []
-          :schema $ quote $ Fn app.comp.search/SearchState (-> Number)
+          :schema $ quote $ Fn SearchState (-> Number)
         'style-body $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-body
             {} $ |& $ {} (:overflow :auto) (:padding-bottom 80)
@@ -4873,11 +4867,11 @@
                     map theme-list $ fn (name)
                       hint-fn $ Fn Tag $ -> respo.schema/ChildPair
                       %{} respo.schema/ChildPair (:key name)
-                        :node $ Option :some $ respo.schema/RenderNode :element
+                        :node $ Some $ respo.schema/RenderNode :element
                           div
                             {}
                               :style $ if
-                                = theme $ Option :some name
+                                = theme $ Some name
                                 {} $ :color :white
                                 {}
                               :class-name style-menu-item
@@ -4891,14 +4885,13 @@
           :schema $ quote $ Fn respo.schema/States (Option Tag) (-> respo.schema/Component)
         'read-theme $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-theme (raw)
-            if (nil? raw) (Option :none)
-              if (tag? raw)
-                Option :some $ decode-map-as raw 'Tag
-                match raw
-                  (:some theme)
-                    Option :some $ decode-map-as theme 'Tag
-                  (:none) (Option :none)
-                  _ $ raise |Expected-optional-theme
+            if (nil? raw) None $ if (tag? raw)
+              Some $ decode-map-as raw 'Tag
+              match raw
+                (:some theme)
+                  Some $ decode-map-as theme 'Tag
+                (:none) None
+                _ $ raise |Expected-optional-theme
           :examples $ []
           :schema $ quote $ Fn Dynamic
             -> $ Option Tag
@@ -4968,8 +4961,8 @@
                 member-name $ .unwrap-or
                   app.schema/read-optional-text $ get member :nickname
                   , |Someone
-                bookmark $ app.bookmark/read-optional-bookmark $ .unwrap-or (get frame :bookmark) (Option :none)
-                entry $ app.schema/read-optional-code-entry $ .unwrap-or (get frame :expr) (Option :none)
+                bookmark $ app.bookmark/read-optional-bookmark $ .unwrap-or (get frame :bookmark) None
+                entry $ app.schema/read-optional-code-entry $ .unwrap-or (get frame :expr) None
                 focus $ decode-map-as
                   .unwrap-or (get frame :focus) ([])
                   List String
@@ -5001,14 +4994,13 @@
           :schema $ quote $ Fn respo.schema/States (Map Tag Dynamic) (Option Tag) (-> respo.schema/Component)
         'read-watching-frame $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-watching-frame (raw)
-            if (nil? raw) (Option :none)
-              if (map? raw)
-                Option :some $ decode-map-as raw $ Map Tag Dynamic
-                match raw
-                  (:none) (Option :none)
-                  (:some frame)
-                    Option :some $ decode-map-as frame $ Map Tag Dynamic
-                  _ $ raise |Expected-optional-watching-frame
+            if (nil? raw) None $ if (map? raw)
+              Some $ decode-map-as raw $ Map Tag Dynamic
+              match raw
+                (:none) None
+                (:some frame)
+                  Some $ decode-map-as frame $ Map Tag Dynamic
+                _ $ raise |Expected-optional-watching-frame
           :examples $ []
           :schema $ quote $ Fn Dynamic
             -> $ Option $ Map Tag Dynamic
@@ -5061,7 +5053,9 @@
       :defs $ {}
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
-            = |dev $ option:unwrap-or (get-env |mode) |release
+            = |dev $
+              get-env |mode
+              , .unwrap-or |release
           :examples $ []
           :schema $ quote Bool
         'site $ %{} 'CodeEntry (:doc |)
@@ -5212,7 +5206,7 @@
                 canvas $ .create-element document |canvas
               .get-context canvas |2d
           :examples $ []
-          :schema $ quote $ Fn (-> app.polyfill/CanvasContextHost) (:features :js-ffi)
+          :schema $ quote $ Fn (-> CanvasContextHost) (:features :js-ffi)
         'text-width* $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn text-width* (content font-size font-family)
             let
@@ -5220,7 +5214,7 @@
               set! (.-font context) (str font-size "|px " font-family)
               unsafe-coerce
                 .-width $ .measure-text context content
-                , 'Number
+                , Number
           :examples $ []
           :schema $ quote $ Fn String Number String (-> Number) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
@@ -5334,19 +5328,19 @@
             .find-with-base $ fn (self x pp)
               hint-fn $ Fn app.schema/CirruExprShape app.schema/CirruNode (List String)
                 -> $ Option $ List String
-              find-node-path self x pp $ Option :none
+              find-node-path self x pp None
             .find $ fn (self x)
               hint-fn $ Fn app.schema/CirruExprShape app.schema/CirruNode $ ->
                 Option $ List String
-              find-node-path self x ([]) (Option :none)
+              find-node-path self x ([]) None
             .find-before-with-base $ fn (self x follow pp)
               hint-fn $ Fn app.schema/CirruExprShape app.schema/CirruNode String (List String)
                 -> $ Option $ List String
-              find-node-path self x pp $ Option :some follow
+              find-node-path self x pp $ Some follow
             .find-before $ fn (self x follow)
               hint-fn $ Fn app.schema/CirruExprShape app.schema/CirruNode String $ ->
                 Option $ List String
-              find-node-path self x ([]) (Option :some follow)
+              find-node-path self x ([]) (Some follow)
             .= $ fn (self x)
               hint-fn $ Fn app.schema/CirruExprShape app.schema/CirruNode $ -> Bool
               cirru-node-equal? self x
@@ -5370,14 +5364,13 @@
                   :data $ {} $ |c inside
                 root $ %{} CirruExpr (:at 1) (:by |author)
                   :data $ {} (|a keep) (|b nested)
-              assert= (Option :some keep) (.get root |a)
-              assert= (Option :some keep) (.nth root 0)
-              assert= (Option :some inside)
+              assert= (Some keep) (.get root |a)
+              assert= (Some keep) (.nth root 0)
+              assert= (Some inside)
                 .get-in root $ [] |b |c
-              assert= (Option :some root)
+              assert= (Some root)
                 .get-in root $ []
-              assert= (Option :none)
-                .get-in root $ [] |a |missing
+              assert= None $ .get-in root $ [] |a |missing
               assert=
                 [] |keep ([] |inside) |tail
                 node->syntax $ .append root tail
@@ -5391,9 +5384,9 @@
                 [] |keep $ [] |inside |tail
                 node->syntax $ .append-in root ([] |b |c) tail
               assert=
-                Option :some $ [] |b |c
+                Some $ [] |b |c
                 .find root inside
-              assert= (Option :none) (.find root tail)
+              assert= None $ .find root tail
               assert=
                 [] |keep $ [] |inside |tail
                 node->syntax $ .dispatch root $ [] (NodeCommand :update |b) (NodeCommand :append tail)
@@ -5423,7 +5416,7 @@
                   [] |keep $ [] |inside
                   , |author 1
               assert=
-                Option :some $ [] |a
+                Some $ [] |a
                 .find-before
                   %{} CirruExpr (:at 1) (:by |author)
                     :data $ {} (|a keep) (|b tail)
@@ -5572,7 +5565,7 @@
                       assoc expr :data $ assoc (:data expr) key $ append-node-path child remaining node
                     (app.schema/CirruLeafShape _leaf) (raise |Expected-expression-child)
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruExprShape (List String) app.schema/CirruNode (-> app.schema/CirruExprShape)
+          :schema $ quote $ Fn CirruExprShape (List String) CirruNode (-> CirruExprShape)
         'assoc-node-path $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn assoc-node-path (expr path node)
             if (empty? path) (raise |Expected-nonempty-node-path)
@@ -5587,12 +5580,12 @@
                       assoc expr :data $ assoc (:data expr) key $ assoc-node-path child remaining node
                     (app.schema/CirruLeafShape _leaf) (raise |Expected-expression-child)
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruExprShape (List String) app.schema/CirruNode (-> app.schema/CirruExprShape)
+          :schema $ quote $ Fn CirruExprShape (List String) CirruNode (-> CirruExprShape)
         'cirru-compact $ %{} 'CodeEntry
           :doc "|a cloned version of tree->cirru to simplify dependency issues"
           :code $ quote $ defn cirru-compact (x) (node->syntax x)
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruNode (-> app.schema/CirruSyntax)
+          :schema $ quote $ Fn CirruNode (-> CirruSyntax)
         'cirru-node-equal? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn cirru-node-equal? (a b)
             match a
@@ -5625,7 +5618,7 @@
                                 .unwrap $ nth other-keys idx
                         , false
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruNode app.schema/CirruNode (-> Bool)
+          :schema $ quote $ Fn CirruNode CirruNode (-> Bool)
         'configs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def configs
             {} (:port 6001) (:expose-port 6011) (:init-fn |app.main/main!) (:reload-fn |app.main/reload!)
@@ -5681,7 +5674,7 @@
                   (:prepend node)
                     assoc expr :data $ bisection/assoc-prepend (:data expr) node
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruExprShape (List app.schema/NodeCommand) (-> app.schema/CirruNode)
+          :schema $ quote $ Fn CirruExprShape (List NodeCommand) (-> CirruNode)
         'expr->syntax $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn expr->syntax (expr)
             -> (:data expr) keys .to-list (sort &compare)
@@ -5689,12 +5682,12 @@
                 hint-fn $ Fn String $ -> app.schema/CirruSyntax
                 node->syntax $ .unwrap $ get (:data expr) key
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruExprShape
-            -> $ List app.schema/CirruSyntax
+          :schema $ quote $ Fn CirruExprShape
+            -> $ List CirruSyntax
         'find-node-path $ %{} 'CodeEntry
           :doc "|Search in bisection key order, matching rendering/serialization. Raw Map iteration is unordered and must not define sibling adjacency or which duplicate occurrence is found first."
           :code $ quote $ defn find-node-path (expr target base follow)
-            if (cirru-node-equal? expr target) (Option :some base)
+            if (cirru-node-equal? expr target) (Some base)
               loop
                   pairs $ map
                     sort
@@ -5703,35 +5696,34 @@
                     fn (key)
                       hint-fn $ Fn String $ -> (Tuple String app.schema/CirruNode)
                       [] key $ .unwrap $ get (:data expr) key
-                if (empty? pairs) (Option :none)
-                  let[] (key child)
-                    .unwrap $ first pairs
-                    let
-                        followed? $ match follow
-                          (:none) true
-                          (:some text)
-                            match
-                              first $ rest pairs
-                              (:none) false
-                              (:some next-pair)
-                                let[] (_key sibling) next-pair $ match sibling
-                                  (app.schema/CirruLeafShape leaf)
-                                    = text $ :text leaf
-                                  (app.schema/CirruExprShape _expr) false
-                      if
-                        and (cirru-node-equal? child target) followed?
-                        Option :some $ conj base key
-                        match child
-                          (app.schema/CirruLeafShape _leaf)
-                            recur $ rest pairs
-                          (app.schema/CirruExprShape nested)
-                            match
-                              find-node-path nested target (conj base key) follow
-                              (:some found) (Option :some found)
-                              (:none)
-                                recur $ rest pairs
+                if (empty? pairs) None $ let[] (key child)
+                  .unwrap $ first pairs
+                  let
+                      followed? $ match follow
+                        (:none) true
+                        (:some text)
+                          match
+                            first $ rest pairs
+                            (:none) false
+                            (:some next-pair)
+                              let[] (_key sibling) next-pair $ match sibling
+                                (app.schema/CirruLeafShape leaf)
+                                  = text $ :text leaf
+                                (app.schema/CirruExprShape _expr) false
+                    if
+                      and (cirru-node-equal? child target) followed?
+                      Some $ conj base key
+                      match child
+                        (app.schema/CirruLeafShape _leaf)
+                          recur $ rest pairs
+                        (app.schema/CirruExprShape nested)
+                          match
+                            find-node-path nested target (conj base key) follow
+                            (:some found) (Some found)
+                            (:none)
+                              recur $ rest pairs
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruExprShape app.schema/CirruNode (List String) (Option String)
+          :schema $ quote $ Fn CirruExprShape CirruNode (List String) (Option String)
             -> $ Option $ List String
         'internal-entry-fields $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn internal-entry-fields (raw expected-name)
@@ -5750,7 +5742,7 @@
               (app.schema/CirruLeafShape leaf) (:text leaf)
               (app.schema/CirruExprShape expr) (expr->syntax expr)
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruNode (-> app.schema/CirruSyntax)
+          :schema $ quote $ Fn CirruNode (-> CirruSyntax)
           :tests $ []
             %{} 'TestEntry (:name |ordered-nested-syntax)
               :code $ quote $ let
@@ -5782,19 +5774,19 @@
               :tags $ #{} :unit
         'node-at-path $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn node-at-path (node path)
-            if (empty? path) (Option :some node)
+            if (empty? path) (Some node)
               match node
-                (app.schema/CirruLeafShape _leaf) (Option :none)
+                (app.schema/CirruLeafShape _leaf) None
                 (app.schema/CirruExprShape expr)
                   match
                     get (:data expr)
                       .unwrap $ first path
                     (:some child)
                       node-at-path child $ rest path
-                    (:none) (Option :none)
+                    (:none) None
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruNode (List String)
-            -> $ Option app.schema/CirruNode
+          :schema $ quote $ Fn CirruNode (List String)
+            -> $ Option CirruNode
         'notification $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def notification
             {} (:id nil) (:kind nil) (:text nil) (:time nil)
@@ -5833,9 +5825,9 @@
                 :examples $ decode-map-as
                   .unwrap-or (get fields :examples) ([])
                   List Dynamic
-                :source-entry $ read-source-option $ .unwrap-or (get fields :source-entry) (Option :none)
+                :source-entry $ read-source-option $ .unwrap-or (get fields :source-entry) None
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> app.schema/CodeEntry)
+          :schema $ quote $ Fn Dynamic (-> CodeEntry)
         'read-dependency-key $ %{} 'CodeEntry
           :doc "|Read an anonymous dependency key from the editor protocol."
           :code $ quote $ defn read-dependency-key (raw)
@@ -5846,7 +5838,7 @@
                 DependencyKey :reference (decode-map-as namespace String) (decode-map-as name String)
               _ $ raise "|Expected a dependency definition or reference"
           :examples $ []
-          :schema $ quote $ Fn T (-> app.schema/DependencyKey) (:generics T)
+          :schema $ quote $ Fn T (-> DependencyKey) (:generics T)
         'read-dependency-map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-dependency-map (raw)
             filter-map-kv
@@ -5857,7 +5849,7 @@
                 MapEntryDecision :keep (read-dependency-key key) (.map links read-dependency-key)
           :examples $ []
           :schema $ quote $ Fn T
-            -> $ Map app.schema/DependencyKey $ Set app.schema/DependencyKey
+            -> $ Map DependencyKey $ Set DependencyKey
             :generics T
         'read-dependency-set $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-dependency-set (raw)
@@ -5866,7 +5858,7 @@
               , read-dependency-key
           :examples $ []
           :schema $ quote $ Fn T
-            -> $ Set app.schema/DependencyKey
+            -> $ Set DependencyKey
             :generics T
         'read-expr $ %{} 'CodeEntry
           :doc "|Recover a checked CirruNode at the raw state boundary, then narrow the existing union to an expression; reject leaves without weakening the node model."
@@ -5875,7 +5867,7 @@
               (CirruExprShape expr) expr
               _ $ raise "|Expected Cirru expression node"
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> app.schema/CirruExprShape)
+          :schema $ quote $ Fn Dynamic (-> CirruExprShape)
         'read-file-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-file-entry (raw)
             let
@@ -5888,18 +5880,18 @@
                 :defs $ filter-map-kv definitions $ fn (name entry)
                   hint-fn $ Fn String Dynamic $ -> (MapEntryDecision String app.schema/CodeEntry)
                   MapEntryDecision :keep name $ read-code-entry entry
-                :source-view $ read-source-option $ .unwrap-or (get fields :source-view) (Option :none)
+                :source-view $ read-source-option $ .unwrap-or (get fields :source-view) None
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> app.schema/FileEntry)
+          :schema $ quote $ Fn Dynamic (-> FileEntry)
           :tests $ [] $ %{} 'TestEntry (:name |legacy-entry-fields-recover-to-local-model)
             :code $ quote $ let
                 node $ syntax->node ([] |ns |demo.main) |fixture 12
                 entry $ %{} CodeEntry (:doc |legacy) (:code node)
                   :examples $ []
-                  :source-entry $ Option :none
+                  :source-entry None
                 expected $ %{} FileEntry (:ns entry)
                   :defs $ {}
-                  :source-view $ Option :none
+                  :source-view None
                 legacy $ {}
                   :ns $ dissoc (&struct:to-map entry) :source-entry
                   :defs $ {}
@@ -5936,7 +5928,7 @@
                     _ $ raise |Unknown-Cirru-node-kind
               raise |Expected-Cirru-node-Struct
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> app.schema/CirruNode)
+          :schema $ quote $ Fn Dynamic (-> CirruNode)
           :tests $ [] $ %{} 'TestEntry (:name |checked-wire-recovery-keeps-local-identity)
             :code $ quote $ let
                 leaf $ %{} CirruLeaf (:at 1) (:by "|中文作者") (:text "|🐈")
@@ -5955,49 +5947,46 @@
             :tags $ #{} :unit
         'read-optional-code-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-optional-code-entry (raw)
-            if (nil? raw) (Option :none)
-              match raw
-                (:some entry)
-                  Option :some $ read-code-entry entry
-                (:none) (Option :none)
-                _ $ raise |Expected-optional-code-entry
+            if (nil? raw) None $ match raw
+              (:some entry)
+                Some $ read-code-entry entry
+              (:none) None
+              _ $ raise |Expected-optional-code-entry
           :examples $ []
           :schema $ quote $ Fn Dynamic
-            -> $ Option app.schema/CodeEntry
+            -> $ Option CodeEntry
         'read-optional-file-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-optional-file-entry (raw)
             if (enum? raw)
               match raw
                 (:some file)
-                  Option :some $ read-file-entry file
-                (:none) (Option :none)
+                  Some $ read-file-entry file
+                (:none) None
                 _ $ raise |Expected-optional-file-entry
               raise |Expected-optional-file-entry
           :examples $ []
           :schema $ quote $ Fn Dynamic
-            -> $ Option app.schema/FileEntry
+            -> $ Option FileEntry
           :tests $ [] $ %{} 'TestEntry (:name |optional-file-wire-restores-local-model)
             :code $ quote $ let
                 entry $ %{} CodeEntry (:doc |fixture)
                   :code $ syntax->node ([] |ns |demo.main) |fixture 12
                   :examples $ []
-                  :source-entry $ Option :none
+                  :source-entry None
                 file $ %{} FileEntry (:ns entry)
                   :defs $ {}
-                  :source-view $ Option :none
-              assert= (Option :none)
-                read-optional-file-entry $ parse-cirru-edn $ format-cirru-edn (Option :none)
-              assert= (Option :some file)
-                read-optional-file-entry $ parse-cirru-edn $ format-cirru-edn (Option :some file)
+                  :source-view None
+              assert= None $ read-optional-file-entry $ parse-cirru-edn (format-cirru-edn None)
+              assert= (Some file)
+                read-optional-file-entry $ parse-cirru-edn $ format-cirru-edn (Some file)
             :tags $ #{} :unit
         'read-optional-text $ %{} 'CodeEntry
           :doc "|Decode a legacy text field, treating both missing and explicit nil as absent."
           :code $ quote $ defn read-optional-text (field)
             match field
-              (:none) (Option :none)
+              (:none) None
               (:some value)
-                if (nil? value) (Option :none)
-                  Option :some $ decode-map-as value String
+                if (nil? value) None $ Some $ decode-map-as value String
           :examples $ []
           :schema $ quote $ Fn (Option T)
             -> $ Option String
@@ -6006,9 +5995,9 @@
           :code $ quote $ defn read-source-option (raw)
             if (enum? raw)
               match raw
-                (:none) (Option :none)
+                (:none) None
                 (:some view)
-                  Option :some $ decode-map-as view 'String
+                  Some $ decode-map-as view 'String
                 _ $ raise |Expected-optional-source-view
               raise |Expected-optional-source-view
           :examples $ []
@@ -6050,15 +6039,15 @@
                       rest remaining
                       bisection-core/bisect next-id bisection-core/max-id
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruSyntax String Number (-> app.schema/CirruNode)
+          :schema $ quote $ Fn CirruSyntax String Number (-> CirruNode)
         'update-expr-data $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-expr-data (self f)
             assoc self :data $ f $ :data self
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruExprShape
-            Fn (Map String app.schema/CirruNode)
-              -> $ Map String app.schema/CirruNode
-            -> app.schema/CirruExprShape
+          :schema $ quote $ Fn CirruExprShape
+            Fn (Map String CirruNode)
+              -> $ Map String CirruNode
+            -> CirruExprShape
         'update-expr-data-at $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-expr-data-at (self p f)
             update-expr-data self $ fn (d)
@@ -6066,9 +6055,9 @@
                 -> $ Map String app.schema/CirruNode
               update d p f
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruExprShape String
-            Fn app.schema/CirruNode $ -> app.schema/CirruNode
-            -> app.schema/CirruExprShape
+          :schema $ quote $ Fn CirruExprShape String
+            Fn CirruNode $ -> CirruNode
+            -> CirruExprShape
         'user $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def user
             {} (:name nil) (:id nil) (:nickname nil) (:avatar nil) (:password nil) (:theme :star-trail)
@@ -6103,19 +6092,17 @@
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :node)
           :schema $ quote Trait
         'compile-all-files! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn compile-all-files! (_configs)
-            save-files! (Option :none) |system
+          :code $ quote $ defn compile-all-files! (_configs) (save-files! None |system)
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) (-> Unit) (:features :js-ffi)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op sid)
             when config/dev? $ js/console.log |Action op sid
             match op
-              (:effect/save-files)
-                save-files! (Option :none) sid
+              (:effect/save-files) (save-files! None sid)
               (:effect/save-ns namespace)
                 save-files!
-                  Option :some $ decode-map-as namespace 'String
+                  Some $ decode-map-as namespace 'String
                   , sid
               (:ping) &unit
               _ $ reset! *writer-db $ updater @*writer-db op sid (new-op-id) (shared/now-ms)
@@ -6160,11 +6147,11 @@
             if config/dev? $ load-console-formatter!
             let
                 configs $ decode-map-as
-                  option:unwrap-or (get initial-db :configs) {}
+                  .unwrap-or (get initial-db :configs) {}
                   Map Tag Dynamic
                 cli-configs $ get-cli-configs!
               if
-                = (get cli-configs :op) (Option :some |compile)
+                = (get cli-configs :op) (Some |compile)
                 compile-all-files! configs
                 do (start-server! configs) (check-version!)
                   dispatch! (:: :analyze/refresh-usages-dict) |system
@@ -6193,9 +6180,9 @@
                   project $ storage/read-source-project! storage-file
                   db @*writer-db
                   same-source? $ = (get db :source-revision)
-                    Option :some $ :source-revision project
+                    Some $ :source-revision project
                   same-manifest? $ = (get db :source-manifest-revision)
-                    Option :some $ :source-manifest-revision project
+                    Some $ :source-manifest-revision project
                 when
                   not $ and same-source? same-manifest?
                   let
@@ -6421,9 +6408,9 @@
                   :sessions $ {} $ |secret |runtime
                   :usages-dict $ {}
               assert=
-                Option :some $ {} $ |pending |original
+                Some $ {} $ |pending |original
                 get archive :saved-files
-              assert= (Option :some |manifest) (get archive :source-manifest-revision)
+              assert= (Some |manifest) (get archive :source-manifest-revision)
               assert= false $ contains? archive :sessions
               assert= false $ contains? archive :usages-dict
             :tags $ #{} :unit
@@ -6459,7 +6446,7 @@
                   format-cirru-edn $ &struct:assoc (&struct:assoc raw :ns namespace-entry) :defs definitions
                 raise |Expected-official-namespace-view
           :examples $ []
-          :schema $ quote $ Fn app.schema/FileEntry (Map Tag String) (-> String)
+          :schema $ quote $ Fn schema/FileEntry (Map Tag String) (-> String)
         'export-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn export-entry (entry template-view expected-name)
             let
@@ -6475,7 +6462,7 @@
                   format-cirru-edn $ &struct:assoc (&struct:assoc raw :code code) :doc $ :doc entry
                 raise |Expected-official-entry-view
           :examples $ []
-          :schema $ quote $ Fn app.schema/CodeEntry String Tag (-> String)
+          :schema $ quote $ Fn schema/CodeEntry String Tag (-> String)
         'import-cli-file $ %{} 'CodeEntry
           :doc "|Read an official CLI namespace view into editor nodes while retaining its complete opaque source view. Only the syntax tree is projected; source metadata remains owned by the CLI."
           :code $ quote $ defn import-cli-file (view author timestamp)
@@ -6491,10 +6478,10 @@
                   :defs $ filter-map-kv definitions $ fn (name entry)
                     hint-fn $ Fn Symbol Dynamic $ -> (MapEntryDecision String app.schema/CodeEntry)
                     MapEntryDecision :keep (to-string name) (import-entry entry :CodeEntry author timestamp)
-                  :source-view $ Option :some view
+                  :source-view $ Some view
               %{} ImportedFile (:file file) (:source-view view)
           :examples $ []
-          :schema $ quote $ Fn String String Number (-> app.source/ImportedFile)
+          :schema $ quote $ Fn String String Number (-> ImportedFile)
           :tests $ [] $ %{} 'TestEntry (:name |official-view-to-editor-nodes)
             :code $ quote $ let
                 view "|%{} 'FileEntry\n  :ns $ %{} 'NsEntry (:doc |namespace-doc)\n    :code $ quote $ ns demo.main\n  :defs $ {}\n    'keep $ %{} 'CodeEntry (:doc |definition-doc)\n      :code $ quote $ defn keep (value) $ [] value |中文 |🐈\n      :examples $ [] $ quote $ keep 1\n      :schema $ quote $ Fn Number $ -> $ List Dynamic\n      :tags $ #{} :fixture\n      :tests $ [] $ %{} 'TestEntry (:name |retained)\n        :code $ quote $ assert= 1 1\n        :tags $ #{} :unit\n"
@@ -6544,7 +6531,7 @@
                   restored $ schema/read-file-entry $ parse-cirru-edn (format-cirru-edn file)
                 assert= (parse-cirru-edn view) (parse-cirru-edn exported)
                 assert= file restored
-                assert= (Option :some view) (:source-view restored)
+                assert= (Some view) (:source-view restored)
             :tags $ #{} :unit
         'import-cli-project $ %{} 'CodeEntry
           :doc "|Import only official CLI namespace views. Keep the full CLI config opaque and retain source templates/revision; do not parse or reconstruct the Snapshot root."
@@ -6585,7 +6572,7 @@
                             .unwrap $ get fields :source-manifest-revision
                             , 'String
           :examples $ []
-          :schema $ quote $ Fn String String Number (-> app.source/SourceProject)
+          :schema $ quote $ Fn String String Number (-> SourceProject)
         'import-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn import-entry (raw expected-name author timestamp)
             let
@@ -6599,9 +6586,9 @@
                   List Dynamic
               %{} schema/CodeEntry (:doc doc) (:examples examples)
                 :code $ cirru->tree syntax author timestamp
-                :source-entry $ Option :some $ format-cirru-edn raw
+                :source-entry $ Some $ format-cirru-edn raw
           :examples $ []
-          :schema $ quote $ Fn Dynamic Tag String Number (-> app.schema/CodeEntry)
+          :schema $ quote $ Fn Dynamic Tag String Number (-> schema/CodeEntry)
         'plan-namespace-changes $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn plan-namespace-changes (files saved-files selected templates)
             filter-map-kv (merge saved-files files)
@@ -6618,12 +6605,11 @@
                     or (not selected?) (= current previous)
                     MapEntryDecision :drop
                     match current
-                      (:none)
-                        MapEntryDecision :keep namespace $ Option :none
+                      (:none) (MapEntryDecision :keep namespace None)
                       (:some file)
-                        MapEntryDecision :keep namespace $ Option :some $ export-cli-file file templates
+                        MapEntryDecision :keep namespace $ Some $ export-cli-file file templates
           :examples $ []
-          :schema $ quote $ Fn (Map String app.schema/FileEntry) (Map String app.schema/FileEntry) (Option String) (Map Tag String)
+          :schema $ quote $ Fn (Map String schema/FileEntry) (Map String schema/FileEntry) (Option String) (Map Tag String)
             -> $ Map String $ Option String
         'read-source-save $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-source-save (raw)
@@ -6637,7 +6623,7 @@
                   , 'String
               if changed? (SourceSave :saved revision) (SourceSave :unchanged revision)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> app.source/SourceSave)
+          :schema $ quote $ Fn Dynamic (-> SourceSave)
         'restore-editor-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn restore-editor-state (project archive)
             let
@@ -6700,7 +6686,7 @@
                               .unwrap-or (get fields :saved-entries) (:entries project)
                               Map String $ Map Tag Dynamic
           :examples $ []
-          :schema $ quote $ Fn app.source/SourceProject (Option Dynamic)
+          :schema $ quote $ Fn SourceProject (Option Dynamic)
             -> $ Map Tag Dynamic
           :tests $ [] $ %{} 'TestEntry
             :name |pending-edits-require-the-original-source-revision
@@ -6708,10 +6694,10 @@
                 entry $ %{} schema/CodeEntry (:doc |saved)
                   :code $ schema/syntax->node ([] |ns |demo.main) |source 0
                   :examples $ []
-                  :source-entry $ Option :none
+                  :source-entry None
                 file $ %{} schema/FileEntry (:ns entry)
                   :defs $ {}
-                  :source-view $ Option :none
+                  :source-view None
                 project $ %{} SourceProject (:package |demo)
                   :files $ {} $ |demo.main file
                   :configs $ {} $ :version |1.0.0
@@ -6727,38 +6713,36 @@
                   :users $ {} $ |fixture
                     {} $ :nickname "|合成成员"
                   :source-manifest-revision |fixture-manifest
-                restored $ restore-editor-state project $ Option :some
+                restored $ restore-editor-state project $ Some
                   parse-cirru-edn $ format-cirru-edn archive
                 rejected? $ try
                   do
-                    restore-editor-state project $ Option :some $ assoc archive :source-revision |other-revision
+                    restore-editor-state project $ Some $ assoc archive :source-revision |other-revision
                     , false
                   fn (_error) true
                 historical $ struct-with file $ :ns
                   struct-with entry $ :code $ schema/syntax->node ([] |ns |demo.main) |historical-author 21
                 manifest-rejected? $ try
                   do
-                    restore-editor-state project $ Option :some $ assoc archive :source-manifest-revision |other-manifest
+                    restore-editor-state project $ Some $ assoc archive :source-manifest-revision |other-manifest
                     , false
                   fn (_error) true
               assert= true rejected?
               assert=
-                Option :some $ :source-config project
+                Some $ :source-config project
                 get restored :source-config
               assert=
-                Option :some $ :files project
+                Some $ :files project
                 get restored :saved-files
               assert=
-                Option :some $ {} $ |demo.main edited
+                Some $ {} $ |demo.main edited
                 get restored :files
               assert= (:files project)
-                .unwrap $ get
-                  restore-editor-state project $ Option :none
-                  , :files
+                .unwrap $ get (restore-editor-state project None) :files
               assert=
-                Option :some $ {} $ |demo.main historical
+                Some $ {} $ |demo.main historical
                 get
-                  restore-editor-state project $ Option :some $ assoc archive :saved-files
+                  restore-editor-state project $ Some $ assoc archive :saved-files
                     {} $ |demo.main historical
                   , :saved-files
               assert= true manifest-rejected?
@@ -6774,8 +6758,8 @@
             let
                 project $ read-source-project! snapshot
                 contents $ readEditorArchive snapshot
-                archive $ if (nil? contents) (Option :none)
-                  Option :some $ parse-cirru-edn $ js-ffi.contract/expect-string |editor-state contents
+                archive $ if (nil? contents) None $ Some
+                  parse-cirru-edn $ js-ffi.contract/expect-string |editor-state contents
               source/restore-editor-state project archive
           :examples $ []
           :schema $ quote $ Fn String
@@ -6787,7 +6771,7 @@
               decode-map-as (readSnapshotEdn snapshot) 'String
               , |source 0
           :examples $ []
-          :schema $ quote $ Fn String (-> app.source/SourceProject) (:features :js-ffi)
+          :schema $ quote $ Fn String (-> source/SourceProject) (:features :js-ffi)
         'save-editor-state! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-editor-state! (snapshot db)
             writeEditorArchive snapshot $ format-cirru-edn $ source/editor-archive-state db
@@ -6821,12 +6805,12 @@
                 writeProjectChangesEdn snapshot revision (format-cirru-edn changes) (format-cirru-edn settings)
                 , 'String
           :examples $ []
-          :schema $ quote $ Fn String (Map Tag Dynamic) (Option String) (-> app.source/SourceSave) (:features :js-ffi)
+          :schema $ quote $ Fn String (Map Tag Dynamic) (Option String) (-> source/SourceSave) (:features :js-ffi)
         'save-source-files! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-source-files! (snapshot revision files saved-files selected templates)
             write-namespace-changes! snapshot revision $ source/plan-namespace-changes files saved-files selected templates
           :examples $ []
-          :schema $ quote $ Fn String String (Map String app.schema/FileEntry) (Map String app.schema/FileEntry) (Option String) (Map Tag String) (-> app.source/SourceSave) (:features :js-ffi)
+          :schema $ quote $ Fn String String (Map String app.schema/FileEntry) (Map String app.schema/FileEntry) (Option String) (Map Tag String) (-> source/SourceSave) (:features :js-ffi)
         'write-namespace-changes! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn write-namespace-changes! (snapshot revision changes)
             source/read-source-save $ parse-cirru-edn $ decode-map-as
@@ -6835,7 +6819,7 @@
           :examples $ []
           :schema $ quote $ Fn String String
             Map String $ Option String
-            -> app.source/SourceSave
+            -> source/SourceSave
             :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.storage
@@ -7197,7 +7181,7 @@
                     (:search)
                       :: :search $ twig-search files
                     (:watching peer-id)
-                      :: :watching $ option:map (get sessions peer-id)
+                      :: :watching $ .map (get sessions peer-id)
                         fn (peer)
                           hint-fn $ Fn (Map Tag Dynamic)
                             -> $ Map Tag Dynamic
@@ -7246,15 +7230,14 @@
                 login $ twig-container db $ assoc guest :router (:: :files)
               assert= false $ .unwrap $ get frame :logged-in?
               assert= true missing-peer?
-              assert= (Option :none) (get login :router)
-              assert= (Option :none)
-                get
-                  decode-map-as
-                    .unwrap $ get public :member
-                    Map Tag Dynamic
-                  , :password
+              assert= None $ get login :router
+              assert= None $ get
+                decode-map-as
+                  .unwrap $ get public :member
+                  Map Tag Dynamic
+                , :password
               assert= true $ .some? $ app.comp.watching/read-watching-frame public
-              assert= (Option :none) (app.comp.watching/read-watching-frame nil)
+              assert= None $ app.comp.watching/read-watching-frame nil
             :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.twig.container
@@ -7300,9 +7283,9 @@
                   .unwrap $ get member :user
                   Map Tag Dynamic
               assert= false $ contains? public-user :password
-              assert= (Option :some "|合成成员") (get public-user :nickname)
-              assert= (Option :some :editor) (get member :page)
-              assert= (Option :some bookmark)
+              assert= (Some "|合成成员") (get public-user :nickname)
+              assert= (Some :editor) (get member :page)
+              assert= (Some bookmark)
                 .unwrap $ get member :bookmark
             :tags $ #{} :unit
       :ns $ %{} 'NsEntry (:doc |)
@@ -7313,11 +7296,11 @@
           :code $ quote $ defn bookmark-entry (files bookmark)
             match
               get files $ app.bookmark/get-namespace bookmark
-              (:none) (Option :none)
+              (:none) None
               (:some file)
                 match bookmark
                   (:ns _namespace _focus)
-                    Option :some $ :ns file
+                    Some $ :ns file
                   (:def _namespace name _focus)
                     get (:defs file) name
           :examples $ []
@@ -7383,30 +7366,29 @@
               (:ns namespace _focus)
                 match (get files namespace)
                   (:some file)
-                    Option :some $ keys $ :defs file
-                  (:none) (Option :none)
-              (:def _namespace _name _focus) (Option :none)
+                    Some $ keys $ :defs file
+                  (:none) None
+              (:def _namespace _name _focus) None
           :examples $ []
           :schema $ quote $ Fn (Map String app.schema/FileEntry) app.bookmark/%bookmark
             -> $ Option $ Set String
         'peek-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn peek-entry (files writer)
             match (get writer :peek-def)
-              (:none) (Option :none)
+              (:none) None
               (:some raw)
-                if (nil? raw) (Option :none)
-                  let
-                      fields $ decode-map-as raw $ Map Tag Dynamic
-                      namespace $ decode-map-as
-                        .unwrap $ get fields :ns
-                        , 'String
-                      name $ decode-map-as
-                        .unwrap $ get fields :def
-                        , 'String
-                    match (get files namespace)
-                      (:none) (Option :none)
-                      (:some file)
-                        get (:defs file) name
+                if (nil? raw) None $ let
+                    fields $ decode-map-as raw $ Map Tag Dynamic
+                    namespace $ decode-map-as
+                      .unwrap $ get fields :ns
+                      , 'String
+                    name $ decode-map-as
+                      .unwrap $ get fields :def
+                      , 'String
+                  match (get files namespace)
+                    (:none) None
+                    (:some file)
+                      get (:defs file) name
           :examples $ []
           :schema $ quote $ Fn (Map String app.schema/FileEntry) (Map Tag Dynamic)
             -> $ Option app.schema/CodeEntry
@@ -7436,18 +7418,18 @@
                 code $ app.schema/syntax->node syntax |author 1
                 entry $ %{} app.schema/CodeEntry (:doc |module) (:code code)
                   :examples $ []
-                  :source-entry $ Option :none
+                  :source-entry None
                 file $ %{} app.schema/FileEntry (:ns entry)
                   :defs $ {} $ |main! entry
-                  :source-view $ Option :none
+                  :source-view None
                 info $ pick-from-ns file
               assert=
-                Option :some $ {}
+                Some $ {}
                   |lib.core $ [] |lib/
                   |util.core $ [] |keep "|中文"
                 get info :imported
               assert=
-                Option :some $ #{} |main!
+                Some $ #{} |main!
                 get info :defined
               let
                   raw-code $ parse-cirru-edn $ format-cirru-edn code
@@ -7455,9 +7437,9 @@
                     :ns $ %{} app.schema/CodeEntry (:doc |module)
                       :code $ app.schema/read-node raw-code
                       :examples $ []
-                      :source-entry $ Option :none
+                      :source-entry None
                     :defs $ {}
-                    :source-view $ Option :none
+                    :source-view None
                 assert= (get info :imported)
                   get (pick-from-ns restored-file) :imported
               let
@@ -7465,25 +7447,25 @@
                   empty-file $ %{} app.schema/FileEntry
                     :ns $ %{} app.schema/CodeEntry (:doc |) (:code no-imports)
                       :examples $ []
-                      :source-entry $ Option :none
+                      :source-entry None
                     :defs $ {}
-                    :source-view $ Option :none
+                    :source-view None
                 assert=
-                  Option :some $ {}
+                  Some $ {}
                   get (pick-from-ns empty-file) :imported
             :tags $ #{} :unit
         'twig-page-editor $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn twig-page-editor (files old-files sessions users writer session-id usages-dict)
             match
-              app.util/to-bookmark $ Option :some writer
+              app.util/to-bookmark $ Some writer
               (:none)
                 {}
                   :focus $ []
                   :others $ {}
                   :watchers $ {}
-                  :expr $ Option :none
-                  :peek-def $ Option :none
-                  :preview-locals $ Option :none
+                  :expr None
+                  :peek-def None
+                  :preview-locals None
                   :picker-choices $ {}
                   :changed :same
                   :usages nil
@@ -7494,15 +7476,14 @@
                       match (get writer :picker-mode)
                         (:none) false
                         (:some value) (non-nil? value)
-                      option:map (get files namespace)
-                        fn (file)
-                          hint-fn $ Fn app.schema/FileEntry $ -> (Map Tag Dynamic)
-                          pick-from-ns file
-                      Option :none
+                      (get files namespace) .map $ fn (file)
+                        hint-fn $ Fn app.schema/FileEntry $ -> (Map Tag Dynamic)
+                        pick-from-ns file
+                      , None
                     usages $ match bookmark
                       (:def namespace name _focus)
                         get usages-dict $ :: :reference namespace name
-                      (:ns _namespace _focus) (Option :none)
+                      (:ns _namespace _focus) None
                   let
                       response $ {}
                         :focus $ app.bookmark/get-focus bookmark
@@ -7527,19 +7508,19 @@
             :code $ quote $ let
                 ns-entry $ %{} app.schema/CodeEntry (:doc |Namespace)
                   :examples $ []
-                  :source-entry $ Option :none
+                  :source-entry None
                   :code $ app.schema/syntax->node
                     [] |ns |demo $ [] |:require
                     , |source 0
                 def-entry $ %{} app.schema/CodeEntry (:doc |Definition)
                   :examples $ []
-                  :source-entry $ Option :none
+                  :source-entry None
                   :code $ app.schema/syntax->node
                     [] |defn |run ([]) |true
                     , |source 0
                 file $ %{} app.schema/FileEntry (:ns ns-entry)
                   :defs $ {} $ |run def-entry
-                  :source-view $ Option :none
+                  :source-view None
                 files $ {} $ |demo file
                 old-files $ {} $ |demo
                   app.schema/read-file-entry $ parse-cirru-edn $ format-cirru-edn file
@@ -7584,26 +7565,23 @@
                 keys $ decode-map-as
                   .unwrap $ get frame :watchers
                   Map String $ Map Tag Dynamic
-              assert= (Option :none)
-                get
-                  decode-map-as
-                    .unwrap $ get watching :member
-                    Map Tag Dynamic
-                  , :password
-              assert= (Option :some def-entry)
+              assert= None $ get
+                decode-map-as
+                  .unwrap $ get watching :member
+                  Map Tag Dynamic
+                , :password
+              assert= (Some def-entry)
                 .unwrap $ get watching :expr
-              assert= (Option :some def-entry)
+              assert= (Some def-entry)
                 .unwrap $ get frame :peek-def
-              assert= (Option :none)
-                .unwrap $ get empty-frame :expr
-              assert= (Option :none)
-                .unwrap $ get frame :preview-locals
+              assert= None $ .unwrap $ get empty-frame :expr
+              assert= None $ .unwrap $ get frame :preview-locals
               assert=
-                Option :some $ #{} |run
+                Some $ #{} |run
                 app.comp.page-editor/read-preview-locals $ .unwrap $ get ns-frame :preview-locals
-              assert= (Option :none) (app.comp.page-editor/read-preview-locals nil)
+              assert= None $ app.comp.page-editor/read-preview-locals nil
               assert=
-                Option :some $ #{} |run
+                Some $ #{} |run
                 app.comp.page-editor/read-preview-locals $ #{} |run
               assert= true $ .unwrap $ get watching :working?
             :tags $ #{} :unit
@@ -7649,10 +7627,10 @@
                     file $ get files namespace
                     saved-file $ get saved-files namespace
                     ns-change $ compare-entry
-                      option:map file $ fn (v)
+                      file .map $ fn (v)
                         hint-fn $ Fn app.schema/FileEntry $ -> app.schema/CodeEntry
                         :ns v
-                      option:map saved-file $ fn (v)
+                      saved-file .map $ fn (v)
                         hint-fn $ Fn app.schema/FileEntry $ -> app.schema/CodeEntry
                         :ns v
                     defs $ match file
@@ -7683,14 +7661,14 @@
                 entry $ %{} app.schema/CodeEntry (:doc |same)
                   :code $ app.schema/syntax->node ([] |ns |demo.main) |fixture 12
                   :examples $ []
-                  :source-entry $ Option :none
+                  :source-entry None
                 copy $ app.schema/read-code-entry $ parse-cirru-edn (format-cirru-edn entry)
                 before $ %{} app.schema/FileEntry (:ns entry)
                   :defs $ {} $ |fresh entry
-                  :source-view $ Option :none
+                  :source-view None
                 after $ %{} app.schema/FileEntry (:ns entry)
                   :defs $ {} $ |fresh copy
-                  :source-view $ Option :none
+                  :source-view None
               assert= ({})
                 render-changed-files
                   {} $ |demo.main after
@@ -7748,7 +7726,7 @@
                 (:some ns-name)
                   let
                       file-entry $ assert-type
-                        option:unwrap $ get files ns-name
+                        .unwrap $ get files ns-name
                         , 'app.schema/FileEntry
                     &map:fold-kv (:defs file-entry) ({})
                       fn (docs key value)
@@ -7758,7 +7736,7 @@
               :changed-files $ render-changed-files files saved-files
               :peeking-file $ match draft-ns
                 (:some ns-name) (get files ns-name)
-                (:none) (Option :none)
+                (:none) None
               :highlights $ session-highlights sessions sid
               :source-templates source-templates
           :examples $ []
@@ -7806,13 +7784,11 @@
             :code $ quote $ let
                 entry $ %{} app.schema/CodeEntry (:doc |)
                   :examples $ []
-                  :source-entry $ Option :none
+                  :source-entry None
                   :code $ app.schema/syntax->node
                     [] |defn |run $ []
                     , |source 0
-                file $ %{} app.schema/FileEntry
-                  :source-view $ Option :none
-                  :ns entry
+                file $ %{} app.schema/FileEntry (:source-view None) (:ns entry)
                   :defs $ {} $ |run entry
                 wire $ parse-cirru-edn $ format-cirru-edn
                   twig-search $ {} $ |demo file
@@ -7862,7 +7838,7 @@
             let
                 bookmark $ to-bookmark $ get session :writer
                 self? $ = my-sid $ .unwrap-or (get session :id) |
-                entry $ option:and-then bookmark $ fn (value)
+                entry $ bookmark .and-then $ fn (value)
                   hint-fn $ Fn app.bookmark/%bookmark $ -> (Option app.schema/CodeEntry)
                   app.twig.page-editor/bookmark-entry files value
               {}
@@ -7872,7 +7848,7 @@
                 :self? self?
                 :working? $ and (.some? bookmark) (not self?)
                 :focus $ .unwrap-or
-                  option:map bookmark $ fn (value)
+                  .map bookmark $ fn (value)
                     hint-fn $ Fn app.bookmark/%bookmark $ -> (List String)
                     app.bookmark/get-focus value
                   []
@@ -7932,8 +7908,8 @@
                 writer/save-files db
                   match op-data
                     (:some name)
-                      Option :some $ decode-map-as name 'String
-                    (:none) (Option :none)
+                      Some $ decode-map-as name 'String
+                    (:none) None
                     _ $ raise |Expected-optional-save-namespace
                   , sid op-id op-time
               (:writer/collapse op-data)
@@ -7983,7 +7959,16 @@
               (:ir/clone-ns op-data) (ir/clone-ns db op-data sid op-id op-time)
               (:ir/toggle-comment) (ir/toggle-comment db sid op-id op-time)
               (:ir/fold-to-end) (ir/fold-to-end db sid op-id op-time)
-              (:notify/push-message op-data) (notify/push-message db op-data sid op-id op-time)
+              (:notify/push-message op-data)
+                let
+                    items $ decode-map-as op-data $ List Dynamic
+                    kind $ decode-map-as
+                      .unwrap $ .get items 0
+                      , Tag
+                    text $ decode-map-as
+                      .unwrap $ .get items 1
+                      , String
+                  notify/push-message db kind text sid op-id op-time
               (:notify/clear op-data) (notify/clear db op-data sid op-id op-time)
               (:notify/broadcast op-data) (notify/broadcast db op-data sid op-id op-time)
               (:analyze/goto-def op-data) (analyze/goto-def db op-data sid op-id op-time)
@@ -8051,7 +8036,7 @@
                               , author op-time
                             entry $ %{} schema/CodeEntry (:doc |) (:code code)
                               :examples $ []
-                              :source-entry $ Option :none
+                              :source-entry None
                             with-definition $ app.updater.writer/write-bookmark-entry db target entry
                           app.updater.writer/write-bookmark-node with-definition bookmark $ cirru->tree name author op-time
                     decode-map-as
@@ -8067,7 +8052,7 @@
               (:def namespace name) (:: :def namespace name)
               (:reference namespace name) (:: :reference namespace name)
           :examples $ []
-          :schema $ quote $ Fn app.schema/DependencyKey (-> AnyEnum) (:open :reflect)
+          :schema $ quote $ Fn schema/DependencyKey (-> AnyEnum) (:open :reflect)
         'goto-def $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn goto-def (db op-data sid op-id op-time)
             let
@@ -8122,7 +8107,7 @@
                                   entry $ %{} schema/CodeEntry (:doc |)
                                     :code $ cirru->tree form author op-time
                                     :examples $ []
-                                    :source-entry $ Option :none
+                                    :source-entry None
                                   file $ match target-file
                                     (:some file)
                                       assoc file :defs $ assoc (:defs file) name entry
@@ -8131,9 +8116,9 @@
                                         :ns $ %{} schema/CodeEntry (:doc |)
                                           :code $ cirru->tree ([] |ns namespace) author op-time
                                           :examples $ []
-                                          :source-entry $ Option :none
+                                          :source-entry None
                                         :defs $ {} $ name entry
-                                        :source-view $ Option :none
+                                        :source-view None
                                   next-db $ assoc db :files $ assoc files namespace file
                                 decode-map-as
                                   update-in next-db ([] :sessions sid :writer) (push-bookmark bookmark false)
@@ -8180,7 +8165,7 @@
                           , &unit
               DependencyGraph :dependencies @*deps :usages @*usages
           :examples $ []
-          :schema $ quote $ Fn (Map String app.schema/FileEntry) (-> app.updater.analyze/DependencyGraph)
+          :schema $ quote $ Fn (Map String schema/FileEntry) (-> DependencyGraph)
         'parse-bookmarks-collect! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-bookmarks-collect! (tree local-defs import-rules this-ns this-def collect!)
             match tree
@@ -8210,8 +8195,8 @@
                       , &unit
             , &unit
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruSyntax (Set String) (List app.updater.analyze/DependencyImport) String String
-            Fn app.schema/DependencyKey $ -> Unit
+          :schema $ quote $ Fn schema/CirruSyntax (Set String) (List DependencyImport) String String
+            Fn schema/DependencyKey $ -> Unit
             -> Unit
         'parse-ns-rules $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-ns-rules (form)
@@ -8253,8 +8238,8 @@
                                               List String
                                           _ $ []
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruSyntax
-            -> $ List app.updater.analyze/DependencyImport
+          :schema $ quote $ Fn schema/CirruSyntax
+            -> $ List DependencyImport
         'peek-def $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn peek-def (db text sid op-id op-time)
             let
@@ -8314,13 +8299,13 @@
                   %{} schema/CodeEntry (:doc |)
                     :code $ cirru->tree form |fixture 1
                     :examples $ []
-                    :source-entry $ Option :none
+                    :source-entry None
                 file $ %{} schema/FileEntry
                   :ns $ make-entry $ [] |ns |demo.main
                   :defs $ {}
                     |first $ make-entry $ [] |def |first |1
                     |second $ make-entry $ [] |def |second |first
-                  :source-view $ Option :none
+                  :source-view None
                 db $ refresh-usages-dict
                   {} $ :files $ {} (|demo.main file)
                   , |fixture |edit 1
@@ -8336,7 +8321,7 @@
                 {} $ first-ref $ #{} second-def
                 .unwrap $ get db :usages-dict
               assert=
-                Option :some $ #{} $ schema/DependencyKey :reference |demo.main |first
+                Some $ #{} $ schema/DependencyKey :reference |demo.main |first
                 get
                   schema/read-dependency-map $ parse-cirru-edn $ format-cirru-edn
                     .unwrap $ get db :deps-dict
@@ -8351,7 +8336,7 @@
           :code $ quote $ defn resolve-definition (db sid reference)
             match
               to-bookmark $ to-writer db sid
-              (:none) (Option :none)
+              (:none) None
               (:some bookmark)
                 let
                     namespace $ app.bookmark/get-namespace bookmark
@@ -8368,16 +8353,17 @@
                       (:unqualified name) name
                   match (get imports key)
                     (:none)
-                      Option :some $ app.bookmark/%bookmark :def namespace name $ []
+                      Some $ app.bookmark/%bookmark :def namespace name $ []
                     (:some rule)
-                      if
-                        = method $ .unwrap-or (get rule :method) :unknown
-                        let
-                            target $ decode-map-as
-                              .unwrap $ get rule :ns
-                              , String
-                          Option :some $ app.bookmark/%bookmark :def target name $ []
-                        Option :none
+                      match rule
+                        (:as target)
+                          if (= method :as)
+                            Some $ app.bookmark/%bookmark :def target name $ []
+                            , None
+                        (:refer target)
+                          if (= method :refer)
+                            Some $ app.bookmark/%bookmark :def target name $ []
+                            , None
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) String app.util/SymbolReference
             -> $ Option app.bookmark/%bookmark
@@ -8413,7 +8399,7 @@
                         (:def pick-ns pick-def _focus)
                           if (= current-ns pick-ns) (insert db pick-def)
                             match
-                              schema/find-node-path ns-tree (to-tree pick-ns) ([]) (Option :some |:refer)
+                              schema/find-node-path ns-tree (to-tree pick-ns) ([]) (Some |:refer)
                               (:none)
                                 do (eprintln "|Failed to find ns node for refer") db
                               (:some coordinate)
@@ -8422,7 +8408,7 @@
                                     rule $ schema/read-expr $ .unwrap (schema/node-at-path ns-tree path)
                                     def-node $ to-tree pick-def
                                   match
-                                    schema/find-node-path rule def-node ([]) (Option :none)
+                                    schema/find-node-path rule def-node ([]) None
                                     (:some _existing) (insert db pick-def)
                                     (:none)
                                       let
@@ -8434,7 +8420,7 @@
                           if (= current-ns pick-ns)
                             do (println "|already in namespace" current-ns) db
                             match
-                              schema/find-node-path ns-tree (to-tree pick-ns) ([]) (Option :some |:as)
+                              schema/find-node-path ns-tree (to-tree pick-ns) ([]) (Some |:as)
                               (:some coordinate)
                                 let
                                     rule $ schema/read-expr $ .unwrap
@@ -8450,7 +8436,7 @@
                                       , pick-ns
                                     rule $ to-tree $ [] pick-ns |:as alias
                                     next-tree $ match
-                                      schema/find-node-path ns-tree (to-tree |:require) ([]) (Option :none)
+                                      schema/find-node-path ns-tree (to-tree |:require) ([]) None
                                       (:some coordinate)
                                         let
                                             path $ butlast coordinate
@@ -8472,7 +8458,7 @@
               MapEntryDecision :keep (dependency-key->wire key) (.map linked dependency-key->wire)
           :examples $ []
           :schema $ quote $ Fn
-            Map app.schema/DependencyKey $ Set app.schema/DependencyKey
+            Map schema/DependencyKey $ Set schema/DependencyKey
             -> $ Map AnyEnum $ Set AnyEnum
             :open :reflect
       :ns $ %{} 'NsEntry (:doc |)
@@ -8507,7 +8493,7 @@
                   :dissoc $ EntryUpdate :dissoc $ decode-map-as payload 'String
                   _ $ raise |Unknown-entry-update-operation
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> app.updater.configs/EntryUpdate)
+          :schema $ quote $ Fn Dynamic (-> EntryUpdate)
         'update-configs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-configs (db settings session-id op-id op-time)
             if (contains? settings :version)
@@ -8532,7 +8518,7 @@
                   (:dissoc name) (dissoc entries name)
               assoc db :entries next
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.updater.configs/EntryUpdate String String Number
+          :schema $ quote $ Fn (Map Tag Dynamic) EntryUpdate String String Number
             -> $ Map Tag Dynamic
           :tests $ [] $ %{} 'TestEntry
             :name |entry-update-wire-and-manifest-version-ownership
@@ -8559,10 +8545,10 @@
                     , false
                   fn (_error) true
               assert=
-                Option :some $ {} $ |test entry
+                Some $ {} $ |test entry
                 get reset :entries
               assert=
-                Option :some $ {} $ |other entry
+                Some $ {} $ |other entry
                 get removed :entries
               assert= true rejected?
             :tags $ #{} :unit
@@ -8595,7 +8581,7 @@
                     [] |defn definition $ []
                     , author op-time
                   :examples $ []
-                  :source-entry $ Option :none
+                  :source-entry None
               app.updater.writer/write-bookmark-entry db
                 app.bookmark/%bookmark :def namespace definition $ []
                 , entry
@@ -8614,10 +8600,10 @@
                 entry $ %{} schema/CodeEntry (:doc |)
                   :code $ cirru->tree ([] |ns namespace) author op-time
                   :examples $ []
-                  :source-entry $ Option :none
+                  :source-entry None
                 file $ %{} schema/FileEntry (:ns entry)
                   :defs $ {}
-                  :source-view $ Option :none
+                  :source-view None
               decode-map-as
                 -> db
                   assoc-in ([] :files namespace) file
@@ -8653,7 +8639,7 @@
                           MapEntryDecision :keep key leaf
                       (app.schema/CirruExprShape nested) (MapEntryDecision :keep key nested)
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruNode String String (-> app.schema/CirruNode)
+          :schema $ quote $ Fn schema/CirruNode String String (-> schema/CirruNode)
         'clone-ns $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn clone-ns (db op-data sid op-id op-time)
             let
@@ -8939,7 +8925,7 @@
                 if expression? (conj next-focus bisection/mid-id) next-focus
                 , session-id op-id op-time
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) String String Number app.updater.ir/SiblingEdit
+          :schema $ quote $ Fn (Map Tag Dynamic) String String Number SiblingEdit
             -> $ Map Tag Dynamic
         'leaf-after $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn leaf-after (db _op-data session-id op-id op-time)
@@ -8964,7 +8950,7 @@
                 selected-ns $ get-in db $ [] :sessions session-id :writer :selected-ns
               update-in db ([] :files selected-ns :defs)
                 fn (defs)
-                  dissoc (option:unwrap-or defs {}) op-data
+                  dissoc (.unwrap-or defs {}) op-data
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
@@ -9016,7 +9002,7 @@
                           (app.schema/CirruExprShape _expr) (raise "|Expected namespace name leaf")
                         next-entry $ assoc entry :code $ assoc expr :data (assoc children key child)
                         next-files $ assoc (dissoc files old-ns) new-ns $ assoc file :ns next-entry
-                      retarget-active-bookmark (assoc db :files next-files) session-id old-ns (Option :none) new-ns |
+                      retarget-active-bookmark (assoc db :files next-files) session-id old-ns None new-ns |
                     if
                       not $ contains? files new-ns
                       decode-map-as
@@ -9050,7 +9036,7 @@
                           destination $ .unwrap $ get without-old new-ns
                           next-files $ assoc without-old new-ns $ assoc destination :defs
                             assoc (:defs destination) new-name next-entry
-                        retarget-active-bookmark (assoc db :files next-files) session-id old-ns (Option :some old-name) new-ns new-name
+                        retarget-active-bookmark (assoc db :files next-files) session-id old-ns (Some old-name) new-ns new-name
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
@@ -9099,7 +9085,7 @@
                       saved-def $ match saved-file
                         (:some previous)
                           get (:defs previous) definition
-                        (:none) (Option :none)
+                        (:none) None
                     match saved-def
                       (:some entry)
                         let
@@ -9117,7 +9103,7 @@
             -> $ Map Tag Dynamic
         'reset-files $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-files (db session-id op-id op-time)
-            assoc db :files $ option:unwrap-or (get db :saved-files) {}
+            assoc db :files $ .unwrap-or (get db :saved-files) {}
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) String String Number
             -> $ Map Tag Dynamic
@@ -9142,23 +9128,22 @@
             let
                 writer $ to-writer db sid
                 target $ match (to-bookmark writer)
-                  (:none) (Option :none)
+                  (:none) None
                   (:some bookmark)
                     match bookmark
                       (:ns namespace focus)
                         if
                           and (= namespace old-ns) (.none? old-def)
-                          Option :some $ %bookmark :ns new-ns focus
-                          Option :none
+                          Some $ %bookmark :ns new-ns focus
+                          , None
                       (:def namespace definition focus)
-                        if (not= namespace old-ns) (Option :none)
-                          match old-def
-                            (:none)
-                              Option :some $ %bookmark :def new-ns definition focus
-                            (:some old-name)
-                              if (= definition old-name)
-                                Option :some $ %bookmark :def new-ns new-def focus
-                                Option :none
+                        if (not= namespace old-ns) None $ match old-def
+                          (:none)
+                            Some $ %bookmark :def new-ns definition focus
+                          (:some old-name)
+                            if (= definition old-name)
+                              Some $ %bookmark :def new-ns new-def focus
+                              , None
               match target
                 (:none) db
                 (:some bookmark)
@@ -9208,16 +9193,16 @@
                       data $ :data expr
                       first-key $ get-min-key data
                       comment-key $ match first-key
-                        (:none) (Option :none)
+                        (:none) None
                         (:some key)
                           match
                             .unwrap $ get data key
                             (app.schema/CirruLeafShape leaf)
                               if
                                 = |; $ :text leaf
-                                Option :some key
-                                Option :none
-                            (app.schema/CirruExprShape _child) (Option :none)
+                                Some key
+                                , None
+                            (app.schema/CirruExprShape _child) None
                       next-data $ match comment-key
                         (:some key) (dissoc data key)
                         (:none)
@@ -9260,10 +9245,10 @@
                 entry $ %{} app.schema/CodeEntry (:doc |)
                   :code $ app.util/cirru->tree ([] |ns |demo.source) |fixture 1
                   :examples $ []
-                  :source-entry $ Option :none
+                  :source-entry None
                 file $ %{} app.schema/FileEntry (:ns entry)
                   :defs $ {}
-                  :source-view $ Option :none
+                  :source-view None
                 path $ [] :sessions |sid :writer :selected-ns
                 db $ {}
                   :files $ {} $ |demo.source file
@@ -9279,7 +9264,7 @@
               assert= (Result :ok file)
                 get-in moved $ [] :files |demo.copy
               assert=
-                Option :some $ {} $ |demo.copy file
+                Some $ {} $ |demo.copy file
                 get moved :files
               assert= (Result :ok |demo.source)
                 get-in (remove-ns copied |demo.copy |sid |edit 1) path
@@ -9411,28 +9396,20 @@
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
         'push-message $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn push-message (db op-data sid op-id op-time)
-            let
-                items $ decode-map-as op-data $ List Dynamic
-                kind $ decode-map-as
-                  .unwrap $ .get items 0
-                  , Tag
-                text $ decode-map-as
-                  .unwrap $ .get items 1
-                  , String
-              decode-map-as
-                update-in db ([] :sessions sid :notifications)
-                  fn (notifications)
-                    hint-fn $ Fn (Option Dynamic)
-                      -> $ List $ Map Tag Dynamic
-                    conj
-                      decode-map-as
-                        .unwrap-or notifications $ []
-                        List $ Map Tag Dynamic
-                      {} (:id op-id) (:kind kind) (:text text) (:time op-time)
-                Map Tag Dynamic
+          :code $ quote $ defn push-message (db kind text sid op-id op-time)
+            decode-map-as
+              update-in db ([] :sessions sid :notifications)
+                fn (notifications)
+                  hint-fn $ Fn (Option Dynamic)
+                    -> $ List $ Map Tag Dynamic
+                  conj
+                    decode-map-as
+                      .unwrap-or notifications $ []
+                      List $ Map Tag Dynamic
+                    {} (:id op-id) (:kind kind) (:text text) (:time op-time)
+              Map Tag Dynamic
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
+          :schema $ quote $ Fn (Map Tag Dynamic) Tag String String String Number
             -> $ Map Tag Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater.notify
@@ -9447,7 +9424,7 @@
           :code $ quote $ defn change (db route session-id _op-id _op-time)
             assoc-in db ([] :sessions session-id :router) (route->wire route)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.updater.router/Route String String Number
+          :schema $ quote $ Fn (Map Tag Dynamic) Route String String Number
             -> $ Map Tag Dynamic
         'read-route $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-route (raw)
@@ -9462,7 +9439,7 @@
                 Route :watching $ decode-map-as sid 'String
               _ $ raise |Unknown-editor-route
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> app.updater.router/Route)
+          :schema $ quote $ Fn Dynamic (-> Route)
         'route->wire $ %{} 'CodeEntry
           :doc "|Encode a typed route as the original anonymous WebSocket enum."
           :code $ quote $ defn route->wire (route)
@@ -9475,7 +9452,7 @@
               (:configs) (:: :configs)
               (:watching sid) (:: :watching sid)
           :examples $ []
-          :schema $ quote $ Fn app.updater.router/Route (-> AnyEnum) (:open :reflect)
+          :schema $ quote $ Fn Route (-> AnyEnum) (:open :reflect)
           :tests $ [] $ %{} 'TestEntry
             :name |checked-local-routes-retain-anonymous-wire-protocol
             :code $ quote $ do
@@ -9497,7 +9474,7 @@
           :code $ quote $ defn route-op (route)
             :: :router/change $ route->wire route
           :examples $ []
-          :schema $ quote $ Fn app.updater.router/Route (-> AnyEnum) (:open :reflect)
+          :schema $ quote $ Fn Route (-> AnyEnum) (:open :reflect)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater.router
     'app.updater.session $ %{} 'FileEntry
@@ -9594,17 +9571,17 @@
           :code $ quote $ defn sign-up (db op-data session-id op-id op-time)
             let[] (username password) op-data $ let
                 users $ decode-map-as
-                  option:unwrap-or (get db :users) ({})
+                  .unwrap-or (get db :users) ({})
                   Map String $ Map Tag Dynamic
               let
                   maybe-user $ find-first
                     fn (user)
                       hint-fn $ Fn (Map Tag Dynamic) (-> Bool)
-                      = username $ option:unwrap-or (get user :name) |
+                      = username $ .unwrap-or (get user :name) |
                     &set:to-list $ distinct-values users
                 let
                     new-user-id $ str |u $ count users
-                  if (option:some? maybe-user)
+                  if (.some? maybe-user)
                     update-in db ([] :sessions session-id :notifications)
                       push-warning op-id op-time $ str "|Name is taken: " username
                     -> db
@@ -9644,7 +9621,7 @@
         'file-change $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn file-change (db project _sid _op-id _op-time)
             let
-                canonical $ source/restore-editor-state project $ Option :none
+                canonical $ source/restore-editor-state project None
                 previous $ decode-map-as
                   .unwrap $ get db :saved-files
                   Map String app.schema/FileEntry
@@ -9679,7 +9656,7 @@
                 assoc :entries entries
                 assoc :saved-entries $ :entries project
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.source/SourceProject String String Number
+          :schema $ quote $ Fn (Map Tag Dynamic) source/SourceProject String String Number
             -> $ Map Tag Dynamic
         'refresh-files $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn refresh-files (previous current incoming)
@@ -9691,16 +9668,16 @@
                   (:none) (MapEntryDecision :drop)
                   (:some file) (MapEntryDecision :keep namespace file)
           :examples $ []
-          :schema $ quote $ Fn (Map String app.schema/FileEntry) (Map String app.schema/FileEntry) (Map String app.schema/FileEntry)
-            -> $ Map String app.schema/FileEntry
+          :schema $ quote $ Fn (Map String schema/FileEntry) (Map String schema/FileEntry) (Map String schema/FileEntry)
+            -> $ Map String schema/FileEntry
           :tests $ [] $ %{} 'TestEntry (:name |nonoverlap-add-remove-and-pending-namespace)
             :code $ quote $ let
                 a $ %{} schema/FileEntry
                   :defs $ {}
-                  :source-view $ Option :none
+                  :source-view None
                   :ns $ %{} schema/CodeEntry (:doc |)
                     :examples $ []
-                    :source-entry $ Option :none
+                    :source-entry None
                     :code $ schema/syntax->node ([] |ns |demo) |source 0
                 b $ assoc a :ns $ assoc (:ns a) :doc |remote
                 pending $ assoc a :ns $ assoc (:ns a) :doc |pending
@@ -9708,10 +9685,10 @@
                 current $ assoc previous |pending pending
                 incoming $ {} (|same a) (|remote b) (|pending a) (|added b)
                 next $ refresh-files previous current incoming
-              assert= (Option :some pending) (get next |pending)
-              assert= (Option :some b) (get next |remote)
-              assert= (Option :some b) (get next |added)
-              assert= (Option :none) (get next |removed)
+              assert= (Some pending) (get next |pending)
+              assert= (Some b) (get next |remote)
+              assert= (Some b) (get next |added)
+              assert= None $ get next |removed
               assert= true $ try
                 do
                   refresh-files previous current $ assoc incoming |pending b
@@ -9751,10 +9728,10 @@
                 entry $ %{} schema/CodeEntry (:doc |saved)
                   :code $ schema/syntax->node ([] |ns |demo.main) |source 0
                   :examples $ []
-                  :source-entry $ Option :none
+                  :source-entry None
                 file $ %{} schema/FileEntry (:ns entry)
                   :defs $ {}
-                  :source-view $ Option :none
+                  :source-view None
                 changed $ struct-with file $ :ns
                   struct-with entry $ :doc |pending
                 db $ {} (:source-revision |old)
@@ -9765,30 +9742,29 @@
                   :sessions $ {} $ |session
                     {} (:user-id |fixture)
                       :notifications $ []
-                partial $ accept-source-save db (app.source/SourceSave :saved |new) (Option :some |demo.main) |session |op 42
+                partial $ accept-source-save db (app.source/SourceSave :saved |new) (Some |demo.main) |session |op 42
                 baseline $ decode-map-as
                   .unwrap $ get partial :saved-files
                   Map String app.schema/FileEntry
-                removed $ accept-source-save partial (app.source/SourceSave :saved |next) (Option :some |demo.removed) |session |op2 43
-                all-saved $ accept-source-save removed (app.source/SourceSave :unchanged |next) (Option :none) |session |op3 44
+                removed $ accept-source-save partial (app.source/SourceSave :saved |next) (Some |demo.removed) |session |op2 43
+                all-saved $ accept-source-save removed (app.source/SourceSave :unchanged |next) None |session |op3 44
                 messages $ match
                   get-in partial $ [] :sessions |session :notifications
                   (:ok value)
                     decode-map-as value $ List $ Map Tag Dynamic
                   (:err _error) (raise |Missing-save-notification)
-              assert= (Option :some |new) (get partial :source-revision)
-              assert= (Option :some changed) (get baseline |demo.main)
-              assert= (Option :some file) (get baseline |demo.other)
-              assert= (Option :none)
-                get
-                  decode-map-as
-                    .unwrap $ get removed :saved-files
-                    Map String app.schema/FileEntry
-                  , |demo.removed
+              assert= (Some |new) (get partial :source-revision)
+              assert= (Some changed) (get baseline |demo.main)
+              assert= (Some file) (get baseline |demo.other)
+              assert= None $ get
+                decode-map-as
+                  .unwrap $ get removed :saved-files
+                  Map String app.schema/FileEntry
+                , |demo.removed
               assert= (get all-saved :files) (get all-saved :saved-files)
-              assert= (Option :some |next) (get all-saved :source-revision)
+              assert= (Some |next) (get all-saved :source-revision)
               assert= 1 $ count messages
-              assert= (Option :some "|合成成员 modified ns demo.main!")
+              assert= (Some "|合成成员 modified ns demo.main!")
                 get
                   .unwrap $ first messages
                   , :text
@@ -9822,7 +9798,7 @@
           :code $ quote $ defn draft-ns (db op-data sid op-id op-time)
             -> db $ update-in ([] :sessions sid :writer)
               fn (writer)
-                assoc (option:unwrap-or writer {}) :draft-ns op-data
+                assoc (.unwrap-or writer {}) :draft-ns op-data
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
@@ -9859,12 +9835,12 @@
                 hint-fn $ Fn (Option Dynamic) (-> Dynamic)
                 let
                     writer-map $ decode-map-as
-                      option:unwrap-or writer $ {}
+                      .unwrap-or writer $ {}
                       Map Tag Dynamic
                     pointer $ decode-map-as
-                      option:unwrap-or (get writer-map :pointer) 0
+                      .unwrap-or (get writer-map :pointer) 0
                       , Number
-                    stack $ app.bookmark/read-bookmarks $ option:unwrap-or (get writer-map :stack) ([])
+                    stack $ app.bookmark/read-bookmarks $ .unwrap-or (get writer-map :stack) ([])
                     next-stack $ if
                       > (count stack) pointer
                       dissoc-idx stack pointer
@@ -9879,7 +9855,7 @@
             let
                 writer $ .unwrap $ app.util/to-writer db session-id
                 pointer $ decode-map-as
-                  option:unwrap-or (get writer :pointer) 0
+                  .unwrap-or (get writer :pointer) 0
                   , Number
               decode-map-as
                 app.util/update-in-existing db ([] :sessions session-id :writer :stack pointer)
@@ -9897,10 +9873,10 @@
           :code $ quote $ defn go-down (db op-data session-id op-id op-time)
             let
                 writer $ .unwrap $ app.util/to-writer db session-id
-                tail? $ option:unwrap-or (get op-data :tail?) false
-                stack $ app.bookmark/read-bookmarks $ option:unwrap-or (get writer :stack) ([])
+                tail? $ .unwrap-or (get op-data :tail?) false
+                stack $ app.bookmark/read-bookmarks $ .unwrap-or (get writer :stack) ([])
                 pointer $ decode-map-as
-                  option:unwrap-or (get writer :pointer) 0
+                  .unwrap-or (get writer :pointer) 0
                   , Number
                 bookmark $ Bookmark $ .unwrap (get stack pointer)
                 target-expr $ read-bookmark-expr db bookmark
@@ -9911,7 +9887,7 @@
                   fn (b)
                     hint-fn $ Fn (Option Dynamic) (-> Dynamic)
                     app.bookmark/update-focus
-                      Bookmark $ app.bookmark/read-bookmark $ option:unwrap b
+                      Bookmark $ app.bookmark/read-bookmark $ .unwrap b
                       fn (focus)
                         hint-fn $ Fn (List String)
                           -> $ List String
@@ -9925,9 +9901,9 @@
           :code $ quote $ defn go-left (db session-id op-id op-time)
             let
                 writer $ .unwrap $ app.util/to-writer db session-id
-                stack $ app.bookmark/read-bookmarks $ option:unwrap-or (get writer :stack) ([])
+                stack $ app.bookmark/read-bookmarks $ .unwrap-or (get writer :stack) ([])
                 pointer $ decode-map-as
-                  option:unwrap-or (get writer :pointer) 0
+                  .unwrap-or (get writer :pointer) 0
                   , Number
                 bookmark $ .unwrap $ get stack pointer
                 current-focus $ app.bookmark/get-focus bookmark
@@ -9940,7 +9916,9 @@
                   base-expr $ read-bookmark-expr db parent-bookmark
                   base-data $ :data base-expr
                   child-keys $ sort $ &set:to-list (keys base-data)
-                  idx $ option:unwrap-or (index-of child-keys last-coord) 0
+                  idx $
+                    index-of child-keys last-coord
+                    , .unwrap-or 0
                   next-coord $ if (= 0 idx) last-coord $ .unwrap
                     .get child-keys $ dec idx
                 focus db (conj parent-focus next-coord) session-id op-id op-time
@@ -9951,9 +9929,9 @@
           :code $ quote $ defn go-right (db session-id op-id op-time)
             let
                 writer $ .unwrap $ app.util/to-writer db session-id
-                stack $ app.bookmark/read-bookmarks $ option:unwrap-or (get writer :stack) ([])
+                stack $ app.bookmark/read-bookmarks $ .unwrap-or (get writer :stack) ([])
                 pointer $ decode-map-as
-                  option:unwrap-or (get writer :pointer) 0
+                  .unwrap-or (get writer :pointer) 0
                   , Number
                 bookmark $ .unwrap $ get stack pointer
                 current-focus $ app.bookmark/get-focus bookmark
@@ -9966,7 +9944,9 @@
                   base-expr $ read-bookmark-expr db parent-bookmark
                   base-data $ :data base-expr
                   child-keys $ sort $ &set:to-list (keys base-data)
-                  idx $ option:unwrap-or (index-of child-keys last-coord) 0
+                  idx $
+                    index-of child-keys last-coord
+                    , .unwrap-or 0
                   next-coord $ if
                     = idx $ dec $ .len child-keys
                     , last-coord $ .unwrap
@@ -9979,9 +9959,9 @@
           :code $ quote $ defn go-up (db session-id op-id op-time)
             let
                 writer $ .unwrap $ app.util/to-writer db session-id
-                stack $ app.bookmark/read-bookmarks $ option:unwrap-or (get writer :stack) ([])
+                stack $ app.bookmark/read-bookmarks $ .unwrap-or (get writer :stack) ([])
                 pointer $ decode-map-as
-                  option:unwrap-or (get writer :pointer) 0
+                  .unwrap-or (get writer :pointer) 0
                   , Number
                 bookmark $ .unwrap $ get stack pointer
               match (app.bookmark/get-parent bookmark)
@@ -10004,12 +9984,12 @@
                 hint-fn $ Fn (Option Dynamic) (-> Dynamic)
                 let
                     writer-map $ decode-map-as
-                      option:unwrap-or writer $ {}
+                      .unwrap-or writer $ {}
                       Map Tag Dynamic
                     pointer $ decode-map-as
-                      option:unwrap-or (get writer-map :pointer) 0
+                      .unwrap-or (get writer-map :pointer) 0
                       , Number
-                    stack $ app.bookmark/read-bookmarks $ option:unwrap-or (get writer-map :stack) ([])
+                    stack $ app.bookmark/read-bookmarks $ .unwrap-or (get writer-map :stack) ([])
                   assoc writer-map :pointer $ if
                     >= pointer $ dec $ count stack
                     , pointer $ inc pointer
@@ -10019,8 +9999,12 @@
         'move-order $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn move-order (db op-map sid op-id op-time)
             let
-                from-idx $ option:unwrap-or (get op-map :from) 0
-                to-idx $ option:unwrap-or (get op-map :to) 0
+                from-idx $
+                  get op-map :from
+                  , .unwrap-or 0
+                to-idx $
+                  get op-map :to
+                  , .unwrap-or 0
               decode-map-as
                 update-in db ([] :sessions sid :writer)
                   fn (writer)
@@ -10028,30 +10012,32 @@
                       -> $ Map Tag Dynamic
                     let
                         writer-map $ decode-map-as
-                          option:unwrap-or writer $ {}
+                          .unwrap-or writer $ {}
                           Map Tag Dynamic
                         pointer $ decode-map-as
-                          option:unwrap-or (get writer-map :pointer) 0
+                          .unwrap-or (get writer-map :pointer) 0
                           , Number
-                        stack $ app.bookmark/read-bookmarks $ option:unwrap-or (get writer-map :stack) ([])
+                        stack $ app.bookmark/read-bookmarks $ .unwrap-or (get writer-map :stack) ([])
                         next-pointer $ cond
                             = pointer from-idx
                             , to-idx
-                          (or (< pointer (option:unwrap-or (min ([] from-idx to-idx)) 0)) (> pointer (option:unwrap-or (max ([] from-idx to-idx)) 0)))
+                          (or (< pointer (.unwrap-or (min ([] from-idx to-idx)) 0)) (> pointer (.unwrap-or (max ([] from-idx to-idx)) 0)))
                             , pointer
                           true $ if (> from-idx to-idx) (inc pointer) (dec pointer)
-                        moved $ option:unwrap $ get stack from-idx
+                        moved $
+                          get stack from-idx
+                          , .unwrap
                         next-stack $ if (< from-idx to-idx)
                           concat
-                            slice stack 0 $ Option :some from-idx
+                            slice stack 0 $ Some from-idx
                             slice stack (inc from-idx)
-                              Option :some $ inc to-idx
+                              Some $ inc to-idx
                             [] moved
                             slice stack $ inc to-idx
                           concat
-                            slice stack 0 $ Option :some to-idx
+                            slice stack 0 $ Some to-idx
                             [] moved
-                            slice stack to-idx $ Option :some from-idx
+                            slice stack to-idx $ Some from-idx
                             if
                               >= (inc from-idx) (.len stack)
                               []
@@ -10068,10 +10054,10 @@
                 hint-fn $ Fn (Option Dynamic) (-> Dynamic)
                 let
                     writer-map $ decode-map-as
-                      option:unwrap-or writer $ {}
+                      .unwrap-or writer $ {}
                       Map Tag Dynamic
                     pointer $ decode-map-as
-                      option:unwrap-or (get writer-map :pointer) 0
+                      .unwrap-or (get writer-map :pointer) 0
                       , Number
                   assoc writer-map :pointer $ if (> pointer 0) (dec pointer) 0
           :examples $ []
@@ -10112,7 +10098,7 @@
                   if
                     > (count printed) 40
                     str
-                      slice printed 0 $ Option :some 40
+                      slice printed 0 $ Some 40
                       , |...
                     , printed
               decode-map-as
@@ -10131,10 +10117,11 @@
                 hint-fn $ Fn (Option Dynamic) (-> Dynamic)
                 let
                     writer-map $ decode-map-as
-                      option:unwrap-or writer $ {}
+                      .unwrap-or writer $ {}
                       Map Tag Dynamic
                   if
-                    option:some? $ get writer-map :picker-mode
+                      get writer-map :picker-mode
+                      , .some?
                     dissoc writer-map :picker-mode
                     match (to-bookmark writer)
                       (:some bookmark) (assoc writer-map :picker-mode bookmark)
@@ -10157,21 +10144,21 @@
                 (:def _namespace definition _focus)
                   .unwrap $ get (:defs file) definition
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> app.schema/CodeEntry)
+          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> schema/CodeEntry)
         'read-bookmark-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-bookmark-expr (db bookmark)
             match (read-bookmark-node db bookmark)
               (app.schema/CirruExprShape expr) expr
               _ $ raise "|Expected Cirru expression node"
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> app.schema/CirruExprShape)
+          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> schema/CirruExprShape)
         'read-bookmark-file $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-bookmark-file (db bookmark)
             decode-map-as
               app.util/get-required-path db $ [] :files $ app.bookmark/get-namespace bookmark
               , app.schema/FileEntry
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> app.schema/FileEntry)
+          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> schema/FileEntry)
         'read-bookmark-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-bookmark-node (db bookmark)
             let
@@ -10179,7 +10166,7 @@
                 root $ schema/read-node $ :code entry
               .unwrap $ schema/node-at-path root $ app.bookmark/get-focus bookmark
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> app.schema/CirruNode)
+          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> schema/CirruNode)
         'read-edit-bookmark $ %{} 'CodeEntry
           :doc "|Check anonymous wire :ns / :def targets, validate String payloads and construct a local bookmark with the existing empty focus path."
           :code $ quote $ defn read-edit-bookmark (raw)
@@ -10288,7 +10275,7 @@
                   , next-file
                 Map Tag Dynamic
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark app.schema/CodeEntry
+          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark schema/CodeEntry
             -> $ Map Tag Dynamic
         'write-bookmark-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn write-bookmark-node (db bookmark node)
@@ -10300,7 +10287,7 @@
                   , path node
               write-bookmark-entry db bookmark $ assoc entry :code next-node
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark app.schema/CirruNode
+          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark schema/CirruNode
             -> $ Map Tag Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater.writer
@@ -10313,6 +10300,10 @@
             app.util :refer $ bookmark->path to-writer to-bookmark push-info cirru->tree stringify-s-expr
     'app.util $ %{} 'FileEntry
       :defs $ {}
+        'ImportBinding $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defenum ImportBinding (:as String) (:refer String)
+          :examples $ []
+          :schema $ quote EnumDef
         'SymbolReference $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def SymbolReference
             defenum SymbolReference (:qualified String String) (:unqualified String)
@@ -10334,7 +10325,7 @@
           :code $ quote $ defn cirru->tree (xs author timestamp)
             schema/syntax->node (normalize-cirru xs) author timestamp
           :examples $ []
-          :schema $ quote $ Fn Dynamic String Number (-> app.schema/CirruNode)
+          :schema $ quote $ Fn Dynamic String Number (-> schema/CirruNode)
         'expr? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn expr? (x)
             and (struct? x)
@@ -10383,7 +10374,7 @@
           :code $ quote $ defn normalize-cirru (raw)
             decode-map-as (normalize-legacy-cirru-data raw) 'app.schema/CirruSyntax
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> app.schema/CirruSyntax)
+          :schema $ quote $ Fn Dynamic (-> schema/CirruSyntax)
           :tests $ [] $ %{} 'TestEntry (:name |legacy-quoted-syntax-boundary)
             :code $ quote $ do
               assert=
@@ -10446,7 +10437,7 @@
                     dot $ .unwrap-or (str-find-index clean-text |.) -1
                   SymbolReference :unqualified $ if (&>= dot 0) (&str:slice clean-text 0 dot) clean-text
           :examples $ []
-          :schema $ quote $ Fn String (-> app.util/SymbolReference)
+          :schema $ quote $ Fn String (-> SymbolReference)
         'parse-deps $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-deps (form)
             match form
@@ -10473,17 +10464,14 @@
                         (List rules)
                           fold (rest rules) ({})
                             fn (result item)
-                              hint-fn $ Fn
-                                Map String $ Map Tag Dynamic
-                                , app.schema/CirruSyntax $ ->
-                                  Map String $ Map Tag Dynamic
+                              hint-fn $ Fn (Map String app.util/ImportBinding) app.schema/CirruSyntax $ -> (Map String app.util/ImportBinding)
                               match item
                                 (String _text) result
                                 (List rule)
                                   merge result $ parse-require rule
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruSyntax
-            -> $ Map String $ Map Tag Dynamic
+          :schema $ quote $ Fn schema/CirruSyntax
+            -> $ Map String ImportBinding
         'parse-require $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-require (rule)
             let
@@ -10502,26 +10490,23 @@
               match method
                 |:as $ let
                     alias $ decode-map-as extra String
-                  {} $ alias $ {} (:method :as) (:ns namespace)
+                  {} $ alias $ ImportBinding :as namespace
                 |:refer $ match extra
                   (String _invalid) (raise "|Expected a list of referred names")
                   (List names)
                     fold names ({})
                       fn (result name)
-                        hint-fn $ Fn
-                          Map String $ Map Tag Dynamic
-                          , app.schema/CirruSyntax $ ->
-                            Map String $ Map Tag Dynamic
+                        hint-fn $ Fn (Map String app.util/ImportBinding) app.schema/CirruSyntax $ -> (Map String app.util/ImportBinding)
                         let
                             text $ decode-map-as name String
-                          if (= text |[]) result $ assoc result text $ {} (:method :refer) (:ns namespace) (:def text)
+                          if (= text |[]) result $ assoc result text $ ImportBinding :refer namespace
                 |:default $ let
                     text $ decode-map-as extra String
-                  {} $ text $ {} (:method :refer) (:ns namespace) (:def text)
+                  {} $ text $ ImportBinding :refer namespace
                 _ $ do (println "|Unknown referring:" piece) ({})
           :examples $ []
-          :schema $ quote $ Fn (List app.schema/CirruSyntax)
-            -> $ Map String $ Map Tag Dynamic
+          :schema $ quote $ Fn (List schema/CirruSyntax)
+            -> $ Map String ImportBinding
         'prepend-data $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn prepend-data (x) ([] :data x)
           :examples $ []
@@ -10548,7 +10533,7 @@
                 -> $ List $ Map Tag Dynamic
               conj
                 decode-map-as
-                  option:unwrap-or xs $ []
+                  .unwrap-or xs $ []
                   List $ Map Tag Dynamic
                 merge schema/notification $ {} (:id op-id) (:kind :warning) (:text text) (:time op-time)
           :examples $ []
@@ -10565,7 +10550,7 @@
                   join-string (map xs stringify-s-expr) "| "
                   , "|)"
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruSyntax (-> String)
+          :schema $ quote $ Fn schema/CirruSyntax (-> String)
           :tests $ [] $ %{} 'TestEntry (:name |recursive-syntax-rendering)
             :code $ quote $ do
               assert= |keep $ stringify-s-expr |keep
@@ -10592,10 +10577,9 @@
                 bookmark $ app.bookmark/%bookmark :ns |demo.main $ []
                 writer $ {} (:pointer 3)
                   :stack $ [] bookmark
-              assert= (Option :none)
-                to-bookmark $ Option :none
-              assert= (Option :none)
-                to-bookmark $ Option :some $ parse-cirru-edn (format-cirru-edn writer)
+              assert= None $ to-bookmark None
+              assert= None $ to-bookmark $ Some
+                parse-cirru-edn $ format-cirru-edn writer
             :tags $ #{} :unit
         'to-writer $ %{} 'CodeEntry
           :doc "|Read an optional session writer: missing is None; malformed intermediate shapes and non-map writers fail explicitly."
@@ -10603,10 +10587,10 @@
             match
               get-in db $ [] :sessions session-id :writer
               (:ok value)
-                Option :some $ decode-map-as value $ Map Tag Dynamic
+                Some $ decode-map-as value $ Map Tag Dynamic
               (:err error)
                 match error
-                  (:missing) (Option :none)
+                  (:missing) None
                   (:shape message) (raise message)
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) String
@@ -10614,7 +10598,7 @@
         'tree->cirru $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn tree->cirru (x) (schema/node->syntax x)
           :examples $ []
-          :schema $ quote $ Fn app.schema/CirruNode (-> app.schema/CirruSyntax)
+          :schema $ quote $ Fn schema/CirruNode (-> schema/CirruSyntax)
         'update-in-existing $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-in-existing (data path f)
             assoc-in data path $ f $ get-required-path data path
@@ -10676,18 +10660,17 @@
                       try-decode-map-as (js-ffi.contract/object-field |Error err |code) String
                       (:ok code) (= code |EADDRINUSE)
                       (:err _message) false
-                  if taken?
-                    next-fn (Option :none) true
+                  if taken? (next-fn None true)
                     next-fn
-                      Option :some $ shared/normalize-error err
+                      Some $ shared/normalize-error err
                       , false
               tester .once |listening $ fn ()
-                tester .once |close $ fn () $ next-fn (Option :none) false
+                tester .once |close $ fn () $ next-fn None false
                 tester .close
               tester .listen port |0.0.0.0
           :examples $ []
           :schema $ quote $ Fn Number
-            Fn (Option js-ffi.shared/JsError) Bool $ -> Dynamic
+            Fn (Option shared/JsError) Bool $ -> Dynamic
             -> Dynamic
             :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
@@ -10835,8 +10818,8 @@
         'pick-http-port! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pick-http-port! (port next-fn)
             port-taken? port $ fn (err taken?)
-              if (option:some? err)
-                raise $ :message $ option:unwrap err
+              if (err .some?)
+                raise $ :message $ err .unwrap
                 if taken?
                   do
                     println $ str |port: port |in-use
@@ -10849,8 +10832,8 @@
         'pick-port! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pick-port! (port next-fn)
             port-taken? port $ fn (err taken?)
-              if (option:some? err)
-                raise $ :message $ option:unwrap err
+              if (err .some?)
+                raise $ :message $ err .unwrap
                 if taken?
                   do
                     println $ str |port: port |in-use
