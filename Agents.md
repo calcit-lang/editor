@@ -9,7 +9,7 @@ calcit docs agents --full
 calcit docs read upgrade --full
 calcit query config
 calcit query ns
-calcit query modules
+calcit config modules
 ```
 
 The only source snapshot is `calcit.cirru`. Use `calcit edit` / `calcit tree`, never add `compact.cirru`; format after structural changes.
