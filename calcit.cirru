@@ -1410,7 +1410,7 @@
           :code $ quote $ defstyle style-container
             {} $ |& $ {} (:background-color :black) (:color :white)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'style-inspector $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-inspector
             {} (:bottom 40) (:left 0) (:max-width |100%)
@@ -1862,7 +1862,7 @@
               |& $ {}
               |&.cirru-focused $ {} $ :animation "|border-blinking 1s ease infinite normal"
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.expr
           :require
@@ -2010,7 +2010,7 @@
               :background-color $ hsl 0 0 100
               :border-radius |6px
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'use-gen-code-box $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn use-gen-code-box (states expr focus)
             let
@@ -2288,7 +2288,7 @@
               ; :transition-property |background-color
               :border-radius |8px
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'style-def-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-def-entry
             {}
@@ -2296,14 +2296,14 @@
                 :color $ hsl 0 0 80
               |&:hover $ {} $ :color (hsl 0 0 100)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'style-def-ns $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-def-ns
             {}
               |& $ {} (:top 0) (:position :sticky) (:opacity 0.6) (:margin-right |12px)
               |&:hover $ {} $ :opacity 1
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'style-deps-area $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-deps-area
             {}
@@ -2317,7 +2317,7 @@
                 :transition-property |border-color
               |&:hover $ {} $ :border-color (hsl 0 0 100 0.5)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'style-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-entry
             {} $ |& $ {}
@@ -2327,7 +2327,7 @@
               :border-radius |8px
               ; :box-shadow "|0 0 2px #888"
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'style-ns $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-ns
             {} $ |& $ {} (:font-size 12) (:vertical-align :middle) (; :margin-left 8) (:white-space :nowrap)
@@ -2335,12 +2335,12 @@
               :line-height |12px
               :margin-bottom 4
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'style-ns-pad $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-ns-pad
             {} $ |& $ {} (:margin-left 8)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'style-recur $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-recur
             {} $ |& $ {}
@@ -2350,7 +2350,7 @@
               :margin "|2px 8px"
               :padding "|0 8px"
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.graph
           :require
@@ -2849,7 +2849,7 @@
             {} $ |& $ {} (:position :fixed) (:width |100%) (:height |100%) (:top 0) (:left 0)
               :background-color $ hsl 0 0 0 0.6
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.modal
           :require
@@ -3292,7 +3292,7 @@
             {} $ |$0 $ {} (:position :fixed) (:right 0) (:left 100) (:bottom 0) (:top 0) (:overflow :auto) (:padding-bottom |60vh) (:padding-top 120) (:flex 1) (:padding-right 8)
               :background-color $ hsl 0 0 0 0.4
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'css-editor $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-editor
             {} $ |$0 $ merge
@@ -3300,7 +3300,7 @@
               assert-type ui/column $ Map Tag Dynamic
               {} (:position :absolute) (:left 100)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'css-page-editor $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-page-editor
             {} $ |$0 $ merge
@@ -3308,7 +3308,7 @@
               assert-type ui/flex $ Map Tag Dynamic
               {} $ :z-index 80
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'css-stack $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-stack
             {}
@@ -3316,7 +3316,7 @@
                 :background-color $ hsl 0 0 0 0.6
               |$0:hover $ {} (:opacity 1) (:z-index 100)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'css-status-bar $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-status-bar
             {}
@@ -3324,7 +3324,7 @@
                 :background-color $ hsl 0 0 0 0.5
               |$0:hover $ {} $ :opacity 1
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'effect-focus-bookmark $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defeffect effect-focus-bookmark (pointer) (action el at?)
             if (= action :update)
@@ -3456,7 +3456,7 @@
             {} $ |& $ {} (:cursor :pointer) (:font-size 14)
               :color $ hsl 200 50 80
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'style-local-link $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-local-link
             {}
@@ -3464,7 +3464,7 @@
               |span& $ {} $ :color (hsl 200 40 64)
               |span&:hover $ {} $ :color (hsl 200 60 76)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'style-missing $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-missing
             {} (:font-family "|Josefin Sans")
@@ -3835,7 +3835,7 @@
           :code $ quote $ defstyle css-file
             {} $ |$0 $ {} (:width 360) (:overflow :auto) (:padding-top 24)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'namespace-entries $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn namespace-entries (ns-dict filter-text)
             -> ns-dict (&map:to-list)
@@ -3879,7 +3879,7 @@
           :code $ quote $ defstyle style-container
             {} $ |& $ {} (:padding "|0px 16px")
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'style-def $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-def
             {}
@@ -3891,7 +3891,7 @@
               (str "|&:hover ." style-remove)
                 {} $ :opacity 1
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'style-def-doc $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-def-doc
             {} $ |& $ {}
@@ -4233,7 +4233,7 @@
                 :background-color $ hsl 0 0 30 1
                 :color $ hsl 0 0 100
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'css-picker-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-picker-container
             {} $ |$0 $ merge ui/column
@@ -4241,19 +4241,19 @@
                 :border $ str "|1px solid " $ hsl 0 0 70 0.4
                 :background-color $ hsl 0 0 20 0.7
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'css-picker-tip $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-picker-tip
             {} $ |$0 $ {} (:font-family ui/font-fancy) (:font-size 28) (:font-weight 300) (:line-height |21px) (:cursor :pointer) (:position :absolute) (:right 4) (:bottom 4) (:z-index -1)
               :color $ hsl 0 0 90 0.4
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
         'style-list-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-list-container
             {} $ |$0 $ merge ui/row
               {} (:flex-wrap :wrap) (:column-gap |4px)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.picker-notice
           :require
