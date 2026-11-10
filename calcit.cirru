@@ -298,7 +298,7 @@
                   send-op! op
             , &unit
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi) (:open :decode)
         'heartbeat! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn heartbeat! ()
             js/setTimeout
@@ -393,7 +393,7 @@
         'send-op! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn send-op! (op) (ws-send! op)
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit)
+          :schema $ quote $ Fn AnyEnum (-> Unit) (:open :reflect)
         'simulate-login! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn simulate-login! ()
             let
@@ -507,7 +507,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn AnyEnum $ -> Unit
-            , app.client-updater/UiStateOp (-> Unit)
+            , app.client-updater/UiStateOp (-> Unit) (:open :decode)
         'draft-box $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn draft-box (states)
             assoc-in states ([] :editor :data :draft-box?) true
@@ -539,6 +539,7 @@
           :examples $ []
           :schema $ quote $ Fn AnyEnum
             -> $ Option app.client-updater/UiStateOp
+            :open :decode
           :tests $ [] $ %{} 'TestEntry (:name |typed-state-and-legacy-plugin)
             :code $ quote $ let
                 cursor $ [] :panel 2
@@ -5533,7 +5534,7 @@
         'CodeEntry $ %{} 'CodeEntry
           :doc "|Internal editable entry. source-entry retains the complete official CLI entry view through moves and copies; None denotes a newly created entry. It is source data, not nominal identity or authorization."
           :code $ quote $ def CodeEntry
-            defstruct :CodeEntry (:doc String) (:code Dynamic) (:examples List)
+            defstruct :CodeEntry (:doc String) (:code app.schema/CirruNode) (:examples List)
               :source-entry $ Option String
           :examples $ []
           :schema $ quote StructDef
@@ -7451,7 +7452,8 @@
               let
                   raw-code $ parse-cirru-edn $ format-cirru-edn code
                   restored-file $ %{} app.schema/FileEntry
-                    :ns $ %{} app.schema/CodeEntry (:doc |module) (:code raw-code)
+                    :ns $ %{} app.schema/CodeEntry (:doc |module)
+                      :code $ app.schema/read-node raw-code
                       :examples $ []
                       :source-entry $ Option :none
                     :defs $ {}
@@ -8065,7 +8067,7 @@
               (:def namespace name) (:: :def namespace name)
               (:reference namespace name) (:: :reference namespace name)
           :examples $ []
-          :schema $ quote $ Fn app.schema/DependencyKey (-> AnyEnum)
+          :schema $ quote $ Fn app.schema/DependencyKey (-> AnyEnum) (:open :reflect)
         'goto-def $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn goto-def (db op-data sid op-id op-time)
             let
@@ -8472,6 +8474,7 @@
           :schema $ quote $ Fn
             Map app.schema/DependencyKey $ Set app.schema/DependencyKey
             -> $ Map AnyEnum $ Set AnyEnum
+            :open :reflect
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater.analyze
           :require
@@ -9472,7 +9475,7 @@
               (:configs) (:: :configs)
               (:watching sid) (:: :watching sid)
           :examples $ []
-          :schema $ quote $ Fn app.updater.router/Route (-> AnyEnum)
+          :schema $ quote $ Fn app.updater.router/Route (-> AnyEnum) (:open :reflect)
           :tests $ [] $ %{} 'TestEntry
             :name |checked-local-routes-retain-anonymous-wire-protocol
             :code $ quote $ do
@@ -9494,7 +9497,7 @@
           :code $ quote $ defn route-op (route)
             :: :router/change $ route->wire route
           :examples $ []
-          :schema $ quote $ Fn app.updater.router/Route (-> AnyEnum)
+          :schema $ quote $ Fn app.updater.router/Route (-> AnyEnum) (:open :reflect)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater.router
     'app.updater.session $ %{} 'FileEntry
