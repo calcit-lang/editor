@@ -392,9 +392,7 @@
         'simulate-login! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn simulate-login! ()
             let
-                key $ decode-map-as
-                  .unwrap-or (get config/site :storage-key) |
-                  , String
+                key $ :storage-key config/site
               match (js-ffi.browser/storage-get key)
                 (:some raw)
                   dispatch! $ :: :user/log-in $ parse-cirru-edn raw
@@ -2713,8 +2711,7 @@
               dispatch! $ if signup?
                 :: :user/sign-up $ [] username password
                 :: :user/log-in $ [] username password
-              js/window.localStorage.setItem
-                .unwrap-or (get config/site :storage-key) nil
+              js/window.localStorage.setItem (:storage-key config/site)
                 format-cirru-edn $ [] username password
               , &unit
           :examples $ []
@@ -4314,9 +4311,7 @@
         'on-log-out $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-log-out (e dispatch!)
             dispatch! $ :: :user/log-out nil
-            js-ffi.browser/storage-remove! $ decode-map-as
-              .unwrap-or (get config/site :storage-key) |
-              , 'String
+            js-ffi.browser/storage-remove! $ :storage-key config/site
             , &unit
           :examples $ []
           :schema $ quote $ Fn respo.schema/RespoEvent
@@ -5051,6 +5046,16 @@
             app.bookmark :as bookmark
     'app.config $ %{} 'FileEntry
       :defs $ {}
+        'SiteConfig $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defstruct SiteConfig
+            :port $ Option Number
+            :title String
+            :icon String
+            :theme String
+            :storage-key String
+            :storage-file String
+          :examples $ []
+          :schema $ quote StructDef
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
             = |dev $
@@ -5060,9 +5065,9 @@
           :schema $ quote Bool
         'site $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def site
-            {} (:port nil) (:title "|Calcit Editor") (:icon |https://cdn.tiye.me/logo/cirru.png) (:theme |#eeeeff) (:storage-key |calcit-storage) (:storage-file |calcit.cirru)
+            SiteConfig :port None :title "|Calcit Editor" :icon |https://cdn.tiye.me/logo/cirru.png :theme |#eeeeff :storage-key |calcit-storage :storage-file |calcit.cirru
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote SiteConfig
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.config
           :require $ app.schema :as schema
@@ -6302,10 +6307,7 @@
           :schema $ quote $ Fn (Map Tag Dynamic) (-> Unit) (:features :js-ffi)
         'storage-file $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def storage-file
-            node/path-join (node/cwd)
-              decode-map-as
-                .unwrap $ get config/site :storage-file
-                , 'String
+            node/path-join (node/cwd) (:storage-file config/site)
           :examples $ []
           :schema $ quote String
         'sync-clients! $ %{} 'CodeEntry (:doc |)
