@@ -5832,7 +5832,7 @@
                   List Dynamic
                 :source-entry $ read-source-option $ .unwrap-or (get fields :source-entry) None
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> CodeEntry)
+          :schema $ quote $ Fn Raw (-> CodeEntry) (:generics Raw)
         'read-dependency-key $ %{} 'CodeEntry
           :doc "|Read an anonymous dependency key from the editor protocol."
           :code $ quote $ defn read-dependency-key (raw)
@@ -5872,7 +5872,7 @@
               (CirruExprShape expr) expr
               _ $ raise "|Expected Cirru expression node"
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> CirruExprShape)
+          :schema $ quote $ Fn Raw (-> CirruExprShape) (:generics Raw)
         'read-file-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-file-entry (raw)
             let
@@ -5887,7 +5887,7 @@
                   MapEntryDecision :keep name $ read-code-entry entry
                 :source-view $ read-source-option $ .unwrap-or (get fields :source-view) None
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> FileEntry)
+          :schema $ quote $ Fn Raw (-> FileEntry) (:generics Raw)
           :tests $ [] $ %{} 'TestEntry (:name |legacy-entry-fields-recover-to-local-model)
             :code $ quote $ let
                 node $ syntax->node ([] |ns |demo.main) |fixture 12
@@ -5933,7 +5933,7 @@
                     _ $ raise |Unknown-Cirru-node-kind
               raise |Expected-Cirru-node-Struct
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> CirruNode)
+          :schema $ quote $ Fn Raw (-> CirruNode) (:generics Raw)
           :tests $ [] $ %{} 'TestEntry (:name |checked-wire-recovery-keeps-local-identity)
             :code $ quote $ let
                 leaf $ %{} CirruLeaf (:at 1) (:by "|中文作者") (:text "|🐈")
@@ -5958,8 +5958,9 @@
               (:none) None
               _ $ raise |Expected-optional-code-entry
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Raw
             -> $ Option CodeEntry
+            :generics Raw
         'read-optional-file-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-optional-file-entry (raw)
             if (enum? raw)
@@ -5970,8 +5971,9 @@
                 _ $ raise |Expected-optional-file-entry
               raise |Expected-optional-file-entry
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Raw
             -> $ Option FileEntry
+            :generics Raw
           :tests $ [] $ %{} 'TestEntry (:name |optional-file-wire-restores-local-model)
             :code $ quote $ let
                 entry $ %{} CodeEntry (:doc |fixture)
@@ -6006,8 +6008,9 @@
                 _ $ raise |Expected-optional-source-view
               raise |Expected-optional-source-view
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Raw
             -> $ Option String
+            :generics Raw
         'router $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def router
             {} (:name nil) (:title nil)
@@ -9441,7 +9444,7 @@
                 Route :watching $ decode-map-as sid 'String
               _ $ raise |Unknown-editor-route
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Route)
+          :schema $ quote $ Fn Raw (-> Route) (:generics Raw)
         'route->wire $ %{} 'CodeEntry
           :doc "|Encode a typed route as the original anonymous WebSocket enum."
           :code $ quote $ defn route->wire (route)
