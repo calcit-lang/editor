@@ -41,7 +41,7 @@ You may try with my project templates:
 - simple virtual DOM playground [calcit-workflow](https://github.com/mvc-works/calcit-workflow)
 - a toy Node.js script [calcit-nodejs-workflow](https://github.com/mvc-works/calcit-nodejs-workflow)
 
-To build this checkout, pair Calcit CLI and `@calcit/procs` at 0.41.0, reinstall dependencies, and rebuild both the server and the page.
+To build this checkout, pair Calcit CLI and `@calcit/procs` at 0.41.1, reinstall dependencies, and rebuild both the server and the page.
 
 Don't forget to check out [keyboard shortcuts](https://github.com/calcit-lang/editor/wiki/Keyboard-Shortcuts). My old [introduction videos](https://www.youtube.com/watch?v=u5Eb_6KYGsA&t) can be found on YouTube.
 

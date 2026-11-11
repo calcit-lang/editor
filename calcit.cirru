@@ -64,12 +64,12 @@
                 (:ns ns' f)
                   %:: %bookmark :ns ns' $ updater f
             .to-path $ fn (self)
-              hint-fn $ Fn app.bookmark/%bookmark $ -> (List app.bookmark/PathSegment)
+              hint-fn $ Fn app.bookmark/%bookmark $ -> (List PathSegment)
               match self
                 (:def ns' def' f)
                   ->
                     mapcat f $ fn (x)
-                      hint-fn $ Fn String $ -> (List app.bookmark/PathSegment)
+                      hint-fn $ Fn String $ -> (List PathSegment)
                       [] :data x
                     prepend :code
                     prepend def'
@@ -79,7 +79,7 @@
                 (:ns ns' f)
                   ->
                     mapcat f $ fn (x)
-                      hint-fn $ Fn String $ -> (List app.bookmark/PathSegment)
+                      hint-fn $ Fn String $ -> (List PathSegment)
                       [] :data x
                     prepend :code
                     prepend :ns
@@ -460,7 +460,7 @@
         'clear-editor $ %{} 'CodeEntry
           :doc "|Clear per-bookmark String/Number state branches after checking the actual CoordKey map. Preserve Tag-scoped editor/plugin payloads, including false; absent editor scope is a no-op."
           :code $ quote $ defn clear-editor (states)
-            match (get states :editor)
+            match (app.schema/map-field states :editor)
               (:none) states
               (:some raw-scope)
                 let
@@ -578,7 +578,7 @@
                   any?
                     distinct-values $ :data expr
                     fn (child)
-                      hint-fn $ Fn app.schema/CirruNode $ -> Bool
+                      hint-fn $ Fn schema/CirruNode $ -> Bool
                       match child
                         (app.schema/CirruLeafShape _child) false
                         (app.schema/CirruExprShape _child) true
@@ -678,10 +678,10 @@
           :code $ quote $ defcomp comp-abstract (states close-modal!)
             comp-modal close-modal! $ let
                 cursor $ decode-map-as
-                  .unwrap-or (get states :cursor) ([])
+                  .unwrap-or (app.schema/map-field states :cursor) ([])
                   List respo.schema/CoordKey
                 state $ .unwrap-or
-                  app.schema/read-optional-text $ get states :data
+                  app.schema/read-optional-text $ app.schema/map-field states :data
                   , |
                 submit! $ fn (d!)
                   hint-fn $ Fn
@@ -1295,7 +1295,7 @@
               (:none) (comp-about)
               (:some store)
                 let
-                    state $ .unwrap-or (get states :data) {}
+                    state $ .unwrap-or (app.schema/map-field states :data) {}
                     session $ .unwrap-or (get store :session) {}
                     writer $ .unwrap-or (get session :writer) {}
                     router $ match (get store :router)
@@ -1599,7 +1599,7 @@
         'read-draft-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-draft-state (states node)
             match
-              app.schema/read-optional-text $ get states :data
+              app.schema/read-optional-text $ app.schema/map-field states :data
               (:none) (draft-text node)
               (:some text) text
           :examples $ []
@@ -2007,12 +2007,12 @@
           :code $ quote $ defn use-gen-code-box (states expr focus)
             let
                 cursor $ decode-map-as
-                  .unwrap-or (get states :cursor) ([])
+                  .unwrap-or (app.schema/map-field states :cursor) ([])
                   List respo.schema/CoordKey
                 state $ decode-map-as
                   merge
                     {} $ :show? false
-                    app.schema/open-state-fields $ .unwrap-or (get states :data) ({})
+                    app.schema/open-state-fields $ .unwrap-or (app.schema/map-field states :data) ({})
                   , CodeBoxState
                 selected $ app.schema/node-at-path (app.schema/read-node expr) focus
                 close-modal! $ fn (d!)
@@ -2115,15 +2115,15 @@
                 that-ns $ .unwrap-or (.get pair 0) |
                 that-def $ .unwrap-or (.get pair 1) |
                 cursor $ decode-map-as
-                  .unwrap $ get states :cursor
+                  .unwrap $ app.schema/map-field states :cursor
                   List respo.schema/CoordKey
                 state $ decode-map-as
                   either
-                    .unwrap-or (get states :data) {}
+                    .unwrap-or (app.schema/map-field states :data) {}
                     {}
                       :ns $ .unwrap-or (.get pair 0) |
                       :def $ .unwrap-or (.get pair 1) |
-                  Map Tag Dynamic
+                  Map Tag String
                 selected-ns $ decode-map-as
                   .unwrap-or (get state :ns) |
                   , String
@@ -2651,9 +2651,9 @@
           :code $ quote $ defcomp comp-login (states)
             let
                 cursor $ decode-map-as
-                  .unwrap-or (get states :cursor) ([])
+                  .unwrap-or (app.schema/map-field states :cursor) ([])
                   List respo.schema/CoordKey
-                state $ match (get states :data)
+                state $ match (app.schema/map-field states :data)
                   (:none) initial-state
                   (:some raw)
                     if (nil? raw) initial-state $ decode-map-as raw $ Map Tag String
@@ -2944,11 +2944,11 @@
           :code $ quote $ defcomp comp-selected-editor (states stack router-data pointer picker-mode? theme expr-entry bookmark)
             let
                 cursor $ decode-map-as
-                  .unwrap-or (get states :cursor) ([])
+                  .unwrap-or (app.schema/map-field states :cursor) ([])
                   List respo.schema/CoordKey
                 state $ decode-map-as
                   or
-                    .unwrap-or (get states :data) initial-state
+                    .unwrap-or (app.schema/map-field states :data) initial-state
                     , initial-state
                   Map Tag Dynamic
                 expr $ match
@@ -4432,12 +4432,12 @@
           :code $ quote $ defn use-replace-name-modal (states on-replace)
             let
                 cursor $ decode-map-as
-                  .unwrap-or (get states :cursor) ([])
+                  .unwrap-or (app.schema/map-field states :cursor) ([])
                   List Tag
                 state $ decode-map-as
                   merge
                     {} (:old-name |) (:new-name |) (:show? false)
-                    match (get states :data)
+                    match (app.schema/map-field states :data)
                       (:none) ({})
                       (:some raw) (app.schema/open-state-fields raw)
                   , RenameState
@@ -4555,7 +4555,7 @@
           :code $ quote $ defcomp comp-search (states router-data)
             let
                 cursor $ decode-map-as
-                  .unwrap-or (get states :cursor) ([])
+                  .unwrap-or (app.schema/map-field states :cursor) ([])
                   List respo.schema/CoordKey
                 state $ respo.core/pick-state states 'app.comp.search/SearchState initial-state
                 def-candidates $ search-candidates router-data (:query state) :def
@@ -4841,9 +4841,9 @@
           :code $ quote $ defcomp comp-theme-menu (states theme)
             let
                 cursor $ decode-map-as
-                  .unwrap-or (get states :cursor) ([])
+                  .unwrap-or (app.schema/map-field states :cursor) ([])
                   List respo.schema/CoordKey
-                raw-state $ .unwrap-or (get states :data) false
+                raw-state $ .unwrap-or (app.schema/map-field states :data) false
                 state $ if (nil? raw-state) false $ decode-map-as raw-state 'Bool
                 label $ match theme
                   (:some name) (str name)
@@ -5233,130 +5233,130 @@
         'CirruExprMethods $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defimpl CirruExprMethods app.schema/CirruExprTrait
             .get $ fn (self p)
-              hint-fn $ Fn app.schema/CirruExprShape String $ -> (Option app.schema/CirruNode)
+              hint-fn $ Fn CirruExprShape String $ -> (Option app.schema/CirruNode)
               get (:data self) p
             .get-in $ fn (self pp)
-              hint-fn $ Fn app.schema/CirruExprShape (List String)
+              hint-fn $ Fn CirruExprShape (List String)
                 -> $ Option app.schema/CirruNode
               node-at-path self pp
             .nth $ fn (self idx)
-              hint-fn $ Fn app.schema/CirruExprShape Number $ -> (Option app.schema/CirruNode)
+              hint-fn $ Fn CirruExprShape Number $ -> (Option app.schema/CirruNode)
               get (:data self)
                 .unwrap $ bisection/key-nth (:data self) idx
             .append $ fn (self x)
-              hint-fn $ Fn app.schema/CirruExprShape app.schema/CirruNode $ -> app.schema/CirruExprShape
+              hint-fn $ Fn CirruExprShape app.schema/CirruNode $ -> CirruExprShape
               update-expr-data self $ fn (d)
                 hint-fn $ Fn (Map String app.schema/CirruNode)
                   -> $ Map String app.schema/CirruNode
                 bisection/assoc-append d x
             .prepend $ fn (self x)
-              hint-fn $ Fn app.schema/CirruExprShape app.schema/CirruNode $ -> app.schema/CirruExprShape
+              hint-fn $ Fn CirruExprShape app.schema/CirruNode $ -> CirruExprShape
               update-expr-data self $ fn (d)
                 hint-fn $ Fn (Map String app.schema/CirruNode)
                   -> $ Map String app.schema/CirruNode
                 bisection/assoc-prepend d x
             .replace $ fn (self p x)
-              hint-fn $ Fn app.schema/CirruExprShape String app.schema/CirruNode $ -> app.schema/CirruExprShape
+              hint-fn $ Fn CirruExprShape String app.schema/CirruNode $ -> CirruExprShape
               update-expr-data self $ fn (d)
                 hint-fn $ Fn (Map String app.schema/CirruNode)
                   -> $ Map String app.schema/CirruNode
                 assoc d p x
             .replace-nth $ fn (self idx x)
-              hint-fn $ Fn app.schema/CirruExprShape Number app.schema/CirruNode $ -> app.schema/CirruExprShape
+              hint-fn $ Fn CirruExprShape Number app.schema/CirruNode $ -> CirruExprShape
               update-expr-data self $ fn (d)
                 hint-fn $ Fn (Map String app.schema/CirruNode)
                   -> $ Map String app.schema/CirruNode
                 bisection/assoc-nth d idx x
             .update-last $ fn (self f)
-              hint-fn $ Fn app.schema/CirruExprShape
+              hint-fn $ Fn CirruExprShape
                 Fn app.schema/CirruNode $ -> app.schema/CirruNode
-                -> app.schema/CirruExprShape
+                -> CirruExprShape
               update-expr-data-at self
                 .unwrap $ last $ sort
                   .to-list $ keys $ :data self
                   , &compare
                 , f
             .update-nth $ fn (self idx f)
-              hint-fn $ Fn app.schema/CirruExprShape Number
+              hint-fn $ Fn CirruExprShape Number
                 Fn app.schema/CirruNode $ -> app.schema/CirruNode
-                -> app.schema/CirruExprShape
+                -> CirruExprShape
               update-expr-data-at self
                 .unwrap $ bisection/key-nth (:data self) idx
                 , f
             .update $ fn (self p f)
-              hint-fn $ Fn app.schema/CirruExprShape String
+              hint-fn $ Fn CirruExprShape String
                 Fn app.schema/CirruNode $ -> app.schema/CirruNode
-                -> app.schema/CirruExprShape
+                -> CirruExprShape
               update-expr-data-at self p f
             .assoc-before $ fn (self p x)
-              hint-fn $ Fn app.schema/CirruExprShape String app.schema/CirruNode $ -> app.schema/CirruExprShape
+              hint-fn $ Fn CirruExprShape String app.schema/CirruNode $ -> CirruExprShape
               update-expr-data self $ fn (d)
                 hint-fn $ Fn (Map String app.schema/CirruNode)
                   -> $ Map String app.schema/CirruNode
                 bisection/assoc-before d p x
             .assoc-before-nth $ fn (self idx x)
-              hint-fn $ Fn app.schema/CirruExprShape Number app.schema/CirruNode $ -> app.schema/CirruExprShape
+              hint-fn $ Fn CirruExprShape Number app.schema/CirruNode $ -> CirruExprShape
               update-expr-data self $ fn (d)
                 hint-fn $ Fn (Map String app.schema/CirruNode)
                   -> $ Map String app.schema/CirruNode
                 bisection/assoc-before-nth d idx x
             .asspc-after $ fn (self p x)
-              hint-fn $ Fn app.schema/CirruExprShape String app.schema/CirruNode $ -> app.schema/CirruExprShape
+              hint-fn $ Fn CirruExprShape String app.schema/CirruNode $ -> CirruExprShape
               update-expr-data self $ fn (d)
                 hint-fn $ Fn (Map String app.schema/CirruNode)
                   -> $ Map String app.schema/CirruNode
                 bisection/assoc-after d p x
             .asspc-after-nth $ fn (self idx x)
-              hint-fn $ Fn app.schema/CirruExprShape Number app.schema/CirruNode $ -> app.schema/CirruExprShape
+              hint-fn $ Fn CirruExprShape Number app.schema/CirruNode $ -> CirruExprShape
               update-expr-data self $ fn (d)
                 hint-fn $ Fn (Map String app.schema/CirruNode)
                   -> $ Map String app.schema/CirruNode
                 bisection/assoc-after-nth d idx x
             .dissoc $ fn (self p)
-              hint-fn $ Fn app.schema/CirruExprShape String $ -> app.schema/CirruExprShape
+              hint-fn $ Fn CirruExprShape String $ -> CirruExprShape
               update-expr-data self $ fn (d)
                 hint-fn $ Fn (Map String app.schema/CirruNode)
                   -> $ Map String app.schema/CirruNode
                 dissoc d p
             .dissoc-nth $ fn (self idx)
-              hint-fn $ Fn app.schema/CirruExprShape Number $ -> app.schema/CirruExprShape
+              hint-fn $ Fn CirruExprShape Number $ -> CirruExprShape
               update-expr-data self $ fn (d)
                 hint-fn $ Fn (Map String app.schema/CirruNode)
                   -> $ Map String app.schema/CirruNode
                 dissoc d $ .unwrap $ bisection/key-nth (:data self) idx
             .assoc-in $ fn (self pp x)
-              hint-fn $ Fn app.schema/CirruExprShape (List String) app.schema/CirruNode $ -> app.schema/CirruExprShape
+              hint-fn $ Fn CirruExprShape (List String) app.schema/CirruNode $ -> CirruExprShape
               assoc-node-path self pp x
             .append-in $ fn (self pp x)
-              hint-fn $ Fn app.schema/CirruExprShape (List String) app.schema/CirruNode $ -> app.schema/CirruExprShape
+              hint-fn $ Fn CirruExprShape (List String) app.schema/CirruNode $ -> CirruExprShape
               append-node-path self pp x
             .find-with-base $ fn (self x pp)
-              hint-fn $ Fn app.schema/CirruExprShape app.schema/CirruNode (List String)
+              hint-fn $ Fn CirruExprShape app.schema/CirruNode (List String)
                 -> $ Option $ List String
               find-node-path self x pp None
             .find $ fn (self x)
-              hint-fn $ Fn app.schema/CirruExprShape app.schema/CirruNode $ ->
+              hint-fn $ Fn CirruExprShape app.schema/CirruNode $ ->
                 Option $ List String
               find-node-path self x ([]) None
             .find-before-with-base $ fn (self x follow pp)
-              hint-fn $ Fn app.schema/CirruExprShape app.schema/CirruNode String (List String)
+              hint-fn $ Fn CirruExprShape app.schema/CirruNode String (List String)
                 -> $ Option $ List String
               find-node-path self x pp $ Some follow
             .find-before $ fn (self x follow)
-              hint-fn $ Fn app.schema/CirruExprShape app.schema/CirruNode String $ ->
+              hint-fn $ Fn CirruExprShape app.schema/CirruNode String $ ->
                 Option $ List String
               find-node-path self x ([]) (Some follow)
             .= $ fn (self x)
-              hint-fn $ Fn app.schema/CirruExprShape app.schema/CirruNode $ -> Bool
+              hint-fn $ Fn CirruExprShape app.schema/CirruNode $ -> Bool
               cirru-node-equal? self x
             .dispatch $ fn (self commands)
-              hint-fn $ Fn app.schema/CirruExprShape (List app.schema/NodeCommand) (-> app.schema/CirruNode)
+              hint-fn $ Fn CirruExprShape (List NodeCommand) (-> app.schema/CirruNode)
               dispatch-node-commands self commands
             .compact $ fn (self)
-              hint-fn $ Fn app.schema/CirruExprShape $ -> (List app.schema/CirruSyntax)
+              hint-fn $ Fn CirruExprShape $ -> (List CirruSyntax)
               expr->syntax self
             .cirru-kind $ fn (_self)
-              hint-fn $ Fn app.schema/CirruExprShape $ -> Tag
+              hint-fn $ Fn CirruExprShape $ -> Tag
               , :expr
           :examples $ []
           :schema $ quote Impl
@@ -5484,13 +5484,13 @@
         'CirruLeafMethods $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defimpl CirruLeafMethods app.schema/CirruLeafTrait
             .= $ fn (self x)
-              hint-fn $ Fn app.schema/CirruLeafShape app.schema/CirruNode $ -> Bool
+              hint-fn $ Fn CirruLeafShape app.schema/CirruNode $ -> Bool
               match x
                 (app.schema/CirruLeafShape other)
                   = (:text self) (:text other)
                 (app.schema/CirruExprShape _other) false
             .cirru-kind $ fn (_self)
-              hint-fn $ Fn app.schema/CirruLeafShape $ -> Tag
+              hint-fn $ Fn CirruLeafShape $ -> Tag
               , :leaf
           :examples $ []
           :schema $ quote Impl
@@ -5684,7 +5684,7 @@
           :code $ quote $ defn expr->syntax (expr)
             -> (:data expr) keys .to-list (sort &compare)
               map $ fn (key)
-                hint-fn $ Fn String $ -> app.schema/CirruSyntax
+                hint-fn $ Fn String $ -> CirruSyntax
                 node->syntax $ .unwrap $ get (:data expr) key
           :examples $ []
           :schema $ quote $ Fn CirruExprShape
@@ -5740,6 +5740,12 @@
           :examples $ []
           :schema $ quote $ Fn Dynamic Tag
             -> $ Map Tag Dynamic
+        'map-field $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn map-field (data key) (get data key)
+          :examples $ []
+          :schema $ quote $ Fn (Map K V) K
+            -> $ Option V
+            :generics K V
         'node->syntax $ %{} 'CodeEntry
           :doc "|Serialize a fully typed CirruNode recursively in bisection key order. Expr.data is Map<String,CirruNode>; raw legacy Structs must pass read-node before traversal."
           :code $ quote $ defn node->syntax (node)
@@ -5850,7 +5856,7 @@
               decode-map-as raw $ Map Dynamic $ Set Dynamic
               fn (key links)
                 hint-fn $ Fn Dynamic (Set Dynamic)
-                  -> $ MapEntryDecision app.schema/DependencyKey $ Set app.schema/DependencyKey
+                  -> $ MapEntryDecision DependencyKey $ Set DependencyKey
                 MapEntryDecision :keep (read-dependency-key key) (.map links read-dependency-key)
           :examples $ []
           :schema $ quote $ Fn T
@@ -5883,7 +5889,7 @@
               %{} FileEntry
                 :ns $ read-code-entry $ .unwrap (get fields :ns)
                 :defs $ filter-map-kv definitions $ fn (name entry)
-                  hint-fn $ Fn String Dynamic $ -> (MapEntryDecision String app.schema/CodeEntry)
+                  hint-fn $ Fn String Dynamic $ -> (MapEntryDecision String CodeEntry)
                   MapEntryDecision :keep name $ read-code-entry entry
                 :source-view $ read-source-option $ .unwrap-or (get fields :source-view) None
           :examples $ []
@@ -5907,8 +5913,8 @@
             if (struct? raw)
               cond
                   &struct:matches? raw CirruLeafShape
-                  assert-type raw 'app.schema/CirruLeafShape
-                (&struct:matches? raw CirruExprShape) (assert-type raw 'app.schema/CirruExprShape)
+                  assert-type raw CirruLeafShape
+                (&struct:matches? raw CirruExprShape) (assert-type raw CirruExprShape)
                 true $ let
                     fields $ &struct:to-map raw
                     at $ decode-map-as
@@ -6440,7 +6446,7 @@
                   , :NsEntry
                 definitions $ filter-map-kv (:defs file)
                   fn (name entry)
-                    hint-fn $ Fn String app.schema/CodeEntry $ -> (MapEntryDecision Symbol Dynamic)
+                    hint-fn $ Fn String schema/CodeEntry $ -> (MapEntryDecision Symbol Dynamic)
                     MapEntryDecision :keep (to-symbol name)
                       parse-cirru-edn $ export-entry entry
                         .unwrap $ get templates :def
@@ -6481,7 +6487,7 @@
                     .unwrap $ get fields :ns
                     , :NsEntry author timestamp
                   :defs $ filter-map-kv definitions $ fn (name entry)
-                    hint-fn $ Fn Symbol Dynamic $ -> (MapEntryDecision String app.schema/CodeEntry)
+                    hint-fn $ Fn Symbol Dynamic $ -> (MapEntryDecision String schema/CodeEntry)
                     MapEntryDecision :keep (to-string name) (import-entry entry :CodeEntry author timestamp)
                   :source-view $ Some view
               %{} ImportedFile (:file file) (:source-view view)
@@ -6547,7 +6553,7 @@
                   .unwrap $ get fields :namespace-views
                   Map String String
                 files $ filter-map-kv namespaces $ fn (name entry)
-                  hint-fn $ Fn String String $ -> (MapEntryDecision String app.schema/FileEntry)
+                  hint-fn $ Fn String String $ -> (MapEntryDecision String schema/FileEntry)
                   MapEntryDecision :keep name $ :file $ import-cli-file entry author timestamp
               SourceProject :package
                 decode-map-as
@@ -6598,7 +6604,7 @@
           :code $ quote $ defn plan-namespace-changes (files saved-files selected templates)
             filter-map-kv (merge saved-files files)
               fn (namespace _file)
-                hint-fn $ Fn String app.schema/FileEntry $ ->
+                hint-fn $ Fn String schema/FileEntry $ ->
                   MapEntryDecision String $ Option String
                 let
                     selected? $ match selected
@@ -6633,11 +6639,11 @@
           :code $ quote $ defn restore-editor-state (project archive)
             let
                 read-files $ fn (raw-files)
-                  hint-fn $ Fn Dynamic $ -> (Map String app.schema/FileEntry)
+                  hint-fn $ Fn Dynamic $ -> (Map String schema/FileEntry)
                   filter-map-kv
                     decode-map-as raw-files $ Map String Dynamic
                     fn (name file)
-                      hint-fn $ Fn String Dynamic $ -> (MapEntryDecision String app.schema/FileEntry)
+                      hint-fn $ Fn String Dynamic $ -> (MapEntryDecision String schema/FileEntry)
                       MapEntryDecision :keep name $ schema/read-file-entry file
                 base $ ->
                   merge schema/database $ &struct:to-map project
@@ -8138,12 +8144,12 @@
           :code $ quote $ defn parse-all-deps (files)
             let
                 *usages $ ref $ assert-type ({})
-                  Map app.schema/DependencyKey $ Set app.schema/DependencyKey
+                  Map schema/DependencyKey $ Set schema/DependencyKey
                 *deps $ ref $ assert-type ({})
-                  Map app.schema/DependencyKey $ Set app.schema/DependencyKey
+                  Map schema/DependencyKey $ Set schema/DependencyKey
               each (&map:to-list files)
                 fn (pair)
-                  hint-fn $ Fn (Tuple String app.schema/FileEntry) (-> Unit)
+                  hint-fn $ Fn (Tuple String schema/FileEntry) (-> Unit)
                   let[] (namespace file) pair $ let
                       defs $ :defs file
                       local-defs $ keys defs
@@ -8152,12 +8158,12 @@
                       import-rules $ parse-ns-rules ns-expr
                     each (&map:to-list defs)
                       fn (pair)
-                        hint-fn $ Fn (Tuple String app.schema/CodeEntry) (-> Unit)
+                        hint-fn $ Fn (Tuple String schema/CodeEntry) (-> Unit)
                         let[] (definition entry) pair $ let
                             key $ schema/DependencyKey :def namespace definition
-                            *entry-deps $ ref $ assert-type (#{}) (Set app.schema/DependencyKey)
+                            *entry-deps $ ref $ assert-type (#{}) (Set schema/DependencyKey)
                             collect! $ fn (reference)
-                              hint-fn $ Fn app.schema/DependencyKey $ -> Unit
+                              hint-fn $ Fn schema/DependencyKey $ -> Unit
                               let
                                   entries $ .unwrap-or (get @*usages reference) (#{})
                                 swap! *usages assoc reference $ include entries key
@@ -8176,7 +8182,7 @@
             match tree
               (List children)
                 each children $ fn (child)
-                  hint-fn $ Fn app.schema/CirruSyntax $ -> Unit
+                  hint-fn $ Fn schema/CirruSyntax $ -> Unit
                   parse-bookmarks-collect! child local-defs import-rules this-ns this-def collect!
               (String leaf)
                 let
@@ -8187,7 +8193,7 @@
                     when (not= this-def sym)
                       collect! $ schema/DependencyKey :reference this-ns sym
                     each import-rules $ fn (rule)
-                      hint-fn $ Fn app.updater.analyze/DependencyImport $ -> Unit
+                      hint-fn $ Fn DependencyImport $ -> Unit
                       match rule
                         (:by-as namespace alias)
                           let
@@ -8216,7 +8222,7 @@
                       (List rules)
                         mapcat (rest rules)
                           fn (rule)
-                            hint-fn $ Fn app.schema/CirruSyntax $ -> (List app.updater.analyze/DependencyImport)
+                            hint-fn $ Fn schema/CirruSyntax $ -> (List DependencyImport)
                             match rule
                               (String _leaf) ([])
                               (List pieces)
@@ -8300,7 +8306,7 @@
           :tests $ [] $ %{} 'TestEntry (:name |typed-graph-preserves-anonymous-wire-keys)
             :code $ quote $ let
                 make-entry $ fn (form)
-                  hint-fn $ Fn app.schema/CirruSyntax $ -> app.schema/CodeEntry
+                  hint-fn $ Fn schema/CirruSyntax $ -> schema/CodeEntry
                   %{} schema/CodeEntry (:doc |)
                     :code $ cirru->tree form |fixture 1
                     :examples $ []
@@ -8391,7 +8397,7 @@
                         ns-bookmark $ app.bookmark/%bookmark :ns current-ns $ []
                         ns-tree $ schema/read-expr $ app.updater.writer/read-bookmark-node db ns-bookmark
                         to-tree $ fn (syntax)
-                          hint-fn $ Fn app.schema/CirruSyntax $ -> app.schema/CirruNode
+                          hint-fn $ Fn schema/CirruSyntax $ -> schema/CirruNode
                           cirru->tree syntax author op-time
                         insert $ fn (state text)
                           hint-fn $ Fn (Map Tag Dynamic) String $ -> (Map Tag Dynamic)
@@ -8458,7 +8464,7 @@
         'wire-dependency-map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn wire-dependency-map (relations)
             filter-map-kv relations $ fn (key linked)
-              hint-fn $ Fn app.schema/DependencyKey (Set app.schema/DependencyKey)
+              hint-fn $ Fn schema/DependencyKey (Set schema/DependencyKey)
                 -> $ MapEntryDecision AnyEnum $ Set AnyEnum
               MapEntryDecision :keep (dependency-key->wire key) (.map linked dependency-key->wire)
           :examples $ []
@@ -8635,7 +8641,7 @@
               (app.schema/CirruExprShape expr)
                 assoc expr :data $ filter-map-kv (:data expr)
                   fn (key child)
-                    hint-fn $ Fn String app.schema/CirruNode $ -> (MapEntryDecision String app.schema/CirruNode)
+                    hint-fn $ Fn String schema/CirruNode $ -> (MapEntryDecision String schema/CirruNode)
                     match (call-replace-expr child from to)
                       (app.schema/CirruLeafShape leaf)
                         if
@@ -8840,13 +8846,13 @@
                       expr $ app.updater.writer/read-bookmark-expr db parent
                       children $ :data expr
                       prior $ filter-map-kv children $ fn (k v)
-                        hint-fn $ Fn String app.schema/CirruNode $ -> (MapEntryDecision String app.schema/CirruNode)
+                        hint-fn $ Fn String schema/CirruNode $ -> (MapEntryDecision String schema/CirruNode)
                         if
                           < (&str:compare k end-key) 0
                           MapEntryDecision :keep k v
                           MapEntryDecision :drop
                       boxed $ filter-map-kv children $ fn (k v)
-                        hint-fn $ Fn String app.schema/CirruNode $ -> (MapEntryDecision String app.schema/CirruNode)
+                        hint-fn $ Fn String schema/CirruNode $ -> (MapEntryDecision String schema/CirruNode)
                         if
                           >= (&str:compare k end-key) 0
                           MapEntryDecision :keep k v
@@ -9667,7 +9673,7 @@
           :code $ quote $ defn refresh-files (previous current incoming)
             filter-map-kv (merge previous current incoming)
               fn (namespace _file)
-                hint-fn $ Fn String app.schema/FileEntry $ -> (MapEntryDecision String app.schema/FileEntry)
+                hint-fn $ Fn String schema/FileEntry $ -> (MapEntryDecision String schema/FileEntry)
                 match
                   choose-source-version namespace (get previous namespace) (get current namespace) (get incoming namespace)
                   (:none) (MapEntryDecision :drop)
@@ -10451,7 +10457,7 @@
                 let
                     clause $ find (slice members 2)
                       fn (item)
-                        hint-fn $ Fn app.schema/CirruSyntax $ -> Bool
+                        hint-fn $ Fn schema/CirruSyntax $ -> Bool
                         match item
                           (String _text) false
                           (List values)
@@ -10469,7 +10475,7 @@
                         (List rules)
                           fold (rest rules) ({})
                             fn (result item)
-                              hint-fn $ Fn (Map String app.util/ImportBinding) app.schema/CirruSyntax $ -> (Map String app.util/ImportBinding)
+                              hint-fn $ Fn (Map String ImportBinding) schema/CirruSyntax $ -> (Map String ImportBinding)
                               match item
                                 (String _text) result
                                 (List rule)
@@ -10501,7 +10507,7 @@
                   (List names)
                     fold names ({})
                       fn (result name)
-                        hint-fn $ Fn (Map String app.util/ImportBinding) app.schema/CirruSyntax $ -> (Map String app.util/ImportBinding)
+                        hint-fn $ Fn (Map String ImportBinding) schema/CirruSyntax $ -> (Map String ImportBinding)
                         let
                             text $ decode-map-as name String
                           if (= text |[]) result $ assoc result text $ ImportBinding :refer namespace
