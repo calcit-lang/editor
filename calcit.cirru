@@ -2939,7 +2939,7 @@
                       {} $ :style $ {} (:padding "|12px 0")
                       <> "|The selected source entry no longer exists." style-nothing
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States (List app.bookmark/%bookmark) (Map Tag Dynamic) Number Bool (Option Dynamic) (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States (List app.bookmark/%bookmark) (Map Tag Dynamic) Number Bool (Option Tag) (-> respo.schema/Component)
         'comp-selected-editor $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-selected-editor (states stack router-data pointer picker-mode? theme expr-entry bookmark)
             let
@@ -3006,9 +3006,7 @@
                           comp-expr
                             >> states $ bookmark-full-str bookmark
                             assert-type expr 'app.schema/CirruExprShape
-                            , focus ([]) others false :inline readonly? picker-mode?
-                              decode-map-as (.unwrap-or theme :star-trail) 'Tag
-                              , 0
+                            , focus ([]) others false :inline readonly? picker-mode? (.unwrap-or theme :star-trail) 0
                         div
                           {}
                             :class-name $ str-spaced css/row-parted
@@ -3066,7 +3064,7 @@
                       decode-map-as focus $ List String
                     , None
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States (List app.bookmark/%bookmark) (Map Tag Dynamic) Number Bool (Option Dynamic) app.schema/CodeEntry app.bookmark/%bookmark (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States (List app.bookmark/%bookmark) (Map Tag Dynamic) Number Bool (Option Tag) app.schema/CodeEntry app.bookmark/%bookmark (-> respo.schema/Component)
         'comp-stack $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-stack (stack pointer)
             [] (effect-focus-bookmark pointer)
@@ -3205,7 +3203,7 @@
                     :on-click $ on-path-gen! bookmark
                 div
                   {} $ :class-name css/row
-                  comp-theme-menu (>> states :theme) (app.comp.theme-menu/read-theme theme)
+                  comp-theme-menu (>> states :theme) theme
                 div
                   {} $ :class-name $ str-spaced css/row-middle css/gap8
                   <>
@@ -3244,7 +3242,7 @@
                 .render add-plugin
                 render-replace-plugin replace-plugin
           :examples $ []
-          :schema $ quote $ Fn (List respo.schema/CoordKey) (Map Tag Bool) respo.schema/States (Map Tag Dynamic) app.bookmark/%bookmark (Option Dynamic)
+          :schema $ quote $ Fn (List respo.schema/CoordKey) (Map Tag Bool) respo.schema/States (Map Tag Dynamic) app.bookmark/%bookmark (Option Tag)
             Fn
               Fn *dispatch-op $ -> Unit
               -> Unit
