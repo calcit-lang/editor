@@ -267,7 +267,7 @@
                 :class-mapper $ {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'detect-watching! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn detect-watching! ()
             match
@@ -277,7 +277,7 @@
                 dispatch! $ app.updater.router/route-op $ app.updater.router/Route :watching (decode-map-as raw String)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi :state)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when
@@ -293,7 +293,7 @@
                   send-op! op
             , &unit
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi) (:open :decode)
+          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi :state) (:open :decode)
         'heartbeat! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn heartbeat! ()
             js/setTimeout
@@ -305,7 +305,7 @@
               , 3000
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             if config/dev? (load-console-formatter!) (disable-list-structure-check!)
@@ -329,7 +329,7 @@
             println "|App started!"
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mount-target ()
             .query-selector (unsafe-coerce js/document 'respo.dom/DomDocument) |.app
@@ -355,7 +355,7 @@
             Option $ Map Tag Dynamic
             Option $ Map Tag Dynamic
             -> Unit
-            :features :js-ffi
+            :features :io :js-ffi :state
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -367,7 +367,7 @@
               tip! |error build-errors
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             respo.core/render-with! (mount-target)
@@ -376,7 +376,7 @@
                 comp-container @*states @*store
               , dispatch!
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'retry-connect! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn retry-connect! ()
             if
@@ -384,7 +384,7 @@
               connect!
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'send-op! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn send-op! (op) (ws-send! op)
           :examples $ []
@@ -399,7 +399,7 @@
                 (:none) (println "|Found no storage.")
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
       :ns $ %{} 'NsEntry (:doc "|browser side main file")
         :code $ quote $ ns app.client
           :require
@@ -621,7 +621,7 @@
                     .unwrap-or (get schema/configs :port) 6001
               , |ws://localhost:6001
           :examples $ []
-          :schema $ quote $ Fn (-> String) (:features :js-ffi)
+          :schema $ quote $ Fn (-> String) (:features :io :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.client-util
           :require (app.config :as config) (|url-parse :default url-parse) (app.schema :as schema)
@@ -654,7 +654,7 @@
                     :color $ hsl 0 0 50
                 comp-md-block "|Calcit Editor is a syntax tree editor of [Cirru Project](http://cirru.org). Read more at [Calcit Editor](https://github.com/calcit-lang/editor).\n" $ {}
           :examples $ []
-          :schema $ quote $ Fn (-> respo.schema/Component)
+          :schema $ quote $ Fn (-> respo.schema/Component) (:features :io)
         'install-commands $ %{} 'CodeEntry (:doc "|copy the commands to use")
           :code $ quote $ def install-commands "|$ npm install -g @calcit/editor\n$ ct\n"
           :examples $ []
@@ -1398,6 +1398,7 @@
           :schema $ quote $ Fn (Map Tag Dynamic)
             Option $ Map Tag Dynamic
             -> respo.schema/Component
+            :features :io
         'style-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-container
             {} $ |& $ {} (:background-color :black) (:color :white)
@@ -1733,7 +1734,7 @@
           :examples $ []
           :schema $ quote $ Fn respo.schema/States app.schema/CirruExprShape (List String) (List String)
             Set $ List String
-            , Bool Tag Bool Bool Tag Number (-> respo.schema/Component) (:features :js-ffi)
+            , Bool Tag Bool Bool Tag Number (-> respo.schema/Component) (:features :io :js-ffi)
         'on-keydown $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-keydown (coord expr picker-mode?)
             fn (e d!)
@@ -1847,7 +1848,7 @@
                     on-window-keydown event d! $ {} $ :name :editor
               , &unit
           :examples $ []
-          :schema $ quote $ Fn (List String) app.schema/CirruExprShape Bool (-> respo.schema/EventHandler) (:features :js-ffi)
+          :schema $ quote $ Fn (List String) app.schema/CirruExprShape Bool (-> respo.schema/EventHandler) (:features :io :js-ffi)
         'style-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-expr
             {}
@@ -1911,7 +1912,7 @@
                         app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor nil
                         d! $ :: :writer/draft-ns nil
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States app.schema/FileEntry (Map Tag String) (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States app.schema/FileEntry (Map Tag String) (-> respo.schema/Component) (:features :io)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.file-replacer
           :require
@@ -2073,7 +2074,7 @@
                     -> Unit
                   .reset-state plugin-code-gen d!
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States Dynamic (List String) (-> app.comp.gen-code-box/%gen-code-box-action) (:features :js-ffi)
+          :schema $ quote $ Fn respo.schema/States Dynamic (List String) (-> app.comp.gen-code-box/%gen-code-box-action) (:features :io :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.gen-code-box
           :require
@@ -2496,7 +2497,7 @@
                     :keydown $ on-keydown state leaf coord picker-mode?
                     :input $ on-input state coord cursor
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States app.schema/CirruLeafShape (List String) (List String) Bool Bool Bool Bool Tag (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States app.schema/CirruLeafShape (List String) (List String) Bool Bool Bool Bool Tag (-> respo.schema/Component) (:features :io)
         'initial-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def initial-state
             %{} LeafState (:text |) (:at 0)
@@ -2630,7 +2631,7 @@
                     on-window-keydown event d! $ {} $ :name :editor
               , &unit
           :examples $ []
-          :schema $ quote $ Fn LeafState app.schema/CirruLeafShape (List String) Bool (-> respo.schema/EventHandler) (:features :js-ffi)
+          :schema $ quote $ Fn LeafState app.schema/CirruLeafShape (List String) Bool (-> respo.schema/EventHandler) (:features :io :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.leaf
           :require
@@ -2949,7 +2950,7 @@
                       {} $ :style $ {} (:padding "|12px 0")
                       <> "|The selected source entry no longer exists." style-nothing
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States (List app.bookmark/%bookmark) (Map Tag Dynamic) Number Bool (Option Tag) (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States (List app.bookmark/%bookmark) (Map Tag Dynamic) Number Bool (Option Tag) (-> respo.schema/Component) (:features :io)
         'comp-selected-editor $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-selected-editor (states stack router-data pointer picker-mode? theme expr-entry bookmark)
             let
@@ -3074,7 +3075,7 @@
                       decode-map-as focus $ List String
                     , None
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States (List app.bookmark/%bookmark) (Map Tag Dynamic) Number Bool (Option Tag) app.schema/CodeEntry app.bookmark/%bookmark (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States (List app.bookmark/%bookmark) (Map Tag Dynamic) Number Bool (Option Tag) app.schema/CodeEntry app.bookmark/%bookmark (-> respo.schema/Component) (:features :io)
         'comp-stack $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-stack (stack pointer)
             [] (effect-focus-bookmark pointer)
@@ -3827,7 +3828,7 @@
                       Map Tag String
                   (:none) (render-empty)
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States (Option String) (Map Tag Dynamic) (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States (Option String) (Map Tag Dynamic) (-> respo.schema/Component) (:features :io)
         'css-file $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-file
             {} $ |$0 $ {} (:width 360) (:overflow :auto) (:padding-top 24)
@@ -4947,6 +4948,7 @@
             Option $ Map Tag Dynamic
             Option Tag
             -> respo.schema/Component
+            :features :io
         'comp-watching-frame $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-watching-frame (states frame theme)
             let
@@ -4992,7 +4994,7 @@
                     =< 16 nil
                     comp-theme-menu (>> states :theme) theme
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States (Map Tag Dynamic) (Option Tag) (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States (Map Tag Dynamic) (Option Tag) (-> respo.schema/Component) (:features :io)
         'read-watching-frame $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-watching-frame (raw)
             if (nil? raw) None $ if (map? raw)
@@ -5038,7 +5040,7 @@
                 (app.schema/CirruLeafShape leaf)
                   span $ {} $ :inner-text (:text leaf)
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States app.bookmark/%bookmark app.schema/CodeEntry (List String) Tag (-> respo.schema/Element)
+          :schema $ quote $ Fn respo.schema/States app.bookmark/%bookmark app.schema/CodeEntry (List String) Tag (-> respo.schema/Element) (:features :io)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.watching
           :require
@@ -6113,7 +6115,7 @@
         'compile-all-files! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn compile-all-files! (_configs) (save-files! None |system)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (Map Tag Dynamic) (-> Unit) (:features :io :js-ffi :state)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op sid)
             when config/dev? $ js/console.log |Action op sid
@@ -6127,7 +6129,7 @@
               _ $ reset! *writer-db $ updater @*writer-db op sid (new-op-id) (shared/now-ms)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn Dynamic String (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn Dynamic String (-> Unit) (:features :io :js-ffi :state)
         'expose-files! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn expose-files! (port)
             let
@@ -6156,7 +6158,7 @@
                   link $ .blue (unsafe-coerce chalk 'app.server/ChalkHost) (str |http://localhost: port)
                 println $ str "|port " port "| ok, local configs exposed on " link
           :examples $ []
-          :schema $ quote $ Fn Number (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn Number (-> Dynamic) (:features :io :js-ffi)
         'initial-db $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def initial-db (storage/load-project-state! storage-file)
           :examples $ []
@@ -6176,7 +6178,7 @@
                   dispatch! (:: :analyze/refresh-usages-dict) |system
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'make-file-response $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn make-file-response (res)
             fn (err content)
@@ -6219,7 +6221,7 @@
                     , |watcher
                   , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'read-config-port $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-config-port (configured key)
             let
@@ -6241,14 +6243,14 @@
             sync-clients! @*reader-db
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'render-loop! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-loop! ()
             if (not= @*reader-db @*writer-db)
               do (reset! *reader-db @*writer-db) (; println "|render loop") (sync-clients! @*reader-db)
             js/setTimeout render-loop! 20
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Dynamic) (:features :io :js-ffi :state)
         'run-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-server! (dispatch! port)
             wss-serve! port $ {}
@@ -6272,7 +6274,7 @@
           :examples $ []
           :schema $ quote $ Fn
             Fn Dynamic String $ -> Unit
-            , Number (-> ws-edn.server/NodeWebSocketServerHost) (:features :js-ffi)
+            , Number (-> ws-edn.server/NodeWebSocketServerHost) (:features :io :js-ffi)
         'save-files! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-files! (selected sid)
             try
@@ -6292,19 +6294,15 @@
                     , sid (new-op-id) (shared/now-ms)
                   , &unit
           :examples $ []
-          :schema $ quote $ Fn (Option String) String (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (Option String) String (-> Unit) (:features :io :js-ffi :state)
         'start-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn start-server! (configs)
             pick-port!
               read-config-port (get configs :port) :port
-              fn (unoccupied-port)
-                hint-fn $ Fn Number $ -> Dynamic
-                run-server! dispatch! unoccupied-port
+              fn (unoccupied-port) (run-server! dispatch! unoccupied-port) &unit
             pick-http-port!
               read-config-port (get configs :expose-port) :expose-port
-              fn (unoccupied-port)
-                hint-fn $ Fn Number $ -> Dynamic
-                expose-files! unoccupied-port
+              fn (unoccupied-port) (expose-files! unoccupied-port) &unit
             render-loop!
             watch-file!
             js/process.on |SIGINT $ fn (_code & _args)
@@ -6318,7 +6316,7 @@
                   , &unit
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (Map Tag Dynamic) (-> Unit) (:features :io :js-ffi :state)
         'storage-file $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def storage-file
             node/path-join (node/cwd) (:storage-file config/site)
@@ -6347,7 +6345,7 @@
               , &unit
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (Map Tag Dynamic) (-> Unit) (:features :io :js-ffi :state)
         'watch-file! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn watch-file! ()
             gaze
@@ -6357,7 +6355,7 @@
                   .!on watcher |changed $ fn (_filepath) (js/setTimeout on-file-change! 20)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.server
           :require (app.schema :as schema)
@@ -6497,7 +6495,7 @@
                   :source-view $ Some view
               %{} ImportedFile (:file file) (:source-view view)
           :examples $ []
-          :schema $ quote $ Fn String String Number (-> ImportedFile)
+          :schema $ quote $ Fn String String Number (-> ImportedFile) (:features :io)
           :tests $ [] $ %{} 'TestEntry (:name |official-view-to-editor-nodes)
             :code $ quote $ let
                 view "|%{} 'FileEntry\n  :ns $ %{} 'NsEntry (:doc |namespace-doc)\n    :code $ quote $ ns demo.main\n  :defs $ {}\n    'keep $ %{} 'CodeEntry (:doc |definition-doc)\n      :code $ quote $ defn keep (value) $ [] value |中文 |🐈\n      :examples $ [] $ quote $ keep 1\n      :schema $ quote $ Fn Number $ -> $ List Dynamic\n      :tags $ #{} :fixture\n      :tests $ [] $ %{} 'TestEntry (:name |retained)\n        :code $ quote $ assert= 1 1\n        :tags $ #{} :unit\n"
@@ -6588,7 +6586,7 @@
                             .unwrap $ get fields :source-manifest-revision
                             , 'String
           :examples $ []
-          :schema $ quote $ Fn String String Number (-> SourceProject)
+          :schema $ quote $ Fn String String Number (-> SourceProject) (:features :io)
         'import-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn import-entry (raw expected-name author timestamp)
             let
@@ -6604,7 +6602,7 @@
                 :code $ cirru->tree syntax author timestamp
                 :source-entry $ Some $ format-cirru-edn raw
           :examples $ []
-          :schema $ quote $ Fn Dynamic Tag String Number (-> schema/CodeEntry)
+          :schema $ quote $ Fn Dynamic Tag String Number (-> schema/CodeEntry) (:features :io)
         'plan-namespace-changes $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn plan-namespace-changes (files saved-files selected templates)
             filter-map-kv (merge saved-files files)
@@ -6780,14 +6778,14 @@
           :examples $ []
           :schema $ quote $ Fn String
             -> $ Map Tag Dynamic
-            :features :js-ffi
+            :features :io :js-ffi
         'read-source-project! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-source-project! (snapshot)
             source/import-cli-project
               decode-map-as (readSnapshotEdn snapshot) 'String
               , |source 0
           :examples $ []
-          :schema $ quote $ Fn String (-> source/SourceProject) (:features :js-ffi)
+          :schema $ quote $ Fn String (-> source/SourceProject) (:features :io :js-ffi)
         'save-editor-state! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-editor-state! (snapshot db)
             writeEditorArchive snapshot $ format-cirru-edn $ source/editor-archive-state db
@@ -8004,7 +8002,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
-            :features :js-ffi
+            :features :io :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
           :require (app.updater.session :as session) (app.updater.user :as user) (app.updater.router :as router) (app.updater.ir :as ir) (app.updater.writer :as writer) (app.updater.notify :as notify) (app.updater.analyze :as analyze) (app.updater.watcher :as watcher) (app.updater.configs :as configs)
@@ -8061,6 +8059,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
+            :features :io
         'dependency-key->wire $ %{} 'CodeEntry
           :doc "|Keep the legacy keys in dependency maps sent to the client."
           :code $ quote $ defn dependency-key->wire (key)
@@ -8144,6 +8143,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
+            :features :io
         'parse-all-deps $ %{} 'CodeEntry
           :doc "|main implementation of reading files and build a usages dictionary. Slow at current, need optimizations with mutable data.\n"
           :code $ quote $ defn parse-all-deps (files)
@@ -8296,6 +8296,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) String String String Number
             -> $ Map Tag Dynamic
+            :features :io
         'refresh-usages-dict $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn refresh-usages-dict (db sid op-id op-time)
             let
@@ -8383,6 +8384,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) String app.util/SymbolReference
             -> $ Option app.bookmark/%bookmark
+            :features :io
         'use-import-def $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn use-import-def (db picked sid op-id op-time)
             match
@@ -8466,6 +8468,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
+            :features :io
         'wire-dependency-map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn wire-dependency-map (relations)
             filter-map-kv relations $ fn (key linked)
@@ -8604,6 +8607,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
+            :features :io
         'add-ns $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn add-ns (db op-data session-id op-id op-time)
             let
@@ -8628,6 +8632,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
+            :features :io
         'append-leaf $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn append-leaf (db op-data session-id op-id op-time) (insert-empty-leaf db session-id op-id op-time true)
           :examples $ []
@@ -8769,6 +8774,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
+            :features :io
         'duplicate $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn duplicate (db _op-data session-id op-id op-time)
             let
@@ -8867,6 +8873,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) String String Number
             -> $ Map Tag Dynamic
+            :features :io
         'indent $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn indent (db session-id op-id op-time)
             let
@@ -9056,6 +9063,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
+            :features :io
         'replace-file $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn replace-file (db view sid op-id op-time)
             let
@@ -9074,6 +9082,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) String String String Number
             -> $ Map Tag Dynamic
+            :features :io
         'reset-at $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reset-at (db op-data session-id op-id op-time)
             let
@@ -9239,6 +9248,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) String String Number
             -> $ Map Tag Dynamic
+            :features :io
         'transfer-namespace $ %{} 'CodeEntry
           :doc "|Validate both names and the source entry before altering the file map."
           :code $ quote $ defn transfer-namespace (db op-data move?)
@@ -9373,6 +9383,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
+            :features :io
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater.ir
           :require (app.schema :as schema) (bisection-key.core :as bisection)
@@ -10093,6 +10104,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
+            :features :io
         'pick-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pick-node (db op-data sid op-id op-time)
             let
@@ -10121,6 +10133,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Dynamic String String Number
             -> $ Map Tag Dynamic
+            :features :io
         'picker-mode $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn picker-mode (db session-id op-id op-time)
             update-in db ([] :sessions session-id :writer)
@@ -10337,7 +10350,7 @@
           :code $ quote $ defn cirru->tree (xs author timestamp)
             schema/syntax->node (normalize-cirru xs) author timestamp
           :examples $ []
-          :schema $ quote $ Fn Dynamic String Number (-> schema/CirruNode)
+          :schema $ quote $ Fn Dynamic String Number (-> schema/CirruNode) (:features :io)
         'expr? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn expr? (x)
             and (struct? x)
@@ -10386,7 +10399,7 @@
           :code $ quote $ defn normalize-cirru (raw)
             decode-map-as (normalize-legacy-cirru-data raw) 'app.schema/CirruSyntax
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> schema/CirruSyntax)
+          :schema $ quote $ Fn Dynamic (-> schema/CirruSyntax) (:features :io)
           :tests $ [] $ %{} 'TestEntry (:name |legacy-quoted-syntax-boundary)
             :code $ quote $ do
               assert=
@@ -10430,7 +10443,7 @@
               (string? raw) raw
               true $ raise |Expected-Cirru-string-or-list
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Dynamic)
+          :schema $ quote $ Fn Dynamic (-> Dynamic) (:features :io)
         'now! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn now! () (js-ffi.shared/now-ms)
           :examples $ []
@@ -10484,6 +10497,7 @@
           :examples $ []
           :schema $ quote $ Fn schema/CirruSyntax
             -> $ Map String ImportBinding
+            :features :io
         'parse-require $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-require (rule)
             let
@@ -10519,6 +10533,7 @@
           :examples $ []
           :schema $ quote $ Fn (List schema/CirruSyntax)
             -> $ Map String ImportBinding
+            :features :io
         'prepend-data $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn prepend-data (x) ([] :data x)
           :examples $ []
@@ -10682,8 +10697,8 @@
               tester .listen port |0.0.0.0
           :examples $ []
           :schema $ quote $ Fn Number
-            Fn (Option shared/JsError) Bool $ -> Dynamic
-            -> Dynamic
+            Fn (Option shared/JsError) Bool $ -> Unit
+            -> ServerHost
             :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.util.detect
@@ -10741,7 +10756,7 @@
                 , &unit
               , &unit
           :examples $ []
-          :schema $ quote $ Fn String (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn String (-> Unit) (:features :io :js-ffi)
         'do-copy-logics! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn do-copy-logics! (d! x message)
             let
@@ -10770,7 +10785,7 @@
                 (:none) (println "|[Editor] .cirru-focused not found")
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi)
         'focus-search! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn focus-search! ()
             js/setTimeout
@@ -10820,7 +10835,7 @@
                 , &unit
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi)
         'get-cli-configs! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-cli-configs! ()
             {} $ :op $ node/env-or |op |
@@ -10837,10 +10852,12 @@
                     println $ str |port: port |in-use
                     pick-http-port! (inc port) next-fn
                   next-fn port
+              , &unit
           :examples $ []
           :schema $ quote $ Fn Number
-            Fn Number $ -> Dynamic
-            -> Dynamic
+            Fn Number $ -> Unit
+            -> app.util.detect/ServerHost
+            :features :io :js-ffi
         'pick-port! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pick-port! (port next-fn)
             port-taken? port $ fn (err taken?)
@@ -10853,10 +10870,12 @@
                   do
                     println $ str |port: port |ok-edit-on: $ str |http://editor.calcit-lang.org?port= port
                     next-fn port
+              , &unit
           :examples $ []
           :schema $ quote $ Fn Number
-            Fn Number $ -> Dynamic
-            -> Dynamic
+            Fn Number $ -> Unit
+            -> app.util.detect/ServerHost
+            :features :io :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.util.env
           :require (|chalk :default chalk)
@@ -10935,7 +10954,7 @@
           :schema $ quote $ Fn
             Fn *dispatch-op $ -> Unit
             -> Unit
-            :features :js-ffi
+            :features :io :js-ffi
         'on-window-keydown $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-window-keydown (event dispatch! router)
             if (non-nil? router)
