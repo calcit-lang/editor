@@ -1393,7 +1393,7 @@
                       {} $ :left 100
                     comp-messages $ decode-map-as
                       .unwrap-or (get session :notifications) ([])
-                      List $ Map Tag Dynamic
+                      List $ Map Tag app.schema/NotificationField
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic)
             Option $ Map Tag Dynamic
@@ -2740,13 +2740,20 @@
             app.config :as config
     'app.comp.messages $ %{} 'FileEntry
       :defs $ {}
+        'DayjsFormatHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait DayjsFormatHost
+            .format $ Fn app.comp.messages/DayjsFormatHost String $ -> String
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+            :names $ {} $ :format |format
+          :schema $ quote Trait
         'comp-messages $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-messages (messages)
             list-> ({})
               -> messages
                 drop $ &max 0 $ - (count messages) 3
                 map-indexed $ fn (idx msg)
-                  hint-fn $ Fn Number (Map Tag Dynamic)
+                  hint-fn $ Fn Number (Map Tag app.schema/NotificationField)
                     -> $ List Dynamic
                   let
                       id $ decode-map-as
@@ -2758,18 +2765,21 @@
                       time $ decode-map-as
                         .unwrap $ get msg :time
                         , Number
-                      formatted $ &trait-call respo-ui.comp/DayjsHost :format
-                        unsafe-coerce (Dayjs time) 'respo-ui.comp/DayjsHost
-                        , |mm:ss
+                      formatted $ let
+                          clock $ js-cast (Dayjs time) app.comp.messages/DayjsFormatHost
+                        clock .format |mm:ss
                     [] id $ div
                       {} (:class-name css-message)
                         :style $ {}
                           :bottom $ + 8 $ * idx 28
                           :color $ match
                             .unwrap-or (get msg :kind) :info
-                            :error $ hsl 0 80 80
-                            :warning $ hsl 60 80 80
-                            :info $ hsl 240 80 80
+                            (Tag kind)
+                              match kind
+                                :error $ hsl 0 80 80
+                                :warning $ hsl 60 80 80
+                                :info $ hsl 240 80 80
+                                _ $ hsl 120 80 80
                             _ $ hsl 120 80 80
                         :on-click $ fn (_event d!)
                           hint-fn $ Fn respo.schema/RespoEvent
@@ -2783,7 +2793,7 @@
                       <> text
           :examples $ []
           :schema $ quote $ Fn
-            List $ Map Tag Dynamic
+            List $ Map Tag app.schema/NotificationField
             -> respo.schema/Component
             :features :js-ffi
         'css-message $ %{} 'CodeEntry (:doc |)
@@ -5552,6 +5562,10 @@
           :code $ quote $ defenum NodeCommand (:update String) (:update-last) (:update-nth Number) (:replace app.schema/CirruNode) (:dissoc String) (:assoc String app.schema/CirruNode) (:append app.schema/CirruNode) (:prepend app.schema/CirruNode)
           :examples $ []
           :schema $ quote EnumDef
+        'NotificationField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion NotificationField String Number Tag
+          :examples $ []
+          :schema $ quote UnionDef
         'append-node-path $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn append-node-path (expr path node)
             if (empty? path) (raise |Expected-nonempty-node-path)
@@ -5794,11 +5808,6 @@
           :examples $ []
           :schema $ quote $ Fn CirruNode (List String)
             -> $ Option CirruNode
-        'notification $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def notification
-            {} (:id nil) (:kind nil) (:text nil) (:time nil)
-          :examples $ []
-          :schema $ quote $ Map Tag Dynamic
         'open-state-fields $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn open-state-fields (raw)
             if (nil? raw) ({})
@@ -9405,15 +9414,7 @@
         'push-message $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn push-message (db kind text sid op-id op-time)
             decode-map-as
-              update-in db ([] :sessions sid :notifications)
-                fn (notifications)
-                  hint-fn $ Fn (Option Dynamic)
-                    -> $ List $ Map Tag Dynamic
-                  conj
-                    decode-map-as
-                      .unwrap-or notifications $ []
-                      List $ Map Tag Dynamic
-                    {} (:id op-id) (:kind kind) (:text text) (:time op-time)
+              update-in db ([] :sessions sid :notifications) (app.util/push-notification kind op-id op-time text)
               Map Tag Dynamic
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) Tag String String String Number
@@ -10520,33 +10521,33 @@
           :schema $ quote $ Fn Number
             -> $ List Dynamic
         'push-info $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn push-info (op-id op-time text)
-            fn (xs)
-              hint-fn $ Fn (Option Dynamic)
-                -> $ List $ Map Tag Dynamic
-              conj
-                decode-map-as
-                  .unwrap-or xs $ []
-                  List $ Map Tag Dynamic
-                merge schema/notification $ {} (:id op-id) (:kind :info) (:text text) (:time op-time)
+          :code $ quote $ defn push-info (op-id op-time text) (push-notification :info op-id op-time text)
           :examples $ []
           :schema $ quote $ Fn String Number String
             -> $ Fn (Option Dynamic)
-              -> $ List $ Map Tag Dynamic
+              -> $ List $ Map Tag schema/NotificationField
+        'push-notification $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn push-notification (kind op-id op-time text)
+            fn (xs)
+              hint-fn $ Fn (Option Dynamic)
+                -> $ List $ Map Tag schema/NotificationField
+              conj
+                decode-map-as
+                  .unwrap-or xs $ []
+                  List $ Map Tag app.schema/NotificationField
+                decode-map-as
+                  {} (:id op-id) (:kind kind) (:text text) (:time op-time)
+                  Map Tag app.schema/NotificationField
+          :examples $ []
+          :schema $ quote $ Fn Tag String Number String
+            -> $ Fn (Option Dynamic)
+              -> $ List $ Map Tag schema/NotificationField
         'push-warning $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn push-warning (op-id op-time text)
-            fn (xs)
-              hint-fn $ Fn (Option Dynamic)
-                -> $ List $ Map Tag Dynamic
-              conj
-                decode-map-as
-                  .unwrap-or xs $ []
-                  List $ Map Tag Dynamic
-                merge schema/notification $ {} (:id op-id) (:kind :warning) (:text text) (:time op-time)
+          :code $ quote $ defn push-warning (op-id op-time text) (push-notification :warning op-id op-time text)
           :examples $ []
           :schema $ quote $ Fn String Number String
             -> $ Fn (Option Dynamic)
-              -> $ List $ Map Tag Dynamic
+              -> $ List $ Map Tag schema/NotificationField
         'stringify-s-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn stringify-s-expr (x)
             match x
