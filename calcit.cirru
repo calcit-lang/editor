@@ -2950,7 +2950,7 @@
                   or
                     .unwrap-or (app.schema/map-field states :data) initial-state
                     , initial-state
-                  Map Tag Dynamic
+                  Map Tag Bool
                 expr $ match
                   app.schema/read-node $ :code expr-entry
                   (app.schema/CirruExprShape root) root
@@ -3244,7 +3244,7 @@
                 .render add-plugin
                 render-replace-plugin replace-plugin
           :examples $ []
-          :schema $ quote $ Fn (List respo.schema/CoordKey) (Map Tag Dynamic) respo.schema/States (Map Tag Dynamic) app.bookmark/%bookmark (Option Dynamic)
+          :schema $ quote $ Fn (List respo.schema/CoordKey) (Map Tag Bool) respo.schema/States (Map Tag Dynamic) app.bookmark/%bookmark (Option Dynamic)
             Fn
               Fn *dispatch-op $ -> Unit
               -> Unit
@@ -3332,7 +3332,7 @@
           :code $ quote $ def initial-state
             {} $ :draft-box? false
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote $ Map Tag Bool
         'on-draft-box $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-draft-box (state cursor)
             fn (_event dispatch!)
@@ -3340,9 +3340,7 @@
                 Fn *dispatch-op $ -> Unit
                 -> Unit
               app.client-updater/dispatch-ui! dispatch! $ app.client-updater/UiStateOp :states cursor $ assoc state :draft-box?
-                not $ decode-map-as
-                  .unwrap-or (get state :draft-box?) false
-                  , 'Bool
+                not $ .unwrap-or (get state :draft-box?) false
               js-ffi.browser/set-timeout!
                 fn () $ match (js-ffi.browser/query-selector |.el-draft-box)
                   (:some element) (js-ffi.browser/element-focus! element)
@@ -3350,7 +3348,7 @@
                 , 0
               , &unit
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (List respo.schema/CoordKey) (-> respo.schema/EventHandler)
+          :schema $ quote $ Fn (Map Tag Bool) (List respo.schema/CoordKey) (-> respo.schema/EventHandler)
         'on-path-gen! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-path-gen! (bookmark)
             fn (_event d!)
