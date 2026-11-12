@@ -9840,7 +9840,8 @@
           :code $ quote $ defn finish (db sid op-id op-time)
             update-in db ([] :sessions sid :writer)
               fn (writer)
-                hint-fn $ Fn (Option Dynamic) (-> Dynamic)
+                hint-fn $ Fn (Option Dynamic)
+                  -> $ Map Tag Dynamic
                 let
                     writer-map $ decode-map-as
                       .unwrap-or writer $ {}
@@ -9893,7 +9894,7 @@
                 = 0 $ count target-data
                 , db $ -> db $ update-in ([] :sessions session-id :writer :stack pointer)
                   fn (b)
-                    hint-fn $ Fn (Option Dynamic) (-> Dynamic)
+                    hint-fn $ Fn (Option Dynamic) (-> app.bookmark/%bookmark)
                     app.bookmark/update-focus
                       Bookmark $ app.bookmark/read-bookmark $ .unwrap b
                       fn (focus)
@@ -9989,7 +9990,8 @@
           :code $ quote $ defn move-next (db sid op-id op-time)
             -> db $ update-in ([] :sessions sid :writer)
               fn (writer)
-                hint-fn $ Fn (Option Dynamic) (-> Dynamic)
+                hint-fn $ Fn (Option Dynamic)
+                  -> $ Map Tag Dynamic
                 let
                     writer-map $ decode-map-as
                       .unwrap-or writer $ {}
@@ -10059,7 +10061,8 @@
           :code $ quote $ defn move-previous (db sid op-id op-time)
             -> db $ update-in ([] :sessions sid :writer)
               fn (writer)
-                hint-fn $ Fn (Option Dynamic) (-> Dynamic)
+                hint-fn $ Fn (Option Dynamic)
+                  -> $ Map Tag Dynamic
                 let
                     writer-map $ decode-map-as
                       .unwrap-or writer $ {}
@@ -10122,7 +10125,8 @@
           :code $ quote $ defn picker-mode (db session-id op-id op-time)
             update-in db ([] :sessions session-id :writer)
               fn (writer)
-                hint-fn $ Fn (Option Dynamic) (-> Dynamic)
+                hint-fn $ Fn (Option Dynamic)
+                  -> $ Map Tag Dynamic
                 let
                     writer-map $ decode-map-as
                       .unwrap-or writer $ {}
@@ -11002,7 +11006,8 @@
         'push-bookmark $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn push-bookmark (bookmark forced?)
             fn (writer)
-              hint-fn $ Fn (Option Dynamic) (-> Dynamic)
+              hint-fn $ Fn (Option Dynamic)
+                -> $ Map Tag Dynamic
               let
                   writer-fields $ decode-map-as
                     .unwrap-or writer $ {}
@@ -11034,6 +11039,7 @@
                           -> writer-fields $ assoc :pointer idx
           :examples $ []
           :schema $ quote $ Fn app.bookmark/%bookmark Bool
-            -> $ Fn (Option Dynamic) (-> Dynamic)
+            -> $ Fn (Option Dynamic)
+              -> $ Map Tag Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.util.stack
