@@ -6299,14 +6299,10 @@
           :code $ quote $ defn start-server! (configs)
             pick-port!
               read-config-port (get configs :port) :port
-              fn (unoccupied-port)
-                hint-fn $ Fn Number $ -> Dynamic
-                run-server! dispatch! unoccupied-port
+              fn (unoccupied-port) (run-server! dispatch! unoccupied-port) &unit
             pick-http-port!
               read-config-port (get configs :expose-port) :expose-port
-              fn (unoccupied-port)
-                hint-fn $ Fn Number $ -> Dynamic
-                expose-files! unoccupied-port
+              fn (unoccupied-port) (expose-files! unoccupied-port) &unit
             render-loop!
             watch-file!
             js/process.on |SIGINT $ fn (_code & _args)
@@ -10701,7 +10697,7 @@
               tester .listen port |0.0.0.0
           :examples $ []
           :schema $ quote $ Fn Number
-            Fn (Option shared/JsError) Bool $ -> Dynamic
+            Fn (Option shared/JsError) Bool $ -> Unit
             -> ServerHost
             :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
@@ -10856,9 +10852,10 @@
                     println $ str |port: port |in-use
                     pick-http-port! (inc port) next-fn
                   next-fn port
+              , &unit
           :examples $ []
           :schema $ quote $ Fn Number
-            Fn Number $ -> Dynamic
+            Fn Number $ -> Unit
             -> app.util.detect/ServerHost
             :features :io :js-ffi
         'pick-port! $ %{} 'CodeEntry (:doc |)
@@ -10873,9 +10870,10 @@
                   do
                     println $ str |port: port |ok-edit-on: $ str |http://editor.calcit-lang.org?port= port
                     next-fn port
+              , &unit
           :examples $ []
           :schema $ quote $ Fn Number
-            Fn Number $ -> Dynamic
+            Fn Number $ -> Unit
             -> app.util.detect/ServerHost
             :features :io :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
