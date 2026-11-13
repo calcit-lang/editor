@@ -2719,16 +2719,14 @@
           :schema $ quote $ Fn String String Bool (-> respo.schema/EventHandler) (:features :js-ffi)
         'style-control $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-control
-            merge
-              assert-type ui/flex $ Map Tag Dynamic
-              {} $ :text-align :right
+            merge ui/flex $ {} $ :text-align :right
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote $ Map Tag respo-ui.schema/StyleValue
         'style-login $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-login
             {} $ :padding 16
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote $ Map Tag respo-ui.schema/StyleValue
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.login
           :require
@@ -3470,7 +3468,7 @@
               :font-size 20
               :font-weight 100
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote $ Map Tag respo-ui.schema/StyleValue
         'style-nothing $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-nothing
             {}
@@ -3908,12 +3906,12 @@
               :background-color $ hsl 0 0 100
               :color :black
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote $ Map Tag respo-ui.schema/StyleValue
         'style-link $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-link
             {} $ :cursor :pointer
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote $ Map Tag respo-ui.schema/StyleValue
         'style-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-list
             {} $ |& $ {} (:width 360) (:overflow :auto) (:padding-top 24)
