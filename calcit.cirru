@@ -812,7 +812,7 @@
         'drag-get-index $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn drag-get-index (raw-event)
             let
-                event $ unsafe-coerce raw-event 'app.comp.bookmark/DragEventHost
+                event $ js-cast raw-event 'app.comp.bookmark/DragEventHost
                 transfer $ .-data-transfer event
               match
                 parse-float $ .get-data transfer |id
@@ -823,26 +823,22 @@
                     , None
                 (:err _message) None
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn respo.dom/DomEvent
             -> $ Option Number
             :features :js-ffi
         'drag-prevent-default! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn drag-prevent-default! (raw-event)
-            let
-                event $ unsafe-coerce raw-event 'app.comp.bookmark/DragEventHost
-              .prevent-default! event
-              , &unit
+          :code $ quote $ defn drag-prevent-default! (raw-event) (.prevent-default! raw-event) &unit
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn respo.dom/DomEvent (-> Unit) (:features :js-ffi)
         'drag-set-data! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn drag-set-data! (raw-event idx)
             let
-                event $ unsafe-coerce raw-event 'app.comp.bookmark/DragEventHost
+                event $ js-cast raw-event 'app.comp.bookmark/DragEventHost
                 transfer $ .-data-transfer event
               .set-data! transfer |id $ str idx
               , &unit
           :examples $ []
-          :schema $ quote $ Fn Dynamic Number (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn respo.dom/DomEvent Number (-> Unit) (:features :js-ffi)
         'on-pick $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-pick (bookmark idx)
             fn (e d!)
