@@ -592,12 +592,12 @@
             and (struct? x)
               = :Expr $ &struct:get-name x
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn Input (-> Bool) (:generics Input)
         'leaf? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn leaf? (x)
             and (struct? x) (&struct:matches? x schema/CirruLeafShape)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn Input (-> Bool) (:generics Input)
         'parse-query! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-query! ()
             let
@@ -10352,7 +10352,7 @@
             and (struct? x)
               = :Expr $ &struct:get-name x
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn Input (-> Bool) (:generics Input)
         'find-first $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn find-first (f xs)
             find xs $ fn (x) (f x)
@@ -10389,7 +10389,7 @@
             and (struct? x)
               = :Leaf $ &struct:get-name x
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn Input (-> Bool) (:generics Input)
         'normalize-cirru $ %{} 'CodeEntry
           :doc "|Checked legacy Cirru input boundary. Preserve quoted wrappers and recursively normalize valid String/List syntax; reject unsupported values instead of inserting nil nodes."
           :code $ quote $ defn normalize-cirru (raw)
@@ -10887,7 +10887,7 @@
           :code $ quote $ defn cirru-form? (x)
             if (string? x) true $ if (list? x) (every? x cirru-form?) false
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn Input (-> Bool) (:generics Input)
         'compare-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn compare-entry (new-x old-x)
             match new-x
