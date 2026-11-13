@@ -1044,7 +1044,7 @@
                   .unwrap-or (get fields :defs) ({})
                   Map String Tag
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> ChangeInfo)
+          :schema $ quote $ Fn Input (-> ChangeInfo) (:generics Input)
           :tests $ [] $ %{} 'TestEntry (:name |wire-changes-and-kind-union)
             :code $ quote $ let
                 source $ {} (:ns :changed)
@@ -6633,7 +6633,7 @@
                   , 'String
               if changed? (SourceSave :saved revision) (SourceSave :unchanged revision)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> SourceSave)
+          :schema $ quote $ Fn Input (-> SourceSave) (:generics Input)
         'restore-editor-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn restore-editor-state (project archive)
             let
@@ -8508,7 +8508,7 @@
                   :dissoc $ EntryUpdate :dissoc $ decode-map-as payload 'String
                   _ $ raise |Unknown-entry-update-operation
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> EntryUpdate)
+          :schema $ quote $ Fn Input (-> EntryUpdate) (:generics Input)
         'update-configs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-configs (db settings session-id op-id op-time)
             if (contains? settings :version)
