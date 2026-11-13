@@ -10395,7 +10395,7 @@
           :code $ quote $ defn normalize-cirru (raw)
             decode-map-as (normalize-legacy-cirru-data raw) 'app.schema/CirruSyntax
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> schema/CirruSyntax) (:features :io)
+          :schema $ quote $ Fn Input (-> schema/CirruSyntax) (:generics Input) (:features :io)
           :tests $ [] $ %{} 'TestEntry (:name |legacy-quoted-syntax-boundary)
             :code $ quote $ do
               assert=
