@@ -150,7 +150,7 @@
                 _ $ raise |Unknown-bookmark-wire-variant
               raise |Expected-bookmark-wire-enum
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> app.bookmark/%bookmark)
+          :schema $ quote $ Fn Input (-> app.bookmark/%bookmark) (:generics Input)
         'read-bookmarks $ %{} 'CodeEntry
           :doc "|Check the incoming list once and recover each bookmark through read-bookmark; keep the existing wire shape while returning a closed local bookmark list."
           :code $ quote $ defn read-bookmarks (raw)
@@ -158,8 +158,9 @@
               decode-map-as raw $ List Dynamic
               , read-bookmark
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Input
             -> $ List app.bookmark/%bookmark
+            :generics Input
           :tests $ [] $ %{} 'TestEntry (:name |wire-recovery-keeps-local-bookmarks)
             :code $ quote $ let
                 original $ []
@@ -181,8 +182,9 @@
                 _ $ raise |Expected-optional-bookmark
               raise |Expected-optional-bookmark
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Input
             -> $ Option app.bookmark/%bookmark
+            :generics Input
         'to-path $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn to-path (bookmark) (.to-path bookmark)
           :examples $ []
@@ -590,12 +592,12 @@
             and (struct? x)
               = :Expr $ &struct:get-name x
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn Input (-> Bool) (:generics Input)
         'leaf? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn leaf? (x)
             and (struct? x) (&struct:matches? x schema/CirruLeafShape)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn Input (-> Bool) (:generics Input)
         'parse-query! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-query! ()
             let
@@ -10350,7 +10352,7 @@
             and (struct? x)
               = :Expr $ &struct:get-name x
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn Input (-> Bool) (:generics Input)
         'find-first $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn find-first (f xs)
             find xs $ fn (x) (f x)
@@ -10387,13 +10389,13 @@
             and (struct? x)
               = :Leaf $ &struct:get-name x
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn Input (-> Bool) (:generics Input)
         'normalize-cirru $ %{} 'CodeEntry
           :doc "|Checked legacy Cirru input boundary. Preserve quoted wrappers and recursively normalize valid String/List syntax; reject unsupported values instead of inserting nil nodes."
           :code $ quote $ defn normalize-cirru (raw)
             decode-map-as (normalize-legacy-cirru-data raw) 'app.schema/CirruSyntax
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> schema/CirruSyntax) (:features :io)
+          :schema $ quote $ Fn Input (-> schema/CirruSyntax) (:generics Input) (:features :io)
           :tests $ [] $ %{} 'TestEntry (:name |legacy-quoted-syntax-boundary)
             :code $ quote $ do
               assert=
@@ -10885,7 +10887,7 @@
           :code $ quote $ defn cirru-form? (x)
             if (string? x) true $ if (list? x) (every? x cirru-form?) false
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Bool)
+          :schema $ quote $ Fn Input (-> Bool) (:generics Input)
         'compare-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn compare-entry (new-x old-x)
             match new-x
