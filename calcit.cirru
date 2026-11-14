@@ -10328,6 +10328,9 @@
             app.util :refer $ bookmark->path to-writer to-bookmark push-info cirru->tree stringify-s-expr
     'app.util $ %{} 'FileEntry
       :defs $ {}
+        'DataPathSegment $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion DataPathSegment Tag Number
+          :examples $ []
         'ImportBinding $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum ImportBinding (:as String) (:refer String)
           :examples $ []
@@ -10390,7 +10393,7 @@
         'kinds $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def kinds (#{} :ns :def)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote $ Set Tag
         'leaf? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn leaf? (x)
             and (struct? x)
@@ -10539,7 +10542,7 @@
           :code $ quote $ defn prepend-data (x) ([] :data x)
           :examples $ []
           :schema $ quote $ Fn Number
-            -> $ List Dynamic
+            -> $ List DataPathSegment
         'push-info $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn push-info (op-id op-time text) (push-notification :info op-id op-time text)
           :examples $ []
