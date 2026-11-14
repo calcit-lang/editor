@@ -3529,7 +3529,7 @@
               {} $ :style style-missing
               <> "|Expression is missing!"
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote respo.schema/Element
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.page-editor
           :require
