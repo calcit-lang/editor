@@ -512,28 +512,31 @@
         'read-ui-state-op $ %{} 'CodeEntry
           :doc "|Adapt the anonymous state events still emitted by Respo plugins."
           :code $ quote $ defn read-ui-state-op (op)
-            if
-              = (enum-definition op) (Some UiStateOp)
-              Some $ decode-map-as op 'app.client-updater/UiStateOp
-              match op
-                (:states cursor value)
-                  Some $ UiStateOp :states
-                    decode-map-as cursor $ List respo.schema/CoordKey
-                    , value
-                (:states-merge cursor initial changes)
-                  Some $ UiStateOp :states-merge
-                    decode-map-as cursor $ List respo.schema/CoordKey
-                    , initial $ decode-map-as changes (Map Tag Dynamic)
-                (:states/clear)
-                  Some $ UiStateOp :states/clear
-                (:manual-state/abstract)
-                  Some $ UiStateOp :manual-state/abstract
-                (:manual-state/draft-box)
-                  Some $ UiStateOp :manual-state/draft-box
-                _ None
+            if (enum? op)
+              if
+                = (enum-definition op) (Some UiStateOp)
+                Some $ decode-map-as op 'app.client-updater/UiStateOp
+                match op
+                  (:states cursor value)
+                    Some $ UiStateOp :states
+                      decode-map-as cursor $ List respo.schema/CoordKey
+                      , value
+                  (:states-merge cursor initial changes)
+                    Some $ UiStateOp :states-merge
+                      decode-map-as cursor $ List respo.schema/CoordKey
+                      , initial $ decode-map-as changes (Map Tag Dynamic)
+                  (:states/clear)
+                    Some $ UiStateOp :states/clear
+                  (:manual-state/abstract)
+                    Some $ UiStateOp :manual-state/abstract
+                  (:manual-state/draft-box)
+                    Some $ UiStateOp :manual-state/draft-box
+                  _ None
+              , None
           :examples $ []
-          :schema $ quote $ Fn AnyEnum
+          :schema $ quote $ Fn Input
             -> $ Option UiStateOp
+            :generics Input
             :open :decode
           :tests $ [] $ %{} 'TestEntry (:name |typed-state-and-legacy-plugin)
             :code $ quote $ let
@@ -1044,7 +1047,7 @@
                   .unwrap-or (get fields :defs) ({})
                   Map String Tag
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> ChangeInfo)
+          :schema $ quote $ Fn Input (-> ChangeInfo) (:generics Input)
           :tests $ [] $ %{} 'TestEntry (:name |wire-changes-and-kind-union)
             :code $ quote $ let
                 source $ {} (:ns :changed)
@@ -6633,7 +6636,7 @@
                   , 'String
               if changed? (SourceSave :saved revision) (SourceSave :unchanged revision)
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> SourceSave)
+          :schema $ quote $ Fn Input (-> SourceSave) (:generics Input)
         'restore-editor-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn restore-editor-state (project archive)
             let
@@ -8468,8 +8471,6 @@
         'wire-dependency-map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn wire-dependency-map (relations)
             filter-map-kv relations $ fn (key linked)
-              hint-fn $ Fn schema/DependencyKey (Set schema/DependencyKey)
-                -> $ MapEntryDecision AnyEnum $ Set AnyEnum
               MapEntryDecision :keep (dependency-key->wire key) (.map linked dependency-key->wire)
           :examples $ []
           :schema $ quote $ Fn
@@ -8508,7 +8509,7 @@
                   :dissoc $ EntryUpdate :dissoc $ decode-map-as payload 'String
                   _ $ raise |Unknown-entry-update-operation
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> EntryUpdate)
+          :schema $ quote $ Fn Input (-> EntryUpdate) (:generics Input)
         'update-configs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn update-configs (db settings session-id op-id op-time)
             if (contains? settings :version)
