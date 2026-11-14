@@ -320,7 +320,9 @@
             js/window.addEventListener |keydown $ fn (event)
               match @*store
                 (:some store)
-                  on-window-keydown event dispatch! $ .unwrap-or (get store :router) ({})
+                  when
+                    non-nil? $ .unwrap-or (get store :router) ({})
+                    on-window-keydown (js-ffi.browser/keyboard-event-host event) dispatch!
                 (:none) &unit
             js/window.addEventListener |focus $ fn (event) (retry-connect!)
             js/window.addEventListener |visibilitychange $ fn (_event)
@@ -1846,7 +1848,7 @@
                     d! $ :: :ir/fold-to-end
                   true $ do
                     ; println |Keydown $ :key-code e
-                    on-window-keydown event d! $ {} $ :name :editor
+                    on-window-keydown event d!
               , &unit
           :examples $ []
           :schema $ quote $ Fn (List String) app.schema/CirruExprShape Bool (-> respo.schema/EventHandler) (:features :io :js-ffi)
@@ -2628,8 +2630,7 @@
                     d! $ :: :writer/picker-mode
                   (and meta? alt? (= code keycode/num-4))
                     d! $ :: :ir/fold-to-end
-                  true $ do (; println "|Keydown leaf" code)
-                    on-window-keydown event d! $ {} $ :name :editor
+                  true $ do (; println "|Keydown leaf" code) (on-window-keydown event d!)
               , &unit
           :examples $ []
           :schema $ quote $ Fn LeafState app.schema/CirruLeafShape (List String) Bool (-> respo.schema/EventHandler) (:features :io :js-ffi)
@@ -4714,7 +4715,7 @@
                       if
                         = (:mode state) :ns
                         , :def :ns
-                  true $ on-window-keydown (:original-event e) d! $ {} (:name :search)
+                  true $ on-window-keydown keyboard d!
               , &unit
           :examples $ []
           :schema $ quote $ Fn SearchState (List app.bookmark/%bookmark) (List respo.schema/CoordKey) (-> respo.schema/EventHandler) (:features :js-ffi)
@@ -10953,42 +10954,41 @@
             -> Unit
             :features :io :js-ffi
         'on-window-keydown $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn on-window-keydown (event dispatch! router)
-            if (non-nil? router)
-              let
-                  keyboard $ js-ffi.browser/keyboard-event-host event
-                  meta? $ or (.-meta-key? keyboard) (.-ctrl-key? keyboard)
-                  shift? $ .-shift-key? keyboard
-                  code $ .-key-code keyboard
-                cond
-                    and meta? $ or (= code keycode/p) (= code keycode/o)
-                    do
-                      dispatch! $ app.updater.router/route-op $ app.updater.router/Route :search
-                      focus-search!
-                      .prevent-default! keyboard
-                  (and meta? (= code keycode/e))
-                    dispatch! $ :: :writer/edit-ns
-                  (and meta? (not shift?) (= code keycode/j))
-                    do (.prevent-default! keyboard)
-                      dispatch! $ :: :writer/move-next
-                  (and meta? (not shift?) (= code keycode/i))
-                    dispatch! $ :: :writer/move-previous
-                  (and meta? (= code keycode/k))
-                    dispatch! $ :: :writer/finish
-                  (and meta? (= code keycode/s))
-                    do (.prevent-default! keyboard)
-                      dispatch! $ :: :effect/save-files
-                      dispatch! $ :: :analyze/refresh-usages-dict
-                  (and meta? shift? (= code keycode/f))
-                    dispatch! $ app.updater.router/route-op $ app.updater.router/Route :files
-                  (and meta? (not shift?) (= code keycode/period))
-                    dispatch! $ :: :writer/picker-mode
-                  true nil
+          :code $ quote $ defn on-window-keydown (keyboard dispatch!)
+            let
+                meta? $ or (.-meta-key? keyboard) (.-ctrl-key? keyboard)
+                shift? $ .-shift-key? keyboard
+                code $ .-key-code keyboard
+              cond
+                  and meta? $ or (= code keycode/p) (= code keycode/o)
+                  do
+                    dispatch! $ app.updater.router/route-op $ app.updater.router/Route :search
+                    focus-search!
+                    .prevent-default! keyboard
+                (and meta? (= code keycode/e))
+                  dispatch! $ :: :writer/edit-ns
+                (and meta? (not shift?) (= code keycode/j))
+                  do (.prevent-default! keyboard)
+                    dispatch! $ :: :writer/move-next
+                (and meta? (not shift?) (= code keycode/i))
+                  dispatch! $ :: :writer/move-previous
+                (and meta? (= code keycode/k))
+                  dispatch! $ :: :writer/finish
+                (and meta? (= code keycode/s))
+                  do (.prevent-default! keyboard)
+                    dispatch! $ :: :effect/save-files
+                    dispatch! $ :: :analyze/refresh-usages-dict
+                (and meta? shift? (= code keycode/f))
+                  dispatch! $ app.updater.router/route-op $ app.updater.router/Route :files
+                (and meta? (not shift?) (= code keycode/period))
+                  dispatch! $ :: :writer/picker-mode
+                true nil
             , &unit
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn js-ffi.browser/KeyboardEventHost
             Fn *dispatch-op $ -> Unit
-            , Dynamic (-> Unit) (:features :js-ffi)
+            -> Unit
+            :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.util.shortcuts
           :require (app.keycode :as keycode)
