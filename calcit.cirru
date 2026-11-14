@@ -6414,8 +6414,9 @@
           :code $ quote $ defn editor-archive-state (db)
             select-keys db $ [] :package :files :saved-files :configs :saved-configs :entries :saved-entries :users :source-revision :source-manifest-revision
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic)
-            -> $ Map Tag Dynamic
+          :schema $ quote $ Fn (Map Tag V)
+            -> $ Map Tag V
+            :generics V
           :tests $ [] $ %{} 'TestEntry (:name |retain-baselines-without-runtime-state)
             :code $ quote $ let
                 archive $ editor-archive-state $ {}
