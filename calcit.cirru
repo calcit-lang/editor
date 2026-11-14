@@ -1243,7 +1243,7 @@
               app.schema/read-optional-text $ get configs key
               , |
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Tag (-> String)
+          :schema $ quote $ Fn (Map Tag V) Tag (-> String) (:generics V)
         'parse-modules $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-modules (text)
             filter-not
@@ -7633,8 +7633,9 @@
         'keys-set $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn keys-set (x) (keys x)
           :examples $ []
-          :schema $ quote $ Fn (Map String Dynamic)
+          :schema $ quote $ Fn (Map String V)
             -> $ Set String
+            :generics V
         'render-changed-files $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-changed-files (files saved-files)
             filter-map-kv (merge files saved-files)
@@ -10596,8 +10597,9 @@
                   , 'Number
               nth stack pointer
           :examples $ []
-          :schema $ quote $ Fn (Option Dynamic)
+          :schema $ quote $ Fn (Option V)
             -> $ Option app.bookmark/%bookmark
+            :generics V
           :tests $ [] $ %{} 'TestEntry
             :name |missing-writer-and-stale-pointer-have-no-bookmark
             :code $ quote $ let
