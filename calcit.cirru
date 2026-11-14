@@ -3414,8 +3414,9 @@
                 (:none) None
                 _ $ raise |Expected-optional-preview-locals
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Raw
             -> $ Option $ Set String
+            :generics Raw
         'style-doc $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-doc
             {}
@@ -4894,8 +4895,9 @@
                 (:none) None
                 _ $ raise |Expected-optional-theme
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Raw
             -> $ Option Tag
+            :generics Raw
         'style-menu $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-menu
             {} $ |& $ {} (:position :absolute) (:bottom |100%) (:right 0) (:background-color :black)
@@ -5004,8 +5006,9 @@
                   Some $ decode-map-as frame $ Map Tag Dynamic
                 _ $ raise |Expected-optional-watching-frame
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Raw
             -> $ Option $ Map Tag Dynamic
+            :generics Raw
         'style-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def style-container
             {} $ :padding "|40px 16px 0 16px"
