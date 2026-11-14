@@ -5749,8 +5749,9 @@
                 &struct:to-map raw
               decode-map-as raw $ Map Tag Dynamic
           :examples $ []
-          :schema $ quote $ Fn Dynamic Tag
+          :schema $ quote $ Fn Input Tag
             -> $ Map Tag Dynamic
+            :generics Input
         'map-field $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn map-field (data key) (get data key)
           :examples $ []
@@ -6435,8 +6436,9 @@
                 &struct:to-map raw
               raise |Expected-CLI-entry-struct
           :examples $ []
-          :schema $ quote $ Fn Dynamic Tag
+          :schema $ quote $ Fn Input Tag
             -> $ Map Tag Dynamic
+            :generics Input
         'export-cli-file $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn export-cli-file (file templates)
             let
@@ -6601,7 +6603,7 @@
                 :code $ cirru->tree syntax author timestamp
                 :source-entry $ Some $ format-cirru-edn raw
           :examples $ []
-          :schema $ quote $ Fn Dynamic Tag String Number (-> schema/CodeEntry) (:features :io)
+          :schema $ quote $ Fn Input Tag String Number (-> schema/CodeEntry) (:generics Input) (:features :io)
         'plan-namespace-changes $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn plan-namespace-changes (files saved-files selected templates)
             filter-map-kv (merge saved-files files)
@@ -10347,7 +10349,7 @@
           :code $ quote $ defn cirru->tree (xs author timestamp)
             schema/syntax->node (normalize-cirru xs) author timestamp
           :examples $ []
-          :schema $ quote $ Fn Dynamic String Number (-> schema/CirruNode) (:features :io)
+          :schema $ quote $ Fn Input String Number (-> schema/CirruNode) (:generics Input) (:features :io)
         'expr? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn expr? (x)
             and (struct? x)
@@ -10434,9 +10436,7 @@
               (list? raw)
                 map
                   decode-map-as raw $ List Dynamic
-                  fn (child)
-                    hint-fn $ Fn Dynamic $ -> Dynamic
-                    normalize-legacy-cirru-data child
+                  , normalize-legacy-cirru-data
               (string? raw) raw
               true $ raise |Expected-Cirru-string-or-list
           :examples $ []
