@@ -6435,8 +6435,9 @@
                 &struct:to-map raw
               raise |Expected-CLI-entry-struct
           :examples $ []
-          :schema $ quote $ Fn Dynamic Tag
+          :schema $ quote $ Fn Input Tag
             -> $ Map Tag Dynamic
+            :generics Input
         'export-cli-file $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn export-cli-file (file templates)
             let
