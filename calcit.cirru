@@ -5749,8 +5749,9 @@
                 &struct:to-map raw
               decode-map-as raw $ Map Tag Dynamic
           :examples $ []
-          :schema $ quote $ Fn Dynamic Tag
+          :schema $ quote $ Fn Input Tag
             -> $ Map Tag Dynamic
+            :generics Input
         'map-field $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn map-field (data key) (get data key)
           :examples $ []
