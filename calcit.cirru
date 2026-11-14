@@ -6601,7 +6601,7 @@
                 :code $ cirru->tree syntax author timestamp
                 :source-entry $ Some $ format-cirru-edn raw
           :examples $ []
-          :schema $ quote $ Fn Dynamic Tag String Number (-> schema/CodeEntry) (:features :io)
+          :schema $ quote $ Fn Input Tag String Number (-> schema/CodeEntry) (:generics Input) (:features :io)
         'plan-namespace-changes $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn plan-namespace-changes (files saved-files selected templates)
             filter-map-kv (merge saved-files files)
@@ -10347,7 +10347,7 @@
           :code $ quote $ defn cirru->tree (xs author timestamp)
             schema/syntax->node (normalize-cirru xs) author timestamp
           :examples $ []
-          :schema $ quote $ Fn Dynamic String Number (-> schema/CirruNode) (:features :io)
+          :schema $ quote $ Fn Input String Number (-> schema/CirruNode) (:generics Input) (:features :io)
         'expr? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn expr? (x)
             and (struct? x)
