@@ -230,12 +230,6 @@
           :code $ quote $ defref *connecting? false
           :examples $ []
           :schema $ quote $ Ref Bool
-        '*states $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defref *states
-            {} $ :states $ {}
-              :cursor $ []
-          :examples $ []
-          :schema $ quote $ Ref (Map Tag Dynamic)
         '*store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *store None
           :examples $ []
@@ -247,7 +241,7 @@
               {}
                 :on-open $ fn (event) (simulate-login!) (detect-watching!) (heartbeat!)
                 :on-close $ fn (event) (reset! *store None) (reset! *connecting? false) (js/console.error "|Lost connection!")
-                  dispatch! $ app.client-updater/UiStateOp :states/clear
+                  app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states/clear
                 :on-data $ fn (data)
                   match data
                     (:patch changes)
@@ -286,12 +280,12 @@
               and config/dev? $ not= (&enum:nth op 0) :states
               js/console.info |Dispatch op
             match (updater/read-ui-state-op op)
-              (:some action) (swap! *states updater/apply-ui-state action)
+              (:some action) (updater/dispatch-ui! action)
               (:none)
                 do
                   when
                     contains? (#{} :effect/save-files :ir/indent :ir/unindent :ir/reset-files) (&enum:nth op 0)
-                    reset! *states $ updater/clear-editor @*states
+                    reset! updater/*states $ updater/clear-editor @updater/*states
                   send-op! op
             , &unit
           :examples $ []
@@ -316,7 +310,7 @@
             render-app!
             connect!
             add-watch! *store :changes on-store-change!
-            add-watch! *states :changes $ fn (states prev) (render-app!)
+            add-watch! updater/*states :changes $ fn (states prev) (render-app!)
             js/window.addEventListener |keydown $ fn (event)
               match @*store
                 (:some store)
@@ -361,8 +355,8 @@
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
-              do (clear-cache!) (render-app!) (remove-watch! *states :changes) (remove-watch! *store :changes)
-                add-watch! *states :changes $ fn (states prev) (render-app!)
+              do (clear-cache!) (render-app!) (remove-watch! updater/*states :changes) (remove-watch! *store :changes)
+                add-watch! updater/*states :changes $ fn (states prev) (render-app!)
                 add-watch! *store :changes on-store-change!
                 println "|Code updated."
                 tip! |ok~ nil
@@ -375,7 +369,7 @@
             respo.core/render-with! (mount-target)
               fn ()
                 hint-fn $ Fn $ -> respo.schema/Component
-                comp-container @*states @*store
+                comp-container @updater/*states @*store
               , dispatch!
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
@@ -420,6 +414,12 @@
             |@calcit/procs :refer $ disable-list-structure-check!
     'app.client-updater $ %{} 'FileEntry
       :defs $ {}
+        '*states $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defref *states
+            {} $ :states $ {}
+              :cursor $ []
+          :examples $ []
+          :schema $ quote $ Ref (Map Tag Dynamic)
         'UiStateOp $ %{} 'CodeEntry
           :doc "|Local Respo state changes. Widget data stays open, while cursor keys and merge patch structure are checked."
           :code $ quote $ defenum UiStateOp
@@ -497,12 +497,11 @@
                 assert= states $ clear-editor states
             :tags $ #{} :unit
         'dispatch-ui! $ %{} 'CodeEntry
-          :doc "|Send a typed client-state operation through the Respo dispatcher, which also accepts legacy wire events."
-          :code $ quote $ defn dispatch-ui! (dispatch! op) (dispatch! op)
+          :doc "|Apply a typed local UI operation to the client state."
+          :code $ quote $ defn dispatch-ui! (op)
+            do (swap! *states apply-ui-state op) &unit
           :examples $ []
-          :schema $ quote $ Fn
-            Fn AnyEnum $ -> Unit
-            , UiStateOp (-> Unit) (:open :decode)
+          :schema $ quote $ Fn UiStateOp (-> Unit) (:features :state)
         'draft-box $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn draft-box (states)
             assoc-in states ([] :editor :data :draft-box?) true
@@ -695,7 +694,7 @@
                   when
                     not $ blank? state
                     d! $ :: :analyze/abstract-def state
-                    app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor nil
+                    app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor nil
                     close-modal! d!
                   , &unit
               div ({})
@@ -706,7 +705,7 @@
                     hint-fn $ Fn respo.schema/RespoEvent
                       Fn *dispatch-op $ -> Unit
                       -> Unit
-                    app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ respo.core/event-value event
+                    app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ respo.core/event-value event
                   :on-keydown $ fn (event d!)
                     hint-fn $ Fn respo.schema/RespoEvent
                       Fn *dispatch-op $ -> Unit
@@ -922,7 +921,7 @@
                   a $ {} (:inner-text |Reset) (:class-name style/button)
                     :on-click $ fn (e d!)
                       d! $ :: :ir/reset-files
-                      d! $ app.client-updater/UiStateOp :states/clear
+                      app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states/clear
           :examples $ []
           :schema $ quote $ Fn respo.schema/States (Map String Dynamic) (-> respo.schema/Component)
         'style-column $ %{} 'CodeEntry (:doc |)
@@ -980,7 +979,7 @@
                       Fn *dispatch-op $ -> Unit
                       -> Unit
                     d! $ :: :ir/reset-ns ns-text
-                    app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states/clear
+                    app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states/clear
                 =< 24 nil
                 respo.core/show
                   not= :same $ :ns info
@@ -1032,7 +1031,7 @@
                     raise |Unknown-change-kind
                 (String name)
                   d! $ :: :ir/reset-at $ :: :def ns-text name
-              app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states/clear
+              app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states/clear
           :examples $ []
           :schema $ quote $ Fn String ChangeKind (-> respo.schema/EventHandler)
         'read-change-info $ %{} 'CodeEntry (:doc |)
@@ -1448,7 +1447,7 @@
                   hint-fn $ Fn
                     Fn *dispatch-op $ -> Unit
                     -> Unit
-                  app.client-updater/dispatch-ui! dispatch! $ app.client-updater/UiStateOp :states cursor nil
+                  app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor nil
                   close-modal! dispatch!
                   , &unit
               comp-modal close! $ match (app.schema/node-at-path expr focus)
@@ -1480,7 +1479,7 @@
                           hint-fn $ Fn respo.schema/RespoEvent
                             Fn *dispatch-op $ -> Unit
                             -> Unit
-                          app.client-updater/dispatch-ui! dispatch! $ app.client-updater/UiStateOp :states cursor $ respo.core/event-value event
+                          app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ respo.core/event-value event
                           , &unit
                         :on-keydown $ fn (event dispatch!)
                           hint-fn $ Fn respo.schema/RespoEvent
@@ -1633,7 +1632,7 @@
               dispatch! $ :: :ir/update-leaf $ {} (:text text)
                 :at $ now!
             when close?
-              app.client-updater/dispatch-ui! dispatch! $ app.client-updater/UiStateOp :states cursor nil
+              app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor nil
               close-modal! dispatch!
             , &unit
           :examples $ []
@@ -1833,7 +1832,7 @@
                             (:none)
                               d! $ :: :notify/push-message $ [] :warn "|Can not create a function!"
                         do
-                          app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :manual-state/abstract
+                          app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :manual-state/abstract
                           js/setTimeout $ fn () $ match (js-ffi.browser/query-selector |.el-abstract)
                             (:some el) (js-ffi.browser/element-focus! el)
                             (:none) &unit
@@ -1896,7 +1895,7 @@
                       hint-fn $ Fn respo.schema/RespoEvent
                         Fn *dispatch-op $ -> Unit
                         -> Unit
-                      app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ decode-map-as (:value e) 'String
+                      app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ decode-map-as (:value e) 'String
                   =< nil 8
                   div
                     {} (:class-name css/row)
@@ -1910,7 +1909,7 @@
                           let
                               imported $ app.source/import-cli-file state | 0
                             d! $ :: :ir/replace-file $ :source-view imported
-                        app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor nil
+                        app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor nil
                         d! $ :: :writer/draft-ns nil
           :examples $ []
           :schema $ quote $ Fn respo.schema/States app.schema/FileEntry (Map Tag String) (-> respo.schema/Component) (:features :io)
@@ -2021,7 +2020,7 @@
                   hint-fn $ Fn
                     Fn *dispatch-op $ -> Unit
                     -> Unit
-                  app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? false
+                  app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? false
                 plugin-code-gen $ use-gen-code (>> states :gen-code)
                   fn ()
                     hint-fn $ Fn $ -> String
@@ -2068,7 +2067,7 @@
                   hint-fn $ Fn
                     Fn *dispatch-op $ -> Unit
                     -> Unit
-                  app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? true
+                  app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? true
                 fn (d!)
                   hint-fn $ Fn
                     Fn *dispatch-op $ -> Unit
@@ -2156,7 +2155,7 @@
                       match
                         .unwrap $ nth result 1
                         (:def a-ns a-def)
-                          d! $ app.client-updater/UiStateOp :states cursor $ {} (:ns a-ns) (:def a-def)
+                          app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ {} (:ns a-ns) (:def a-def)
                 bookmark $ app.util/to-bookmark $ Some writer
               [] (effect-navigate bookmark)
                 div
@@ -2527,7 +2526,7 @@
                   now $ util/now!
                   text $ decode-map-as (:value e) 'String
                 d! $ :: :ir/update-leaf $ {} (:text text) (:at now)
-                app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ -> state (assoc :text text) (assoc :at now)
+                app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ -> state (assoc :text text) (assoc :at now)
               , &unit
           :examples $ []
           :schema $ quote $ Fn LeafState (List String) (List respo.schema/CoordKey) (-> respo.schema/EventHandler) (:features :js-ffi)
@@ -2614,7 +2613,7 @@
                           any? $ fn (x)
                             starts-with? (:text leaf) x
                         do
-                          app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :manual-state/draft-box
+                          app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :manual-state/draft-box
                           js/setTimeout $ fn () $ match (js-ffi.browser/query-selector |.el-draft-box)
                             (:some el) (js-ffi.browser/element-focus! el)
                             (:none) &unit
@@ -2701,7 +2700,7 @@
               hint-fn $ Fn respo.schema/RespoEvent
                 Fn *dispatch-op $ -> Unit
                 -> Unit
-              app.client-updater/dispatch-ui! dispatch! $ app.client-updater/UiStateOp :states cursor $ assoc state k (respo.core/event-value e)
+              app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state k (respo.core/event-value e)
           :examples $ []
           :schema $ quote $ Fn (Map Tag String) (List respo.schema/CoordKey) Tag (-> respo.schema/EventHandler)
         'on-submit $ %{} 'CodeEntry (:doc |)
@@ -2973,13 +2972,13 @@
                   hint-fn $ Fn
                     Fn *dispatch-op $ -> Unit
                     -> Unit
-                  app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :draft-box? false
+                  app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :draft-box? false
                   , &unit
                 close-abstract! $ fn (d!)
                   hint-fn $ Fn
                     Fn *dispatch-op $ -> Unit
                     -> Unit
-                  app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :abstract? false
+                  app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :abstract? false
                   , &unit
                 plugin-gen-code-box $ use-gen-code-box (>> states :gen-code-plugin) expr focus
               div
@@ -3347,7 +3346,7 @@
               hint-fn $ Fn respo.schema/RespoEvent
                 Fn *dispatch-op $ -> Unit
                 -> Unit
-              app.client-updater/dispatch-ui! dispatch! $ app.client-updater/UiStateOp :states cursor $ assoc state :draft-box?
+              app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :draft-box?
                 not $ .unwrap-or (get state :draft-box?) false
               js-ffi.browser/set-timeout!
                 fn () $ match (js-ffi.browser/query-selector |.el-draft-box)
@@ -3399,7 +3398,7 @@
             d! $ :: :ir/reset-at $ match bookmark
               (:ns ns' f) (:: :ns ns')
               (:def ns' def' f) (:: :def ns' def')
-            app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states/clear
+            app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states/clear
           :examples $ []
           :schema $ quote $ Fn app.bookmark/%bookmark
             Fn *dispatch-op $ -> Unit
@@ -3629,7 +3628,7 @@
                       hint-fn $ Fn respo.schema/RespoEvent
                         Fn *dispatch-op $ -> Unit
                         -> Unit
-                      d! $ app.client-updater/UiStateOp :states cursor $ assoc state :def-text (:value e)
+                      app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :def-text (:value e)
                       , &unit
                 =< nil 8
                 list->
@@ -4376,7 +4375,7 @@
               match self $
                 :rename-plugin node cursor state
                 do
-                  app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc
+                  app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc
                     assoc (assoc state :old-name |) :new-name |
                     , :show? true
                   js-ffi.browser/set-timeout!
@@ -4391,7 +4390,7 @@
                 -> Unit
               match self $
                 :rename-plugin node cursor state
-                app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? false
+                app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? false
           :examples $ []
           :schema $ quote Impl
         'RenamePluginTrait $ %{} 'CodeEntry (:doc |)
@@ -4456,7 +4455,7 @@
                       not $ blank? $ :old-name state
                       not $ = (:new-name state) |
                     on-replace (:old-name state) (:new-name state) d!
-                    app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? false
+                    app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? false
                   , &unit
                 node $ comp-modal
                   {} (:title "|Replace variable")
@@ -4481,7 +4480,7 @@
                               hint-fn $ Fn respo.schema/RespoEvent
                                 Fn *dispatch-op $ -> Unit
                                 -> Unit
-                              app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :old-name (respo.core/event-value e)
+                              app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :old-name (respo.core/event-value e)
                         respo.comp.space/space-y 8
                         div ({})
                           input $ {} (:placeholder |to...)
@@ -4490,7 +4489,7 @@
                               hint-fn $ Fn respo.schema/RespoEvent
                                 Fn *dispatch-op $ -> Unit
                                 -> Unit
-                              app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :new-name (respo.core/event-value e)
+                              app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :new-name (respo.core/event-value e)
                             :value $ :new-name state
                             :on-keydown $ fn (e d!)
                               hint-fn $ Fn respo.schema/RespoEvent
@@ -4515,7 +4514,7 @@
                     hint-fn $ Fn
                       Fn *dispatch-op $ -> Unit
                       -> Unit
-                    app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? false
+                    app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :show? false
               %:: %rename-plugin :rename-plugin node cursor state
           :examples $ []
           :schema $ quote $ Fn respo.schema/States
@@ -4637,7 +4636,7 @@
                                 span $ {} (:inner-text |import) (:class-name style-use-ns)
                                   :on-click $ fn (e d!)
                                     d! $ :: :analyze/use-import-def bookmark
-                                    d! $ app.client-updater/UiStateOp :states cursor initial-state
+                                    app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor initial-state
                           (:def _namespace _name _focus) (raise |Expected-namespace-search-candidate)
                 div $ {} $ :class-name css/flex
                 div
@@ -4667,7 +4666,7 @@
               hint-fn $ Fn respo.schema/RespoEvent
                 Fn *dispatch-op $ -> Unit
                 -> Unit
-              app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ -> state
+              app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ -> state
                 assoc :query $ decode-map-as (:value e) 'String
                 assoc :selection 0
           :examples $ []
@@ -4690,27 +4689,27 @@
                           if (.-shift-key? keyboard)
                             d! $ :: :analyze/use-import-def selected-target
                             d! $ :: :writer/select selected-target
-                          app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor initial-state
+                          app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor initial-state
                       (:none) &unit
                   (= keycode/up code)
                     do (.prevent-default! keyboard)
                       when
                         > (search-selection state) 0
-                        app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :selection
+                        app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :selection
                           dec $ search-selection state
                   (= keycode/escape code)
                     do
                       d! $ app.updater.router/route-op $ app.updater.router/Route :editor
-                      app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor initial-state
+                      app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor initial-state
                   (= keycode/down code)
                     do (.prevent-default! keyboard)
                       when
                         < (search-selection state)
                           dec $ .len candidates
-                        app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :selection
+                        app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :selection
                           inc $ search-selection state
                   (and (.-meta-key? keyboard) (= keycode/b code))
-                    app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor $ assoc state :mode
+                    app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :mode
                       if
                         = (:mode state) :ns
                         , :def :ns
@@ -4725,7 +4724,7 @@
                 Fn *dispatch-op $ -> Unit
                 -> Unit
               d! $ :: :writer/select bookmark
-              app.client-updater/dispatch-ui! d! $ app.client-updater/UiStateOp :states cursor initial-state
+              app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor initial-state
           :examples $ []
           :schema $ quote $ Fn app.bookmark/%bookmark (List respo.schema/CoordKey) (-> respo.schema/EventHandler)
         'query-length $ %{} 'CodeEntry (:doc |)
@@ -4858,7 +4857,7 @@
                 {}
                   :class-name $ str-spaced css/font-fancy style-theme-menu
                   :on-click $ fn (_event dispatch!)
-                    dispatch! $ app.client-updater/UiStateOp :states cursor $ not state
+                    app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ not state
                     , &unit
                 <> label
                 if state
@@ -4878,7 +4877,7 @@
                               :class-name style-menu-item
                               :on-click $ fn (_event dispatch!)
                                 dispatch! $ :: :user/change-theme name
-                                dispatch! $ app.client-updater/UiStateOp :states cursor false
+                                app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor false
                                 , &unit
                             <> $ str name
                   span $ {}
