@@ -5546,6 +5546,9 @@
               :source-entry $ Option String
           :examples $ []
           :schema $ quote StructDef
+        'DefaultConfigValue $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion DefaultConfigValue Number String (List String)
+          :examples $ []
         'DependencyKey $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum DependencyKey (:def String String) (:reference String String)
           :examples $ []
@@ -5644,7 +5647,7 @@
               :modules $ []
               :version |0.0.1
           :examples $ []
-          :schema $ quote $ Map Tag Dynamic
+          :schema $ quote $ Map Tag DefaultConfigValue
         'database $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def database
             {}
