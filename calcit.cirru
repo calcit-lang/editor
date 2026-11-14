@@ -8471,8 +8471,6 @@
         'wire-dependency-map $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn wire-dependency-map (relations)
             filter-map-kv relations $ fn (key linked)
-              hint-fn $ Fn schema/DependencyKey (Set schema/DependencyKey)
-                -> $ MapEntryDecision AnyEnum $ Set AnyEnum
               MapEntryDecision :keep (dependency-key->wire key) (.map linked dependency-key->wire)
           :examples $ []
           :schema $ quote $ Fn
