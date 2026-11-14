@@ -2016,7 +2016,7 @@
                     {} $ :show? false
                     app.schema/open-state-fields $ .unwrap-or (app.schema/map-field states :data) ({})
                   , CodeBoxState
-                selected $ app.schema/node-at-path (app.schema/read-node expr) focus
+                selected $ app.schema/node-at-path expr focus
                 close-modal! $ fn (d!)
                   hint-fn $ Fn
                     Fn *dispatch-op $ -> Unit
@@ -2075,7 +2075,7 @@
                     -> Unit
                   .reset-state plugin-code-gen d!
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States Dynamic (List String) (-> app.comp.gen-code-box/%gen-code-box-action) (:features :io :js-ffi)
+          :schema $ quote $ Fn respo.schema/States app.schema/CirruNode (List String) (-> app.comp.gen-code-box/%gen-code-box-action) (:features :io :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.gen-code-box
           :require
