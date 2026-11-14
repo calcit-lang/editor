@@ -512,28 +512,31 @@
         'read-ui-state-op $ %{} 'CodeEntry
           :doc "|Adapt the anonymous state events still emitted by Respo plugins."
           :code $ quote $ defn read-ui-state-op (op)
-            if
-              = (enum-definition op) (Some UiStateOp)
-              Some $ decode-map-as op 'app.client-updater/UiStateOp
-              match op
-                (:states cursor value)
-                  Some $ UiStateOp :states
-                    decode-map-as cursor $ List respo.schema/CoordKey
-                    , value
-                (:states-merge cursor initial changes)
-                  Some $ UiStateOp :states-merge
-                    decode-map-as cursor $ List respo.schema/CoordKey
-                    , initial $ decode-map-as changes (Map Tag Dynamic)
-                (:states/clear)
-                  Some $ UiStateOp :states/clear
-                (:manual-state/abstract)
-                  Some $ UiStateOp :manual-state/abstract
-                (:manual-state/draft-box)
-                  Some $ UiStateOp :manual-state/draft-box
-                _ None
+            if (enum? op)
+              if
+                = (enum-definition op) (Some UiStateOp)
+                Some $ decode-map-as op 'app.client-updater/UiStateOp
+                match op
+                  (:states cursor value)
+                    Some $ UiStateOp :states
+                      decode-map-as cursor $ List respo.schema/CoordKey
+                      , value
+                  (:states-merge cursor initial changes)
+                    Some $ UiStateOp :states-merge
+                      decode-map-as cursor $ List respo.schema/CoordKey
+                      , initial $ decode-map-as changes (Map Tag Dynamic)
+                  (:states/clear)
+                    Some $ UiStateOp :states/clear
+                  (:manual-state/abstract)
+                    Some $ UiStateOp :manual-state/abstract
+                  (:manual-state/draft-box)
+                    Some $ UiStateOp :manual-state/draft-box
+                  _ None
+              , None
           :examples $ []
-          :schema $ quote $ Fn AnyEnum
+          :schema $ quote $ Fn Input
             -> $ Option UiStateOp
+            :generics Input
             :open :decode
           :tests $ [] $ %{} 'TestEntry (:name |typed-state-and-legacy-plugin)
             :code $ quote $ let
