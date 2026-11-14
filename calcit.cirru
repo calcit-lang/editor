@@ -10436,9 +10436,7 @@
               (list? raw)
                 map
                   decode-map-as raw $ List Dynamic
-                  fn (child)
-                    hint-fn $ Fn Dynamic $ -> Dynamic
-                    normalize-legacy-cirru-data child
+                  , normalize-legacy-cirru-data
               (string? raw) raw
               true $ raise |Expected-Cirru-string-or-list
           :examples $ []
