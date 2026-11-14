@@ -909,7 +909,7 @@
               respo.core/data-list-> ({})
                 -> changed-files (&map:to-list)
                   map $ fn (pair)
-                    hint-fn $ Fn (Tuple String Dynamic)
+                    hint-fn $ Fn (Tuple String V)
                       -> $ Tuple String respo.schema/Component
                     let[] (k info) pair $ [] k $ comp-changed-info (app.comp.changed-info/read-change-info info) (assert-type k String)
               if (empty? changed-files)
@@ -925,7 +925,7 @@
                       d! $ :: :ir/reset-files
                       app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states/clear
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States (Map String Dynamic) (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States (Map String V) (-> respo.schema/Component) (:generics V)
         'style-column $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-column
             {} $ |& $ {} (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
@@ -5549,6 +5549,7 @@
         'DefaultConfigValue $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion DefaultConfigValue Number String (List String)
           :examples $ []
+          :schema $ quote UnionDef
         'DependencyKey $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum DependencyKey (:def String String) (:reference String String)
           :examples $ []
