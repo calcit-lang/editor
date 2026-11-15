@@ -909,7 +909,7 @@
               respo.core/data-list-> ({})
                 -> changed-files (&map:to-list)
                   map $ fn (pair)
-                    hint-fn $ Fn (Tuple String Dynamic)
+                    hint-fn $ Fn (Tuple String V)
                       -> $ Tuple String respo.schema/Component
                     let[] (k info) pair $ [] k $ comp-changed-info (app.comp.changed-info/read-change-info info) (assert-type k String)
               if (empty? changed-files)
@@ -925,7 +925,7 @@
                       d! $ :: :ir/reset-files
                       app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states/clear
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States (Map String Dynamic) (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States (Map String V) (-> respo.schema/Component) (:generics V)
         'style-column $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle style-column
             {} $ |& $ {} (:overflow :auto) (:padding-top 24) (:padding-bottom 120)
@@ -1243,7 +1243,7 @@
               app.schema/read-optional-text $ get configs key
               , |
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) Tag (-> String)
+          :schema $ quote $ Fn (Map Tag V) Tag (-> String) (:generics V)
         'parse-modules $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-modules (text)
             filter-not
@@ -3529,7 +3529,7 @@
               {} $ :style style-missing
               <> "|Expression is missing!"
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote respo.schema/Element
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.page-editor
           :require
@@ -5546,6 +5546,10 @@
               :source-entry $ Option String
           :examples $ []
           :schema $ quote StructDef
+        'DefaultConfigValue $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion DefaultConfigValue Number String (List String)
+          :examples $ []
+          :schema $ quote UnionDef
         'DependencyKey $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum DependencyKey (:def String String) (:reference String String)
           :examples $ []
@@ -5644,7 +5648,7 @@
               :modules $ []
               :version |0.0.1
           :examples $ []
-          :schema $ quote $ Map Tag Dynamic
+          :schema $ quote $ Map Tag DefaultConfigValue
         'database $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def database
             {}
@@ -6411,8 +6415,9 @@
           :code $ quote $ defn editor-archive-state (db)
             select-keys db $ [] :package :files :saved-files :configs :saved-configs :entries :saved-entries :users :source-revision :source-manifest-revision
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic)
-            -> $ Map Tag Dynamic
+          :schema $ quote $ Fn (Map Tag V)
+            -> $ Map Tag V
+            :generics V
           :tests $ [] $ %{} 'TestEntry (:name |retain-baselines-without-runtime-state)
             :code $ quote $ let
                 archive $ editor-archive-state $ {}
@@ -7633,8 +7638,9 @@
         'keys-set $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn keys-set (x) (keys x)
           :examples $ []
-          :schema $ quote $ Fn (Map String Dynamic)
+          :schema $ quote $ Fn (Map String V)
             -> $ Set String
+            :generics V
         'render-changed-files $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-changed-files (files saved-files)
             filter-map-kv (merge files saved-files)
@@ -10327,6 +10333,9 @@
             app.util :refer $ bookmark->path to-writer to-bookmark push-info cirru->tree stringify-s-expr
     'app.util $ %{} 'FileEntry
       :defs $ {}
+        'DataPathSegment $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion DataPathSegment Tag Number
+          :examples $ []
         'ImportBinding $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum ImportBinding (:as String) (:refer String)
           :examples $ []
@@ -10389,7 +10398,7 @@
         'kinds $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def kinds (#{} :ns :def)
           :examples $ []
-          :schema $ quote Dynamic
+          :schema $ quote $ Set Tag
         'leaf? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn leaf? (x)
             and (struct? x)
@@ -10538,7 +10547,7 @@
           :code $ quote $ defn prepend-data (x) ([] :data x)
           :examples $ []
           :schema $ quote $ Fn Number
-            -> $ List Dynamic
+            -> $ List DataPathSegment
         'push-info $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn push-info (op-id op-time text) (push-notification :info op-id op-time text)
           :examples $ []
@@ -10596,8 +10605,9 @@
                   , 'Number
               nth stack pointer
           :examples $ []
-          :schema $ quote $ Fn (Option Dynamic)
+          :schema $ quote $ Fn (Option V)
             -> $ Option app.bookmark/%bookmark
+            :generics V
           :tests $ [] $ %{} 'TestEntry
             :name |missing-writer-and-stale-pointer-have-no-bookmark
             :code $ quote $ let
