@@ -3559,7 +3559,7 @@
     'app.comp.page-files $ %{} 'FileEntry
       :defs $ {}
         'comp-file $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defcomp comp-file (states selected-ns defs-dict highlights configs)
+          :code $ quote $ defcomp comp-file (states selected-ns defs-dict highlights)
             let
                 cursor $ respo.core/state-cursor states
                 state $ respo.core/pick-state states
@@ -3689,7 +3689,7 @@
                 .render duplicate-plugin
                 .render add-plugin
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States String (Map String String) (Set app.bookmark/%bookmark) (Map Tag Dynamic) (-> respo.schema/Component)
+          :schema $ quote $ Fn respo.schema/States String (Map String String) (Set app.bookmark/%bookmark) (-> respo.schema/Component)
         'comp-namespace-list $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-namespace-list (states ns-dict selected-ns ns-highlights)
             let
@@ -3811,9 +3811,7 @@
                     decode-map-as
                       .unwrap-or (get router-data :defs-dict) {}
                       Map String String
-                    , highlights $ decode-map-as
-                      .unwrap-or (get router-data :file-configs) {}
-                      Map Tag Dynamic
+                    , highlights
                   render-empty
                 =< 32 nil
                 comp-changed-files (>> states :files)
