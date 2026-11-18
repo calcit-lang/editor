@@ -4,7 +4,7 @@
   :package |app
   :entries $ {}
     :client $ {} (:description |) (:init-fn 'app.client/main!) (:mode :js) (:reload-fn 'app.client/reload!) (:target :browser)
-      :feature-policy $ {}
+      :feature-policy $ {} (:io :warn) (:state :warn)
       :modules $ [] |recollect/ |respo.calcit/ |respo-ui.calcit/ |respo-message.calcit/ |cumulo-util.calcit/ |ws-edn.calcit/ |respo-feather.calcit/ |alerts.calcit/ |respo-markdown.calcit/ |bisection-key/ |gen-code/ |js-ffi/
       :type-slots $ {} $ :dispatch-op 'app.schema/DispatchOp
     :default $ {} (:description |) (:init-fn 'app.server/main!) (:mode :js) (:reload-fn 'app.server/reload!) (:target :node)
@@ -15,12 +15,9 @@
     'app.bookmark $ %{} 'FileEntry
       :defs $ {}
         '%bookmark $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def %bookmark
-            impl-traits
-              defenum %bookmark
-                :def String String $ List String
-                :ns String $ List String
-              , BookmarkImpl
+          :code $ quote $ defenum %bookmark (:impls BookmarkTrait)
+            :def String String $ List String
+            :ns String $ List String
           :examples $ []
           :schema $ quote EnumDef
         'Bookmark $ %{} 'CodeEntry
@@ -32,7 +29,7 @@
           :examples $ []
           :schema $ quote $ Fn app.bookmark/%bookmark (-> app.bookmark/%bookmark)
         'BookmarkImpl $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defimpl BookmarkImpl BookmarkTrait
+          :code $ quote $ defimpl %bookmark BookmarkTrait
             .get-focus $ fn (self)
               hint-fn $ Fn app.bookmark/%bookmark $ -> (List String)
               match self
@@ -849,7 +846,7 @@
           :code $ quote $ defn on-pick (bookmark idx)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               let
                   event $ js-ffi.browser/mouse-event-host $ :original-event e
@@ -1009,7 +1006,7 @@
           :code $ quote $ defn on-preview (ns-text kind status)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               match kind
                 (Tag namespace-kind)
@@ -1024,7 +1021,7 @@
           :code $ quote $ defn on-reset-def (ns-text kind)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               match kind
                 (Tag namespace-kind)
@@ -1447,7 +1444,7 @@
                 cursor $ respo.core/state-cursor states
                 close! $ fn (dispatch!)
                   hint-fn $ Fn
-                    Fn *dispatch-op $ -> Unit
+                    Fn *dispatch-op (-> Unit) (:features :io :state)
                     -> Unit
                   app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor nil
                   close-modal! dispatch!
@@ -1509,7 +1506,7 @@
           :examples $ []
           :schema $ quote $ Fn respo.schema/States app.schema/CirruNode (List String)
             Fn
-              Fn *dispatch-op $ -> Unit
+              Fn *dispatch-op (-> Unit) (:features :io :state)
               -> Unit
             -> respo.schema/Component
             :features :js-ffi
@@ -1561,14 +1558,14 @@
           :code $ quote $ defn on-submit (expression? text cursor close-modal! close?)
             fn (_event dispatch!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               submit-draft! expression? text cursor close-modal! close? dispatch!
               , &unit
           :examples $ []
           :schema $ quote $ Fn Bool String (List respo.schema/CoordKey)
             Fn
-              Fn *dispatch-op $ -> Unit
+              Fn *dispatch-op (-> Unit) (:features :io :state)
               -> Unit
             , Bool (-> respo.schema/EventHandler) (:features :js-ffi)
         'parse-draft-expression $ %{} 'CodeEntry (:doc |)
@@ -1640,10 +1637,10 @@
           :examples $ []
           :schema $ quote $ Fn Bool String (List respo.schema/CoordKey)
             Fn
-              Fn *dispatch-op $ -> Unit
+              Fn *dispatch-op (-> Unit) (:features :io :state)
               -> Unit
             , Bool
-              Fn *dispatch-op $ -> Unit
+              Fn *dispatch-op (-> Unit) (:features :io :state)
               -> Unit
               :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
@@ -1741,7 +1738,7 @@
           :code $ quote $ defn on-keydown (coord expr picker-mode?)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               let
                   event $ js-ffi.browser/keyboard-event-host $ :original-event e
@@ -1929,19 +1926,20 @@
     'app.comp.gen-code-box $ %{} 'FileEntry
       :defs $ {}
         '%gen-code-box-action $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def %gen-code-box-action (impl-traits %gen-code-box-action0 GenCodeBoxActionImpl)
+          :code $ quote $ def %gen-code-box-action %gen-code-box-action0
           :examples $ []
           :schema $ quote EnumDef
         '%gen-code-box-action0 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def %gen-code-box-action0
-            defenum %gen-code-box-action0 $ :plugin
-              Fn $ -> $ Option respo.schema/Component
-              Fn
-                Fn *dispatch-op $ -> Unit
-                -> Unit
-              Fn
-                Fn *dispatch-op $ -> Unit
-                -> Unit
+            defenum %gen-code-box-action0 (:impls GenCodeBoxActionTrait)
+              :plugin
+                Fn $ -> $ Option respo.schema/Component
+                Fn
+                  Fn *dispatch-op $ -> Unit
+                  -> Unit
+                Fn
+                  Fn *dispatch-op $ -> Unit
+                  -> Unit
           :examples $ []
           :schema $ quote EnumDef
         'CodeBoxState $ %{} 'CodeEntry (:doc |)
@@ -1949,7 +1947,7 @@
           :examples $ []
           :schema $ quote StructDef
         'GenCodeBoxActionImpl $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defimpl GenCodeBoxActionImpl GenCodeBoxActionTrait
+          :code $ quote $ defimpl %gen-code-box-action0 GenCodeBoxActionTrait
             .render $ fn (self)
               hint-fn $ Fn app.comp.gen-code-box/%gen-code-box-action0 $ -> (Option respo.schema/Component)
               match self $
@@ -2509,7 +2507,7 @@
           :code $ quote $ defn on-focus (leaf coord picker-mode?)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               if picker-mode?
                 do
@@ -2522,7 +2520,7 @@
           :code $ quote $ defn on-input (state coord cursor)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               let
                   now $ util/now!
@@ -2536,7 +2534,7 @@
           :code $ quote $ defn on-keydown (state leaf coord picker-mode?)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               let
                   event $ js-ffi.browser/keyboard-event-host $ :original-event e
@@ -2699,7 +2697,7 @@
           :code $ quote $ defn on-input (state cursor k)
             fn (e dispatch!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state k (respo.core/event-value e)
           :examples $ []
@@ -2708,7 +2706,7 @@
           :code $ quote $ defn on-submit (username password signup?)
             fn (e dispatch!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               dispatch! $ if signup?
                 :: :user/sign-up $ [] username password
@@ -2971,7 +2969,7 @@
                 readonly? false
                 close-draft-box! $ fn (d!)
                   hint-fn $ Fn
-                    Fn *dispatch-op $ -> Unit
+                    Fn *dispatch-op (-> Unit) (:features :io :state)
                     -> Unit
                   app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :draft-box? false
                   , &unit
@@ -3345,7 +3343,7 @@
           :code $ quote $ defn on-draft-box (state cursor)
             fn (_event dispatch!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ assoc state :draft-box?
                 not $ .unwrap-or (get state :draft-box?) false
@@ -3361,7 +3359,7 @@
           :code $ quote $ defn on-path-gen! (bookmark)
             fn (_event d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               match bookmark
                 (:def ns' def' f)
@@ -4353,16 +4351,17 @@
     'app.comp.replace-name $ %{} 'FileEntry
       :defs $ {}
         '%rename-plugin $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def %rename-plugin (impl-traits %rename-plugin0 RenamePluginImpl)
+          :code $ quote $ def %rename-plugin %rename-plugin0
           :examples $ []
           :schema $ quote EnumDef
         '%rename-plugin0 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def %rename-plugin0
-            defenum %rename-plugin0 $ :rename-plugin respo.schema/Component (List Tag) RenameState
+            defenum %rename-plugin0 (:impls RenamePluginTrait)
+              :rename-plugin respo.schema/Component (List Tag) RenameState
           :examples $ []
           :schema $ quote EnumDef
         'RenamePluginImpl $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defimpl RenamePluginImpl RenamePluginTrait
+          :code $ quote $ defimpl %rename-plugin0 RenamePluginTrait
             .render $ fn (self)
               hint-fn $ Fn app.comp.replace-name/%rename-plugin0 $ -> respo.schema/Component
               match self $
@@ -4664,7 +4663,7 @@
           :code $ quote $ defn on-input (state cursor)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor $ -> state
                 assoc :query $ decode-map-as (:value e) 'String
@@ -4675,7 +4674,7 @@
           :code $ quote $ defn on-keydown (state candidates cursor)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               let
                   keyboard $ js-ffi.browser/keyboard-event-host $ :original-event e
@@ -4721,7 +4720,7 @@
           :code $ quote $ defn on-select (bookmark cursor)
             fn (e d!)
               hint-fn $ Fn respo.schema/RespoEvent
-                Fn *dispatch-op $ -> Unit
+                Fn *dispatch-op (-> Unit) (:features :io :state)
                 -> Unit
               d! $ :: :writer/select bookmark
               app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states cursor initial-state
@@ -5235,11 +5234,11 @@
     'app.schema $ %{} 'FileEntry
       :defs $ {}
         'CirruExpr $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def CirruExpr (impl-traits CirruExprShape CirruExprMethods)
+          :code $ quote $ def CirruExpr CirruExprShape
           :examples $ []
           :schema $ quote StructDef
         'CirruExprMethods $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defimpl CirruExprMethods app.schema/CirruExprTrait
+          :code $ quote $ defimpl CirruExprShape app.schema/CirruExprTrait
             .get $ fn (self p)
               hint-fn $ Fn CirruExprShape String $ -> (Option app.schema/CirruNode)
               get (:data self) p
@@ -5442,6 +5441,7 @@
         'CirruExprShape $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct :Expr (:by String) (:at Number)
             :data $ Map String app.schema/CirruNode
+            :impls app.schema/CirruExprTrait
           :examples $ []
           :schema $ quote StructDef
         'CirruExprTrait $ %{} 'CodeEntry (:doc |)
@@ -5486,11 +5486,11 @@
           :examples $ []
           :schema $ quote Trait
         'CirruLeaf $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def CirruLeaf (impl-traits CirruLeafShape CirruLeafMethods)
+          :code $ quote $ def CirruLeaf CirruLeafShape
           :examples $ []
           :schema $ quote StructDef
         'CirruLeafMethods $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defimpl CirruLeafMethods app.schema/CirruLeafTrait
+          :code $ quote $ defimpl CirruLeafShape app.schema/CirruLeafTrait
             .= $ fn (self x)
               hint-fn $ Fn CirruLeafShape app.schema/CirruNode $ -> Bool
               match x
@@ -5520,7 +5520,7 @@
               assert= false $ app.client-util/leaf? |keep
             :tags $ #{} :unit
         'CirruLeafShape $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct :Leaf (:at Number) (:by String) (:text String)
+          :code $ quote $ defstruct :Leaf (:at Number) (:by String) (:text String) (:impls app.schema/CirruLeafTrait)
           :examples $ []
           :schema $ quote StructDef
         'CirruLeafTrait $ %{} 'CodeEntry (:doc |)
@@ -6278,8 +6278,8 @@
               :class-mapper $ {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf)
           :examples $ []
           :schema $ quote $ Fn
-            Fn Dynamic String $ -> Unit
-            , Number (-> ws-edn.server/NodeWebSocketServerHost) (:features :io :js-ffi)
+            Fn Dynamic String (-> Unit) (:features :io :js-ffi :state)
+            , Number (-> ws-edn.server/NodeWebSocketServerHost) (:features :io :js-ffi :state)
         'save-files! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-files! (selected sid)
             try
@@ -10783,7 +10783,7 @@
               , &unit
           :examples $ []
           :schema $ quote $ Fn
-            Fn *dispatch-op $ -> Unit
+            Fn *dispatch-op (-> Unit) (:features :io :state)
             , String String (-> Unit) (:features :js-ffi)
         'focus! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn focus! ()
@@ -10960,7 +10960,7 @@
               , &unit
           :examples $ []
           :schema $ quote $ Fn
-            Fn *dispatch-op $ -> Unit
+            Fn *dispatch-op (-> Unit) (:features :io :state)
             -> Unit
             :features :io :js-ffi
         'on-window-keydown $ %{} 'CodeEntry (:doc |)
@@ -10996,9 +10996,9 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn js-ffi.browser/KeyboardEventHost
-            Fn *dispatch-op $ -> Unit
+            Fn *dispatch-op (-> Unit) (:features :io :js-ffi :state)
             -> Unit
-            :features :js-ffi
+            :features :io :js-ffi :state
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.util.shortcuts
           :require (app.keycode :as keycode)
