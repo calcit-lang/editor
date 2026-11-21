@@ -7841,15 +7841,17 @@
             twig-user $ lookup-session-user users session
           :examples $ []
           :schema $ quote $ Fn
-            Map String $ Map Tag Dynamic
-            Map Tag Dynamic
-            -> $ Map Tag Dynamic
+            Map String $ Map Tag V
+            Map Tag K
+            -> $ Map Tag V
+            :generics K V
         'twig-user $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn twig-user (user)
             -> user $ dissoc :password
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic)
-            -> $ Map Tag Dynamic
+          :schema $ quote $ Fn (Map Tag V)
+            -> $ Map Tag V
+            :generics V
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.twig.user (:require)
     'app.twig.watching $ %{} 'FileEntry
