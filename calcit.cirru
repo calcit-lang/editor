@@ -10209,7 +10209,7 @@
                 _ $ raise "|Unknown editor bookmark target"
               raise "|Expected editor bookmark target enum"
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> app.bookmark/%bookmark)
+          :schema $ quote $ Fn Input (-> app.bookmark/%bookmark) (:generics Input)
         'remove-idx $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn remove-idx (db idx session-id op-id op-time)
             decode-map-as
