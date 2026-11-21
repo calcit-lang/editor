@@ -7414,8 +7414,9 @@
                     (:some file)
                       get (:defs file) name
           :examples $ []
-          :schema $ quote $ Fn (Map String app.schema/FileEntry) (Map Tag Dynamic)
+          :schema $ quote $ Fn (Map String app.schema/FileEntry) (Map Tag V)
             -> $ Option app.schema/CodeEntry
+            :generics V
         'pick-from-ns $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pick-from-ns (ns-info)
             let
