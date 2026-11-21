@@ -1157,7 +1157,7 @@
                         Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show modules-plugin dispatch! $ fn (raw)
-                        hint-fn $ Fn Dynamic $ -> Unit
+                        hint-fn $ Fn String $ -> Unit
                         dispatch! $ :: :configs/update $ {}
                           :modules $ parse-modules $ decode-map-as raw 'String
                         , &unit
@@ -1170,7 +1170,7 @@
                         Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show init-fn-plugin dispatch! $ fn (raw)
-                        hint-fn $ Fn Dynamic $ -> Unit
+                        hint-fn $ Fn String $ -> Unit
                         dispatch! $ :: :configs/update $ {}
                           :init-fn $ decode-map-as raw 'String
                         , &unit
@@ -1183,7 +1183,7 @@
                         Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show reload-fn-plugin dispatch! $ fn (raw)
-                        hint-fn $ Fn Dynamic $ -> Unit
+                        hint-fn $ Fn String $ -> Unit
                         dispatch! $ :: :configs/update $ {}
                           :reload-fn $ decode-map-as raw 'String
                         , &unit
@@ -1222,7 +1222,7 @@
                       Fn *dispatch-op $ -> Unit
                       -> Unit
                     .show plugin dispatch! $ fn (raw)
-                      hint-fn $ Fn Dynamic $ -> Unit
+                      hint-fn $ Fn String $ -> Unit
                       dispatch! $ :: :configs/update-entries $ [] :reset
                         parse-cirru-edn $ decode-map-as raw 'String
                       , &unit
@@ -3582,7 +3582,7 @@
                         Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show duplicate-plugin d! $ fn (raw-result)
-                        hint-fn $ Fn Dynamic $ -> Unit
+                        hint-fn $ Fn String $ -> Unit
                         let
                             result $ decode-map-as raw-result 'String
                           if
@@ -3609,7 +3609,7 @@
                         Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show add-plugin d! $ fn (raw-result)
-                        hint-fn $ Fn Dynamic $ -> Unit
+                        hint-fn $ Fn String $ -> Unit
                         let
                             result $ decode-map-as raw-result 'String
                           let
@@ -3713,7 +3713,7 @@
                         Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show plugin-add-ns d! $ fn (result)
-                        hint-fn $ Fn Dynamic $ -> Unit
+                        hint-fn $ Fn String $ -> Unit
                         let
                             text $ trim $ decode-map-as result 'String
                           when-not (blank? text)
@@ -4286,7 +4286,7 @@
                           Fn *dispatch-op $ -> Unit
                           -> Unit
                         .show rename-plugin d! $ fn (raw-result)
-                          hint-fn $ Fn Dynamic $ -> Unit
+                          hint-fn $ Fn String $ -> Unit
                           let
                               result $ decode-map-as raw-result 'String
                             d! $ :: :user/nickname $ trim result
