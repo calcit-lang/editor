@@ -9603,7 +9603,7 @@
               (:ok value) (decode-map-as value 'String)
               (:err _error) (raise |Missing-session-user-id)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) String (-> String)
+          :schema $ quote $ Fn (Map Tag V) String (-> String) (:generics V)
         'sign-up $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn sign-up (db op-data session-id op-id op-time)
             let[] (username password) op-data $ let
@@ -10187,21 +10187,21 @@
                 (:def _namespace definition _focus)
                   .unwrap $ get (:defs file) definition
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> schema/CodeEntry)
+          :schema $ quote $ Fn (Map Tag V) app.bookmark/%bookmark (-> schema/CodeEntry) (:generics V)
         'read-bookmark-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-bookmark-expr (db bookmark)
             match (read-bookmark-node db bookmark)
               (app.schema/CirruExprShape expr) expr
               _ $ raise "|Expected Cirru expression node"
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> schema/CirruExprShape)
+          :schema $ quote $ Fn (Map Tag V) app.bookmark/%bookmark (-> schema/CirruExprShape) (:generics V)
         'read-bookmark-file $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-bookmark-file (db bookmark)
             decode-map-as
               app.util/get-required-path db $ [] :files $ app.bookmark/get-namespace bookmark
               , app.schema/FileEntry
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> schema/FileEntry)
+          :schema $ quote $ Fn (Map Tag V) app.bookmark/%bookmark (-> schema/FileEntry) (:generics V)
         'read-bookmark-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-bookmark-node (db bookmark)
             let
@@ -10209,7 +10209,7 @@
                 root $ schema/read-node $ :code entry
               .unwrap $ schema/node-at-path root $ app.bookmark/get-focus bookmark
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> schema/CirruNode)
+          :schema $ quote $ Fn (Map Tag V) app.bookmark/%bookmark (-> schema/CirruNode) (:generics V)
         'read-edit-bookmark $ %{} 'CodeEntry
           :doc "|Check anonymous wire :ns / :def targets, validate String payloads and construct a local bookmark with the existing empty focus path."
           :code $ quote $ defn read-edit-bookmark (raw)
@@ -10641,8 +10641,9 @@
                   (:missing) None
                   (:shape message) (raise message)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) String
+          :schema $ quote $ Fn (Map Tag V) String
             -> $ Option $ Map Tag Dynamic
+            :generics V
         'tree->cirru $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn tree->cirru (x) (schema/node->syntax x)
           :examples $ []
