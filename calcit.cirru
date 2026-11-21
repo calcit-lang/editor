@@ -10333,6 +10333,7 @@
         'DataPathSegment $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion DataPathSegment Tag Number
           :examples $ []
+          :schema $ quote UnionDef
         'ImportBinding $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum ImportBinding (:as String) (:refer String)
           :examples $ []
