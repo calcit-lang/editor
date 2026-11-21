@@ -8402,8 +8402,9 @@
                             Some $ app.bookmark/%bookmark :def target name $ []
                             , None
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) String app.util/SymbolReference
+          :schema $ quote $ Fn (Map Tag V) String app.util/SymbolReference
             -> $ Option app.bookmark/%bookmark
+            :generics V
             :features :io
         'use-import-def $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn use-import-def (db picked sid op-id op-time)
