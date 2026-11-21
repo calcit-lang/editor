@@ -7643,6 +7643,18 @@
           :code $ quote $ defunion ChangedFileField Tag (Map String Tag)
           :examples $ []
           :schema $ quote UnionDef
+        'FileDictKey $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion FileDictKey String Tag
+          :examples $ []
+          :schema $ quote UnionDef
+        'FileDictValue $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion FileDictValue String app.bookmark/%bookmark (Map Tag app.twig.page-files/ChangedFileField)
+          :examples $ []
+          :schema $ quote UnionDef
+        'FilePageField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion FilePageField (Map app.twig.page-files/FileDictKey app.twig.page-files/FileDictValue) (Option app.schema/FileEntry)
+          :examples $ []
+          :schema $ quote UnionDef
         'keys-set $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn keys-set (x) (keys x)
           :examples $ []
@@ -7773,7 +7785,7 @@
               :source-templates source-templates
           :examples $ []
           :schema $ quote $ Fn (Map String app.schema/FileEntry) (Option String) (Map String app.schema/FileEntry) (Option String) (Map String Dynamic) String (Map Tag String)
-            -> $ Map Tag Dynamic
+            -> $ Map Tag FilePageField
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.twig.page-files
           :require $ app.util.list :refer $ compare-entry
