@@ -7609,7 +7609,7 @@
           :code $ quote $ defn watchers (sessions users session-id)
             filter-map-kv sessions $ fn (sid session)
               hint-fn $ Fn String (Map Tag Dynamic)
-                -> $ MapEntryDecision String $ Map Tag Dynamic
+                -> $ MapEntryDecision String $ Map Tag V
               match
                 .unwrap-or (get session :router) (:: :files)
                 (:watching target)
@@ -7620,9 +7620,10 @@
           :examples $ []
           :schema $ quote $ Fn
             Map String $ Map Tag Dynamic
-            Map String $ Map Tag Dynamic
+            Map String $ Map Tag V
             , String
-              -> $ Map String $ Map Tag Dynamic
+              -> $ Map String $ Map Tag V
+              :generics V
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.twig.page-editor
           :require
