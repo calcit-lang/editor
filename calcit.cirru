@@ -7316,6 +7316,12 @@
           :code $ quote $ defunion CollaboratorField String (List String)
           :examples $ []
           :schema $ quote UnionDef
+        'NamespaceChoicesField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion NamespaceChoicesField
+            Map String $ List String
+            Set String
+          :examples $ []
+          :schema $ quote UnionDef
         'bookmark-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn bookmark-entry (files bookmark)
             match
@@ -7431,55 +7437,76 @@
                     match clause
                       (List parts) (rest parts)
                       (String _text) (raise |Expected-namespace-require-clause)
-                imported $ pairs-map $ map rules import-rule-entry
+                imported $ reduce rules ({})
+                  fn (acc rule)
+                    hint-fn $ Fn
+                      Map String $ List String
+                      , app.schema/CirruSyntax $ ->
+                        Map String $ List String
+                    let[] (source names) (import-rule-entry rule) (assoc acc source names)
               {} (:imported imported)
                 :defined $ keys $ :defs ns-info
           :examples $ []
           :schema $ quote $ Fn app.schema/FileEntry
-            -> $ Map Tag Dynamic
-          :tests $ [] $ %{} 'TestEntry (:name |typed-namespace-imports-and-wire-node)
-            :code $ quote $ let
-                syntax $ [] |ns |demo.main $ [] |:require ([] |lib.core |:as |lib)
-                  [] |util.core |:refer $ [] |[] |keep "|中文"
-                code $ app.schema/syntax->node syntax |author 1
-                entry $ %{} app.schema/CodeEntry (:doc |module) (:code code)
-                  :examples $ []
-                  :source-entry None
-                file $ %{} app.schema/FileEntry (:ns entry)
-                  :defs $ {} $ |main! entry
-                  :source-view None
-                info $ pick-from-ns file
-              assert=
-                Some $ {}
-                  |lib.core $ [] |lib/
-                  |util.core $ [] |keep "|中文"
-                get info :imported
-              assert=
-                Some $ #{} |main!
-                get info :defined
-              let
-                  raw-code $ parse-cirru-edn $ format-cirru-edn code
-                  restored-file $ %{} app.schema/FileEntry
-                    :ns $ %{} app.schema/CodeEntry (:doc |module)
-                      :code $ app.schema/read-node raw-code
-                      :examples $ []
-                      :source-entry None
-                    :defs $ {}
+            -> $ Map Tag NamespaceChoicesField
+          :tests $ []
+            %{} 'TestEntry (:name |typed-namespace-imports-and-wire-node)
+              :code $ quote $ let
+                  syntax $ [] |ns |demo.main $ [] |:require ([] |lib.core |:as |lib)
+                    [] |util.core |:refer $ [] |[] |keep "|中文"
+                  code $ app.schema/syntax->node syntax |author 1
+                  entry $ %{} app.schema/CodeEntry (:doc |module) (:code code)
+                    :examples $ []
+                    :source-entry None
+                  file $ %{} app.schema/FileEntry (:ns entry)
+                    :defs $ {} $ |main! entry
                     :source-view None
-                assert= (get info :imported)
-                  get (pick-from-ns restored-file) :imported
-              let
-                  no-imports $ app.schema/syntax->node ([] |ns |empty.main) |author 1
-                  empty-file $ %{} app.schema/FileEntry
-                    :ns $ %{} app.schema/CodeEntry (:doc |) (:code no-imports)
-                      :examples $ []
-                      :source-entry None
+                  info $ pick-from-ns file
+                assert=
+                  Some $ {}
+                    |lib.core $ [] |lib/
+                    |util.core $ [] |keep "|中文"
+                  get info :imported
+                assert=
+                  Some $ #{} |main!
+                  get info :defined
+                let
+                    raw-code $ parse-cirru-edn $ format-cirru-edn code
+                    restored-file $ %{} app.schema/FileEntry
+                      :ns $ %{} app.schema/CodeEntry (:doc |module)
+                        :code $ app.schema/read-node raw-code
+                        :examples $ []
+                        :source-entry None
+                      :defs $ {}
+                      :source-view None
+                  assert= (get info :imported)
+                    get (pick-from-ns restored-file) :imported
+                let
+                    no-imports $ app.schema/syntax->node ([] |ns |empty.main) |author 1
+                    empty-file $ %{} app.schema/FileEntry
+                      :ns $ %{} app.schema/CodeEntry (:doc |) (:code no-imports)
+                        :examples $ []
+                        :source-entry None
+                      :defs $ {}
+                      :source-view None
+                  assert=
+                    Some $ {}
+                    get (pick-from-ns empty-file) :imported
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |duplicate-import-last-wins)
+              :code $ quote $ let
+                  syntax $ [] |ns |demo.main $ [] |:require ([] |lib.core |:as |first) ([] |lib.core |:as |second)
+                  code $ app.schema/syntax->node syntax |author 1
+                  entry $ %{} app.schema/CodeEntry (:doc |) (:code code)
+                    :examples $ []
+                    :source-entry None
+                  file $ %{} app.schema/FileEntry (:ns entry)
                     :defs $ {}
                     :source-view None
                 assert=
-                  Some $ {}
-                  get (pick-from-ns empty-file) :imported
-            :tags $ #{} :unit
+                  Some $ {} $ |lib.core ([] |second/)
+                  get (pick-from-ns file) :imported
+              :tags $ #{} :unit
         'twig-page-editor $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn twig-page-editor (files old-files sessions users writer session-id usages-dict)
             match
