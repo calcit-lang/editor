@@ -7357,9 +7357,10 @@
           :examples $ []
           :schema $ quote $ Fn
             Map String $ Map Tag Dynamic
-            Map String $ Map Tag Dynamic
+            Map String $ Map Tag V
             , app.bookmark/%bookmark String
               -> $ Map String $ Map Tag CollaboratorField
+              :generics V
         'import-rule-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn import-rule-entry (rule)
             match rule
