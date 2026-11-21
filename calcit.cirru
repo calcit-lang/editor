@@ -10849,7 +10849,7 @@
             {} $ :op $ node/env-or |op |
           :examples $ []
           :schema $ quote $ Fn
-            -> $ Map Tag Dynamic
+            -> $ Map Tag String
         'pick-http-port! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pick-http-port! (port next-fn)
             port-taken? port $ fn (err taken?)
