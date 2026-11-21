@@ -7633,6 +7633,10 @@
             app.bookmark :as bookmark
     'app.twig.page-files $ %{} 'FileEntry
       :defs $ {}
+        'ChangedFileField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion ChangedFileField Tag (Map String Tag)
+          :examples $ []
+          :schema $ quote UnionDef
         'keys-set $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn keys-set (x) (keys x)
           :examples $ []
@@ -7644,7 +7648,7 @@
             filter-map-kv (merge files saved-files)
               fn (namespace _file)
                 hint-fn $ Fn String app.schema/FileEntry $ ->
-                  MapEntryDecision String $ Map Tag Dynamic
+                  MapEntryDecision String $ Map Tag ChangedFileField
                 let
                     file $ get files namespace
                     saved-file $ get saved-files namespace
@@ -7676,7 +7680,7 @@
                     MapEntryDecision :keep namespace $ {} (:ns ns-change) (:defs def-changes)
           :examples $ []
           :schema $ quote $ Fn (Map String app.schema/FileEntry) (Map String app.schema/FileEntry)
-            -> $ Map String Dynamic
+            -> $ Map String $ Map Tag ChangedFileField
           :tests $ [] $ %{} 'TestEntry
             :name |equal-recovered-definitions-do-not-appear-changed
             :code $ quote $ let
