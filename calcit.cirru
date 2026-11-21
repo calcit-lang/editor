@@ -7312,6 +7312,10 @@
         :code $ quote $ ns app.twig.member (:require)
     'app.twig.page-editor $ %{} 'FileEntry
       :defs $ {}
+        'CollaboratorField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion CollaboratorField String (List String)
+          :examples $ []
+          :schema $ quote UnionDef
         'bookmark-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn bookmark-entry (files bookmark)
             match
@@ -7330,7 +7334,7 @@
           :code $ quote $ defn collaborators (sessions users bookmark session-id)
             filter-map-kv sessions $ fn (sid session)
               hint-fn $ Fn String (Map Tag Dynamic)
-                -> $ MapEntryDecision String $ Map Tag Dynamic
+                -> $ MapEntryDecision String $ Map Tag CollaboratorField
               if (= sid session-id) (MapEntryDecision :drop)
                 match
                   .unwrap-or (get session :router) (:: :files)
@@ -7353,9 +7357,10 @@
           :examples $ []
           :schema $ quote $ Fn
             Map String $ Map Tag Dynamic
-            Map String $ Map Tag Dynamic
+            Map String $ Map Tag V
             , app.bookmark/%bookmark String
-              -> $ Map String $ Map Tag Dynamic
+              -> $ Map String $ Map Tag CollaboratorField
+              :generics V
         'import-rule-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn import-rule-entry (rule)
             match rule
@@ -7410,8 +7415,9 @@
                     (:some file)
                       get (:defs file) name
           :examples $ []
-          :schema $ quote $ Fn (Map String app.schema/FileEntry) (Map Tag Dynamic)
+          :schema $ quote $ Fn (Map String app.schema/FileEntry) (Map Tag V)
             -> $ Option app.schema/CodeEntry
+            :generics V
         'pick-from-ns $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pick-from-ns (ns-info)
             let
@@ -7633,6 +7639,10 @@
             app.bookmark :as bookmark
     'app.twig.page-files $ %{} 'FileEntry
       :defs $ {}
+        'ChangedFileField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion ChangedFileField Tag (Map String Tag)
+          :examples $ []
+          :schema $ quote UnionDef
         'keys-set $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn keys-set (x) (keys x)
           :examples $ []
@@ -7644,7 +7654,7 @@
             filter-map-kv (merge files saved-files)
               fn (namespace _file)
                 hint-fn $ Fn String app.schema/FileEntry $ ->
-                  MapEntryDecision String $ Map Tag Dynamic
+                  MapEntryDecision String $ Map Tag ChangedFileField
                 let
                     file $ get files namespace
                     saved-file $ get saved-files namespace
@@ -7676,7 +7686,7 @@
                     MapEntryDecision :keep namespace $ {} (:ns ns-change) (:defs def-changes)
           :examples $ []
           :schema $ quote $ Fn (Map String app.schema/FileEntry) (Map String app.schema/FileEntry)
-            -> $ Map String Dynamic
+            -> $ Map String $ Map Tag ChangedFileField
           :tests $ [] $ %{} 'TestEntry
             :name |equal-recovered-definitions-do-not-appear-changed
             :code $ quote $ let
