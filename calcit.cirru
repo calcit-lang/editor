@@ -21,11 +21,11 @@
           :examples $ []
           :schema $ quote EnumDef
         'Bookmark $ %{} 'CodeEntry
-          :doc "|Normalize an already local %bookmark value. Construct new local values with `%:: app.bookmark/%bookmark :def ns-text def-text focus` or the :ns variant. Serialized or anonymous input requires checked boundary conversion before this nominal API."
+          :doc "|Normalize an already local %bookmark value. Construct new local values with `app.bookmark/%bookmark :def ns-text def-text focus` or the :ns variant. Serialized or anonymous input requires checked boundary conversion before this nominal API."
           :code $ quote $ defn Bookmark (b)
             match b
-              (:def ns' def' f) (%:: %bookmark :def ns' def' f)
-              (:ns ns' f) (%:: %bookmark :ns ns' f)
+              (:def ns' def' f) (%bookmark :def ns' def' f)
+              (:ns ns' f) (%bookmark :ns ns' f)
           :examples $ []
           :schema $ quote $ Fn app.bookmark/%bookmark (-> app.bookmark/%bookmark)
         'BookmarkImpl $ %{} 'CodeEntry (:doc |)
@@ -57,9 +57,9 @@
                 -> app.bookmark/%bookmark
               match self
                 (:def ns' def' f)
-                  %:: %bookmark :def ns' def' $ updater f
+                  %bookmark :def ns' def' $ updater f
                 (:ns ns' f)
-                  %:: %bookmark :ns ns' $ updater f
+                  %bookmark :ns ns' $ updater f
             .to-path $ fn (self)
               hint-fn $ Fn app.bookmark/%bookmark $ -> (List PathSegment)
               match self
@@ -91,9 +91,9 @@
               hint-fn $ Fn app.bookmark/%bookmark $ -> (Option app.bookmark/%bookmark)
               match self
                 (:def ns' def' f)
-                  if (empty? f) None $ Some $ %:: %bookmark :def ns' def' (butlast f)
+                  if (empty? f) None $ Some $ %bookmark :def ns' def' (butlast f)
                 (:ns ns' f)
-                  if (empty? f) None $ Some $ %:: %bookmark :ns ns' (butlast f)
+                  if (empty? f) None $ Some $ %bookmark :ns ns' (butlast f)
           :examples $ []
           :schema $ quote Impl
         'BookmarkTrait $ %{} 'CodeEntry (:doc |)
@@ -139,10 +139,10 @@
             if (enum? raw)
               match raw
                 (:ns namespace focus)
-                  %:: %bookmark :ns (decode-map-as namespace 'String)
+                  %bookmark :ns (decode-map-as namespace 'String)
                     decode-map-as focus $ List String
                 (:def namespace definition focus)
-                  %:: %bookmark :def (decode-map-as namespace 'String) (decode-map-as definition 'String)
+                  %bookmark :def (decode-map-as namespace 'String) (decode-map-as definition 'String)
                     decode-map-as focus $ List String
                 _ $ raise |Unknown-bookmark-wire-variant
               raise |Expected-bookmark-wire-enum
@@ -497,8 +497,7 @@
             :tags $ #{} :unit
         'dispatch-ui! $ %{} 'CodeEntry
           :doc "|Apply a typed local UI operation to the client state."
-          :code $ quote $ defn dispatch-ui! (op)
-            do (swap! *states apply-ui-state op) &unit
+          :code $ quote $ defn dispatch-ui! (op) (swap! *states apply-ui-state op) &unit
           :examples $ []
           :schema $ quote $ Fn UiStateOp (-> Unit) (:features :state)
         'draft-box $ %{} 'CodeEntry (:doc |)
