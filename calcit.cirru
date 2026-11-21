@@ -10458,8 +10458,7 @@
           :schema $ quote $ Fn Input (-> Bool) (:generics Input)
         'normalize-cirru $ %{} 'CodeEntry
           :doc "|Checked legacy Cirru input boundary. Preserve quoted wrappers and recursively normalize valid String/List syntax; reject unsupported values instead of inserting nil nodes."
-          :code $ quote $ defn normalize-cirru (raw)
-            decode-map-as (normalize-legacy-cirru-data raw) 'app.schema/CirruSyntax
+          :code $ quote $ defn normalize-cirru (raw) (normalize-legacy-cirru-data raw)
           :examples $ []
           :schema $ quote $ Fn Input (-> schema/CirruSyntax) (:generics Input) (:features :io)
           :tests $ [] $ %{} 'TestEntry (:name |legacy-quoted-syntax-boundary)
@@ -10483,7 +10482,7 @@
                 assert= true @rejected
             :tags $ #{} :unit
         'normalize-legacy-cirru-data $ %{} 'CodeEntry
-          :doc "|Legacy-only raw syntax adapter: unwrap quoted enum/CirruQuote wrappers and preserve String/List payloads. Its result is not trusted until normalize-cirru performs one complete recursive CirruSyntax decode."
+          :doc "|Unwrap legacy enum/CirruQuote wrappers and recursively normalize checked String/List syntax to CirruSyntax; reject unsupported leaves."
           :code $ quote $ defn normalize-legacy-cirru-data (raw)
             cond
                 enum? raw
@@ -10497,13 +10496,16 @@
               (cirru-quote? raw)
                 normalize-legacy-cirru-data $ &cirru-quote:to-list raw
               (list? raw)
-                map
-                  decode-map-as raw $ List Dynamic
-                  , normalize-legacy-cirru-data
-              (string? raw) raw
+                assert-type
+                  map
+                    decode-map-as raw $ List Dynamic
+                    , normalize-legacy-cirru-data
+                  , schema/CirruSyntax
+              (string? raw)
+                assert-type (decode-map-as raw 'String) schema/CirruSyntax
               true $ raise |Expected-Cirru-string-or-list
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Dynamic) (:features :io)
+          :schema $ quote $ Fn Dynamic (-> schema/CirruSyntax) (:features :io)
         'now! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn now! () (js-ffi.shared/now-ms)
           :examples $ []
