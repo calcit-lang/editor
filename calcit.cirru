@@ -7312,6 +7312,10 @@
         :code $ quote $ ns app.twig.member (:require)
     'app.twig.page-editor $ %{} 'FileEntry
       :defs $ {}
+        'CollaboratorField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion CollaboratorField String (List String)
+          :examples $ []
+          :schema $ quote UnionDef
         'bookmark-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn bookmark-entry (files bookmark)
             match
@@ -7330,7 +7334,7 @@
           :code $ quote $ defn collaborators (sessions users bookmark session-id)
             filter-map-kv sessions $ fn (sid session)
               hint-fn $ Fn String (Map Tag Dynamic)
-                -> $ MapEntryDecision String $ Map Tag Dynamic
+                -> $ MapEntryDecision String $ Map Tag CollaboratorField
               if (= sid session-id) (MapEntryDecision :drop)
                 match
                   .unwrap-or (get session :router) (:: :files)
@@ -7355,7 +7359,7 @@
             Map String $ Map Tag Dynamic
             Map String $ Map Tag Dynamic
             , app.bookmark/%bookmark String
-              -> $ Map String $ Map Tag Dynamic
+              -> $ Map String $ Map Tag CollaboratorField
         'import-rule-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn import-rule-entry (rule)
             match rule
