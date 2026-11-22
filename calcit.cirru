@@ -234,12 +234,12 @@
             Option $ Map Tag Dynamic
         'connect! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn connect! () (js/console.info |Connecting...) (reset! *connecting? true)
-            ws-connect! (ws-host)
-              {}
-                :on-open $ fn (event) (simulate-login!) (detect-watching!) (heartbeat!)
-                :on-close $ fn (event) (reset! *store None) (reset! *connecting? false) (js/console.error "|Lost connection!")
+            let
+                opened $ fn (event) (simulate-login!) (detect-watching!) (heartbeat!) &unit
+                closed $ fn (event) (reset! *store None) (reset! *connecting? false) (js/console.error "|Lost connection!")
                   app.client-updater/dispatch-ui! $ app.client-updater/UiStateOp :states/clear
-                :on-data $ fn (data)
+                  , &unit
+                received $ fn (data)
                   match data
                     (:patch changes)
                       do
@@ -257,7 +257,10 @@
                             (:err error)
                               do (eprintln |Rejected-Editor-patch: error) &unit
                     _ $ eprintln "|Unknown op:" data
-                :class-mapper $ {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf)
+                  , &unit
+              ws-edn.client/ws-connect-typed! (ws-host)
+                ws-edn.client/ClientConfig :retry-base-ms None :retry-max-ms None :retry-jitter None :heartbeat-timeout-ms None :class-mapper $ {} (:Expr schema/CirruExpr) (:Leaf schema/CirruLeaf)
+                ws-edn.client/ClientCallbacks :on-open (Some opened) :on-close (Some closed) :on-error None :on-data $ Some received
             , &unit
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
@@ -611,9 +614,9 @@
           :code $ quote $ defn ws-host ()
             if
               and (js-present? js/location)
-                not $ blank? $
-                  unsafe-coerce js/location 'js-ffi.browser/LocationHost
-                  , :search
+                let
+                    location $ js-ffi.browser/location-host
+                  not $ blank? $ location :search
               let
                   query $ parse-query!
                 println "|Loading from url" query
@@ -3254,7 +3257,7 @@
               Fn *dispatch-op $ -> Unit
               -> Unit
             -> respo.schema/Component
-            :features :js-ffi
+            :features :io :js-ffi :state
         'comp-usages $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-usages (usages)
             match usages
@@ -3776,7 +3779,7 @@
                   comp-i :x 12 $ hsl 0 0 80 0.6
                 .render plugin-rm-ns
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States String String Bool (Set String) (-> respo.schema/Component) (:features :js-ffi)
+          :schema $ quote $ Fn respo.schema/States String String Bool (Set String) (-> respo.schema/Component) (:features :io :js-ffi :state)
         'comp-page-files $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-page-files (states selected-ns router-data)
             let
