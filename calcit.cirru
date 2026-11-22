@@ -3257,7 +3257,7 @@
               Fn *dispatch-op $ -> Unit
               -> Unit
             -> respo.schema/Component
-            :features :js-ffi
+            :features :io :js-ffi :state
         'comp-usages $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-usages (usages)
             match usages
@@ -3779,7 +3779,7 @@
                   comp-i :x 12 $ hsl 0 0 80 0.6
                 .render plugin-rm-ns
           :examples $ []
-          :schema $ quote $ Fn respo.schema/States String String Bool (Set String) (-> respo.schema/Component) (:features :js-ffi)
+          :schema $ quote $ Fn respo.schema/States String String Bool (Set String) (-> respo.schema/Component) (:features :io :js-ffi :state)
         'comp-page-files $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-page-files (states selected-ns router-data)
             let
