@@ -614,9 +614,9 @@
           :code $ quote $ defn ws-host ()
             if
               and (js-present? js/location)
-                not $ blank? $
-                  unsafe-coerce js/location 'js-ffi.browser/LocationHost
-                  , :search
+                let
+                    location $ js-ffi.browser/location-host
+                  not $ blank? $ location :search
               let
                   query $ parse-query!
                 println "|Loading from url" query
