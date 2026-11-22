@@ -1157,7 +1157,7 @@
                         Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show modules-plugin dispatch! $ fn (raw)
-                        hint-fn $ Fn Dynamic $ -> Unit
+                        hint-fn $ Fn String $ -> Unit
                         dispatch! $ :: :configs/update $ {}
                           :modules $ parse-modules $ decode-map-as raw 'String
                         , &unit
@@ -1170,7 +1170,7 @@
                         Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show init-fn-plugin dispatch! $ fn (raw)
-                        hint-fn $ Fn Dynamic $ -> Unit
+                        hint-fn $ Fn String $ -> Unit
                         dispatch! $ :: :configs/update $ {}
                           :init-fn $ decode-map-as raw 'String
                         , &unit
@@ -1183,7 +1183,7 @@
                         Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show reload-fn-plugin dispatch! $ fn (raw)
-                        hint-fn $ Fn Dynamic $ -> Unit
+                        hint-fn $ Fn String $ -> Unit
                         dispatch! $ :: :configs/update $ {}
                           :reload-fn $ decode-map-as raw 'String
                         , &unit
@@ -1222,7 +1222,7 @@
                       Fn *dispatch-op $ -> Unit
                       -> Unit
                     .show plugin dispatch! $ fn (raw)
-                      hint-fn $ Fn Dynamic $ -> Unit
+                      hint-fn $ Fn String $ -> Unit
                       dispatch! $ :: :configs/update-entries $ [] :reset
                         parse-cirru-edn $ decode-map-as raw 'String
                       , &unit
@@ -3582,7 +3582,7 @@
                         Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show duplicate-plugin d! $ fn (raw-result)
-                        hint-fn $ Fn Dynamic $ -> Unit
+                        hint-fn $ Fn String $ -> Unit
                         let
                             result $ decode-map-as raw-result 'String
                           if
@@ -3609,7 +3609,7 @@
                         Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show add-plugin d! $ fn (raw-result)
-                        hint-fn $ Fn Dynamic $ -> Unit
+                        hint-fn $ Fn String $ -> Unit
                         let
                             result $ decode-map-as raw-result 'String
                           let
@@ -3713,7 +3713,7 @@
                         Fn *dispatch-op $ -> Unit
                         -> Unit
                       .show plugin-add-ns d! $ fn (result)
-                        hint-fn $ Fn Dynamic $ -> Unit
+                        hint-fn $ Fn String $ -> Unit
                         let
                             text $ trim $ decode-map-as result 'String
                           when-not (blank? text)
@@ -4286,7 +4286,7 @@
                           Fn *dispatch-op $ -> Unit
                           -> Unit
                         .show rename-plugin d! $ fn (raw-result)
-                          hint-fn $ Fn Dynamic $ -> Unit
+                          hint-fn $ Fn String $ -> Unit
                           let
                               result $ decode-map-as raw-result 'String
                             d! $ :: :user/nickname $ trim result
@@ -7316,6 +7316,12 @@
           :code $ quote $ defunion CollaboratorField String (List String)
           :examples $ []
           :schema $ quote UnionDef
+        'NamespaceChoicesField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion NamespaceChoicesField
+            Map String $ List String
+            Set String
+          :examples $ []
+          :schema $ quote UnionDef
         'bookmark-entry $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn bookmark-entry (files bookmark)
             match
@@ -7431,55 +7437,76 @@
                     match clause
                       (List parts) (rest parts)
                       (String _text) (raise |Expected-namespace-require-clause)
-                imported $ pairs-map $ map rules import-rule-entry
+                imported $ reduce rules ({})
+                  fn (acc rule)
+                    hint-fn $ Fn
+                      Map String $ List String
+                      , app.schema/CirruSyntax $ ->
+                        Map String $ List String
+                    let[] (source names) (import-rule-entry rule) (assoc acc source names)
               {} (:imported imported)
                 :defined $ keys $ :defs ns-info
           :examples $ []
           :schema $ quote $ Fn app.schema/FileEntry
-            -> $ Map Tag Dynamic
-          :tests $ [] $ %{} 'TestEntry (:name |typed-namespace-imports-and-wire-node)
-            :code $ quote $ let
-                syntax $ [] |ns |demo.main $ [] |:require ([] |lib.core |:as |lib)
-                  [] |util.core |:refer $ [] |[] |keep "|中文"
-                code $ app.schema/syntax->node syntax |author 1
-                entry $ %{} app.schema/CodeEntry (:doc |module) (:code code)
-                  :examples $ []
-                  :source-entry None
-                file $ %{} app.schema/FileEntry (:ns entry)
-                  :defs $ {} $ |main! entry
-                  :source-view None
-                info $ pick-from-ns file
-              assert=
-                Some $ {}
-                  |lib.core $ [] |lib/
-                  |util.core $ [] |keep "|中文"
-                get info :imported
-              assert=
-                Some $ #{} |main!
-                get info :defined
-              let
-                  raw-code $ parse-cirru-edn $ format-cirru-edn code
-                  restored-file $ %{} app.schema/FileEntry
-                    :ns $ %{} app.schema/CodeEntry (:doc |module)
-                      :code $ app.schema/read-node raw-code
-                      :examples $ []
-                      :source-entry None
-                    :defs $ {}
+            -> $ Map Tag NamespaceChoicesField
+          :tests $ []
+            %{} 'TestEntry (:name |typed-namespace-imports-and-wire-node)
+              :code $ quote $ let
+                  syntax $ [] |ns |demo.main $ [] |:require ([] |lib.core |:as |lib)
+                    [] |util.core |:refer $ [] |[] |keep "|中文"
+                  code $ app.schema/syntax->node syntax |author 1
+                  entry $ %{} app.schema/CodeEntry (:doc |module) (:code code)
+                    :examples $ []
+                    :source-entry None
+                  file $ %{} app.schema/FileEntry (:ns entry)
+                    :defs $ {} $ |main! entry
                     :source-view None
-                assert= (get info :imported)
-                  get (pick-from-ns restored-file) :imported
-              let
-                  no-imports $ app.schema/syntax->node ([] |ns |empty.main) |author 1
-                  empty-file $ %{} app.schema/FileEntry
-                    :ns $ %{} app.schema/CodeEntry (:doc |) (:code no-imports)
-                      :examples $ []
-                      :source-entry None
+                  info $ pick-from-ns file
+                assert=
+                  Some $ {}
+                    |lib.core $ [] |lib/
+                    |util.core $ [] |keep "|中文"
+                  get info :imported
+                assert=
+                  Some $ #{} |main!
+                  get info :defined
+                let
+                    raw-code $ parse-cirru-edn $ format-cirru-edn code
+                    restored-file $ %{} app.schema/FileEntry
+                      :ns $ %{} app.schema/CodeEntry (:doc |module)
+                        :code $ app.schema/read-node raw-code
+                        :examples $ []
+                        :source-entry None
+                      :defs $ {}
+                      :source-view None
+                  assert= (get info :imported)
+                    get (pick-from-ns restored-file) :imported
+                let
+                    no-imports $ app.schema/syntax->node ([] |ns |empty.main) |author 1
+                    empty-file $ %{} app.schema/FileEntry
+                      :ns $ %{} app.schema/CodeEntry (:doc |) (:code no-imports)
+                        :examples $ []
+                        :source-entry None
+                      :defs $ {}
+                      :source-view None
+                  assert=
+                    Some $ {}
+                    get (pick-from-ns empty-file) :imported
+              :tags $ #{} :unit
+            %{} 'TestEntry (:name |duplicate-import-last-wins)
+              :code $ quote $ let
+                  syntax $ [] |ns |demo.main $ [] |:require ([] |lib.core |:as |first) ([] |lib.core |:as |second)
+                  code $ app.schema/syntax->node syntax |author 1
+                  entry $ %{} app.schema/CodeEntry (:doc |) (:code code)
+                    :examples $ []
+                    :source-entry None
+                  file $ %{} app.schema/FileEntry (:ns entry)
                     :defs $ {}
                     :source-view None
                 assert=
-                  Some $ {}
-                  get (pick-from-ns empty-file) :imported
-            :tags $ #{} :unit
+                  Some $ {} $ |lib.core ([] |second/)
+                  get (pick-from-ns file) :imported
+              :tags $ #{} :unit
         'twig-page-editor $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn twig-page-editor (files old-files sessions users writer session-id usages-dict)
             match
@@ -7643,6 +7670,18 @@
           :code $ quote $ defunion ChangedFileField Tag (Map String Tag)
           :examples $ []
           :schema $ quote UnionDef
+        'FileDictKey $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion FileDictKey String Tag
+          :examples $ []
+          :schema $ quote UnionDef
+        'FileDictValue $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion FileDictValue String app.bookmark/%bookmark (Map Tag app.twig.page-files/ChangedFileField)
+          :examples $ []
+          :schema $ quote UnionDef
+        'FilePageField $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion FilePageField (Map app.twig.page-files/FileDictKey app.twig.page-files/FileDictValue) (Option app.schema/FileEntry)
+          :examples $ []
+          :schema $ quote UnionDef
         'keys-set $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn keys-set (x) (keys x)
           :examples $ []
@@ -7773,7 +7812,7 @@
               :source-templates source-templates
           :examples $ []
           :schema $ quote $ Fn (Map String app.schema/FileEntry) (Option String) (Map String app.schema/FileEntry) (Option String) (Map String Dynamic) String (Map Tag String)
-            -> $ Map Tag Dynamic
+            -> $ Map Tag FilePageField
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.twig.page-files
           :require $ app.util.list :refer $ compare-entry
@@ -8402,8 +8441,9 @@
                             Some $ app.bookmark/%bookmark :def target name $ []
                             , None
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) String app.util/SymbolReference
+          :schema $ quote $ Fn (Map Tag V) String app.util/SymbolReference
             -> $ Option app.bookmark/%bookmark
+            :generics V
             :features :io
         'use-import-def $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn use-import-def (db picked sid op-id op-time)
@@ -9603,7 +9643,7 @@
               (:ok value) (decode-map-as value 'String)
               (:err _error) (raise |Missing-session-user-id)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) String (-> String)
+          :schema $ quote $ Fn (Map Tag V) String (-> String) (:generics V)
         'sign-up $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn sign-up (db op-data session-id op-id op-time)
             let[] (username password) op-data $ let
@@ -10187,21 +10227,21 @@
                 (:def _namespace definition _focus)
                   .unwrap $ get (:defs file) definition
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> schema/CodeEntry)
+          :schema $ quote $ Fn (Map Tag V) app.bookmark/%bookmark (-> schema/CodeEntry) (:generics V)
         'read-bookmark-expr $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-bookmark-expr (db bookmark)
             match (read-bookmark-node db bookmark)
               (app.schema/CirruExprShape expr) expr
               _ $ raise "|Expected Cirru expression node"
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> schema/CirruExprShape)
+          :schema $ quote $ Fn (Map Tag V) app.bookmark/%bookmark (-> schema/CirruExprShape) (:generics V)
         'read-bookmark-file $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-bookmark-file (db bookmark)
             decode-map-as
               app.util/get-required-path db $ [] :files $ app.bookmark/get-namespace bookmark
               , app.schema/FileEntry
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> schema/FileEntry)
+          :schema $ quote $ Fn (Map Tag V) app.bookmark/%bookmark (-> schema/FileEntry) (:generics V)
         'read-bookmark-node $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-bookmark-node (db bookmark)
             let
@@ -10209,7 +10249,7 @@
                 root $ schema/read-node $ :code entry
               .unwrap $ schema/node-at-path root $ app.bookmark/get-focus bookmark
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) app.bookmark/%bookmark (-> schema/CirruNode)
+          :schema $ quote $ Fn (Map Tag V) app.bookmark/%bookmark (-> schema/CirruNode) (:generics V)
         'read-edit-bookmark $ %{} 'CodeEntry
           :doc "|Check anonymous wire :ns / :def targets, validate String payloads and construct a local bookmark with the existing empty focus path."
           :code $ quote $ defn read-edit-bookmark (raw)
@@ -10418,8 +10458,7 @@
           :schema $ quote $ Fn Input (-> Bool) (:generics Input)
         'normalize-cirru $ %{} 'CodeEntry
           :doc "|Checked legacy Cirru input boundary. Preserve quoted wrappers and recursively normalize valid String/List syntax; reject unsupported values instead of inserting nil nodes."
-          :code $ quote $ defn normalize-cirru (raw)
-            decode-map-as (normalize-legacy-cirru-data raw) 'app.schema/CirruSyntax
+          :code $ quote $ defn normalize-cirru (raw) (normalize-legacy-cirru-data raw)
           :examples $ []
           :schema $ quote $ Fn Input (-> schema/CirruSyntax) (:generics Input) (:features :io)
           :tests $ [] $ %{} 'TestEntry (:name |legacy-quoted-syntax-boundary)
@@ -10443,7 +10482,7 @@
                 assert= true @rejected
             :tags $ #{} :unit
         'normalize-legacy-cirru-data $ %{} 'CodeEntry
-          :doc "|Legacy-only raw syntax adapter: unwrap quoted enum/CirruQuote wrappers and preserve String/List payloads. Its result is not trusted until normalize-cirru performs one complete recursive CirruSyntax decode."
+          :doc "|Unwrap legacy enum/CirruQuote wrappers and recursively normalize checked String/List syntax to CirruSyntax; reject unsupported leaves."
           :code $ quote $ defn normalize-legacy-cirru-data (raw)
             cond
                 enum? raw
@@ -10457,13 +10496,16 @@
               (cirru-quote? raw)
                 normalize-legacy-cirru-data $ &cirru-quote:to-list raw
               (list? raw)
-                map
-                  decode-map-as raw $ List Dynamic
-                  , normalize-legacy-cirru-data
-              (string? raw) raw
+                assert-type
+                  map
+                    decode-map-as raw $ List Dynamic
+                    , normalize-legacy-cirru-data
+                  , schema/CirruSyntax
+              (string? raw)
+                assert-type (decode-map-as raw 'String) schema/CirruSyntax
               true $ raise |Expected-Cirru-string-or-list
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Dynamic) (:features :io)
+          :schema $ quote $ Fn Dynamic (-> schema/CirruSyntax) (:features :io)
         'now! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn now! () (js-ffi.shared/now-ms)
           :examples $ []
@@ -10641,8 +10683,9 @@
                   (:missing) None
                   (:shape message) (raise message)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) String
+          :schema $ quote $ Fn (Map Tag V) String
             -> $ Option $ Map Tag Dynamic
+            :generics V
         'tree->cirru $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn tree->cirru (x) (schema/node->syntax x)
           :examples $ []
