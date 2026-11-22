@@ -11,6 +11,6 @@
     |Respo/respo.calcit |0.19.13
     |calcit-lang/bisection-key |0.0.49
     |calcit-lang/gen-code |0.0.27
-    |calcit-lang/recollect |0.3.10
-    |mvc-works/ws-edn.calcit |0.2.6
     |calcit-lang/js-ffi |0.2.19
+    |calcit-lang/recollect |0.3.10
+    |mvc-works/ws-edn.calcit |0.2.7
