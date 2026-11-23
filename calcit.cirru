@@ -607,9 +607,13 @@
                 url-obj $ unsafe-coerce
                   url-parse (location-href) true
                   , 'app.client-util/UrlParseResultHost
-              to-calcit-data $ url-obj :query
+              decode-map-as
+                to-calcit-data $ url-obj :query
+                Map String String
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn
+            -> $ Map String String
+            :features :js-ffi
         'ws-host $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn ws-host ()
             if
@@ -622,8 +626,16 @@
                 println "|Loading from url" query
                 str |ws://
                   .unwrap-or (get query |host) |localhost
-                  , |: $ .unwrap-or (get query |port)
-                    .unwrap-or (get schema/configs :port) 6001
+                  , |: $ match (get query |port)
+                    (:some port) port
+                    (:none)
+                      match (get schema/configs :port)
+                        (:none) |6001
+                        (:some fallback)
+                          match fallback
+                            (Number n) (str n)
+                            (String s) s
+                            (List xs) (str xs)
               , |ws://localhost:6001
           :examples $ []
           :schema $ quote $ Fn (-> String) (:features :io :js-ffi)
