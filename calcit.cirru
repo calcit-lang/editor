@@ -10800,13 +10800,6 @@
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
             :names $ {} (:catch-error |catch) (:then-text |then) (:then-value |then)
           :schema $ quote Trait
-        'EventHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait EventHost
-            .prevent-default! $ Fn app.util.dom/EventHost $ -> Unit
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
-            :names $ {} $ :prevent-default! |preventDefault
-          :schema $ quote Trait
         'NavigatorHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait NavigatorHost (:clipboard 'app.util.dom/ClipboardHost)
           :examples $ []
@@ -10869,17 +10862,14 @@
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'prevent-default! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn prevent-default! (raw-event)
-            let
-                event $ unsafe-coerce raw-event 'app.util.dom/EventHost
-              .prevent-default! event
-              , &unit
+          :code $ quote $ defn prevent-default! (event) (.prevent-default! event) &unit
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn dom/DomEvent (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.util.dom
           :require
             respo.core :refer $ style
+            respo.dom :as dom
             respo.render.html :refer $ style->html
     'app.util.env $ %{} 'FileEntry
       :defs $ {}
