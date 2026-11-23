@@ -1336,6 +1336,12 @@
                           .unwrap-or (get store :stats) ({})
                           Map Tag Dynamic
                       , None
+                    if
+                      = (get store :recovery-mode) (Some true)
+                      Some $ div
+                        {} $ :style $ {} (:padding |12px) (:background-color |#fff1cd) (:color |#612f00)
+                        <> "|Recovery view: source and archive saving are disabled. Copy the pending edits elsewhere before closing; changes made here will not be saved."
+                      , None
                     div
                       {} $ :class-name $ str-spaced css/row css/expand
                       if
@@ -6326,7 +6332,10 @@
             js/process.on |SIGINT $ fn (_code & _args)
               try
                 do (storage/save-editor-state! storage-file @*writer-db)
-                  println "|Saved editor state in .calcit/editor-state.cirru"
+                  if
+                    = (get @*writer-db :recovery-mode) (Some true)
+                    println "|Recovery view closed; original editor archive was preserved."
+                    println "|Saved editor state in .calcit/editor-state.cirru"
                   js/process.exit
                   , &unit
                 fn (error)
@@ -6838,7 +6847,8 @@
                       let
                           baseline-project $ struct-with project (:source-revision revision) (:source-manifest-revision manifest)
                           archived $ source/restore-editor-state baseline-project archive
-                        watcher/file-change archived project |recovery |recovery 0
+                        try (watcher/file-change archived project |recovery |recovery 0)
+                          fn (_error) (assoc archived :recovery-mode true)
           :examples $ []
           :schema $ quote $ Fn source/SourceProject (Option Dynamic)
             -> $ Map Tag Dynamic
@@ -6882,13 +6892,16 @@
               assert= (Some pending) (get files |demo.main)
               assert= (Some changed) (get files |other)
               assert= (Some |new-revision) (get restored :source-revision)
-              assert= true $ try
-                do
-                  recover-project-state
+              let
+                  conflict $ recover-project-state
                     struct-with project $ :files $ {} (|demo.main changed) (|other original)
                     Some loaded
-                  , false
-                fn (_error) true
+                  conflict-files $ decode-map-as
+                    .unwrap $ get conflict :files
+                    Map String app.schema/FileEntry
+                assert= (Some true) (get conflict :recovery-mode)
+                assert= (Some pending) (get conflict-files |demo.main)
+                assert= (Some |old-revision) (get conflict :source-revision)
               assert= true $ try
                 do
                   recover-project-state project $ Some $ dissoc archive :saved-files
@@ -6897,12 +6910,17 @@
             :tags $ #{} :unit
         'save-editor-state! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-editor-state! (snapshot db)
-            writeEditorArchive snapshot $ format-cirru-edn $ source/editor-archive-state db
+            when
+              not= (get db :recovery-mode) (Some true)
+              writeEditorArchive snapshot $ format-cirru-edn $ source/editor-archive-state db
             , &unit
           :examples $ []
           :schema $ quote $ Fn String (Map Tag Dynamic) (-> Unit) (:features :js-ffi)
         'save-project! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-project! (snapshot db selected)
+            when
+              = (get db :recovery-mode) (Some true)
+              raise "|Recovery view cannot save to the changed project. Copy pending edits to a separate location."
             let
                 revision $ decode-map-as
                   .unwrap $ get db :source-revision
@@ -6929,6 +6947,16 @@
                 , 'String
           :examples $ []
           :schema $ quote $ Fn String (Map Tag Dynamic) (Option String) (-> source/SourceSave) (:features :js-ffi)
+          :tests $ [] $ %{} 'TestEntry (:name |recovery-view-blocks-save)
+            :code $ quote $ assert= true
+              try
+                do
+                  save-project! |unused
+                    {} $ :recovery-mode true
+                    , None
+                  , false
+                fn (_error) true
+            :tags $ #{} :unit
         'save-source-files! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-source-files! (snapshot revision files saved-files selected templates)
             write-namespace-changes! snapshot revision $ source/plan-namespace-changes files saved-files selected templates
@@ -7315,8 +7343,10 @@
                         :configs $ .unwrap-or (get db :configs) ({})
                         :entries $ .unwrap-or (get db :entries) ({})
                   :stats $ {} $ :members-count (count sessions)
+                  :recovery-mode $ = (get db :recovery-mode) (Some true)
                 {} (:session session) (:logged-in? false)
                   :stats $ {} $ :members-count 0
+                  :recovery-mode $ = (get db :recovery-mode) (Some true)
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) (Map Tag Dynamic)
             -> $ Map Tag Dynamic
