@@ -6794,7 +6794,7 @@
                 contents $ readEditorArchive snapshot
                 archive $ if (nil? contents) None $ Some
                   parse-cirru-edn $ js-ffi.contract/expect-string |editor-state contents
-              source/restore-editor-state project archive
+              recover-project-state project archive
           :examples $ []
           :schema $ quote $ Fn String
             -> $ Map Tag Dynamic
@@ -6806,6 +6806,95 @@
               , |source 0
           :examples $ []
           :schema $ quote $ Fn String (-> source/SourceProject) (:features :io :js-ffi)
+        'recover-project-state $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn recover-project-state (project archive)
+            match archive
+              (:none) (source/restore-editor-state project None)
+              (:some raw)
+                let
+                    fields $ decode-map-as raw $ Map Tag Dynamic
+                    revision $ decode-map-as
+                      .unwrap $ get fields :source-revision
+                      , String
+                    manifest $ decode-map-as
+                      .unwrap $ get fields :source-manifest-revision
+                      , String
+                  if
+                    and
+                      = revision $ :source-revision project
+                      = manifest $ :source-manifest-revision project
+                    source/restore-editor-state project archive
+                    do
+                      when
+                        not $ and (contains? fields :saved-files) (contains? fields :saved-configs) (contains? fields :saved-entries) (contains? fields :package)
+                        raise "|Cannot recover editor changes without their saved baseline. The original archive was preserved."
+                      when
+                        not=
+                          decode-map-as
+                            .unwrap $ get fields :package
+                            , String
+                          :package project
+                        raise "|The project package changed; the original editor archive was preserved."
+                      let
+                          baseline-project $ struct-with project (:source-revision revision) (:source-manifest-revision manifest)
+                          archived $ source/restore-editor-state baseline-project archive
+                        watcher/file-change archived project |recovery |recovery 0
+          :examples $ []
+          :schema $ quote $ Fn source/SourceProject (Option Dynamic)
+            -> $ Map Tag Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |rebase-preserves-pending-and-rejects-conflicts)
+            :code $ quote $ let
+                entry $ %{} app.schema/CodeEntry (:doc |saved)
+                  :code $ app.schema/syntax->node ([] |ns |demo.main) |source 0
+                  :examples $ []
+                  :source-entry None
+                original $ %{} app.schema/FileEntry (:ns entry)
+                  :defs $ {}
+                  :source-view None
+                pending $ struct-with original $ :ns
+                  struct-with entry $ :doc |pending
+                changed $ struct-with original $ :ns
+                  struct-with entry $ :doc |changed
+                project $ %{} source/SourceProject (:package |demo)
+                  :files $ {} (|demo.main original) (|other original)
+                  :configs $ {}
+                  :entries $ {}
+                  :source-config |config
+                  :source-revision |new-revision
+                  :source-templates $ {}
+                  :source-manifest-revision |new-manifest
+                configs $ merge app.schema/configs $ {}
+                archive $ {} (:package |demo) (:source-revision |old-revision) (:source-manifest-revision |old-manifest)
+                  :files $ {} (|demo.main pending) (|other original)
+                  :saved-files $ {} (|demo.main original) (|other original)
+                  :configs configs
+                  :saved-configs configs
+                  :entries $ {}
+                  :saved-entries $ {}
+                  :users $ {}
+                incoming $ struct-with project $ :files
+                  {} (|demo.main original) (|other changed)
+                loaded $ parse-cirru-edn $ format-cirru-edn archive
+                restored $ recover-project-state incoming $ Some loaded
+                files $ decode-map-as
+                  .unwrap $ get restored :files
+                  Map String app.schema/FileEntry
+              assert= (Some pending) (get files |demo.main)
+              assert= (Some changed) (get files |other)
+              assert= (Some |new-revision) (get restored :source-revision)
+              assert= true $ try
+                do
+                  recover-project-state
+                    struct-with project $ :files $ {} (|demo.main changed) (|other original)
+                    Some loaded
+                  , false
+                fn (_error) true
+              assert= true $ try
+                do
+                  recover-project-state project $ Some $ dissoc archive :saved-files
+                  , false
+                fn (_error) true
+            :tags $ #{} :unit
         'save-editor-state! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-editor-state! (snapshot db)
             writeEditorArchive snapshot $ format-cirru-edn $ source/editor-archive-state db
@@ -6859,6 +6948,7 @@
         :code $ quote $ ns app.storage
           :require (app.source :as source)
             |../snapshot-cli.mjs :refer $ readSnapshotEdn writeSnapshotChangesEdn writeProjectChangesEdn readEditorArchive writeEditorArchive
+            app.updater.watcher :as watcher
     'app.style $ %{} 'FileEntry
       :defs $ {}
         'button $ %{} 'CodeEntry (:doc |)
