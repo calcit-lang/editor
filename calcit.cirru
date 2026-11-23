@@ -2466,12 +2466,6 @@
             respo-alerts.core :refer $ use-prompt
     'app.comp.leaf $ %{} 'FileEntry
       :defs $ {}
-        'LeafInputTargetHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait LeafInputTargetHost (:selection-start 'Number) (:selection-end 'Number) (:text-length 'Number)
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
-            :names $ {} (:selection-end |selectionEnd) (:selection-start |selectionStart)
-          :schema $ quote Trait
         'LeafState $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def LeafState
             defstruct :LeafState (:text String) (:at Number)
@@ -2556,15 +2550,15 @@
                   alt? $ .unwrap-or
                     js-nullish->option $ :alt? e
                     , false
-                  event-target $ unsafe-coerce (.-target event) 'app.comp.leaf/LeafInputTargetHost
-                  selection-start $ .-selection-start event-target
-                  selection-end $ .-selection-end event-target
+                  selection $ js-ffi.browser/text-selection $ js-ffi.browser/text-selection-host (.-target event)
+                  selection-start $ .unwrap $ :start selection
+                  selection-end $ .unwrap $ :end selection
                   selected? $ not= selection-start selection-end
                   text $ if
                     > (:at state) (:at leaf)
                     :text state
                     :text leaf
-                  text-length $ .-text-length event-target
+                  text-length $ :text-length selection
                 cond
                     = code keycode/backspace
                     if
