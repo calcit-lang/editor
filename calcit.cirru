@@ -6826,7 +6826,7 @@
                     source/restore-editor-state project archive
                     do
                       when
-                        not $ and (contains? fields :saved-files) (contains? fields :saved-configs) (contains? fields :saved-entries) (contains? fields :package)
+                        not $ and (contains? fields :files) (contains? fields :configs) (contains? fields :entries) (contains? fields :saved-files) (contains? fields :saved-configs) (contains? fields :saved-entries) (contains? fields :package)
                         raise "|Cannot recover editor changes without their saved baseline. The original archive was preserved."
                       when
                         not=
