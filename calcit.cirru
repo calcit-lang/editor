@@ -6255,9 +6255,14 @@
           :code $ quote $ defn render-loop! ()
             if (not= @*reader-db @*writer-db)
               do (reset! *reader-db @*writer-db) (; println "|render loop") (sync-clients! @*reader-db)
-            js/setTimeout render-loop! 20
+            node/set-timeout!
+              fn ()
+                hint-fn $ Fn (-> Unit) (:features :io :js-ffi :state)
+                render-loop!
+                , &unit
+              , 20
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic) (:features :io :js-ffi :state)
+          :schema $ quote $ Fn (-> node/NodeTimerHost) (:features :io :js-ffi :state)
         'run-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-server! (dispatch! port)
             wss-serve! port $ {}
