@@ -6257,7 +6257,7 @@
           :schema $ quote $ Fn (Option T) Tag (-> Number) (:generics T)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
-            println $ .gray (unsafe-coerce chalk 'app.server/ChalkHost) "|code updated."
+            println $ .gray (js-cast chalk 'app.server/ChalkHost) "|code updated."
             clear-twig-caches!
             sync-clients! @*reader-db
             , &unit
@@ -10855,7 +10855,7 @@
         'md5 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn md5 (s)
             let
-                host $ unsafe-coerce crypto 'app.util.compile/CryptoModuleHost
+                host $ js-cast crypto 'app.util.compile/CryptoModuleHost
                 hash $ host .create-hash |md5
                 updated $ hash .update s
               updated .digest |hex
@@ -11006,7 +11006,7 @@
                 pkg $ js/JSON.parse $ fs/readFileSync (path/join directory |../package.json) |utf8
                 version $ js-ffi.contract/expect-string |package.version $ js-ffi.contract/object-field |package pkg |version
                 name $ js-ffi.contract/expect-string |package.name $ js-ffi.contract/object-field |package pkg |name
-                color $ unsafe-coerce chalk 'app.server/ChalkHost
+                color $ js-cast chalk 'app.server/ChalkHost
                 promise $ unsafe-coerce (latest-version name) 'js-ffi.shared/PromiseHost
                 requested $ .then! promise $ fn (raw)
                   hint-fn $ Fn (JsNullish JsObject) (-> Unit)
