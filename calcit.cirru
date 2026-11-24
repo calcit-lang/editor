@@ -607,9 +607,13 @@
                 url-obj $ unsafe-coerce
                   url-parse (location-href) true
                   , 'app.client-util/UrlParseResultHost
-              to-calcit-data $ url-obj :query
+              decode-map-as
+                to-calcit-data $ url-obj :query
+                Map String String
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn
+            -> $ Map String String
+            :features :js-ffi
         'ws-host $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn ws-host ()
             if
@@ -622,8 +626,16 @@
                 println "|Loading from url" query
                 str |ws://
                   .unwrap-or (get query |host) |localhost
-                  , |: $ .unwrap-or (get query |port)
-                    .unwrap-or (get schema/configs :port) 6001
+                  , |: $ match (get query |port)
+                    (:some port) port
+                    (:none)
+                      match (get schema/configs :port)
+                        (:none) |6001
+                        (:some fallback)
+                          match fallback
+                            (Number n) (str n)
+                            (String s) s
+                            (List xs) (str xs)
               , |ws://localhost:6001
           :examples $ []
           :schema $ quote $ Fn (-> String) (:features :io :js-ffi)
@@ -1323,6 +1335,12 @@
                         decode-map-as
                           .unwrap-or (get store :stats) ({})
                           Map Tag Dynamic
+                      , None
+                    if
+                      = (get store :recovery-mode) (Some true)
+                      Some $ div
+                        {} $ :style $ {} (:padding |12px) (:background-color |#fff1cd) (:color |#612f00)
+                        <> "|Recovery view: source and archive saving are disabled. Copy the pending edits elsewhere before closing; changes made here will not be saved."
                       , None
                     div
                       {} $ :class-name $ str-spaced css/row css/expand
@@ -2466,12 +2484,6 @@
             respo-alerts.core :refer $ use-prompt
     'app.comp.leaf $ %{} 'FileEntry
       :defs $ {}
-        'LeafInputTargetHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait LeafInputTargetHost (:selection-start 'Number) (:selection-end 'Number) (:text-length 'Number)
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
-            :names $ {} (:selection-end |selectionEnd) (:selection-start |selectionStart)
-          :schema $ quote Trait
         'LeafState $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def LeafState
             defstruct :LeafState (:text String) (:at Number)
@@ -2556,15 +2568,15 @@
                   alt? $ .unwrap-or
                     js-nullish->option $ :alt? e
                     , false
-                  event-target $ unsafe-coerce (.-target event) 'app.comp.leaf/LeafInputTargetHost
-                  selection-start $ .-selection-start event-target
-                  selection-end $ .-selection-end event-target
+                  selection $ js-ffi.browser/text-selection $ js-ffi.browser/text-selection-host (.-target event)
+                  selection-start $ .unwrap $ :start selection
+                  selection-end $ .unwrap $ :end selection
                   selected? $ not= selection-start selection-end
                   text $ if
                     > (:at state) (:at leaf)
                     :text state
                     :text leaf
-                  text-length $ .-text-length event-target
+                  text-length $ :text-length selection
                 cond
                     = code keycode/backspace
                     if
@@ -6162,7 +6174,7 @@
                       |/calcit-data $ readFile |./calcit.cirru |utf8 $ make-file-response res
                       _ $ do (.!writeHead res 404) (.!end res "|not found. check url")
               .!listen server port $ fn () $ let
-                  link $ .blue (unsafe-coerce chalk 'app.server/ChalkHost) (str |http://localhost: port)
+                  link $ .blue (js-cast chalk 'app.server/ChalkHost) (str |http://localhost: port)
                 println $ str "|port " port "| ok, local configs exposed on " link
           :examples $ []
           :schema $ quote $ Fn Number (-> Dynamic) (:features :io :js-ffi)
@@ -6245,7 +6257,7 @@
           :schema $ quote $ Fn (Option T) Tag (-> Number) (:generics T)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
-            println $ .gray (unsafe-coerce chalk 'app.server/ChalkHost) "|code updated."
+            println $ .gray (js-cast chalk 'app.server/ChalkHost) "|code updated."
             clear-twig-caches!
             sync-clients! @*reader-db
             , &unit
@@ -6255,9 +6267,14 @@
           :code $ quote $ defn render-loop! ()
             if (not= @*reader-db @*writer-db)
               do (reset! *reader-db @*writer-db) (; println "|render loop") (sync-clients! @*reader-db)
-            js/setTimeout render-loop! 20
+            node/set-timeout!
+              fn ()
+                hint-fn $ Fn (-> Unit) (:features :io :js-ffi :state)
+                render-loop!
+                , &unit
+              , 20
           :examples $ []
-          :schema $ quote $ Fn (-> Dynamic) (:features :io :js-ffi :state)
+          :schema $ quote $ Fn (-> node/NodeTimerHost) (:features :io :js-ffi :state)
         'run-server! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn run-server! (dispatch! port)
             wss-serve! port $ {}
@@ -6315,7 +6332,10 @@
             js/process.on |SIGINT $ fn (_code & _args)
               try
                 do (storage/save-editor-state! storage-file @*writer-db)
-                  println "|Saved editor state in .calcit/editor-state.cirru"
+                  if
+                    = (get @*writer-db :recovery-mode) (Some true)
+                    println "|Recovery view closed; original editor archive was preserved."
+                    println "|Saved editor state in .calcit/editor-state.cirru"
                   js/process.exit
                   , &unit
                 fn (error)
@@ -6783,7 +6803,7 @@
                 contents $ readEditorArchive snapshot
                 archive $ if (nil? contents) None $ Some
                   parse-cirru-edn $ js-ffi.contract/expect-string |editor-state contents
-              source/restore-editor-state project archive
+              recover-project-state project archive
           :examples $ []
           :schema $ quote $ Fn String
             -> $ Map Tag Dynamic
@@ -6795,14 +6815,112 @@
               , |source 0
           :examples $ []
           :schema $ quote $ Fn String (-> source/SourceProject) (:features :io :js-ffi)
+        'recover-project-state $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn recover-project-state (project archive)
+            match archive
+              (:none) (source/restore-editor-state project None)
+              (:some raw)
+                let
+                    fields $ decode-map-as raw $ Map Tag Dynamic
+                    revision $ decode-map-as
+                      .unwrap $ get fields :source-revision
+                      , String
+                    manifest $ decode-map-as
+                      .unwrap $ get fields :source-manifest-revision
+                      , String
+                  if
+                    and
+                      = revision $ :source-revision project
+                      = manifest $ :source-manifest-revision project
+                    source/restore-editor-state project archive
+                    do
+                      when
+                        not $ and (contains? fields :files) (contains? fields :configs) (contains? fields :entries) (contains? fields :saved-files) (contains? fields :saved-configs) (contains? fields :saved-entries) (contains? fields :package)
+                        raise "|Cannot recover editor changes without their saved baseline. The original archive was preserved."
+                      when
+                        not=
+                          decode-map-as
+                            .unwrap $ get fields :package
+                            , String
+                          :package project
+                        raise "|The project package changed; the original editor archive was preserved."
+                      let
+                          baseline-project $ struct-with project (:source-revision revision) (:source-manifest-revision manifest)
+                          archived $ source/restore-editor-state baseline-project archive
+                        try (watcher/file-change archived project |recovery |recovery 0)
+                          fn (_error) (assoc archived :recovery-mode true)
+          :examples $ []
+          :schema $ quote $ Fn source/SourceProject (Option Dynamic)
+            -> $ Map Tag Dynamic
+          :tests $ [] $ %{} 'TestEntry (:name |rebase-preserves-pending-and-rejects-conflicts)
+            :code $ quote $ let
+                entry $ %{} app.schema/CodeEntry (:doc |saved)
+                  :code $ app.schema/syntax->node ([] |ns |demo.main) |source 0
+                  :examples $ []
+                  :source-entry None
+                original $ %{} app.schema/FileEntry (:ns entry)
+                  :defs $ {}
+                  :source-view None
+                pending $ struct-with original $ :ns
+                  struct-with entry $ :doc |pending
+                changed $ struct-with original $ :ns
+                  struct-with entry $ :doc |changed
+                project $ %{} source/SourceProject (:package |demo)
+                  :files $ {} (|demo.main original) (|other original)
+                  :configs $ {}
+                  :entries $ {}
+                  :source-config |config
+                  :source-revision |new-revision
+                  :source-templates $ {}
+                  :source-manifest-revision |new-manifest
+                configs $ merge app.schema/configs $ {}
+                archive $ {} (:package |demo) (:source-revision |old-revision) (:source-manifest-revision |old-manifest)
+                  :files $ {} (|demo.main pending) (|other original)
+                  :saved-files $ {} (|demo.main original) (|other original)
+                  :configs configs
+                  :saved-configs configs
+                  :entries $ {}
+                  :saved-entries $ {}
+                  :users $ {}
+                incoming $ struct-with project $ :files
+                  {} (|demo.main original) (|other changed)
+                loaded $ parse-cirru-edn $ format-cirru-edn archive
+                restored $ recover-project-state incoming $ Some loaded
+                files $ decode-map-as
+                  .unwrap $ get restored :files
+                  Map String app.schema/FileEntry
+              assert= (Some pending) (get files |demo.main)
+              assert= (Some changed) (get files |other)
+              assert= (Some |new-revision) (get restored :source-revision)
+              let
+                  conflict $ recover-project-state
+                    struct-with project $ :files $ {} (|demo.main changed) (|other original)
+                    Some loaded
+                  conflict-files $ decode-map-as
+                    .unwrap $ get conflict :files
+                    Map String app.schema/FileEntry
+                assert= (Some true) (get conflict :recovery-mode)
+                assert= (Some pending) (get conflict-files |demo.main)
+                assert= (Some |old-revision) (get conflict :source-revision)
+              assert= true $ try
+                do
+                  recover-project-state project $ Some $ dissoc archive :saved-files
+                  , false
+                fn (_error) true
+            :tags $ #{} :unit
         'save-editor-state! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-editor-state! (snapshot db)
-            writeEditorArchive snapshot $ format-cirru-edn $ source/editor-archive-state db
+            when
+              not= (get db :recovery-mode) (Some true)
+              writeEditorArchive snapshot $ format-cirru-edn $ source/editor-archive-state db
             , &unit
           :examples $ []
           :schema $ quote $ Fn String (Map Tag Dynamic) (-> Unit) (:features :js-ffi)
         'save-project! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-project! (snapshot db selected)
+            when
+              = (get db :recovery-mode) (Some true)
+              raise "|Recovery view cannot save to the changed project. Copy pending edits to a separate location."
             let
                 revision $ decode-map-as
                   .unwrap $ get db :source-revision
@@ -6829,6 +6947,17 @@
                 , 'String
           :examples $ []
           :schema $ quote $ Fn String (Map Tag Dynamic) (Option String) (-> source/SourceSave) (:features :js-ffi)
+          :tests $ [] $ %{} 'TestEntry (:name |recovery-view-blocks-save)
+            :code $ quote $ assert= true
+              try
+                do
+                  save-project! |unused
+                    {} $ :recovery-mode true
+                    , None
+                  , false
+                fn (error)
+                  includes? (str error) "|Recovery view cannot save to the changed project."
+            :tags $ #{} :unit
         'save-source-files! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-source-files! (snapshot revision files saved-files selected templates)
             write-namespace-changes! snapshot revision $ source/plan-namespace-changes files saved-files selected templates
@@ -6848,6 +6977,7 @@
         :code $ quote $ ns app.storage
           :require (app.source :as source)
             |../snapshot-cli.mjs :refer $ readSnapshotEdn writeSnapshotChangesEdn writeProjectChangesEdn readEditorArchive writeEditorArchive
+            app.updater.watcher :as watcher
     'app.style $ %{} 'FileEntry
       :defs $ {}
         'button $ %{} 'CodeEntry (:doc |)
@@ -7214,8 +7344,10 @@
                         :configs $ .unwrap-or (get db :configs) ({})
                         :entries $ .unwrap-or (get db :entries) ({})
                   :stats $ {} $ :members-count (count sessions)
+                  :recovery-mode $ = (get db :recovery-mode) (Some true)
                 {} (:session session) (:logged-in? false)
                   :stats $ {} $ :members-count 0
+                  :recovery-mode $ = (get db :recovery-mode) (Some true)
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) (Map Tag Dynamic)
             -> $ Map Tag Dynamic
@@ -10724,7 +10856,7 @@
         'md5 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn md5 (s)
             let
-                host $ unsafe-coerce crypto 'app.util.compile/CryptoModuleHost
+                host $ js-cast crypto 'app.util.compile/CryptoModuleHost
                 hash $ host .create-hash |md5
                 updated $ hash .update s
               updated .digest |hex
@@ -10795,13 +10927,6 @@
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
             :names $ {} (:catch-error |catch) (:then-text |then) (:then-value |then)
           :schema $ quote Trait
-        'EventHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait EventHost
-            .prevent-default! $ Fn app.util.dom/EventHost $ -> Unit
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
-            :names $ {} $ :prevent-default! |preventDefault
-          :schema $ quote Trait
         'NavigatorHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait NavigatorHost (:clipboard 'app.util.dom/ClipboardHost)
           :examples $ []
@@ -10864,17 +10989,14 @@
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'prevent-default! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn prevent-default! (raw-event)
-            let
-                event $ unsafe-coerce raw-event 'app.util.dom/EventHost
-              .prevent-default! event
-              , &unit
+          :code $ quote $ defn prevent-default! (event) (.prevent-default! event) &unit
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn dom/DomEvent (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.util.dom
           :require
             respo.core :refer $ style
+            respo.dom :as dom
             respo.render.html :refer $ style->html
     'app.util.env $ %{} 'FileEntry
       :defs $ {}
@@ -10885,7 +11007,7 @@
                 pkg $ js/JSON.parse $ fs/readFileSync (path/join directory |../package.json) |utf8
                 version $ js-ffi.contract/expect-string |package.version $ js-ffi.contract/object-field |package pkg |version
                 name $ js-ffi.contract/expect-string |package.name $ js-ffi.contract/object-field |package pkg |name
-                color $ unsafe-coerce chalk 'app.server/ChalkHost
+                color $ js-cast chalk 'app.server/ChalkHost
                 promise $ unsafe-coerce (latest-version name) 'js-ffi.shared/PromiseHost
                 requested $ .then! promise $ fn (raw)
                   hint-fn $ Fn (JsNullish JsObject) (-> Unit)

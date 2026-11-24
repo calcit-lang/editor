@@ -41,7 +41,9 @@ You may try with my project templates:
 - simple virtual DOM playground [calcit-workflow](https://github.com/mvc-works/calcit-workflow)
 - a toy Node.js script [calcit-nodejs-workflow](https://github.com/mvc-works/calcit-nodejs-workflow)
 
-To build this checkout, pair Calcit CLI and `@calcit/procs` at 0.44.0, reinstall dependencies, and rebuild both the server and the page. The module graph uses gen-code 0.0.27, WS-EDN 0.2.7, and the matching released Respo and Recollect versions. Existing project files and bookmark wire data keep their formats; stop the local server before updating and restart it after rebuilding.
+To build this checkout, pair Calcit CLI and `@calcit/procs` at 0.44.0, reinstall dependencies, and rebuild both the server and the page. The module graph uses gen-code 0.0.29, WS-EDN 0.2.11 and JS-FFI 0.2.23, and the matching released Respo and Recollect versions. Existing project files and bookmark wire data keep their formats; stop the local server before updating, restart it after rebuilding, and reload each open editor page.
+
+If the Snapshot changed while an editor archive has pending changes, non-overlapping changes are reconciled automatically. Overlapping changes open a recovery view with saving disabled: copy the pending edits elsewhere before closing, because changes made in that view are not saved. The original archive and current Snapshot remain untouched. Archives without a complete baseline or with a different package are not recovered automatically.
 
 Don't forget to check out [keyboard shortcuts](https://github.com/calcit-lang/editor/wiki/Keyboard-Shortcuts). My old [introduction videos](https://www.youtube.com/watch?v=u5Eb_6KYGsA&t) can be found on YouTube.
 
