@@ -5228,7 +5228,7 @@
         'ctx $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn ctx ()
             let
-                document $ unsafe-coerce js/document 'app.polyfill/PolyfillDocumentHost
+                document $ js-cast js/document 'app.polyfill/PolyfillDocumentHost
                 canvas $ .create-element document |canvas
               .get-context canvas |2d
           :examples $ []
@@ -5238,9 +5238,9 @@
             let
                 context $ ctx
               set! (.-font context) (str font-size "|px " font-family)
-              unsafe-coerce
+              decode-map-as
                 .-width $ .measure-text context content
-                , Number
+                , 'Number
           :examples $ []
           :schema $ quote $ Fn String Number String (-> Number) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
@@ -7220,7 +7220,7 @@
         'number-prefix? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn number-prefix? (text)
             let
-                pattern $ unsafe-coerce (new js/RegExp |^-?\d) 'app.theme.star-trail/RegexHost
+                pattern $ js-cast (new js/RegExp |^-?\d) 'app.theme.star-trail/RegexHost
               .test pattern text
           :examples $ []
           :schema $ quote $ Fn String (-> Bool) (:features :js-ffi)
