@@ -6174,7 +6174,7 @@
                       |/calcit-data $ readFile |./calcit.cirru |utf8 $ make-file-response res
                       _ $ do (.!writeHead res 404) (.!end res "|not found. check url")
               .!listen server port $ fn () $ let
-                  link $ .blue (unsafe-coerce chalk 'app.server/ChalkHost) (str |http://localhost: port)
+                  link $ .blue (js-cast chalk 'app.server/ChalkHost) (str |http://localhost: port)
                 println $ str "|port " port "| ok, local configs exposed on " link
           :examples $ []
           :schema $ quote $ Fn Number (-> Dynamic) (:features :io :js-ffi)
