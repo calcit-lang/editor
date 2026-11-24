@@ -2266,7 +2266,7 @@
                       try
                         let
                             id $ str |# $ gen-def-id the-ns the-def
-                            host-el $ unsafe-coerce el 'app.comp.graph/GraphElementHost
+                            host-el $ js-cast el 'app.comp.graph/GraphElementHost
                             target-opt $ js-nullish->option $ .query-selector host-el id
                           match target-opt
                             (:some target)
