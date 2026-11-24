@@ -558,7 +558,7 @@
     'app.client-util $ %{} 'FileEntry
       :defs $ {}
         'UrlParseResultHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait UrlParseResultHost (:query 'Dynamic)
+          :code $ quote $ deftrait UrlParseResultHost (:query 'JsObject)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
             :names $ {} $ :query |query
@@ -604,7 +604,7 @@
         'parse-query! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn parse-query! ()
             let
-                url-obj $ unsafe-coerce
+                url-obj $ js-cast
                   url-parse (location-href) true
                   , 'app.client-util/UrlParseResultHost
               decode-map-as
