@@ -6955,7 +6955,8 @@
                     {} $ :recovery-mode true
                     , None
                   , false
-                fn (_error) true
+                fn (error)
+                  includes? (str error) "|Recovery view cannot save to the changed project."
             :tags $ #{} :unit
         'save-source-files! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn save-source-files! (snapshot revision files saved-files selected templates)
